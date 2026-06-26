@@ -157,47 +157,48 @@
   :root {
     /* --- Base (shadcn/ui) --- */
     --background: #ffffff;
-    --foreground: #0a0a0b;
+    --foreground: #1d1d1f;
     --card: #ffffff;
-    --card-foreground: #0a0a0b;
+    --card-foreground: #1d1d1f; /* ink 통일 */
     --popover: #ffffff;
-    --popover-foreground: #0a0a0b;
-    --primary: #155dfc;
+    --popover-foreground: #1d1d1f; /* ink 통일 */
+    --primary: #0066cc;
     --primary-foreground: #fafafa;
     --secondary: #6d788d;
     --secondary-foreground: #fafafa;
     --muted: #6d788d;
     --muted-foreground: #71717b;
-    --accent: #f4f4f5;
-    --accent-foreground: #19191a;
-    --destructive: #e04440;
+    --accent: #f5f5f7; /* parch · 옅은 채움 면(hover 등) */
+    --accent-foreground: #1d1d1f; /* ink 통일 */
+    --destructive: #ff3b30; /* red */
     --destructive-foreground: #fafafa;
-    --border: #e5e5e5;
-    --input: #e5e5e5;
-    --ring: #155dfc;
-    --radius: 0.5rem;
+    --destructive-background: #ff3b301a; /* error 배경 — @theme error-background 대응 */
+    --border: #e6e6e9; /* hair · 헤어라인 보더 */
+    --input: #e6e6e9; /* hair · input 테두리 */
+    --ring: #0066cc;
+    --radius: 0.75rem; /* 12px — 버튼·입력 기준. 카드는 컴포넌트에서 rounded-2xl로 별도 */
 
     /* --- Text --- */
-    --text-primary: #0a0a0bde;
-    --text-secondary: #0a0a0b99;
-    --text-tertiary: #0a0a0b61;
-    --text-disabled: #0a0a0b42;
+    --text-primary: #1d1d1f;
+    --text-secondary: #3a3a3c;
+    --text-tertiary: #6e6e73;
+    --text-disabled: #a1a1a6;
 
     /* --- Primary variants --- */
-    --primary-emphasis: #265fc5;
-    --primary-light: #eaf1fe;
-    --primary-medium: #4894fe;
-    --primary-background: #155dfc1a;
+    --primary-emphasis: #004a99;
+    --primary-light: #e8f1fc;
+    --primary-medium: #2997ff;
+    --primary-background: #0066cc1a;
 
     /* --- Secondary variants --- */
     --secondary-background: #6d788d1a;
 
     /* --- Status --- */
-    --success: #72e128;
-    --success-background: #72e1281a;
-    --warning: #fdb528;
-    --warning-background: #fdb5281a;
-    --info: #21aedb;
+    --success: #34c759; /* green · 강점·완료·긍정 */
+    --success-background: #34c7591a;
+    --warning: #ff9500; /* amber · 주의·진행중 */
+    --warning-background: #ff95001a;
+    --info: #21aedb; /* 디자인 시스템 대응 없음 — 유지 */
     --info-background: #21aedb1a;
   }
 
