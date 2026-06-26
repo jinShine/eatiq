@@ -1,0 +1,262 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  /* Font — 기본 폰트 초기화 후 디자인 시스템 폰트만 등록 */
+  --font-*: initial;
+  --font-sans: var(--font-sans); /* IBM Plex Sans KR — 본문·제목 */
+  --font-mono: var(--font-mono); /* IBM Plex Mono — 숫자·금액·코드 */
+
+  /* -------------------------------------------------------------------------
+   * Custom Theme Colors — 프로젝트 고유 시맨틱 컬러
+   * ---------------------------------------------------------------------- */
+
+  /* Text */
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-text-disabled: var(--text-disabled);
+
+  /* Primary variants */
+  --color-primary-emphasis: var(--primary-emphasis);
+  --color-primary-light: var(--primary-light);
+  --color-primary-medium: var(--primary-medium);
+  --color-primary-background: var(--primary-background);
+
+  /* Secondary variants */
+  --color-secondary-background: var(--secondary-background);
+
+  /* Status */
+  --color-success: var(--success);
+  --color-success-background: var(--success-background);
+  --color-warning: var(--warning);
+  --color-warning-background: var(--warning-background);
+  --color-info: var(--info);
+  --color-info-background: var(--info-background);
+  --color-error: var(--destructive);
+  --color-error-background: var(--destructive-background);
+
+  /* -------------------------------------------------------------------------
+   * Base Colors — shadcn/ui 기본 시맨틱 컬러
+   * ---------------------------------------------------------------------- */
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Chart */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  /* -------------------------------------------------------------------------
+   * Border Radius
+   * ---------------------------------------------------------------------- */
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  /* -------------------------------------------------------------------------
+   * Animations
+   * ---------------------------------------------------------------------- */
+
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+
+  @keyframes accordion-down {
+    from {
+      height: 0;
+    }
+    to {
+      height: var(--radix-accordion-content-height);
+    }
+  }
+  @keyframes accordion-up {
+    from {
+      height: var(--radix-accordion-content-height);
+    }
+    to {
+      height: 0;
+    }
+  }
+}
+
+/* ============================================================================
+ * @layer base — 전역 기본 스타일
+ * ========================================================================= */
+
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-text-primary font-sans antialiased;
+    /* 디자인 시스템 기본 타이포 — 편안한 행간, 살짝 좁은 자간 */
+    line-height: 1.6;
+    letter-spacing: -0.01em;
+  }
+
+  form {
+    @apply space-y-5;
+  }
+
+  /* iOS Safari — input focus 시 자동 줌 방지 (font-size 16px 미만일 때 발생) */
+  input,
+  select,
+  textarea {
+    font-size: max(16px, 1em);
+  }
+}
+
+/* ============================================================================
+ * @layer base — 컬러 토큰 값 정의
+ *
+ * :root = 라이트 모드 (기본)
+ * .dark = 다크 모드
+ * ========================================================================= */
+
+@layer base {
+  :root {
+    /* --- Base (shadcn/ui) --- */
+    --background: #ffffff;
+    --foreground: #0a0a0b;
+    --card: #ffffff;
+    --card-foreground: #0a0a0b;
+    --popover: #ffffff;
+    --popover-foreground: #0a0a0b;
+    --primary: #155dfc;
+    --primary-foreground: #fafafa;
+    --secondary: #6d788d;
+    --secondary-foreground: #fafafa;
+    --muted: #6d788d;
+    --muted-foreground: #71717b;
+    --accent: #f4f4f5;
+    --accent-foreground: #19191a;
+    --destructive: #e04440;
+    --destructive-foreground: #fafafa;
+    --border: #e5e5e5;
+    --input: #e5e5e5;
+    --ring: #155dfc;
+    --radius: 0.5rem;
+
+    /* --- Text --- */
+    --text-primary: #0a0a0bde;
+    --text-secondary: #0a0a0b99;
+    --text-tertiary: #0a0a0b61;
+    --text-disabled: #0a0a0b42;
+
+    /* --- Primary variants --- */
+    --primary-emphasis: #265fc5;
+    --primary-light: #eaf1fe;
+    --primary-medium: #4894fe;
+    --primary-background: #155dfc1a;
+
+    /* --- Secondary variants --- */
+    --secondary-background: #6d788d1a;
+
+    /* --- Status --- */
+    --success: #72e128;
+    --success-background: #72e1281a;
+    --warning: #fdb528;
+    --warning-background: #fdb5281a;
+    --info: #21aedb;
+    --info-background: #21aedb1a;
+  }
+
+  .dark {
+    /* --- Base (shadcn/ui) --- */
+    --background: #0a0a0b;
+    --foreground: #fafafa;
+    --card: #0a0a0b;
+    --card-foreground: #fafafa;
+    --popover: #0a0a0b;
+    --popover-foreground: #fafafa;
+    --primary: #fafafa;
+    --primary-foreground: #19191a;
+    --secondary: #27272a;
+    --secondary-foreground: #fafafa;
+    --muted: #27272a;
+    --muted-foreground: #a1a1aa;
+    --accent: #27272a;
+    --accent-foreground: #fafafa;
+    --destructive: #7f1d1d;
+    --destructive-foreground: #fafafa;
+    --border: #27272a;
+    --input: #27272a;
+    --ring: #d4d4d8;
+
+    /* --- Text --- */
+    --text-primary: #fafafade;
+    --text-secondary: #fafafa99;
+    --text-tertiary: #fafafa61;
+    --text-disabled: #fafafa42;
+
+    /* --- Primary variants --- */
+    --primary-emphasis: #93b8fc;
+    --primary-light: #1a2340;
+    --primary-medium: #6aa3fe;
+    --primary-background: #fafafa1a;
+
+    /* --- Secondary variants --- */
+    --secondary-background: #27272a1a;
+
+    /* --- Status --- */
+    --success: #4ade80;
+    --success-background: #4ade801a;
+    --warning: #fbbf24;
+    --warning-background: #fbbf241a;
+    --info: #38bdf8;
+    --info-background: #38bdf81a;
+  }
+}
+
+/* ============================================================================
+ * @layer utilities — 커스텀 유틸리티 클래스
+ * ========================================================================= */
+
+@layer utilities {
+  .scrollbar-hidden {
+    &::-webkit-scrollbar {
+      display: none;
+    }
+    scrollbar-width: none;
+  }
+}

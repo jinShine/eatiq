@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# 스테이징된 파일만 eslint --fix + prettier 적용
+npx lint-staged

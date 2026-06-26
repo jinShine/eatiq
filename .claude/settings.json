@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(timeout 120 npx eslint . --ext ts,tsx)",
+      "Bash(timeout 120 npx eslint . --ext ts,tsx --fix)",
+      "Bash(bun add *)",
+      "Bash(bun install *)",
+      "Bash(echo \"=== exit: $? ===\")",
+      "Bash(npm list *)",
+      "Bash(xargs -I {} basename {})",
+      "Bash(cd /Users/buzz/Documents/Private/projects/fe-template-buzz *)",
+      "Bash(git rm *)",
+      "Bash(rm -f .npmrc)",
+      "Bash(bun run *)",
+      "Bash(git add *)",
+      "Bash(npx lint-staged *)",
+      "Bash(git commit -m ' *)"
+    ],
+    "additionalDirectories": ["/Users/buzz/Documents/Private/projects/fe-template-buzz"]
+  }
+}

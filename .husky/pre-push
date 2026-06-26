@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# 풀빌드 대신 타입체크로 빠르게 검증 (전체 빌드는 CI에서)
+bun run type-check
