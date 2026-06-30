@@ -14,7 +14,14 @@
       "Bash(bun run *)",
       "Bash(git add *)",
       "Bash(npx lint-staged *)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(npx eslint *)",
+      "Bash(npm view *)",
+      "Bash(echo \"preview.tsx exit code: $?\")",
+      "Bash(echo \"tsc exit: $?\")",
+      "Bash(echo \"eslint exit: $?\")",
+      "Read(//Users/buzz/.vscode/extensions/**)",
+      "Read(//Users/buzz/.vscode-server/**)"
     ],
     "additionalDirectories": ["/Users/buzz/Documents/Private/projects/fe-template-buzz"]
   }
