@@ -29,7 +29,10 @@
       "Bash(git commit -q -m 'feat: 컴포넌트 디자인 시스템 토큰 일관화 및 쇼케이스 구성 *)",
       "mcp__plugin_playwright_playwright__browser_resize",
       "mcp__plugin_playwright_playwright__browser_evaluate",
-      "Bash(git commit -q -m 'feat: 앱 레이아웃 골격 구성 및 쇼케이스 컴포넌트 확장 *)"
+      "Bash(git commit -q -m 'feat: 앱 레이아웃 골격 구성 및 쇼케이스 컴포넌트 확장 *)",
+      "WebFetch(domain:eatiq-nine.vercel.app)",
+      "Bash(curl -s --max-time 20 https://eatiq-nine.vercel.app)",
+      "Bash(git commit -q -m 'fix: SEO 메타데이터를 EATIQ LINK로 설정 및 보일러플레이트 OG 이미지 제거 *)"
     ],
     "additionalDirectories": [
       "/Users/buzz/Documents/Private/projects/fe-template-buzz",

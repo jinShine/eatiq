@@ -1,8 +1,8 @@
 import { type Metadata } from "next";
 
-const TITLE = "";
-const DESCRIPTION = "";
-const BASE_URL = "https://app.store-watch.ai"; // 예) https://app.store-watch.ai/
+const TITLE = "EATIQ LINK";
+const DESCRIPTION = "한국 F&B 브랜드의 해외 진출을 지원하는 B2B 플랫폼 — 바이어 매칭부터 계약까지 한 곳에서.";
+const BASE_URL = "https://eatiq-nine.vercel.app";
 
 /**
  * SEO Metadata Configuration
@@ -21,68 +21,28 @@ export const seoMetadata: Metadata = {
   // 페이지 설명 (검색 결과에 표시됨)
   description: DESCRIPTION,
 
-  // 검색 엔진 키워드 (현재는 대부분의 검색 엔진이 무시하지만, 참고용으로 포함)
-  keywords: [
-    "Watch",
-    "데이터 퓨레, forSPACElab",
-    "포스페이스랩",
-    "프렌차이즈",
-    "매장 영업",
-    "가맹 영업",
-    "가맹 본부",
-    "가맹 관리",
-    "퓨레링크",
-    "pureelink",
-    "AI",
-    "계약관리",
-    "전자계약",
-  ],
+  // 검색 엔진 키워드
+  keywords: ["EATIQ", "EATIQ LINK", "이팁", "F&B", "프랜차이즈", "해외 진출", "바이어 매칭", "상권 분석"],
 
   // 페이지 작성자 정보
-  authors: [{ name: "forSPACElab, inc." }],
-
-  // 파비콘 설정
-  icons: {
-    icon: "/favicon.png",
-  },
-
-  verification: {
-    google: "",
-    other: {
-      "naver-site-verification": "",
-    },
-  },
+  authors: [{ name: "EATIQ" }],
 
   // Open Graph 메타데이터 (소셜 미디어 공유 시 표시되는 정보)
+  // 참고: OG 이미지는 추후 디자인 준비 후 images 필드로 추가
   openGraph: {
-    title: TITLE, // 공유 시 표시될 제목
-    description: DESCRIPTION, // 공유 시 표시될 설명
-    images: [
-      {
-        url: "/og-image.png", // 공유 시 표시될 이미지 URL
-        width: 800, // 이미지 너비
-        height: 400, // 이미지 높이
-        type: "image/png", // 이미지 타입
-        alt: `${TITLE}-og-image`, // 이미지 대체 텍스트
-      },
-    ],
+    title: TITLE,
+    description: DESCRIPTION,
     locale: "ko_KR", // 페이지 언어 설정
-    type: "website", // 콘텐츠 타입 (website, article, product 등)
+    type: "website", // 콘텐츠 타입
     url: BASE_URL, // 페이지의 표준 URL
-    siteName: DESCRIPTION, // 웹사이트 이름
+    siteName: TITLE, // 웹사이트 이름
   },
 
-  // Twitter 카드 메타데이터 (트위터 공유 시 표시되는 정보)
+  // Twitter 카드 메타데이터 (이미지 없으므로 summary 카드 사용)
   twitter: {
-    title: TITLE, // 트위터 공유 시 표시될 제목
-    description: DESCRIPTION, // 트위터 공유 시 표시될 설명
-    images: [
-      {
-        url: "/og-image.png", // 트위터 카드 이미지 URL
-        width: 800, // 이미지 너비
-        height: 400, // 이미지 높이
-      },
-    ],
+    card: "summary",
+    title: TITLE,
+    description: DESCRIPTION,
   },
 };
 
