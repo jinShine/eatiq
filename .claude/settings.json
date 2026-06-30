@@ -21,8 +21,16 @@
       "Bash(echo \"tsc exit: $?\")",
       "Bash(echo \"eslint exit: $?\")",
       "Read(//Users/buzz/.vscode/extensions/**)",
-      "Read(//Users/buzz/.vscode-server/**)"
+      "Read(//Users/buzz/.vscode-server/**)",
+      "mcp__plugin_playwright_playwright__browser_navigate",
+      "mcp__plugin_playwright_playwright__browser_take_screenshot",
+      "Bash(echo \"exit: $?\")",
+      "Bash(cd /Users/buzz/Documents/eatiq.io/eatiq *)",
+      "Bash(git commit -q -m 'feat: 컴포넌트 디자인 시스템 토큰 일관화 및 쇼케이스 구성 *)"
     ],
-    "additionalDirectories": ["/Users/buzz/Documents/Private/projects/fe-template-buzz"]
+    "additionalDirectories": [
+      "/Users/buzz/Documents/Private/projects/fe-template-buzz",
+      "/Users/buzz/Documents/eatiq.io/eatiq"
+    ]
   }
 }

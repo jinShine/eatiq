@@ -83,7 +83,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
               "shadow-none",
               size === "xl" ? "text-base" : "text-sm",
               inputHeight,
-              props.disabled && "bg-gray-200",
+              props.disabled && "bg-secondary-background",
               startAdornment && "pl-10",
               endAdornment && "pr-10",
               error && "border-destructive focus-visible:border-destructive focus-visible:ring-destructive/50",

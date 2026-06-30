@@ -8,7 +8,7 @@ export default function HeaderIconButton({ ...props }: ButtonProps) {
       variant="ghost"
       size="icon"
       {...props}
-      className={cn("hover:bg-gray-100 rounded-full -ml-2 [&_svg]:size-5", props.className)}
+      className={cn("hover:bg-accent rounded-full -ml-2 [&_svg]:size-5", props.className)}
     />
   );
 }

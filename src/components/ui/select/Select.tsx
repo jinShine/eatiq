@@ -60,7 +60,11 @@ export function Select({
       <ShadcnSelect value={value} onValueChange={onValueChange}>
         <SelectTrigger
           {...props}
-          className={cn(props.disabled && "pointer-events-none bg-gray-200", selectTriggerHeight, props.className)}
+          className={cn(
+            props.disabled && "pointer-events-none bg-secondary-background",
+            selectTriggerHeight,
+            props.className,
+          )}
         >
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>

@@ -83,7 +83,7 @@ export default function TagInput({ values = [], onChangeTags, ...props }: TagInp
         {_values.map(tag => (
           <div
             key={tag.id}
-            className="flex items-center gap-1 px-2 py-1 bg-primary-background border border-blue-200 rounded-full"
+            className="flex items-center gap-1 px-2 py-1 bg-primary-background border border-primary-light rounded-full"
           >
             <span className="text-xs text-primary">{tag.value}</span>
             <button

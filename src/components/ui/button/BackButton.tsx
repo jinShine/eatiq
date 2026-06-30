@@ -13,7 +13,7 @@ export default function BackButton({ ...props }: ButtonProps) {
     <Button
       variant="ghost"
       size="icon"
-      className="hover:bg-gray-100 rounded-full m-0"
+      className="hover:bg-accent rounded-full m-0"
       {...props}
       onClick={() => router.back()}
     >

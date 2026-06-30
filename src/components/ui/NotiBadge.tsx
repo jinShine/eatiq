@@ -59,7 +59,7 @@ export default function NotiBadge({ children, count, className, isInvisible = fa
       <div>{children}</div>
       <div
         className={cn(
-          "bg-red-500 rounded-full border-2 border-white shadow-lg shadow-black/25 flex items-center justify-center text-[10px]",
+          "bg-destructive rounded-full border-2 border-white shadow-lg shadow-black/25 flex items-center justify-center text-[10px]",
           badgeStyles.container,
         )}
       >
