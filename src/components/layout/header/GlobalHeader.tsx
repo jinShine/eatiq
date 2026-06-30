@@ -1,28 +1,25 @@
-import { Suspense } from "react";
+import { BellIcon } from "lucide-react";
 
-import { Center, HStack } from "@components/ui";
+import { NotiBadge } from "@components/ui";
 
 import { LAYOUT } from "@constants/layout";
 
-import HeaderBackButton from "./_components/HeaderBackButton";
-
 export default function GlobalHeader() {
   return (
-    <div className="flex justify-between items-center px-4 py-3 bg-background" style={{ height: LAYOUT.HEADER.HEIGHT }}>
-      <HStack className="flex-[0.3] justify-start items-center gap-1 w-fit">
-        <Suspense fallback={null}>
-          <HeaderBackButton />
-        </Suspense>
-        <div>Logo</div>
-      </HStack>
+    <div
+      className="border-border bg-background flex items-center justify-between border-b px-6 py-3"
+      style={{ height: LAYOUT.HEADER.HEIGHT }}
+    >
+      <h1 className="text-text-primary text-lg font-bold tracking-tight">대시보드</h1>
 
-      <Center className="flex-1 h-full items-center">
-        <div>Title</div>
-      </Center>
-
-      <HStack className="flex-[0.3] justify-end items-center w-fit">
-        <div>Menu</div>
-      </HStack>
+      <div className="flex items-center gap-4">
+        <NotiBadge count={3}>
+          <BellIcon className="text-text-secondary size-5" />
+        </NotiBadge>
+        <div className="bg-primary-light text-primary flex size-8 items-center justify-center rounded-full text-xs font-bold">
+          몽
+        </div>
+      </div>
     </div>
   );
 }

@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 
-import { BellIcon } from "lucide-react";
+import { BellIcon, SettingsIcon } from "lucide-react";
 
 import BaseContainerLayout from "@components/layout/base/BaseContainerLayout";
 import BaseContentLayout from "@components/layout/base/BaseContentLayout";
 import {
+  BackButton,
   Badge,
   Button,
   Card,
@@ -14,14 +15,18 @@ import {
   CardFooter,
   CardHeader,
   Checkbox,
+  DeleteMenuItem,
   DropdownMenu,
   DropdownMenuItem,
+  EditMenuItem,
+  HeaderIconButton,
   Input,
   Modal,
   ModalActions,
   ModalBody,
   ModalFooter,
   ModalHeader,
+  MoreButton,
   MultiSelect,
   NotiBadge,
   NumberInput,
@@ -29,6 +34,7 @@ import {
   PaginatorV2,
   PasswordInput,
   Popover,
+  ScrollArea,
   Select,
   SelectItem,
   Separator,
@@ -37,10 +43,13 @@ import {
   SpinLoader,
   Switch,
   TagInput,
+  Text,
+  TextLoader,
   Textarea,
   Toast,
   Tooltip,
 } from "@components/ui";
+import UploadButton from "@components/ui/UploadButton";
 import { SelectGroup, SelectLabel } from "@components/ui/select/Select";
 
 // 미팅용 디자인 시스템 쇼케이스 — ui 컴포넌트 전체를 카테고리별로 보여준다
@@ -129,6 +138,17 @@ export default function AppContainer() {
                 <p className="text-text-secondary text-sm">본문 텍스트는 편안한 행간으로 읽기 좋게 표시됩니다.</p>
                 <p className="text-primary font-mono text-lg font-medium">₩ 1,234,567</p>
               </div>
+              <Field label="TEXT 컴포넌트 (variant · color)">
+                <div className="w-full space-y-1">
+                  <Text variant="2xl">Text · 2xl</Text>
+                  <Text variant="lg" color="secondary">
+                    Text · lg · secondary
+                  </Text>
+                  <Text variant="sm" color="tertiary">
+                    Text · sm · tertiary
+                  </Text>
+                </div>
+              </Field>
             </Section>
 
             {/* ───── Button ───── */}
@@ -150,6 +170,20 @@ export default function AppContainer() {
                 <Field label="STATES">
                   <Button isLoading>로딩 중</Button>
                   <Button disabled>비활성</Button>
+                </Field>
+                <Field label="ICON · UPLOAD (BackButton · MoreButton · HeaderIconButton · UploadButton)">
+                  <BackButton />
+                  <MoreButton />
+                  <HeaderIconButton>
+                    <SettingsIcon />
+                  </HeaderIconButton>
+                  <UploadButton
+                    accept="image/*"
+                    onChangeFile={() => {}}
+                    className="bg-primary text-primary-foreground rounded-lg px-4 py-2 text-sm font-semibold"
+                  >
+                    파일 업로드
+                  </UploadButton>
                 </Field>
               </div>
             </Section>
@@ -258,10 +292,10 @@ export default function AppContainer() {
                   </Card>
                 </Popover>
 
-                <DropdownMenu trigger={<Button variant="outline">Dropdown</Button>}>
-                  <DropdownMenuItem>메뉴 1</DropdownMenuItem>
-                  <DropdownMenuItem>메뉴 2</DropdownMenuItem>
-                  <DropdownMenuItem variant="destructive">삭제</DropdownMenuItem>
+                <DropdownMenu trigger={<MoreButton />}>
+                  <DropdownMenuItem>상세 보기</DropdownMenuItem>
+                  <EditMenuItem onClick={() => {}} />
+                  <DeleteMenuItem onClick={() => {}} />
                 </DropdownMenu>
 
                 <Tooltip trigger={<Button variant="outline">Tooltip</Button>}>도움말 텍스트입니다</Tooltip>
@@ -269,7 +303,7 @@ export default function AppContainer() {
             </Section>
 
             {/* ───── Feedback ───── */}
-            <Section title="Feedback" desc="Toast · Skeleton · SpinLoader.">
+            <Section title="Feedback" desc="Toast · Skeleton · SpinLoader · TextLoader.">
               <div className="border-border space-y-4 rounded-xl border p-4">
                 <Field label="TOAST">
                   <Button size="sm" onClick={() => Toast.success("저장되었습니다")}>
@@ -294,7 +328,26 @@ export default function AppContainer() {
                 <Field label="SPIN LOADER">
                   <SpinLoader />
                 </Field>
+                <Field label="TEXT LOADER">
+                  <TextLoader
+                    messages={["상권을 분석하고 있어요", "최적 바이어를 찾는 중이에요"]}
+                    className="text-sm"
+                  />
+                </Field>
               </div>
+            </Section>
+
+            {/* ───── ScrollArea ───── */}
+            <Section title="ScrollArea" desc="제한된 높이 안에서 스크롤되는 영역.">
+              <ScrollArea className="border-border h-32 rounded-xl border p-3">
+                <div className="space-y-2">
+                  {Array.from({ length: 12 }).map((_, index) => (
+                    <p key={index} className="text-text-secondary text-sm">
+                      스크롤 항목 {index + 1}
+                    </p>
+                  ))}
+                </div>
+              </ScrollArea>
             </Section>
 
             {/* ───── Data ───── */}

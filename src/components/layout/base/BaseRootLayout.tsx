@@ -46,10 +46,7 @@ export default function BaseRootLayout({
           sideNav && `w-full md:w-auto ml-0 md:ml-[260px]`,
           className,
         )}
-        style={{
-          ...style,
-          ...(sideNav ? { marginLeft: LAYOUT.NAVIGATION.SIDEBAR.WIDTH } : {}),
-        }}
+        style={style}
       >
         {/* header */}
         {header && <header className={cn("sticky top-0 z-40 w-full", horizonNav && "border-none")}>{header}</header>}
