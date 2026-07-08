@@ -1,6 +1,10 @@
+"use client";
+
 import React from "react";
 
 import { VStack } from "@components/ui/Container";
+
+import { useUserSettingsStore } from "@stores/useUserSettingsStore";
 
 import { LAYOUT } from "@constants/layout";
 
@@ -28,13 +32,18 @@ export default function BaseRootLayout({
   style,
   contentClassName,
 }: BaseRootLayoutProps) {
+  const sidebarCollapsed = useUserSettingsStore(state => state.sidebarCollapsed);
+  const sidebarWidth = sidebarCollapsed ? 64 : LAYOUT.NAVIGATION.SIDEBAR.WIDTH; // 64 ↔ 260
+
   return (
     <>
       {/* sideNav */}
       {sideNav && (
         <aside
-          className={cn(`fixed top-0 left-0 bottom-0 z-40 border-r overflow-auto hidden md:block`)}
-          style={{ width: LAYOUT.NAVIGATION.SIDEBAR.WIDTH }}
+          className={cn(
+            "fixed top-0 left-0 bottom-0 z-40 border-r overflow-hidden hidden md:block transition-[width] duration-300 ease-in-out",
+          )}
+          style={{ width: sidebarWidth }} // ← 고정 260 대신 동적
         >
           {sideNav}
         </aside>
@@ -42,8 +51,8 @@ export default function BaseRootLayout({
 
       <VStack
         className={cn(
-          `justify-between items-start min-h-svh gap-0`,
-          sideNav && `w-full md:w-auto ml-0 md:ml-[260px]`,
+          `justify-between items-start min-h-svh gap-0 transition-[margin] duration-300 ease-in-out`,
+          sideNav && (sidebarCollapsed ? "w-full md:w-auto ml-0 md:ml-[64px]" : "w-full md:w-auto ml-0 md:ml-[260px]"),
           className,
         )}
         style={style}
