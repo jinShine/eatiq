@@ -54,3 +54,9 @@ public/workbox-*.js.map
 public/firebase-messaging-sw.js
 *storybook.log
 storybook-static
+
+# playwright
+.playwright-mcp
+
+# docs
+superpowers
