@@ -30,6 +30,7 @@ export default [
       "**/*.config.js",
       "**/*.config.cjs",
       "**/*.config.mjs",
+      "src/services/openapi.ts", // openapi-typescript 자동 생성 파일 (lint 제외)
     ],
   },
 

@@ -1,7 +1,11 @@
+import axios from "axios";
+
 import axiosClientInstance from "@services/axios.client";
 import { type ApiResponse } from "@services/types/common";
 
-import { type SignInRequest, type SignInResponse } from "./auth.type";
+import { ENV_CLIENT } from "@configs/env/client";
+
+import { type AuthResponse, type SignInRequest, type TokenResponse } from "./auth.type";
 
 const BASE_PATH = "/api/auth";
 
@@ -13,7 +17,15 @@ const ENDPOINTS = {
   logout: `${BASE_PATH}/logout`,
 };
 
-export async function signIn(body: SignInRequest): Promise<SignInResponse> {
-  const res = await axiosClientInstance.post<ApiResponse<SignInResponse>>(ENDPOINTS.signin, body);
+export async function signIn(body: SignInRequest): Promise<AuthResponse> {
+  const res = await axiosClientInstance.post<ApiResponse<AuthResponse>>(ENDPOINTS.signin, body);
+  return res.data.data;
+}
+
+export async function refresh(refreshToken: string): Promise<TokenResponse> {
+  const res = await axios.post<ApiResponse<TokenResponse>>(
+    `${ENV_CLIENT.API_URL}${ENDPOINTS.refresh}`,
+    { refreshToken }, //
+  );
   return res.data.data;
 }
