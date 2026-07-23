@@ -3,10 +3,9 @@
 /* 임시 API 테스트 페이지 — 시연용, 이후 삭제 */
 import { useState } from "react";
 
-import { STORAGE_KEY } from "@constants/storage-key";
-
-import axiosClient from "@services/axios.client";
 import { useSignInMutation } from "@services/api/auth/auth.query";
+import axiosClient from "@services/axios.client";
+import { tokenStorage } from "@services/token-storage";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Result = { label: string; data?: any; error?: any } | null;
@@ -22,8 +21,10 @@ export default function TestPage() {
     signIn(
       { email, password },
       {
-        onSuccess: (data) => {
-          localStorage.setItem(STORAGE_KEY.LOCAL.TOKEN, data.accessToken);
+        onSuccess: data => {
+          if (data.accessToken && data.refreshToken) {
+            tokenStorage.setTokens(data.accessToken, data.refreshToken);
+          }
           setResult({ label: "✅ 로그인 성공 (토큰 저장됨)", data });
         },
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -50,13 +51,13 @@ export default function TestPage() {
       <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
         <input
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={e => setEmail(e.target.value)}
           placeholder="email"
           style={{ border: "1px solid #ccc", padding: 8, flex: 1 }}
         />
         <input
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={e => setPassword(e.target.value)}
           placeholder="password"
           style={{ border: "1px solid #ccc", padding: 8, flex: 1 }}
         />
@@ -73,7 +74,9 @@ export default function TestPage() {
           ③ 워크스페이스 목록
         </button>
         <button
-          onClick={() => call("POST /api/brands", () => axiosClient.post("/api/brands", { nameKo: "테스트 워크스페이스" }))}
+          onClick={() =>
+            call("POST /api/brands", () => axiosClient.post("/api/brands", { nameKo: "테스트 워크스페이스" }))
+          }
           style={btn}
         >
           ④ 워크스페이스 생성
