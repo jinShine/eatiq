@@ -44,7 +44,7 @@ export default function GlobalSideNav() {
   const toggle = useUserSettingsStore(state => state.toggleSidebar);
 
   return (
-    <nav className="bg-background flex h-full flex-col">
+    <nav className="flex h-full flex-col bg-[#25053c]">
       {/* ① 상단: 워크스페이스 + 토글 (고정) */}
       <div
         className={cn(
@@ -55,9 +55,9 @@ export default function GlobalSideNav() {
         <div className="bg-primary text-primary-foreground flex size-7 shrink-0 items-center justify-center rounded-lg text-sm font-bold">
           E
         </div>
-        {!collapsed && <span className="text-text-primary flex-1 truncate font-bold tracking-tight">EATIQ LINK</span>}
-        <button onClick={toggle} className="hover:bg-accent rounded-md p-1.5" aria-label="사이드바 토글">
-          <PanelLeft className="text-text-secondary size-4" />
+        {!collapsed && <span className="flex-1 truncate font-bold tracking-tight text-[#e6e6ea]">EATIQ LINK</span>}
+        <button onClick={toggle} className="rounded-md p-1.5 hover:bg-white/10" aria-label="사이드바 토글">
+          <PanelLeft className="size-4 text-[#9a9aa6]" />
         </button>
       </div>
 
@@ -67,7 +67,7 @@ export default function GlobalSideNav() {
           <div key={section.label} className="space-y-1">
             <p
               className={cn(
-                "text-text-tertiary truncate px-2.5 py-1 text-xs font-semibold transition-opacity",
+                "truncate px-2.5 py-1 text-xs font-semibold text-[#9a9aa6] transition-opacity",
                 collapsed && "opacity-0",
               )}
             >
@@ -77,7 +77,7 @@ export default function GlobalSideNav() {
               <button
                 key={item.label}
                 className={cn(
-                  "text-text-secondary hover:bg-accent flex w-full items-center rounded-lg py-2 text-sm transition-[padding] duration-300 ease-in-out",
+                  "flex w-full items-center rounded-lg py-2 text-sm text-[#c9c9d0] transition-[padding] duration-300 ease-in-out hover:bg-white/10",
                   collapsed ? "px-[15px]" : "px-2.5",
                 )}
               >
@@ -93,7 +93,7 @@ export default function GlobalSideNav() {
                 {item.badge && (
                   <span
                     className={cn(
-                      "text-text-tertiary shrink-0 overflow-hidden text-xs transition-all duration-300 ease-in-out",
+                      "shrink-0 overflow-hidden text-xs text-[#9a9aa6] transition-all duration-300 ease-in-out",
                       collapsed ? "ml-0 max-w-0 opacity-0" : "ml-auto max-w-[40px] opacity-100",
                     )}
                   >
@@ -107,10 +107,10 @@ export default function GlobalSideNav() {
       </div>
 
       {/* ③ 하단: 액션 + 유저 (고정) */}
-      <div className="border-border shrink-0 space-y-1 border-t p-2">
+      <div className="shrink-0 space-y-1 border-t border-white/10 p-2">
         <button
           className={cn(
-            "text-text-secondary hover:bg-accent flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-sm",
+            "flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-sm text-[#c9c9d0] hover:bg-white/10",
             collapsed && "justify-center",
           )}
         >
@@ -118,13 +118,13 @@ export default function GlobalSideNav() {
           {!collapsed && <span>설정</span>}
         </button>
         <div className={cn("flex items-center gap-2 px-1.5 py-1.5", collapsed && "justify-center")}>
-          <div className="bg-primary-light text-primary flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold">
+          <div className="bg-primary text-primary-foreground flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold">
             몽
           </div>
           {!collapsed && (
             <div className="min-w-0">
-              <p className="text-text-primary truncate text-sm font-semibold">몽탄</p>
-              <p className="text-text-tertiary truncate text-xs">dev_front@eatiq.io</p>
+              <p className="truncate text-sm font-semibold text-[#e6e6ea]">몽탄</p>
+              <p className="truncate text-xs text-[#9a9aa6]">dev_front@eatiq.io</p>
             </div>
           )}
         </div>
