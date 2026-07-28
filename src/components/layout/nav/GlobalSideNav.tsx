@@ -1,8 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useParams, usePathname, useRouter } from "next/navigation";
 
-import { BarChart3, FileText, LayoutDashboard, MapPin, PanelLeft, Search, Store, User, Users } from "lucide-react";
+import {
+  BarChart3,
+  Building2,
+  Compass,
+  FileText,
+  LayoutDashboard,
+  PanelLeft,
+  Sparkles,
+  Store,
+  User,
+  Users,
+} from "lucide-react";
 
 import { useUserSettingsStore } from "@stores/useUserSettingsStore";
 
@@ -27,19 +38,20 @@ const NAV_SECTIONS = [
   {
     label: "메인",
     items: [
-      { icon: LayoutDashboard, label: "대시보드" },
-      { icon: Store, label: "브랜드 정보 설정" },
-      { icon: FileText, label: "브랜드 문서 작성" },
-      { icon: Search, label: "바이어 탐색" },
-      { icon: BarChart3, label: "진행 관리" },
-      { icon: MapPin, label: "AI 상권분석" },
+      { icon: LayoutDashboard, label: "대시보드", href: "dashboard" },
+      { icon: Store, label: "브랜드 정보 설정", href: "brand-settings" },
+      { icon: FileText, label: "브랜드 문서 작성", href: "brand-documents" },
+      { icon: Users, label: "바이어 탐색", href: "buyer" },
+      { icon: Compass, label: "브랜드 탐색", href: "brand" },
+      { icon: BarChart3, label: "진행 관리", href: "progress" },
+      { icon: Sparkles, label: "AI 상권분석", href: "market-analysis" },
     ],
   },
   {
     label: "관리",
     items: [
-      { icon: User, label: "내 정보 관리" },
-      { icon: Users, label: "워크스페이스 관리" },
+      { icon: User, label: "내 정보 설정", href: "account" },
+      { icon: Building2, label: "워크스페이스 정보 설정", href: "workspaces-settings" },
     ],
   },
 ];
@@ -48,11 +60,20 @@ export default function GlobalSideNav() {
   const collapsed = useUserSettingsStore(state => state.sidebarCollapsed);
   const toggle = useUserSettingsStore(state => state.toggleSidebar);
 
-  // 임시 상태 — 추후 URL의 workspaceId + router.push로 대체
-  const [currentWorkspaceId, setCurrentWorkspaceId] = useState(MOCK_WORKSPACES[0].id);
+  const router = useRouter();
+  const pathname = usePathname();
+  const { workspaceId } = useParams<{ workspaceId: string }>();
 
-  // 임시 상태 — 추후 usePathname()으로 현재 라우트와 비교해 대체
-  const [activeItem, setActiveItem] = useState("대시보드");
+  // URL 경로에서 현재 섹션 추출: /workspace/:workspaceId/:section -> section
+  const currentSection = pathname.split("/")[2] ?? "";
+
+  const handleSwitchWorkspace = (id: string) => {
+    router.push(`/${id}/${currentSection}`);
+  };
+
+  const handleNavToSection = (section: string) => {
+    router.push(`/${workspaceId}/${section}`);
+  };
 
   return (
     <nav className="flex h-full flex-col bg-[#111827]">
@@ -65,8 +86,8 @@ export default function GlobalSideNav() {
       >
         <WorkspaceSwitcher
           workspaces={MOCK_WORKSPACES}
-          currentId={currentWorkspaceId}
-          onSwitch={setCurrentWorkspaceId}
+          currentId={workspaceId}
+          onSwitch={handleSwitchWorkspace}
           collapsed={collapsed}
         />
         <button
@@ -99,8 +120,8 @@ export default function GlobalSideNav() {
                 icon={item.icon}
                 label={item.label}
                 collapsed={collapsed}
-                active={activeItem === item.label}
-                onClick={() => setActiveItem(item.label)}
+                active={item.href === currentSection}
+                onClick={() => handleNavToSection(item.href)}
               />
             ))}
           </div>
