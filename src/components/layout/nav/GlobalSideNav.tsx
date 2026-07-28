@@ -15,6 +15,9 @@ import {
   Users,
 } from "lucide-react";
 
+import { useMe } from "@services/api/auth/auth.query";
+import { useWorkspaces } from "@services/api/brand/brand.query";
+
 import { useUserSettingsStore } from "@stores/useUserSettingsStore";
 
 import { cn } from "@utils/shadcn";
@@ -22,16 +25,6 @@ import { cn } from "@utils/shadcn";
 import SidebarNavItem from "./_components/SidebarNavItem";
 import SidebarUserProfile from "./_components/SidebarUserProfile";
 import WorkspaceSwitcher from "./_components/WorkspaceSwitcher";
-
-// 임시 목업 — 데이터 레이어(brands.query) 연결 전까지 UI 확인용
-const MOCK_WORKSPACES = [
-  { id: "ws-1", name: "몽탄" },
-  { id: "ws-2", name: "롤링파스타" },
-  { id: "ws-3", name: "고든램지버거" },
-];
-
-// 임시 목업 — 추후 useMe() 등 데이터 레이어로 대체
-const MOCK_USER = { name: "몽탄", email: "dev_front@eatiq.io" };
 
 // 섹션 → 항목 (계층 없는 단일 버튼 리스트)
 const NAV_SECTIONS = [
@@ -64,6 +57,9 @@ export default function GlobalSideNav() {
   const pathname = usePathname();
   const { workspaceId } = useParams<{ workspaceId: string }>();
 
+  const { data: workspaces, isLoading: isWorkspacesLoading } = useWorkspaces();
+  const { data: me, isLoading: isMeLoading } = useMe();
+
   // URL 경로에서 현재 섹션 추출: /workspace/:workspaceId/:section -> section
   const currentSection = pathname.split("/")[2] ?? "";
 
@@ -85,10 +81,11 @@ export default function GlobalSideNav() {
         )}
       >
         <WorkspaceSwitcher
-          workspaces={MOCK_WORKSPACES}
+          workspaces={workspaces ?? []}
           currentId={workspaceId}
           onSwitch={handleSwitchWorkspace}
           collapsed={collapsed}
+          isLoading={isWorkspacesLoading}
         />
         <button
           onClick={toggle}
@@ -130,7 +127,14 @@ export default function GlobalSideNav() {
 
       {/* ③ 하단: 유저 프로필 (고정) */}
       <div className="shrink-0 border-t border-white/10 p-2">
-        <SidebarUserProfile user={MOCK_USER} collapsed={collapsed} />
+        <SidebarUserProfile
+          user={{
+            name: me?.user?.name ?? "",
+            email: me?.user?.email ?? "",
+          }}
+          collapsed={collapsed}
+          isLoading={isMeLoading}
+        />
       </div>
     </nav>
   );

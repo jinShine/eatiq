@@ -5,7 +5,7 @@ import { type ApiResponse } from "@services/types/common";
 
 import { ENV_CLIENT } from "@configs/env/client";
 
-import { type AuthResponse, type SignInRequest, type TokenResponse } from "./auth.type";
+import { type AuthResponse, type MeResponse, type SignInRequest, type TokenResponse } from "./auth.type";
 
 const BASE_PATH = "/api/auth";
 
@@ -27,5 +27,10 @@ export async function refresh(refreshToken: string): Promise<TokenResponse> {
     `${ENV_CLIENT.API_URL}${ENDPOINTS.refresh}`,
     { refreshToken }, //
   );
+  return res.data.data;
+}
+
+export async function getMe(): Promise<MeResponse> {
+  const res = await axiosClientInstance.get<ApiResponse<MeResponse>>(ENDPOINTS.me);
   return res.data.data;
 }

@@ -2,7 +2,7 @@
 export const STORAGE_KEY = {
   LOCAL: {
     TOKEN: "eatiq@token",
-    REFRESH_TOKEN: "eqtiq@refresh-token",
+    REFRESH_TOKEN: "eatiq@refresh-token",
   },
   SESSION: {},
   COOKIE: {},

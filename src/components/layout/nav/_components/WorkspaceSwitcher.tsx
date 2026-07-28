@@ -1,6 +1,6 @@
 import { CheckIcon, ChevronDownIcon } from "lucide-react";
 
-import { DropdownMenu, DropdownMenuItem } from "@components/ui";
+import { DropdownMenu, DropdownMenuItem, Skeleton } from "@components/ui";
 
 import { getInitial } from "@utils/functions";
 import { cn } from "@utils/shadcn";
@@ -15,9 +15,24 @@ type WorkspaceSwitcherProps = {
   currentId: string;
   onSwitch: (id: string) => void;
   collapsed?: boolean;
+  isLoading?: boolean;
 };
 
-export default function WorkspaceSwitcher({ workspaces, currentId, onSwitch, collapsed }: WorkspaceSwitcherProps) {
+export default function WorkspaceSwitcher({
+  workspaces,
+  currentId,
+  onSwitch,
+  collapsed,
+  isLoading,
+}: WorkspaceSwitcherProps) {
+  if (isLoading) {
+    return collapsed ? (
+      <Skeleton className="size-9 rounded-lg bg-white/10" />
+    ) : (
+      <Skeleton className="h-5 w-28 rounded-md bg-white/10" />
+    );
+  }
+
   const currentWorkspace = workspaces.find(w => w.id === currentId);
 
   if (!currentWorkspace) {
