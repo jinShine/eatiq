@@ -1,5 +1,5 @@
 import AppContainer from "./_container";
 
-export default function RootPage() {
+export default function DashboardPage() {
   return <AppContainer />;
 }
