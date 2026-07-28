@@ -29,7 +29,7 @@ import WorkspaceSwitcher from "./_components/WorkspaceSwitcher";
 // 섹션 → 항목 (계층 없는 단일 버튼 리스트)
 const NAV_SECTIONS = [
   {
-    label: "메인",
+    label: "",
     items: [
       { icon: LayoutDashboard, label: "대시보드", href: "dashboard" },
       { icon: Store, label: "브랜드 정보 설정", href: "brand-settings" },
