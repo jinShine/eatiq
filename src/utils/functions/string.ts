@@ -117,6 +117,18 @@ export function removeChar(str: string | undefined, target: string): string {
   return str.replaceAll(target, "");
 }
 
+/**
+ * 이름에서 초기 문자를 가져오는 함수
+ * @param name - 대상 이름
+ * @returns 이름의 첫 글자
+ * @example
+ * getInitial('John Doe') // 'J'
+ * getInitial('Jane Smith') // 'J'
+ */
+export function getInitial(name: string) {
+  return name.trim().charAt(0);
+}
+
 /** Helpers */
 
 const isHyphenSeparated = (phoneNumber: string) => {

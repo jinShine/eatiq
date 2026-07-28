@@ -33,7 +33,7 @@ export default function BaseRootLayout({
   contentClassName,
 }: BaseRootLayoutProps) {
   const sidebarCollapsed = useUserSettingsStore(state => state.sidebarCollapsed);
-  const sidebarWidth = sidebarCollapsed ? 64 : LAYOUT.NAVIGATION.SIDEBAR.WIDTH; // 64 ↔ 260
+  const sidebarWidth = sidebarCollapsed ? 64 : LAYOUT.NAVIGATION.SIDEBAR.WIDTH; // 64 ↔ 268
 
   return (
     <>

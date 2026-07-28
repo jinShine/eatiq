@@ -9,7 +9,7 @@ export const LAYOUT = {
   FOOTER: {},
   NAVIGATION: {
     SIDEBAR: {
-      WIDTH: 260,
+      WIDTH: 268,
     },
     HORIZONTAL: {
       HEIGHT: 50,

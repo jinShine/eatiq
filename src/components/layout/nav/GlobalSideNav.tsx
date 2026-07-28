@@ -1,21 +1,26 @@
 "use client";
 
-import {
-  BarChart3,
-  FileText,
-  LayoutDashboard,
-  MapPin,
-  PanelLeft,
-  Search,
-  Settings,
-  Store,
-  User,
-  Users,
-} from "lucide-react";
+import { useState } from "react";
+
+import { BarChart3, FileText, LayoutDashboard, MapPin, PanelLeft, Search, Store, User, Users } from "lucide-react";
 
 import { useUserSettingsStore } from "@stores/useUserSettingsStore";
 
 import { cn } from "@utils/shadcn";
+
+import SidebarNavItem from "./_components/SidebarNavItem";
+import SidebarUserProfile from "./_components/SidebarUserProfile";
+import WorkspaceSwitcher from "./_components/WorkspaceSwitcher";
+
+// 임시 목업 — 데이터 레이어(brands.query) 연결 전까지 UI 확인용
+const MOCK_WORKSPACES = [
+  { id: "ws-1", name: "몽탄" },
+  { id: "ws-2", name: "롤링파스타" },
+  { id: "ws-3", name: "고든램지버거" },
+];
+
+// 임시 목업 — 추후 useMe() 등 데이터 레이어로 대체
+const MOCK_USER = { name: "몽탄", email: "dev_front@eatiq.io" };
 
 // 섹션 → 항목 (계층 없는 단일 버튼 리스트)
 const NAV_SECTIONS = [
@@ -25,7 +30,7 @@ const NAV_SECTIONS = [
       { icon: LayoutDashboard, label: "대시보드" },
       { icon: Store, label: "브랜드 정보 설정" },
       { icon: FileText, label: "브랜드 문서 작성" },
-      { icon: Search, label: "바이어 탐색", badge: 3 },
+      { icon: Search, label: "바이어 탐색" },
       { icon: BarChart3, label: "진행 관리" },
       { icon: MapPin, label: "AI 상권분석" },
     ],
@@ -43,21 +48,36 @@ export default function GlobalSideNav() {
   const collapsed = useUserSettingsStore(state => state.sidebarCollapsed);
   const toggle = useUserSettingsStore(state => state.toggleSidebar);
 
+  // 임시 상태 — 추후 URL의 workspaceId + router.push로 대체
+  const [currentWorkspaceId, setCurrentWorkspaceId] = useState(MOCK_WORKSPACES[0].id);
+
+  // 임시 상태 — 추후 usePathname()으로 현재 라우트와 비교해 대체
+  const [activeItem, setActiveItem] = useState("대시보드");
+
   return (
-    <nav className="flex h-full flex-col bg-[#25053c]">
-      {/* ① 상단: 워크스페이스 + 토글 (고정) */}
+    <nav className="flex h-full flex-col bg-[#111827]">
+      {/* ① 상단: 워크스페이스 스위처 + 토글 (고정) — 헤더 껍데기는 부모가 소유 */}
       <div
         className={cn(
-          "flex shrink-0 items-center gap-2 px-3 py-4",
-          collapsed ? "flex-col items-center gap-3" : "items-center gap-2",
+          "flex shrink-0 items-center border-b border-white/[0.18]",
+          collapsed ? "h-auto flex-col gap-2 py-2" : "h-16 gap-2 px-3",
         )}
       >
-        <div className="bg-primary text-primary-foreground flex size-7 shrink-0 items-center justify-center rounded-lg text-sm font-bold">
-          E
-        </div>
-        {!collapsed && <span className="flex-1 truncate font-bold tracking-tight text-[#e6e6ea]">EATIQ LINK</span>}
-        <button onClick={toggle} className="rounded-md p-1.5 hover:bg-white/10" aria-label="사이드바 토글">
-          <PanelLeft className="size-4 text-[#9a9aa6]" />
+        <WorkspaceSwitcher
+          workspaces={MOCK_WORKSPACES}
+          currentId={currentWorkspaceId}
+          onSwitch={setCurrentWorkspaceId}
+          collapsed={collapsed}
+        />
+        <button
+          onClick={toggle}
+          aria-label="사이드바 토글"
+          className={cn(
+            "flex items-center justify-center rounded-lg text-white/60 hover:bg-white/10",
+            collapsed ? "size-9" : "ml-auto p-1.5",
+          )}
+        >
+          <PanelLeft className="size-4" />
         </button>
       </div>
 
@@ -74,60 +94,22 @@ export default function GlobalSideNav() {
               {section.label}
             </p>
             {section.items.map(item => (
-              <button
+              <SidebarNavItem
                 key={item.label}
-                className={cn(
-                  "flex w-full items-center rounded-lg py-2 text-sm text-[#c9c9d0] transition-[padding] duration-300 ease-in-out hover:bg-white/10",
-                  collapsed ? "px-[15px]" : "px-2.5",
-                )}
-              >
-                <item.icon className="size-4.5 shrink-0" />
-                <span
-                  className={cn(
-                    "truncate text-left transition-all duration-300 ease-in-out",
-                    collapsed ? "ml-0 max-w-0 opacity-0" : "ml-3 max-w-[180px] flex-1 opacity-100",
-                  )}
-                >
-                  {item.label}
-                </span>
-                {item.badge && (
-                  <span
-                    className={cn(
-                      "shrink-0 overflow-hidden text-xs text-[#9a9aa6] transition-all duration-300 ease-in-out",
-                      collapsed ? "ml-0 max-w-0 opacity-0" : "ml-auto max-w-[40px] opacity-100",
-                    )}
-                  >
-                    {item.badge}
-                  </span>
-                )}
-              </button>
+                icon={item.icon}
+                label={item.label}
+                collapsed={collapsed}
+                active={activeItem === item.label}
+                onClick={() => setActiveItem(item.label)}
+              />
             ))}
           </div>
         ))}
       </div>
 
-      {/* ③ 하단: 액션 + 유저 (고정) */}
-      <div className="shrink-0 space-y-1 border-t border-white/10 p-2">
-        <button
-          className={cn(
-            "flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-sm text-[#c9c9d0] hover:bg-white/10",
-            collapsed && "justify-center",
-          )}
-        >
-          <Settings className="size-4.5 shrink-0" />
-          {!collapsed && <span>설정</span>}
-        </button>
-        <div className={cn("flex items-center gap-2 px-1.5 py-1.5", collapsed && "justify-center")}>
-          <div className="bg-primary text-primary-foreground flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold">
-            몽
-          </div>
-          {!collapsed && (
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-[#e6e6ea]">몽탄</p>
-              <p className="truncate text-xs text-[#9a9aa6]">dev_front@eatiq.io</p>
-            </div>
-          )}
-        </div>
+      {/* ③ 하단: 유저 프로필 (고정) */}
+      <div className="shrink-0 border-t border-white/10 p-2">
+        <SidebarUserProfile user={MOCK_USER} collapsed={collapsed} />
       </div>
     </nav>
   );
