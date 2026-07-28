@@ -7,7 +7,6 @@ import { AnimatePresence, motion } from "motion/react";
 
 // 순환 노출할 예시 프롬프트 (추후 모달 트리거로 확장 예정)
 const EXAMPLES = [
-  "이번 주 마감 예정 다음 액션 보여줘",
   "우리 브랜드 강점 3가지 요약해줘",
   "경쟁사 대비 차별점 정리해줘",
   "바이어에게 어필할 포인트 알려줘",
@@ -20,13 +19,20 @@ const EXAMPLES = [
 
 const ROTATE_INTERVAL = 2800;
 
+const getRandomExampleIndex = () => Math.floor(Math.random() * EXAMPLES.length);
+
 export default function AiAskButton() {
-  const [index, setIndex] = useState(0);
+  const [index, setIndex] = useState<number | null>(null);
 
   useEffect(() => {
+    const initialIndex = getRandomExampleIndex();
+
+    setIndex(initialIndex);
+
     const id = setInterval(() => {
-      setIndex(prev => (prev + 1) % EXAMPLES.length);
+      setIndex(prev => ((prev ?? initialIndex) + 1) % EXAMPLES.length);
     }, ROTATE_INTERVAL);
+
     return () => clearInterval(id);
   }, []);
 
@@ -41,16 +47,18 @@ export default function AiAskButton() {
       {/* 예시 문구가 아래→위로 슬라이드되며 순환 (데스크톱만) */}
       <span className="text-text-tertiary relative hidden h-5 w-[220px] overflow-hidden text-left md:block">
         <AnimatePresence mode="wait">
-          <motion.span
-            key={index}
-            initial={{ y: "110%", opacity: 0 }}
-            animate={{ y: "0%", opacity: 1 }}
-            exit={{ y: "-110%", opacity: 0 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
-            className="absolute inset-0 truncate"
-          >
-            예: “{EXAMPLES[index]}”
-          </motion.span>
+          {index !== null && (
+            <motion.span
+              key={index}
+              initial={{ y: "110%", opacity: 0 }}
+              animate={{ y: "0%", opacity: 1 }}
+              exit={{ y: "-110%", opacity: 0 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              className="absolute inset-0 truncate"
+            >
+              예: “{EXAMPLES[index]}”
+            </motion.span>
+          )}
         </AnimatePresence>
       </span>
     </button>
