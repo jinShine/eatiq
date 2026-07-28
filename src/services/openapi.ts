@@ -28,6 +28,90 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/brands/{brandId}/menus": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * 대표 메뉴 등록
+     * @description nameKo만 필수(공백 불가), 나머지(nameEn/description/priceKrw) nullable. photoUrls/videoUrl은 이 엔드포인트에서 다루지 않습니다(미디어 업로드 API로 관리) — 요청 바디에 포함되면 알 수 없는 필드로 거부됩니다(400 VALIDATION_ERROR). 브랜드당 대표 메뉴는 최대 3개까지 등록 가능(초과 시 VALIDATION_ERROR).
+     */
+    post: operations["createMenu"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/brands/{brandId}/media/{fileId}/confirm": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * 업로드 완료 확정(confirm)
+     * @description presign으로 발급받은 fileId를 확정합니다. 업로드 바이트 검증(매직바이트·크기) 후 반영되며, 이미 attached된 파일을 다시 confirm하면 멱등하게 200을 반환합니다.
+     */
+    post: operations["confirm"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/brands/{brandId}/media/uploads": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * 업로드 URL 발급(presign)
+     * @description targetType·contentType·size(+menu_* 대상은 resourceId 필수)를 검증하고 presigned PUT URL을 발급합니다. 30분 내에 그 URL로 직접 업로드 후 confirm을 호출해야 합니다.
+     */
+    post: operations["presign"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/brands/{brandId}/expansion-targets": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * 진출 목표 목록 조회
+     * @description priority 오름차순으로 정렬된 진출 목표 목록을 반환합니다.
+     */
+    get: operations["expansionTargets"];
+    put?: never;
+    /**
+     * 진출 목표 등록
+     * @description country/city 필수, status는 nullable(누락·null이면 서버가 exploring으로 설정). 브랜드당 진출 목표는 최대 4개까지 등록 가능(초과 시 VALIDATION_ERROR). 동일 (country,city) 중복 등록은 409(BRAND_EXPANSION_TARGET_CONFLICT).
+     */
+    post: operations["addExpansionTarget"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/auth/signup": {
     parameters: {
       query?: never;
@@ -185,6 +269,294 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/brands/{brandId}/policy": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * 계약 정책 정보 저장(전체 치환)
+     * @description 전 필드 nullable(누락·null 모두 값 해제). ENUM 필드는 BrandProfileVocab 소속 검증됩니다.
+     */
+    patch: operations["policy"];
+    trace?: never;
+  };
+  "/api/brands/{brandId}/operation": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * 브랜드 운영 정보 저장(전체 치환)
+     * @description 전 필드 nullable(누락·null 모두 값 해제). 빈 배열([])은 null과 동일하게 처리됩니다.
+     */
+    patch: operations["operation"];
+    trace?: never;
+  };
+  "/api/brands/{brandId}/menus/{menuId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * 대표 메뉴 삭제
+     * @description 삭제된 메뉴 자체는 반환하지 않고 재계산된 completionRate/journey만 반환합니다.
+     */
+    delete: operations["deleteMenu"];
+    options?: never;
+    head?: never;
+    /**
+     * 대표 메뉴 수정(전체 치환)
+     * @description nameKo만 필수(공백 불가), 나머지(nameEn/description/priceKrw) nullable. photoUrls/videoUrl은 이 엔드포인트에서 다루지 않습니다(미디어 업로드 API로 관리) — 요청 바디에 포함되면 알 수 없는 필드로 거부됩니다(400 VALIDATION_ERROR).
+     */
+    patch: operations["updateMenu"];
+    trace?: never;
+  };
+  "/api/brands/{brandId}/media/order": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * 배열형 슬롯 재배열
+     * @description flagship_photo/menu_photo 등 배열형 대상만 지원합니다. fileIds는 현재 attached된 파일 집합과 정확히 일치해야 하며, 그 순서대로 sort_order(0..n-1)를 다시 부여합니다.
+     */
+    patch: operations["reorder"];
+    trace?: never;
+  };
+  "/api/brands/{brandId}/intro": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * 브랜드 소개 저장(전체 치환)
+     * @description 전 필드 nullable(누락·null 모두 값 해제). category/pricePositioning은 ENUM.
+     */
+    patch: operations["intro"];
+    trace?: never;
+  };
+  "/api/brands/{brandId}/flagship-store": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * 플래그십 스토어 저장(전체 치환)
+     * @description storeNameKo/storeNameEn/address 전 필드 nullable(누락·null 모두 값 해제). photoUrls/videoUrl은 이 엔드포인트에서 다루지 않습니다(미디어 업로드 API로 관리) — 요청 바디에 포함되면 알 수 없는 필드로 거부됩니다(400 VALIDATION_ERROR).
+     */
+    patch: operations["flagshipStore"];
+    trace?: never;
+  };
+  "/api/brands/{brandId}/fee": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * 수수료 정보 저장(전체 치환, franchise 전용)
+     * @description brandType이 franchise가 아니면 요청 내용과 무관하게 400입니다. royaltyBase가 정하는 활성 로열티 필드 외 값을 보내면 400(VALIDATION_ERROR).
+     */
+    patch: operations["fee"];
+    trace?: never;
+  };
+  "/api/brands/{brandId}/expansion-targets/{expansionTargetId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * 진출 목표 삭제
+     * @description 삭제된 진출 목표 자체는 반환하지 않고 재계산된 completionRate/journey만 반환합니다. 남은 목표의 priority는 1..n으로 재정렬됩니다.
+     */
+    delete: operations["deleteExpansionTarget"];
+    options?: never;
+    head?: never;
+    /**
+     * 진출 목표 수정(전체 치환)
+     * @description city/status 전체 치환(country는 생성 후 불변이라 이 엔드포인트에서 다루지 않습니다) — 요청 바디에 country가 포함되면 알 수 없는 필드로 거부됩니다(400 VALIDATION_ERROR). city 변경으로 동일 (country,city) 다른 진출 목표와 겹치면 409(BRAND_EXPANSION_TARGET_CONFLICT).
+     */
+    patch: operations["updateExpansionTarget"];
+    trace?: never;
+  };
+  "/api/brands/{brandId}/expansion-targets/reorder": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * 진출 목표 재정렬(배열형 전체 치환)
+     * @description items가 현재 활성 진출 목표 집합과 정확히 일치해야 합니다(id 집합 동일 + priority가 1..n을 각 1회씩 사용) — 불일치 시 400(VALIDATION_ERROR).
+     */
+    patch: operations["reorderExpansionTargets"];
+    trace?: never;
+  };
+  "/api/brands/{brandId}/contract": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * 계약 담당자·서명권자 정보 저장(전체 치환)
+     * @description 전 필드 nullable(누락·null 모두 값 해제). 이메일 2필드는 형식 검증됩니다.
+     */
+    patch: operations["contract"];
+    trace?: never;
+  };
+  "/api/brands/{brandId}/contact": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * 브랜드 담당자 정보 저장(전체 치환)
+     * @description 전 필드 nullable(누락·null 모두 값 해제). contactLanguages는 허용 언어코드 부분집합만 허용.
+     */
+    patch: operations["contact"];
+    trace?: never;
+  };
+  "/api/brands/{brandId}/brand-type": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * 브랜드 유형 설정(franchise|direct)
+     * @description direct 전환 시에도 기존 수수료 값은 DB에 보존되나 응답에서는 숨겨집니다(franchise만 brandFee 노출).
+     */
+    patch: operations["brandType"];
+    trace?: never;
+  };
+  "/api/brands/{brandId}/basic": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * 브랜드 기본정보 저장(전체 치환)
+     * @description nameKo만 필수, 나머지는 nullable(누락·null 모두 값 해제).
+     */
+    patch: operations["basic"];
+    trace?: never;
+  };
+  "/api/brands/{brandId}/area-criteria": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * 상권분석 기준 저장(전체 치환)
+     * @description 전 필드 nullable(누락·null 모두 값 해제). ENUM 필드는 BrandProfileVocab 소속 검증되며, rentMinKrw는 rentMaxKrw 이하여야 합니다.
+     */
+    patch: operations["areaCriteria"];
+    trace?: never;
+  };
   "/api/health": {
     parameters: {
       query?: never;
@@ -197,6 +569,26 @@ export interface paths {
      * @description DB 왕복 확인. 정상 200 CommonResponse<HealthData>, DB 실패 503 ErrorResponse(HEALTH_DATABASE_UNAVAILABLE).
      */
     get: operations["health"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/brands/{brandId}/settings": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * 브랜드 정보 설정 조회
+     * @description brand/brandIntro/brandOperation/brandContact/brandAsset/brandFlagshipStore/brandMenus/brandContract/brandPolicy/brandFee/brandAreaCriteria/expansionTargets + completionRates(basicInfo/brandVisual/contractPolicy/tradeAreaCriteria) + journeys(basicInfo/brandVisual/contractPolicy/tradeAreaCriteria, 각 scopeKey=BRAND_BASIC/BRAND_VISUAL/CONTRACT_POLICY/TRADE_AREA)를 반환합니다.
+     */
+    get: operations["settings"];
     put?: never;
     post?: never;
     delete?: never;
@@ -237,6 +629,26 @@ export interface paths {
     put?: never;
     post?: never;
     delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/brands/{brandId}/media/{fileId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * 첨부 파일 삭제
+     * @description 이미 attached된 파일을 삭제합니다. 배열형 대상은 남은 슬롯을 0..n-1로 재배치합니다.
+     */
+    delete: operations["delete"];
     options?: never;
     head?: never;
     patch?: never;
@@ -288,6 +700,153 @@ export interface components {
       status?: "active" | "trialing" | "past_due" | "cancelled";
       /** @enum {string} */
       billingCycle?: "monthly" | "annual";
+    };
+    JsonNode: Record<string, never>;
+    BenefitDto: {
+      itemKey?: string;
+      benefitText?: string;
+    };
+    BrandMenuDto: {
+      menuId?: string;
+      nameKo?: string;
+      nameEn?: string;
+      description?: string;
+      /** Format: int32 */
+      priceKrw?: number;
+      photoUrls?: string[];
+      videoUrl?: string;
+      media?: components["schemas"]["MenuMediaDto"];
+    };
+    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
+    CommonResponseMenuSaveResponse: {
+      /** @example true */
+      success?: boolean;
+      data?: components["schemas"]["MenuSaveResponse"];
+      /** @example 요청이 성공했습니다. */
+      message?: string;
+    };
+    JourneyDto: {
+      scope?: string;
+      scopeKey?: string;
+      journeyStage?: string;
+      /** Format: int32 */
+      completionRate?: number;
+      /** Format: int32 */
+      nextStageRemaining?: number;
+      gateReason?: string;
+      gateMessage?: string;
+      missingItems?: components["schemas"]["MissingItemDto"][];
+      benefits?: components["schemas"]["BenefitDto"][];
+      nextAction?: components["schemas"]["NextActionDto"];
+    };
+    MediaFileDto: {
+      fileId?: string;
+      url?: string;
+      contentType?: string;
+      /** Format: int64 */
+      size?: number;
+      /** Format: int32 */
+      position?: number;
+    };
+    MenuMediaDto: {
+      photos?: components["schemas"]["MediaFileDto"][];
+      video?: components["schemas"]["MediaFileDto"];
+    };
+    MenuSaveResponse: {
+      brandMenu?: components["schemas"]["BrandMenuDto"];
+      completionRate?: components["schemas"]["TabRateDto"];
+      journey?: components["schemas"]["JourneyDto"];
+    };
+    MissingItemDto: {
+      key?: string;
+      label?: string;
+      section?: string;
+      isRequired?: boolean;
+      /** Format: int32 */
+      sortOrder?: number;
+      targetScreen?: string;
+      targetTab?: string;
+      targetAnchor?: string;
+    };
+    NextActionDto: {
+      label?: string;
+      targetScreen?: string;
+      targetTab?: string;
+      targetAnchor?: string;
+    };
+    TabRateDto: {
+      tab?: string;
+      /** Format: int32 */
+      rate?: number;
+      stage?: string;
+    };
+    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
+    CommonResponseMediaMutationResult: {
+      /** @example true */
+      success?: boolean;
+      data?: components["schemas"]["MediaMutationResult"];
+      /** @example 요청이 성공했습니다. */
+      message?: string;
+    };
+    MediaMutationResult: {
+      /** Format: int32 */
+      completionRate?: number;
+      journey?: components["schemas"]["JourneyDto"];
+    };
+    PresignRequest: {
+      targetType?: string;
+      contentType?: string;
+      /** Format: int64 */
+      size?: number;
+      resourceId?: string;
+      /** Format: int32 */
+      position?: number;
+    };
+    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
+    CommonResponsePresignResponse: {
+      /** @example true */
+      success?: boolean;
+      data?: components["schemas"]["PresignResponse"];
+      /** @example 요청이 성공했습니다. */
+      message?: string;
+    };
+    PresignResponse: {
+      fileId?: string;
+      putUrl?: string;
+      method?: string;
+      requiredHeaders?: {
+        [key: string]: string;
+      };
+      /** Format: int64 */
+      expectedSize?: number;
+      /** Format: date-time */
+      expiresAt?: string;
+    };
+    CreateExpansionTargetRequest: {
+      country?: string;
+      city?: string;
+      status?: string;
+    };
+    BrandExpansionTargetDto: {
+      expansionTargetId?: string;
+      country?: string;
+      city?: string;
+      status?: string;
+      /** Format: int32 */
+      priority?: number;
+    };
+    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
+    CommonResponseExpansionTargetSaveResponse: {
+      /** @example true */
+      success?: boolean;
+      data?: components["schemas"]["ExpansionTargetSaveResponse"];
+      /** @example 요청이 성공했습니다. */
+      message?: string;
+    };
+    ExpansionTargetSaveResponse: {
+      expansionTarget?: components["schemas"]["BrandExpansionTargetDto"];
+      completionRate?: components["schemas"]["TabRateDto"];
+      journey?: components["schemas"]["JourneyDto"];
     };
     SignupRequest: {
       /**
@@ -392,6 +951,385 @@ export interface components {
       /** @description 이메일 링크의 인증 토큰 */
       token: string;
     };
+    UpdatePolicyRequest: {
+      preferredContractType?: string;
+      exclusivity?: string;
+      menuLocalization?: string;
+      interiorCompliance?: string;
+      ingredientSupply?: string;
+      ingredientSupplyRequired?: boolean;
+      trademark?: string;
+      manualCompliance?: string;
+    };
+    BrandPolicyDto: {
+      preferredContractType?: string;
+      exclusivity?: string;
+      menuLocalization?: string;
+      interiorCompliance?: string;
+      ingredientSupply?: string;
+      ingredientSupplyRequired?: boolean;
+      trademark?: string;
+      manualCompliance?: string;
+    };
+    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
+    CommonResponsePolicySaveResponse: {
+      /** @example true */
+      success?: boolean;
+      data?: components["schemas"]["PolicySaveResponse"];
+      /** @example 요청이 성공했습니다. */
+      message?: string;
+    };
+    PolicySaveResponse: {
+      brandPolicy?: components["schemas"]["BrandPolicyDto"];
+      completionRate?: components["schemas"]["TabRateDto"];
+      journey?: components["schemas"]["JourneyDto"];
+    };
+    UpdateOperationRequest: {
+      /** Format: int32 */
+      storeCountTotalDomestic?: number;
+      /** Format: int32 */
+      storeCountDirect?: number;
+      /** Format: int32 */
+      storeCountOverseas?: number;
+      /** Format: int64 */
+      monthlyRevenueAvg?: number;
+      /** Format: int32 */
+      avgStoreSizePy?: number;
+      /** Format: int32 */
+      avgSpendPerPerson?: number;
+      /** Format: int32 */
+      avgSeatCount?: number;
+      targetCustomers?: string[];
+      usageOccasions?: string[];
+    };
+    BrandOperationDto: {
+      /** Format: int32 */
+      storeCountTotalDomestic?: number;
+      /** Format: int32 */
+      storeCountDirect?: number;
+      /** Format: int32 */
+      storeCountOverseas?: number;
+      /** Format: int64 */
+      monthlyRevenueAvg?: number;
+      /** Format: int32 */
+      avgStoreSizePy?: number;
+      /** Format: int32 */
+      avgSpendPerPerson?: number;
+      /** Format: int32 */
+      avgSeatCount?: number;
+      targetCustomers?: string[];
+      usageOccasions?: string[];
+    };
+    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
+    CommonResponseOperationSaveResponse: {
+      /** @example true */
+      success?: boolean;
+      data?: components["schemas"]["OperationSaveResponse"];
+      /** @example 요청이 성공했습니다. */
+      message?: string;
+    };
+    OperationSaveResponse: {
+      brandOperation?: components["schemas"]["BrandOperationDto"];
+      completionRate?: components["schemas"]["TabRateDto"];
+      journey?: components["schemas"]["JourneyDto"];
+    };
+    ReorderRequest: {
+      targetType?: string;
+      resourceId?: string;
+      fileIds?: string[];
+    };
+    UpdateIntroRequest: {
+      oneLiner?: string;
+      description?: string;
+      category?: string;
+      pricePositioning?: string;
+      differentiator1?: string;
+      differentiator2?: string;
+      differentiator3?: string;
+    };
+    BrandIntroDto: {
+      oneLiner?: string;
+      description?: string;
+      category?: string;
+      pricePositioning?: string;
+      differentiator1?: string;
+      differentiator2?: string;
+      differentiator3?: string;
+    };
+    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
+    CommonResponseIntroSaveResponse: {
+      /** @example true */
+      success?: boolean;
+      data?: components["schemas"]["IntroSaveResponse"];
+      /** @example 요청이 성공했습니다. */
+      message?: string;
+    };
+    IntroSaveResponse: {
+      brandIntro?: components["schemas"]["BrandIntroDto"];
+      completionRate?: components["schemas"]["TabRateDto"];
+      journey?: components["schemas"]["JourneyDto"];
+    };
+    BrandFlagshipStoreDto: {
+      storeNameKo?: string;
+      storeNameEn?: string;
+      address?: string;
+      photoUrls?: string[];
+      videoUrl?: string;
+    };
+    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
+    CommonResponseFlagshipStoreSaveResponse: {
+      /** @example true */
+      success?: boolean;
+      data?: components["schemas"]["FlagshipStoreSaveResponse"];
+      /** @example 요청이 성공했습니다. */
+      message?: string;
+    };
+    FlagshipStoreSaveResponse: {
+      brandFlagshipStore?: components["schemas"]["BrandFlagshipStoreDto"];
+      completionRate?: components["schemas"]["TabRateDto"];
+      journey?: components["schemas"]["JourneyDto"];
+    };
+    UpdateFeeRequest: {
+      /** Format: int64 */
+      franchiseFeeKrw?: number;
+      royaltyBase?: string;
+      royaltyRatePct?: number;
+      /** Format: int64 */
+      royaltyFixedKrw?: number;
+      paymentCycle?: string;
+    };
+    BrandFeeDto: {
+      /** Format: int64 */
+      franchiseFeeKrw?: number;
+      royaltyBase?: string;
+      royaltyRatePct?: number;
+      /** Format: int64 */
+      royaltyFixedKrw?: number;
+      paymentCycle?: string;
+    };
+    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
+    CommonResponseFeeSaveResponse: {
+      /** @example true */
+      success?: boolean;
+      data?: components["schemas"]["FeeSaveResponse"];
+      /** @example 요청이 성공했습니다. */
+      message?: string;
+    };
+    FeeSaveResponse: {
+      brandFee?: components["schemas"]["BrandFeeDto"];
+      completionRate?: components["schemas"]["TabRateDto"];
+      journey?: components["schemas"]["JourneyDto"];
+    };
+    UpdateExpansionTargetRequest: {
+      city?: string;
+      status?: string;
+    };
+    ReorderExpansionTargetsRequest: {
+      items?: components["schemas"]["ReorderItem"][];
+    };
+    ReorderItem: {
+      expansionTargetId?: string;
+      /** Format: int32 */
+      priority?: number;
+    };
+    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
+    CommonResponseExpansionTargetsSaveResponse: {
+      /** @example true */
+      success?: boolean;
+      data?: components["schemas"]["ExpansionTargetsSaveResponse"];
+      /** @example 요청이 성공했습니다. */
+      message?: string;
+    };
+    ExpansionTargetsSaveResponse: {
+      expansionTargets?: components["schemas"]["BrandExpansionTargetDto"][];
+      completionRate?: components["schemas"]["TabRateDto"];
+      journey?: components["schemas"]["JourneyDto"];
+    };
+    UpdateContractRequest: {
+      contractContactNameKo?: string;
+      contractContactNameEn?: string;
+      contractContactTitle?: string;
+      contractContactEmail?: string;
+      signatoryNameKo?: string;
+      signatoryNameEn?: string;
+      signatoryTitle?: string;
+      signatoryEmail?: string;
+    };
+    BrandContractDto: {
+      contractContactNameKo?: string;
+      contractContactNameEn?: string;
+      contractContactTitle?: string;
+      contractContactEmail?: string;
+      signatoryNameKo?: string;
+      signatoryNameEn?: string;
+      signatoryTitle?: string;
+      signatoryEmail?: string;
+    };
+    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
+    CommonResponseContractSaveResponse: {
+      /** @example true */
+      success?: boolean;
+      data?: components["schemas"]["ContractSaveResponse"];
+      /** @example 요청이 성공했습니다. */
+      message?: string;
+    };
+    ContractSaveResponse: {
+      brandContract?: components["schemas"]["BrandContractDto"];
+      completionRate?: components["schemas"]["TabRateDto"];
+      journey?: components["schemas"]["JourneyDto"];
+    };
+    UpdateContactRequest: {
+      contactNameKo?: string;
+      contactNameEn?: string;
+      contactTitle?: string;
+      contactEmail?: string;
+      contactLanguages?: string[];
+    };
+    BrandContactDto: {
+      contactNameKo?: string;
+      contactNameEn?: string;
+      contactTitle?: string;
+      contactEmail?: string;
+      contactLanguages?: string[];
+    };
+    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
+    CommonResponseContactSaveResponse: {
+      /** @example true */
+      success?: boolean;
+      data?: components["schemas"]["ContactSaveResponse"];
+      /** @example 요청이 성공했습니다. */
+      message?: string;
+    };
+    ContactSaveResponse: {
+      brandContact?: components["schemas"]["BrandContactDto"];
+      completionRate?: components["schemas"]["TabRateDto"];
+      journey?: components["schemas"]["JourneyDto"];
+    };
+    SetBrandTypeRequest: {
+      brandType?: string;
+    };
+    BrandTypeSaveResponse: {
+      brandType?: string;
+      brandFee?: components["schemas"]["BrandFeeDto"];
+      completionRate?: components["schemas"]["TabRateDto"];
+      journey?: components["schemas"]["JourneyDto"];
+    };
+    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
+    CommonResponseBrandTypeSaveResponse: {
+      /** @example true */
+      success?: boolean;
+      data?: components["schemas"]["BrandTypeSaveResponse"];
+      /** @example 요청이 성공했습니다. */
+      message?: string;
+    };
+    UpdateBasicRequest: {
+      nameKo?: string;
+      nameEn?: string;
+      /** Format: int32 */
+      launchYear?: number;
+      ceoNameKo?: string;
+      ceoNameEn?: string;
+      hqEmail?: string;
+      hqWebsite?: string;
+      hqAddress?: string;
+    };
+    BasicSaveResponse: {
+      brand?: components["schemas"]["BrandBasicDto"];
+      completionRate?: components["schemas"]["TabRateDto"];
+      journey?: components["schemas"]["JourneyDto"];
+    };
+    BrandBasicDto: {
+      nameKo?: string;
+      nameEn?: string;
+      /** Format: int32 */
+      launchYear?: number;
+      ceoNameKo?: string;
+      ceoNameEn?: string;
+      hqEmail?: string;
+      hqWebsite?: string;
+      hqAddress?: string;
+    };
+    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
+    CommonResponseBasicSaveResponse: {
+      /** @example true */
+      success?: boolean;
+      data?: components["schemas"]["BasicSaveResponse"];
+      /** @example 요청이 성공했습니다. */
+      message?: string;
+    };
+    UpdateAreaCriteriaRequest: {
+      preferredArea1st?: string;
+      preferredArea2nd?: string;
+      preferredArea3rd?: string;
+      /** Format: int64 */
+      rentMinKrw?: number;
+      /** Format: int64 */
+      rentMaxKrw?: number;
+      allowableFloor?: string;
+      signageImportance?: string;
+      storeSizeImportance?: string;
+      parkingImportance?: string;
+      waitingSpaceImportance?: string;
+      lunchSalesImportance?: string;
+      latenightSalesImportance?: string;
+      weekdaySalesImportance?: string;
+      weekendSalesImportance?: string;
+      /** Format: int32 */
+      recommendedSizePy?: number;
+      /** Format: int32 */
+      sizeMinPy?: number;
+      /** Format: int32 */
+      sizeMaxPy?: number;
+      minFrontageM?: number;
+      gasImportance?: string;
+      waterImportance?: string;
+      openFlameImportance?: string;
+      ventilationImportance?: string;
+      refrigerationImportance?: string;
+    };
+    AreaCriteriaSaveResponse: {
+      brandAreaCriteria?: components["schemas"]["BrandAreaCriteriaDto"];
+      completionRate?: components["schemas"]["TabRateDto"];
+      journey?: components["schemas"]["JourneyDto"];
+    };
+    BrandAreaCriteriaDto: {
+      preferredArea1st?: string;
+      preferredArea2nd?: string;
+      preferredArea3rd?: string;
+      /** Format: int64 */
+      rentMinKrw?: number;
+      /** Format: int64 */
+      rentMaxKrw?: number;
+      allowableFloor?: string;
+      signageImportance?: string;
+      storeSizeImportance?: string;
+      parkingImportance?: string;
+      waitingSpaceImportance?: string;
+      lunchSalesImportance?: string;
+      latenightSalesImportance?: string;
+      weekdaySalesImportance?: string;
+      weekendSalesImportance?: string;
+      /** Format: int32 */
+      recommendedSizePy?: number;
+      /** Format: int32 */
+      sizeMinPy?: number;
+      /** Format: int32 */
+      sizeMaxPy?: number;
+      minFrontageM?: number;
+      gasImportance?: string;
+      waterImportance?: string;
+      openFlameImportance?: string;
+      ventilationImportance?: string;
+      refrigerationImportance?: string;
+    };
+    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
+    CommonResponseAreaCriteriaSaveResponse: {
+      /** @example true */
+      success?: boolean;
+      data?: components["schemas"]["AreaCriteriaSaveResponse"];
+      /** @example 요청이 성공했습니다. */
+      message?: string;
+    };
     /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
     CommonResponseHealthData: {
       /** @example true */
@@ -452,6 +1390,69 @@ export interface components {
       /** @example false */
       hasNext?: boolean;
     };
+    AssetMediaDto: {
+      logo?: components["schemas"]["MediaFileDto"];
+      mainImage?: components["schemas"]["MediaFileDto"];
+      brandVideo?: components["schemas"]["MediaFileDto"];
+      brochure?: components["schemas"]["MediaFileDto"];
+    };
+    BrandAssetDto: {
+      logoUrl?: string;
+      mainImageUrl?: string;
+      brandVideoUrl?: string;
+      brochureUrl?: string;
+    };
+    BrandSettingsResponse: {
+      brand?: components["schemas"]["BrandBasicDto"];
+      brandIntro?: components["schemas"]["BrandIntroDto"];
+      brandOperation?: components["schemas"]["BrandOperationDto"];
+      brandContact?: components["schemas"]["BrandContactDto"];
+      brandAsset?: components["schemas"]["BrandAssetDto"];
+      brandAssetMedia?: components["schemas"]["AssetMediaDto"];
+      brandFlagshipStore?: components["schemas"]["BrandFlagshipStoreDto"];
+      brandFlagshipMedia?: components["schemas"]["FlagshipMediaDto"];
+      brandMenus?: components["schemas"]["BrandMenuDto"][];
+      brandType?: string;
+      brandContract?: components["schemas"]["BrandContractDto"];
+      brandPolicy?: components["schemas"]["BrandPolicyDto"];
+      brandFee?: components["schemas"]["BrandFeeDto"];
+      brandAreaCriteria?: components["schemas"]["BrandAreaCriteriaDto"];
+      expansionTargets?: components["schemas"]["BrandExpansionTargetDto"][];
+      completionRates?: {
+        [key: string]: components["schemas"]["RateStageDto"];
+      };
+      journeys?: {
+        [key: string]: components["schemas"]["JourneyDto"];
+      };
+    };
+    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
+    CommonResponseBrandSettingsResponse: {
+      /** @example true */
+      success?: boolean;
+      data?: components["schemas"]["BrandSettingsResponse"];
+      /** @example 요청이 성공했습니다. */
+      message?: string;
+    };
+    FlagshipMediaDto: {
+      photos?: components["schemas"]["MediaFileDto"][];
+      video?: components["schemas"]["MediaFileDto"];
+    };
+    RateStageDto: {
+      /** Format: int32 */
+      rate?: number;
+      stage?: string;
+    };
+    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
+    CommonResponseExpansionTargetsResponse: {
+      /** @example true */
+      success?: boolean;
+      data?: components["schemas"]["ExpansionTargetsResponse"];
+      /** @example 요청이 성공했습니다. */
+      message?: string;
+    };
+    ExpansionTargetsResponse: {
+      expansionTargets?: components["schemas"]["BrandExpansionTargetDto"][];
+    };
     /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
     CommonResponseCurrentBrandResponse: {
       /** @example true */
@@ -491,6 +1492,30 @@ export interface components {
     };
     MeResponse: {
       user?: components["schemas"]["UserDto"];
+    };
+    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
+    CommonResponseMenuDeleteResponse: {
+      /** @example true */
+      success?: boolean;
+      data?: components["schemas"]["MenuDeleteResponse"];
+      /** @example 요청이 성공했습니다. */
+      message?: string;
+    };
+    MenuDeleteResponse: {
+      completionRate?: components["schemas"]["TabRateDto"];
+      journey?: components["schemas"]["JourneyDto"];
+    };
+    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
+    CommonResponseExpansionTargetDeleteResponse: {
+      /** @example true */
+      success?: boolean;
+      data?: components["schemas"]["ExpansionTargetDeleteResponse"];
+      /** @example 요청이 성공했습니다. */
+      message?: string;
+    };
+    ExpansionTargetDeleteResponse: {
+      completionRate?: components["schemas"]["TabRateDto"];
+      journey?: components["schemas"]["JourneyDto"];
     };
   };
   responses: never;
@@ -586,6 +1611,291 @@ export interface operations {
       };
       /** @description plan 미시드(PLAN_NOT_SEEDED) 등 서버 오류 */
       500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  createMenu: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        brandId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["JsonNode"];
+      };
+    };
+    responses: {
+      /** @description 등록 성공 */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CommonResponseMenuSaveResponse"];
+        };
+      };
+      /** @description 입력값 오류(VALIDATION_ERROR, 메뉴 3개 초과·알 수 없는 필드 포함) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 브랜드를 찾을 수 없음(비멤버·비활성 멤버·미존재 모두 동일, BRAND_NOT_FOUND) */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  confirm: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        brandId: string;
+        fileId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 확정 성공(또는 이미 확정된 파일의 멱등 재확인) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CommonResponseMediaMutationResult"];
+        };
+      };
+      /** @description 업로드 파일이 유효하지 않음(VALIDATION_ERROR, 매직바이트·크기 불일치) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 브랜드를 찾을 수 없음(비멤버·비활성 멤버·미존재 모두 동일, BRAND_NOT_FOUND) 또는 파일/업로드 세션을 찾을 수 없음(MEDIA_FILE_NOT_FOUND) */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 업로드 상태가 올바르지 않음(MEDIA_UPLOAD_INVALID_STATE) */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 업로드 세션 만료(MEDIA_UPLOAD_EXPIRED) */
+      410: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 스토리지를 사용할 수 없음(MEDIA_STORAGE_UNAVAILABLE) */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  presign: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        brandId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["PresignRequest"];
+      };
+    };
+    responses: {
+      /** @description 발급 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CommonResponsePresignResponse"];
+        };
+      };
+      /** @description 입력값 오류(VALIDATION_ERROR, 허용 안 된 콘텐츠타입·용량초과·슬롯초과 포함) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 브랜드를 찾을 수 없음(비멤버·비활성 멤버·미존재 모두 동일, BRAND_NOT_FOUND) 또는 메뉴를 찾을 수 없음(BRAND_MENU_NOT_FOUND) */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  expansionTargets: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        brandId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 조회 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CommonResponseExpansionTargetsResponse"];
+        };
+      };
+      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 브랜드를 찾을 수 없음(비멤버·비활성 멤버·미존재 모두 동일, BRAND_NOT_FOUND) */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  addExpansionTarget: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        brandId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateExpansionTargetRequest"];
+      };
+    };
+    responses: {
+      /** @description 등록 성공 */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CommonResponseExpansionTargetSaveResponse"];
+        };
+      };
+      /** @description 입력값 오류(VALIDATION_ERROR, 4개 초과 포함) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 브랜드를 찾을 수 없음(비멤버·비활성 멤버·미존재 모두 동일, BRAND_NOT_FOUND) */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 동일 (country,city) 진출 목표 중복(BRAND_EXPANSION_TARGET_CONFLICT) */
+      409: {
         headers: {
           [name: string]: unknown;
         };
@@ -891,6 +2201,841 @@ export interface operations {
       };
     };
   };
+  policy: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        brandId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdatePolicyRequest"];
+      };
+    };
+    responses: {
+      /** @description 저장 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CommonResponsePolicySaveResponse"];
+        };
+      };
+      /** @description 입력값 오류(VALIDATION_ERROR) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 브랜드를 찾을 수 없음(비멤버·비활성 멤버·미존재 모두 동일, BRAND_NOT_FOUND) */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  operation: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        brandId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateOperationRequest"];
+      };
+    };
+    responses: {
+      /** @description 저장 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CommonResponseOperationSaveResponse"];
+        };
+      };
+      /** @description 입력값 오류(VALIDATION_ERROR) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 브랜드를 찾을 수 없음(비멤버·비활성 멤버·미존재 모두 동일, BRAND_NOT_FOUND) */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  deleteMenu: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        brandId: string;
+        menuId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 삭제 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CommonResponseMenuDeleteResponse"];
+        };
+      };
+      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 메뉴를 찾을 수 없음(미존재·타 브랜드 소유 모두 동일, BRAND_MENU_NOT_FOUND) */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  updateMenu: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        brandId: string;
+        menuId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["JsonNode"];
+      };
+    };
+    responses: {
+      /** @description 수정 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CommonResponseMenuSaveResponse"];
+        };
+      };
+      /** @description 입력값 오류(VALIDATION_ERROR, 알 수 없는 필드 포함) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 메뉴를 찾을 수 없음(미존재·타 브랜드 소유 모두 동일, BRAND_MENU_NOT_FOUND) */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  reorder: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        brandId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["ReorderRequest"];
+      };
+    };
+    responses: {
+      /** @description 재배열 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CommonResponseMediaMutationResult"];
+        };
+      };
+      /** @description 입력값 오류(VALIDATION_ERROR, 배열형이 아님·fileIds 불일치·중복 포함) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 브랜드를 찾을 수 없음(비멤버·비활성 멤버·미존재 모두 동일, BRAND_NOT_FOUND) 또는 메뉴를 찾을 수 없음(BRAND_MENU_NOT_FOUND) */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  intro: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        brandId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateIntroRequest"];
+      };
+    };
+    responses: {
+      /** @description 저장 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CommonResponseIntroSaveResponse"];
+        };
+      };
+      /** @description 입력값 오류(VALIDATION_ERROR) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 브랜드를 찾을 수 없음(비멤버·비활성 멤버·미존재 모두 동일, BRAND_NOT_FOUND) */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  flagshipStore: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        brandId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["JsonNode"];
+      };
+    };
+    responses: {
+      /** @description 저장 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CommonResponseFlagshipStoreSaveResponse"];
+        };
+      };
+      /** @description 입력값 오류(VALIDATION_ERROR, 알 수 없는 필드·타입 불일치·형식 오류 포함) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 브랜드를 찾을 수 없음(비멤버·비활성 멤버·미존재 모두 동일, BRAND_NOT_FOUND) */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  fee: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        brandId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateFeeRequest"];
+      };
+    };
+    responses: {
+      /** @description 저장 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CommonResponseFeeSaveResponse"];
+        };
+      };
+      /** @description 입력값 오류(VALIDATION_ERROR, brandType!=franchise 포함) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 브랜드를 찾을 수 없음(비멤버·비활성 멤버·미존재 모두 동일, BRAND_NOT_FOUND) */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  deleteExpansionTarget: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        brandId: string;
+        expansionTargetId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 삭제 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CommonResponseExpansionTargetDeleteResponse"];
+        };
+      };
+      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 진출 목표를 찾을 수 없음(미존재·타 브랜드 소유 모두 동일, BRAND_EXPANSION_TARGET_NOT_FOUND) */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  updateExpansionTarget: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        brandId: string;
+        expansionTargetId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateExpansionTargetRequest"];
+      };
+    };
+    responses: {
+      /** @description 수정 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CommonResponseExpansionTargetSaveResponse"];
+        };
+      };
+      /** @description 입력값 오류(VALIDATION_ERROR, 알 수 없는 필드 포함) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 진출 목표를 찾을 수 없음(미존재·타 브랜드 소유 모두 동일, BRAND_EXPANSION_TARGET_NOT_FOUND) */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 동일 (country,city) 진출 목표 중복(BRAND_EXPANSION_TARGET_CONFLICT) */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  reorderExpansionTargets: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        brandId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ReorderExpansionTargetsRequest"];
+      };
+    };
+    responses: {
+      /** @description 재정렬 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CommonResponseExpansionTargetsSaveResponse"];
+        };
+      };
+      /** @description 입력값 오류(VALIDATION_ERROR, 집합 불일치 포함) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 브랜드를 찾을 수 없음(비멤버·비활성 멤버·미존재 모두 동일, BRAND_NOT_FOUND) */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  contract: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        brandId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateContractRequest"];
+      };
+    };
+    responses: {
+      /** @description 저장 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CommonResponseContractSaveResponse"];
+        };
+      };
+      /** @description 입력값 오류(VALIDATION_ERROR) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 브랜드를 찾을 수 없음(비멤버·비활성 멤버·미존재 모두 동일, BRAND_NOT_FOUND) */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  contact: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        brandId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateContactRequest"];
+      };
+    };
+    responses: {
+      /** @description 저장 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CommonResponseContactSaveResponse"];
+        };
+      };
+      /** @description 입력값 오류(VALIDATION_ERROR) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 브랜드를 찾을 수 없음(비멤버·비활성 멤버·미존재 모두 동일, BRAND_NOT_FOUND) */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  brandType: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        brandId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SetBrandTypeRequest"];
+      };
+    };
+    responses: {
+      /** @description 저장 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CommonResponseBrandTypeSaveResponse"];
+        };
+      };
+      /** @description 입력값 오류(VALIDATION_ERROR, franchise|direct 외 값) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 브랜드를 찾을 수 없음(비멤버·비활성 멤버·미존재 모두 동일, BRAND_NOT_FOUND) */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  basic: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        brandId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateBasicRequest"];
+      };
+    };
+    responses: {
+      /** @description 저장 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CommonResponseBasicSaveResponse"];
+        };
+      };
+      /** @description 입력값 오류(VALIDATION_ERROR) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 브랜드를 찾을 수 없음(비멤버·비활성 멤버·미존재 모두 동일, BRAND_NOT_FOUND) */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  areaCriteria: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        brandId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateAreaCriteriaRequest"];
+      };
+    };
+    responses: {
+      /** @description 저장 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CommonResponseAreaCriteriaSaveResponse"];
+        };
+      };
+      /** @description 입력값 오류(VALIDATION_ERROR, ENUM 불일치·rentMin>rentMax 포함) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 브랜드를 찾을 수 없음(비멤버·비활성 멤버·미존재 모두 동일, BRAND_NOT_FOUND) */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
   health: {
     parameters: {
       query?: never;
@@ -911,6 +3056,46 @@ export interface operations {
       };
       /** @description DB 연결 실패(HEALTH_DATABASE_UNAVAILABLE) */
       503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  settings: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        brandId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 조회 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CommonResponseBrandSettingsResponse"];
+        };
+      };
+      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 브랜드를 찾을 수 없음(비멤버·비활성 멤버·미존재 모두 동일, BRAND_NOT_FOUND) */
+      404: {
         headers: {
           [name: string]: unknown;
         };
@@ -969,6 +3154,56 @@ export interface operations {
       };
       /** @description 인증 필요(AUTH_UNAUTHORIZED) */
       401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        brandId: string;
+        fileId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 삭제 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CommonResponseMediaMutationResult"];
+        };
+      };
+      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 브랜드를 찾을 수 없음(비멤버·비활성 멤버·미존재 모두 동일, BRAND_NOT_FOUND) 또는 파일/업로드 세션을 찾을 수 없음(MEDIA_FILE_NOT_FOUND) */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 업로드 상태가 올바르지 않음(MEDIA_UPLOAD_INVALID_STATE, attached가 아님) */
+      409: {
         headers: {
           [name: string]: unknown;
         };
