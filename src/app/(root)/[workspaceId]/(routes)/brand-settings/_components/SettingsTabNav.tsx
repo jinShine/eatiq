@@ -7,7 +7,7 @@ import { cn } from "@utils/shadcn";
 export const SETTINGS_TABS = [
   { key: "basic", label: "기본 정보" },
   { key: "visual", label: "브랜드 비주얼" },
-  { key: "contract", label: "계약 및 정책" },
+  { key: "policy", label: "계약 및 정책" },
   { key: "area", label: "상권분석 기준" },
 ] as const;
 export type SettingsTabKey = (typeof SETTINGS_TABS)[number]["key"];

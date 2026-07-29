@@ -12,3 +12,6 @@ export type BrandSettings = components["schemas"]["BrandSettingsResponse"];
 export type BrandBasic = components["schemas"]["BrandBasicDto"];
 export type UpdateBasicRequest = components["schemas"]["UpdateBasicRequest"];
 export type BasicSaveResponse = components["schemas"]["BasicSaveResponse"];
+export type BrandJourney = components["schemas"]["JourneyDto"];
+export type BrandMissingItem = components["schemas"]["MissingItemDto"];
+export type BrandNextAction = components["schemas"]["NextActionDto"];

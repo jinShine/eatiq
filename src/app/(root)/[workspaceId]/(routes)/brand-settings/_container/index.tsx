@@ -8,12 +8,13 @@ import SettingsTabNav, { type SettingsTabKey } from "../_components/SettingsTabN
 import AreaCriteriaTab from "../_components/tabs/AreaCriteriaTab";
 import BasicInfoTab from "../_components/tabs/BasicInfoTab";
 import BrandVisualTab from "../_components/tabs/BrandVisualTab";
-import ContractTab from "../_components/tabs/ContractTab";
+import PolicyTab from "../_components/tabs/PolicyTab";
 
-const TAB_CONTENT: Record<SettingsTabKey, React.ComponentType> = {
+type TabProps = { workspaceId: string };
+const TAB_CONTENT: Record<SettingsTabKey, React.ComponentType<TabProps>> = {
   basic: BasicInfoTab,
   visual: BrandVisualTab,
-  contract: ContractTab,
+  policy: PolicyTab,
   area: AreaCriteriaTab,
 };
 
@@ -37,7 +38,7 @@ export default function BrandSettingsContainer({ workspaceId, activeTab }: Brand
         <BaseContentLayout>
           <SettingsTabNav workspaceId={workspaceId} activeTab={activeTab} />
           <div className="p-8">
-            <ActiveTab />
+            <ActiveTab workspaceId={workspaceId} />
           </div>
         </BaseContentLayout>
       }

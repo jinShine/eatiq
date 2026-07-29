@@ -5,6 +5,15 @@ import { useInvalidateQueries } from "@hooks/commons";
 import { getBrandSettings, getBrands, updateBrandBasic } from "./brand.api";
 import { type UpdateBasicRequest } from "./brand.type";
 
+const JOURNEY_KEY_BY_TAB = {
+  basic: "basicInfo",
+  visual: "brandVisual",
+  policy: "contractPolicy",
+  area: "tradeAreaCriteria",
+} as const;
+
+export type BrandSettingsTab = keyof typeof JOURNEY_KEY_BY_TAB;
+
 export type Workspace = {
   id: string;
   name: string;
@@ -51,5 +60,14 @@ export function useUpdateBrandBasic(workspaceId: string) {
     onSuccess: () => {
       invalidateQueries.single(brandKeys.settings(workspaceId));
     },
+  });
+}
+
+export function useBrandJourney(workspaceId: string, tab: BrandSettingsTab) {
+  return useQuery({
+    queryKey: brandKeys.settings(workspaceId),
+    queryFn: () => getBrandSettings(workspaceId),
+    enabled: Boolean(workspaceId),
+    select: settings => settings.journeys?.[JOURNEY_KEY_BY_TAB[tab]] ?? null,
   });
 }
