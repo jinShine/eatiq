@@ -1,13 +1,22 @@
 import axiosClientInstance from "@services/axios.client";
 import { type ApiResponse } from "@services/types/common";
 
-import { type CurrentBrandResponse, type PageResponseBrandSummary } from "./brand.type";
+import {
+  type BasicSaveResponse,
+  type BrandSettings,
+  type CurrentBrandResponse,
+  type PageResponseBrandSummary,
+  type UpdateBasicRequest,
+} from "./brand.type";
 
 const BASE_PATH = "/api/brands";
+const buildPath = (brandId: string) => `${BASE_PATH}/${brandId}`;
 
 const ENDPOINTS = {
   list: BASE_PATH,
   current: `${BASE_PATH}/current`,
+  settings: (brandId: string) => `${buildPath(brandId)}/settings`,
+  basic: (brandId: string) => `${buildPath(brandId)}/basic`,
 };
 
 export async function getBrands(): Promise<PageResponseBrandSummary> {
@@ -17,5 +26,19 @@ export async function getBrands(): Promise<PageResponseBrandSummary> {
 
 export async function getCurrentBrand(): Promise<CurrentBrandResponse> {
   const res = await axiosClientInstance.get<ApiResponse<CurrentBrandResponse>>(ENDPOINTS.current);
+  return res.data.data;
+}
+
+/************************************
+ * 브랜드 정보 설정
+ ************************************/
+
+export async function getBrandSettings(brandId: string): Promise<BrandSettings> {
+  const res = await axiosClientInstance.get<ApiResponse<BrandSettings>>(ENDPOINTS.settings(brandId));
+  return res.data.data;
+}
+
+export async function updateBrandBasic(brandId: string, body: UpdateBasicRequest): Promise<BasicSaveResponse> {
+  const res = await axiosClientInstance.patch<ApiResponse<BasicSaveResponse>>(ENDPOINTS.basic(brandId), body);
   return res.data.data;
 }

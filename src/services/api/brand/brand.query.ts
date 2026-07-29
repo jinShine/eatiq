@@ -1,6 +1,9 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
-import { getBrands } from "./brand.api";
+import { useInvalidateQueries } from "@hooks/commons";
+
+import { getBrandSettings, getBrands, updateBrandBasic } from "./brand.api";
+import { type UpdateBasicRequest } from "./brand.type";
 
 export type Workspace = {
   id: string;
@@ -17,6 +20,8 @@ export const brandKeys = {
   all: ["brands"] as const,
   list: () => [...brandKeys.all, "list"] as const,
   current: () => [...brandKeys.all, "current"] as const,
+
+  settings: (workspaceId: string) => [...brandKeys.all, "settings", workspaceId] as const,
 };
 
 export function useWorkspaces() {
@@ -24,5 +29,27 @@ export function useWorkspaces() {
     queryKey: brandKeys.list(),
     queryFn: getBrands,
     select: page => (page.content ?? []).map(toWorkspace),
+  });
+}
+
+/************************************
+ * 브랜드 정보 설정
+ ************************************/
+export function useBrandSettings(workspaceId: string) {
+  return useQuery({
+    queryKey: brandKeys.settings(workspaceId),
+    queryFn: () => getBrandSettings(workspaceId),
+    enabled: Boolean(workspaceId),
+  });
+}
+
+export function useUpdateBrandBasic(workspaceId: string) {
+  const invalidateQueries = useInvalidateQueries();
+
+  return useMutation({
+    mutationFn: (body: UpdateBasicRequest) => updateBrandBasic(workspaceId, body),
+    onSuccess: () => {
+      invalidateQueries.single(brandKeys.settings(workspaceId));
+    },
   });
 }
