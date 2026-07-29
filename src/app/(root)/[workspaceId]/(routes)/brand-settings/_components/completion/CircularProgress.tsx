@@ -10,7 +10,7 @@ type CircularProgressProps = {
   strokeWidth?: number;
 };
 
-export default function CircularProgress({ rate, size = 120, strokeWidth = 10 }: CircularProgressProps) {
+export default function CircularProgress({ rate, size = 80, strokeWidth = 8 }: CircularProgressProps) {
   const shouldReduceMotion = useReducedMotion();
 
   const radius = (size - strokeWidth) / 2;
@@ -57,7 +57,7 @@ export default function CircularProgress({ rate, size = 120, strokeWidth = 10 }:
 
       {/* 중앙 숫자 */}
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-text-primary text-xl font-bold">
+        <span className="text-text-primary text-lg font-bold">
           <motion.span>{displayRate}</motion.span>%
         </span>
       </div>

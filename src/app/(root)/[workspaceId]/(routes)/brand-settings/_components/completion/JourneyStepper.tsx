@@ -30,17 +30,17 @@ export default function JourneyStepper({ currentIndex }: JourneyStepperProps) {
             >
               <span
                 className={cn(
-                  "flex size-5 items-center justify-center rounded-full transition-colors",
+                  "flex size-6 items-center justify-center rounded-full transition-colors",
                   isDone ? "bg-primary text-primary-foreground" : "bg-secondary-background text-text-disabled",
                 )}
               >
                 {isDone ? (
-                  <CheckIcon className="size-3" strokeWidth={3} />
+                  <CheckIcon className="size-3.5" strokeWidth={3} />
                 ) : (
-                  <span className="text-[10px]">{index + 1}</span>
+                  <span className="text-xs">{index + 1}</span>
                 )}
               </span>
-              <span className={cn("text-xs font-semibold", isDone ? "text-text-primary" : "text-text-disabled")}>
+              <span className={cn("text-sm font-semibold", isDone ? "text-text-primary" : "text-text-disabled")}>
                 {stage.label}
               </span>
             </motion.div>

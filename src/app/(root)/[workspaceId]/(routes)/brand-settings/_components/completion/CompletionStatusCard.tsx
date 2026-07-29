@@ -13,19 +13,20 @@ import CircularProgress from "./CircularProgress";
 import JourneyStepper from "./JourneyStepper";
 import { JOURNEY_STAGES, resolveStageIndex } from "./journeyStages";
 
-const MISSING_ITEMS_LIMIT = 5;
+const MISSING_ITEMS_LIMIT = 3;
 
 type CompletionStatusCardProps = {
   workspaceId: string;
   tab: BrandSettingsTab;
+  tabLabel: string; // 제목에 붙는 탭 이름 — "정보 완성 현황 - 기본 정보"
 };
 
-export default function CompletionStatusCard({ workspaceId, tab }: CompletionStatusCardProps) {
+export default function CompletionStatusCard({ workspaceId, tab, tabLabel }: CompletionStatusCardProps) {
   const shouldReduceMotion = useReducedMotion();
   const { data: journey, isLoading } = useBrandJourney(workspaceId, tab);
 
   if (isLoading) {
-    return <Skeleton className="h-40 w-full rounded-2xl" />;
+    return <Skeleton className="h-[282px] w-full rounded-2xl" />;
   }
   if (!journey) {
     return null;
@@ -47,71 +48,78 @@ export default function CompletionStatusCard({ workspaceId, tab }: CompletionSta
     `/${workspaceId}/brand-settings?tab=${targetTab ?? tab}${targetAnchor ? `#${targetAnchor}` : ""}`;
 
   return (
-    <section className="border-border space-y-5 rounded-2xl border p-6">
-      <div className="flex items-center justify-between gap-4">
-        <h2 className="text-text-primary text-base font-bold tracking-tight">정보 완성 현황</h2>
+    <section className="border-border rounded-2xl border p-6">
+      <h2 className="text-text-primary text-base font-bold tracking-tight">정보 완성 현황 - {tabLabel}</h2>
+
+      {/* 스테퍼 — 전체 폭 */}
+      <div className="mt-4">
         <JourneyStepper currentIndex={stageIndex} />
       </div>
 
-      <div className="flex flex-col gap-6 md:flex-row md:items-center">
-        {/* 좌: 원형 진행률 */}
-        <div className="flex items-center gap-4">
-          <CircularProgress rate={rate} />
-          <div className="space-y-1">
-            <p className="text-primary text-sm font-bold">{JOURNEY_STAGES[stageIndex].label} 단계</p>
-            {nextBenefit && <p className="text-text-tertiary max-w-[220px] text-xs leading-relaxed">{nextBenefit}</p>}
-            {Boolean(journey.nextStageRemaining) && (
-              <p className="text-text-secondary text-xs">
-                다음 단계까지 <span className="text-primary font-bold">{journey.nextStageRemaining}개</span> 남았어요
+      <div className="bg-border mt-4 h-px w-full" />
+
+      {/* 3열 본문 — 수직 구분선으로 분할 */}
+      <div className="divide-border mt-4 grid grid-cols-1 gap-6 md:grid-cols-3 md:gap-0 md:divide-x">
+        {/* 열1 — 진행률 */}
+        <div className="flex flex-col justify-between gap-4 md:pr-6">
+          <div className="flex items-center gap-4">
+            <CircularProgress rate={rate} />
+            <div className="min-w-0 space-y-1">
+              <p className="text-sm font-bold">
+                <span className="text-primary">{JOURNEY_STAGES[stageIndex].label}</span>
+                <span className="text-text-primary"> 단계</span>
               </p>
-            )}
+              {nextBenefit && <p className="text-text-secondary text-xs leading-relaxed">{nextBenefit}</p>}
+            </div>
           </div>
+          {Boolean(journey.nextStageRemaining) && (
+            <p className="text-text-secondary text-xs">
+              🎁 다음 단계까지 <span className="text-primary font-bold">{journey.nextStageRemaining}개</span> 남았어요
+            </p>
+          )}
         </div>
 
-        {/* 우: 다음 액션 + 남은 항목 */}
-        <div className="flex-1 space-y-3">
-          {nextAction && (
+        {/* 열2 — 다음으로 해야 할 일 */}
+        {nextAction && (
+          <div className="flex flex-col gap-3 md:px-6">
+            <p className="text-text-tertiary text-xs">다음으로 해야 할 일</p>
+            <div className="flex-1 space-y-1">
+              <p className="text-text-primary text-base font-bold">{nextAction.label}</p>
+              {nextBenefit && <p className="text-text-tertiary text-xs leading-relaxed">{nextBenefit}</p>}
+            </div>
             <Link
               href={buildHref(nextAction.targetTab, nextAction.targetAnchor)}
-              className="bg-primary-background hover:bg-primary-light group flex items-center justify-between rounded-xl px-4 py-3 transition-colors"
+              className="bg-primary text-primary-foreground hover:bg-primary-emphasis group inline-flex w-fit items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold transition-colors"
             >
-              <span className="min-w-0">
-                <span className="text-text-tertiary block text-[11px] font-semibold">다음으로 해야 할 일</span>
-                <span className="text-text-primary block truncate text-sm font-bold">{nextAction.label}</span>
-              </span>
-              <ArrowRightIcon className="text-primary size-4 shrink-0 transition-transform group-hover:translate-x-1" />
+              등록하기
+              <ArrowRightIcon className="size-4 transition-transform group-hover:translate-x-0.5" />
             </Link>
-          )}
+          </div>
+        )}
 
-          {missingItems.length > 0 && (
-            <ul className="space-y-1">
-              {missingItems.map((item, index) => (
-                <motion.li
-                  key={item.key}
-                  initial={shouldReduceMotion ? false : { opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: shouldReduceMotion ? 0 : index * 0.06, duration: 0.3 }}
+        {/* 열3 — 남은 주요 항목 */}
+        <div className="space-y-3 md:pl-6">
+          <p className="text-text-tertiary text-xs">남은 주요 항목</p>
+          <ul className="space-y-2">
+            {missingItems.map((item, index) => (
+              <motion.li
+                key={item.key}
+                initial={shouldReduceMotion ? false : { opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: shouldReduceMotion ? 0 : index * 0.06, duration: 0.3 }}
+                className="border-border flex items-center justify-between gap-3 rounded-xl border px-4 py-3"
+              >
+                <span className="text-text-primary min-w-0 truncate text-sm font-semibold">{item.label}</span>
+                <Link
+                  href={buildHref(item.targetTab, item.targetAnchor)}
+                  className="border-primary text-primary hover:bg-primary-background group inline-flex shrink-0 items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-colors"
                 >
-                  <Link
-                    href={buildHref(item.targetTab, item.targetAnchor)}
-                    className="hover:bg-accent group flex items-center justify-between rounded-lg px-3 py-2 transition-colors"
-                  >
-                    <span className="flex min-w-0 items-center gap-2">
-                      <span className="text-text-secondary truncate text-sm">{item.label}</span>
-                      {item.isRequired && (
-                        <span className="text-error bg-destructive-background shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold">
-                          필수
-                        </span>
-                      )}
-                    </span>
-                    <span className="text-text-tertiary group-hover:text-primary shrink-0 text-xs transition-colors">
-                      입력 →
-                    </span>
-                  </Link>
-                </motion.li>
-              ))}
-            </ul>
-          )}
+                  입력
+                  <ArrowRightIcon className="size-3.5 transition-transform group-hover:translate-x-0.5" />
+                </Link>
+              </motion.li>
+            ))}
+          </ul>
         </div>
       </div>
     </section>
