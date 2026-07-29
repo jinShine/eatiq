@@ -6,9 +6,11 @@ type AreaCriteriaTabProps = {
 
 export default function AreaCriteriaTab({ workspaceId }: AreaCriteriaTabProps) {
   return (
-    <div className="space-y-6">
+    <div>
       <CompletionStatusCard workspaceId={workspaceId} tab="area" tabLabel="상권분석 기준" />
-      <p className="text-text-tertiary text-sm">상권분석 기준 폼 (다음 단계)</p>
+      <div className="px-6 py-6">
+        <p className="text-text-tertiary text-sm">상권분석 기준 폼 (다음 단계)</p>
+      </div>
     </div>
   );
 }

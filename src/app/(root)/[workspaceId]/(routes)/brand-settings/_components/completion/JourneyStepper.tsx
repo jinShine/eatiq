@@ -40,7 +40,14 @@ export default function JourneyStepper({ currentIndex }: JourneyStepperProps) {
                   <span className="text-xs">{index + 1}</span>
                 )}
               </span>
-              <span className={cn("text-sm font-semibold", isDone ? "text-text-primary" : "text-text-disabled")}>
+              {/* 좁은 화면에선 라벨을 숨겨 원+연결선만 노출 (현재 단계는 항상 표시) */}
+              <span
+                className={cn(
+                  "text-sm font-semibold",
+                  isDone ? "text-text-primary" : "text-text-disabled",
+                  index === currentIndex ? "inline" : "hidden sm:inline",
+                )}
+              >
                 {stage.label}
               </span>
             </motion.div>

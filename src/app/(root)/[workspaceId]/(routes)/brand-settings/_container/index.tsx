@@ -37,9 +37,7 @@ export default function BrandSettingsContainer({ workspaceId, activeTab }: Brand
       content={
         <BaseContentLayout>
           <SettingsTabNav workspaceId={workspaceId} activeTab={activeTab} />
-          <div className="p-8">
-            <ActiveTab workspaceId={workspaceId} />
-          </div>
+          <ActiveTab workspaceId={workspaceId} />
         </BaseContentLayout>
       }
     />
