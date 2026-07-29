@@ -60,11 +60,8 @@ export default function CompletionStatusCard({ workspaceId, tab, tabLabel }: Com
   const focusRing =
     "focus-visible:ring-primary focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none";
 
-  // 하단 페이드로 "아래에 더 있음"을 암시 (동작 줄이기 설정이면 생략)
-  const scrollAreaStyle: React.CSSProperties = {
-    height: SCROLL_HEIGHT,
-    ...(shouldReduceMotion ? {} : { maskImage: "linear-gradient(to bottom, black 78%, transparent)" }),
-  };
+  // 스크롤 신호는 peek(다음 항목이 반쯤 잘림) + 상시 스크롤바로 충분 — 페이드는 텍스트 가독성을 해쳐 제외
+  const scrollAreaStyle: React.CSSProperties = { height: SCROLL_HEIGHT };
 
   return (
     <section className="border-border border-b px-6 py-6">
