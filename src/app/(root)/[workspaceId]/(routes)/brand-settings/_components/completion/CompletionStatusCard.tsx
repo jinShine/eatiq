@@ -16,6 +16,11 @@ import { JOURNEY_STAGES, resolveStageIndex } from "./journeyStages";
 // 피그마 기준 본문 높이 — 남은 항목이 늘어도 카드 높이를 고정하고 내부 스크롤
 const BODY_HEIGHT = 146;
 
+// 항목 56px + 간격 8px. 2.4개가 보이도록 잡아 다음 항목이 "반쯤 잘려" 스크롤을 암시
+const MISSING_ITEM_HEIGHT = 56;
+const MISSING_ITEM_GAP = 8;
+const SCROLL_HEIGHT = MISSING_ITEM_HEIGHT * 2 + MISSING_ITEM_GAP * 2 + Math.round(MISSING_ITEM_HEIGHT * 0.4);
+
 type CompletionStatusCardProps = {
   workspaceId: string;
   tab: BrandSettingsTab;
@@ -57,8 +62,8 @@ export default function CompletionStatusCard({ workspaceId, tab, tabLabel }: Com
 
   // 하단 페이드로 "아래에 더 있음"을 암시 (동작 줄이기 설정이면 생략)
   const scrollAreaStyle: React.CSSProperties = {
-    height: BODY_HEIGHT - 24,
-    ...(shouldReduceMotion ? {} : { maskImage: "linear-gradient(to bottom, black 88%, transparent)" }),
+    height: SCROLL_HEIGHT,
+    ...(shouldReduceMotion ? {} : { maskImage: "linear-gradient(to bottom, black 78%, transparent)" }),
   };
 
   return (
@@ -126,7 +131,11 @@ export default function CompletionStatusCard({ workspaceId, tab, tabLabel }: Com
               <p className="text-text-secondary text-sm font-semibold">모두 입력했어요 🎉</p>
             </div>
           ) : (
-            <ScrollArea className="pr-2" style={scrollAreaStyle}>
+            <ScrollArea
+              type="always" // 스크롤바 상시 노출 — hover 전에도 스크롤 가능함을 알림
+              style={scrollAreaStyle}
+              className="pr-3 [&_[data-slot=scroll-area-thumb]]:bg-text-disabled"
+            >
               <ul className="space-y-2">
                 <AnimatePresence initial={false}>
                   {missingItems.map((item, index) => (
