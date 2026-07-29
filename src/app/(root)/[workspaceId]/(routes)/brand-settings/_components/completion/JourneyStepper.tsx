@@ -15,18 +15,19 @@ export default function JourneyStepper({ currentIndex }: JourneyStepperProps) {
   const shouldReduceMotion = useReducedMotion();
 
   return (
-    <ol className="flex items-center gap-2">
+    <ol className="flex items-center">
       {JOURNEY_STAGES.map((stage, index) => {
         const isDone = index <= currentIndex;
         const isLast = index === JOURNEY_STAGES.length - 1;
 
         return (
-          <li key={stage.label} className="flex flex-1 items-center gap-2">
+          // 마지막 단계는 남은 공간을 차지하지 않아야 라벨이 우측 끝에 정렬됨 (피그마 기준)
+          <li key={stage.label} className={cn("flex items-center", isLast ? "shrink-0" : "flex-1")}>
             <motion.div
               initial={shouldReduceMotion ? false : { scale: 0.6, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: shouldReduceMotion ? 0 : index * 0.12, type: "spring", stiffness: 320, damping: 20 }}
-              className="flex shrink-0 items-center gap-1.5"
+              className="flex shrink-0 items-center gap-2"
             >
               <span
                 className={cn(
@@ -54,7 +55,8 @@ export default function JourneyStepper({ currentIndex }: JourneyStepperProps) {
 
             {/* 연결선 — 다음 단계까지 채워지는 애니메이션 */}
             {!isLast && (
-              <div className="bg-secondary-background relative h-0.5 flex-1 overflow-hidden rounded-full">
+              // 피그마: 선 양쪽 24px 여백, 두께 1px
+              <div className="bg-border relative mx-6 h-px flex-1 overflow-hidden rounded-full">
                 <motion.div
                   initial={shouldReduceMotion ? false : { scaleX: 0 }}
                   animate={{ scaleX: index < currentIndex ? 1 : 0 }}
