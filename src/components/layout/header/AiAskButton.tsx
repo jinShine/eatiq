@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { SparklesIcon } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, type Variants, motion } from "motion/react";
 
 // 순환 노출할 예시 프롬프트 (추후 모달 트리거로 확장 예정)
 const EXAMPLES = [
@@ -18,6 +18,27 @@ const EXAMPLES = [
 ];
 
 const ROTATE_INTERVAL = 2800;
+
+const SPARKLE_ICON_VARIANTS: Variants = {
+  rest: {
+    filter: "drop-shadow(0 0 0 rgba(99, 102, 241, 0))",
+    rotate: 0,
+    scale: 1,
+  },
+  hover: {
+    filter: [
+      "drop-shadow(0 0 0 rgba(99, 102, 241, 0))",
+      "drop-shadow(0 0 8px rgba(99, 102, 241, 0.55))",
+      "drop-shadow(0 0 0 rgba(99, 102, 241, 0))",
+    ],
+    rotate: [0, -12, 12, -6, 0],
+    scale: [1, 1.22, 0.98, 1.1, 1],
+    transition: {
+      duration: 0.9,
+      ease: "easeInOut",
+    },
+  },
+};
 
 const getRandomExampleIndex = () => Math.floor(Math.random() * EXAMPLES.length);
 
@@ -37,11 +58,15 @@ export default function AiAskButton() {
   }, []);
 
   return (
-    <button
+    <motion.button
       type="button"
+      initial="rest"
+      whileHover="hover"
       className="border-border hover:bg-accent flex shrink-0 items-center gap-2 rounded-full border py-2 pr-4 pl-3 text-sm transition-colors"
     >
-      <SparklesIcon className="text-primary size-4 shrink-0" />
+      <motion.span className="flex size-4 shrink-0 items-center justify-center" variants={SPARKLE_ICON_VARIANTS}>
+        <SparklesIcon className="text-primary size-4" />
+      </motion.span>
       <span className="text-text-secondary shrink-0 font-medium">AI에게 물어보세요</span>
 
       {/* 예시 문구가 아래→위로 슬라이드되며 순환 (데스크톱만) */}
@@ -61,6 +86,6 @@ export default function AiAskButton() {
           )}
         </AnimatePresence>
       </span>
-    </button>
+    </motion.button>
   );
 }
