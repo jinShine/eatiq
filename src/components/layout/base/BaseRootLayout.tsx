@@ -34,6 +34,10 @@ export default function BaseRootLayout({
 }: BaseRootLayoutProps) {
   const sidebarCollapsed = useUserSettingsStore(state => state.sidebarCollapsed);
   const sidebarWidth = sidebarCollapsed ? 64 : LAYOUT.NAVIGATION.SIDEBAR.WIDTH; // 64 ↔ 268
+  const layoutStyle = {
+    ...style,
+    "--sidebar-width": `${sidebarWidth}px`,
+  } as React.CSSProperties;
 
   return (
     <>
@@ -51,11 +55,11 @@ export default function BaseRootLayout({
 
       <VStack
         className={cn(
-          `justify-between items-start min-h-svh gap-0 transition-[margin] duration-300 ease-in-out`,
-          sideNav && (sidebarCollapsed ? "w-full md:w-auto ml-0 md:ml-[64px]" : "w-full md:w-auto ml-0 md:ml-[260px]"),
+          "justify-between items-start min-h-svh w-full gap-0 transition-[padding-left] duration-300 ease-in-out",
+          sideNav && "pl-0 md:pl-[var(--sidebar-width)]",
           className,
         )}
-        style={style}
+        style={layoutStyle}
       >
         {/* header */}
         {header && <header className={cn("sticky top-0 z-40 w-full", horizonNav && "border-none")}>{header}</header>}
