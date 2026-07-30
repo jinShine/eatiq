@@ -21,7 +21,6 @@ export default function JourneyStepper({ currentIndex }: JourneyStepperProps) {
         const isLast = index === JOURNEY_STAGES.length - 1;
 
         return (
-          // 마지막 단계는 남은 공간을 차지하지 않아야 라벨이 우측 끝에 정렬됨 (피그마 기준)
           <li key={stage.label} className={cn("flex items-center", isLast ? "shrink-0" : "flex-1")}>
             <motion.div
               initial={shouldReduceMotion ? false : { scale: 0.6, opacity: 0 }}
