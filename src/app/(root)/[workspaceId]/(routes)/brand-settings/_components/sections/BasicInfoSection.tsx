@@ -66,7 +66,6 @@ export default function BasicInfoSection({ workspaceId }: BasicInfoSectionProps)
   } = useForm<BasicInfoFormValues>({
     resolver: zodResolver(basicInfoSchema),
     defaultValues: EMPTY_VALUES,
-    // 서버 데이터와 폼을 반응적으로 동기화 (저장 후 refetch되면 자동 재동기화 + isDirty 해제)
     values: settings?.brand ? toFormValues(settings.brand) : undefined,
   });
 
@@ -86,89 +85,90 @@ export default function BasicInfoSection({ workspaceId }: BasicInfoSectionProps)
       onSubmit={handleSubmit(onSubmit)}
     >
       {/* row1 */}
-      <Input
-        id="nameKo"
-        size="md"
-        labelClassName="text-xs"
-        label="브랜드 이름 (한국어)"
-        placeholder="예: 롤링 파스타"
-        error={Boolean(errors.nameKo)}
-        errorText={errors.nameKo?.message}
-        {...register("nameKo")}
-      />
-      <Input
-        id="nameEn"
-        size="md"
-        labelClassName="text-xs"
-        label="브랜드 이름 (영어)"
-        placeholder="예: Rolling Pasta"
-        error={Boolean(errors.nameEn)}
-        errorText={errors.nameEn?.message}
-        {...register("nameEn")}
-      />
-      <Input
-        id="launchYear"
-        size="md"
-        labelClassName="text-xs"
-        label="설립 연도"
-        placeholder="예: 2018"
-        inputMode="numeric"
-        error={Boolean(errors.launchYear)}
-        errorText={errors.launchYear?.message}
-        {...register("launchYear")}
-      />
-
-      {/* row2 — 3번째 칸은 비움 */}
-      <Input
-        id="ceoNameKo"
-        size="md"
-        labelClassName="text-xs"
-        label="대표자 이름 (한국어)"
-        placeholder="예: 김도경"
-        {...register("ceoNameKo")}
-      />
-      <Input
-        id="ceoNameEn"
-        size="md"
-        labelClassName="text-xs"
-        label="대표자 이름 (영어)"
-        placeholder="예: Dokyoung Kim"
-        {...register("ceoNameEn")}
-      />
-      <div className="hidden md:block" />
-
-      {/* row3 */}
-      <Input
-        id="hqWebsite"
-        size="md"
-        labelClassName="text-xs"
-        label="본사 홈페이지"
-        placeholder="예: rollingpasta.ai"
-        {...register("hqWebsite")}
-      />
-      <Input
-        id="hqEmail"
-        size="md"
-        labelClassName="text-xs"
-        label="본사 대표 이메일"
-        placeholder="예: hq@rollingpasta.com"
-        error={Boolean(errors.hqEmail)}
-        errorText={errors.hqEmail?.message}
-        {...register("hqEmail")}
-      />
-      <div className="hidden md:block" />
-
-      {/* row4 — 전체폭 */}
-      <div className="md:col-span-3">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         <Input
-          id="hqAddress"
+          id="nameKo"
           size="md"
           labelClassName="text-xs"
-          label="본사 주소"
-          placeholder="예: 서울시 강남구 테헤란로 123, 4층"
-          {...register("hqAddress")}
+          label="브랜드 이름 (한국어)"
+          placeholder="예: 롤링 파스타"
+          error={Boolean(errors.nameKo)}
+          errorText={errors.nameKo?.message}
+          {...register("nameKo")}
+        />
+        <Input
+          id="nameEn"
+          size="md"
+          labelClassName="text-xs"
+          label="브랜드 이름 (영어)"
+          placeholder="예: Rolling Pasta"
+          error={Boolean(errors.nameEn)}
+          errorText={errors.nameEn?.message}
+          {...register("nameEn")}
+        />
+        <Input
+          id="launchYear"
+          size="md"
+          labelClassName="text-xs"
+          label="설립 연도"
+          placeholder="예: 2018"
+          inputMode="numeric"
+          error={Boolean(errors.launchYear)}
+          errorText={errors.launchYear?.message}
+          {...register("launchYear")}
         />
       </div>
+
+      {/* row2 */}
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        <Input
+          id="ceoNameKo"
+          size="md"
+          labelClassName="text-xs"
+          label="대표자 이름 (한국어)"
+          placeholder="예: 김도경"
+          {...register("ceoNameKo")}
+        />
+        <Input
+          id="ceoNameEn"
+          size="md"
+          labelClassName="text-xs"
+          label="대표자 이름 (영어)"
+          placeholder="예: Dokyoung Kim"
+          {...register("ceoNameEn")}
+        />
+      </div>
+      {/* row3 */}
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        <Input
+          id="hqWebsite"
+          size="md"
+          labelClassName="text-xs"
+          label="본사 홈페이지"
+          placeholder="예: rollingpasta.ai"
+          {...register("hqWebsite")}
+        />
+        <Input
+          id="hqEmail"
+          size="md"
+          labelClassName="text-xs"
+          label="본사 대표 이메일"
+          placeholder="예: hq@rollingpasta.com"
+          error={Boolean(errors.hqEmail)}
+          errorText={errors.hqEmail?.message}
+          {...register("hqEmail")}
+        />
+      </div>
+
+      {/* row4 — 전체폭 */}
+      <Input
+        id="hqAddress"
+        size="md"
+        labelClassName="text-xs"
+        label="본사 주소"
+        placeholder="예: 서울시 강남구 테헤란로 123, 4층"
+        {...register("hqAddress")}
+      />
     </SettingsSection>
   );
 }

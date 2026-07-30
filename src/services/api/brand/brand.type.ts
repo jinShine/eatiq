@@ -15,3 +15,6 @@ export type BasicSaveResponse = components["schemas"]["BasicSaveResponse"];
 export type BrandJourney = components["schemas"]["JourneyDto"];
 export type BrandMissingItem = components["schemas"]["MissingItemDto"];
 export type BrandNextAction = components["schemas"]["NextActionDto"];
+export type BrandIntro = components["schemas"]["BrandIntroDto"];
+export type UpdateIntroRequest = components["schemas"]["UpdateIntroRequest"];
+export type IntroSaveResponse = components["schemas"]["IntroSaveResponse"];

@@ -2,8 +2,8 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 
 import { useInvalidateQueries } from "@hooks/commons";
 
-import { getBrandSettings, getBrands, updateBrandBasic } from "./brand.api";
-import { type UpdateBasicRequest } from "./brand.type";
+import { getBrandSettings, getBrands, updateBrandBasic, updateBrandIntro } from "./brand.api";
+import { type UpdateBasicRequest, type UpdateIntroRequest } from "./brand.type";
 
 const JOURNEY_KEY_BY_TAB = {
   basic: "basicInfo",
@@ -69,5 +69,16 @@ export function useBrandJourney(workspaceId: string, tab: BrandSettingsTab) {
     queryFn: () => getBrandSettings(workspaceId),
     enabled: Boolean(workspaceId),
     select: settings => settings.journeys?.[JOURNEY_KEY_BY_TAB[tab]] ?? null,
+  });
+}
+
+export function useUpdateBrandIntro(workspaceId: string) {
+  const invalidateQueries = useInvalidateQueries();
+
+  return useMutation({
+    mutationFn: (body: UpdateIntroRequest) => updateBrandIntro(workspaceId, body),
+    onSuccess: () => {
+      invalidateQueries.single(brandKeys.settings(workspaceId));
+    },
   });
 }

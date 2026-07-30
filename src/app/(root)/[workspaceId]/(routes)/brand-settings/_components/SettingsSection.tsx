@@ -27,7 +27,7 @@ export default function SettingsSection({
       </div>
 
       {/* 바디 — 3열 그리드 (전체폭 필드는 자식에서 col-span-3) */}
-      <div className="grid grid-cols-1 gap-3 p-6 md:grid-cols-3">{children}</div>
+      <div className="space-y-3 p-6">{children}</div>
 
       {/* 푸터 — 저장되지 않은 변경사항 + 저장 */}
       <div className="border-border bg-secondary-background flex items-center justify-between border-t px-7 py-4">
