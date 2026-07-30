@@ -1,6 +1,7 @@
 import CompletionStatusCard from "../completion/CompletionStatusCard";
 import BasicInfoSection from "../sections/BasicInfoSection";
 import IntroSection from "../sections/IntroSection";
+import OperationSection from "../sections/OperationSection";
 
 type BasicInfoTabProps = {
   workspaceId: string;
@@ -13,6 +14,7 @@ export default function BasicInfoTab({ workspaceId }: BasicInfoTabProps) {
       <div className="space-y-6 px-6 py-6">
         <BasicInfoSection workspaceId={workspaceId} />
         <IntroSection workspaceId={workspaceId} />
+        <OperationSection workspaceId={workspaceId} />
       </div>
     </div>
   );

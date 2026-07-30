@@ -18,3 +18,6 @@ export type BrandNextAction = components["schemas"]["NextActionDto"];
 export type BrandIntro = components["schemas"]["BrandIntroDto"];
 export type UpdateIntroRequest = components["schemas"]["UpdateIntroRequest"];
 export type IntroSaveResponse = components["schemas"]["IntroSaveResponse"];
+export type BrandOperation = components["schemas"]["BrandOperationDto"];
+export type UpdateOperationRequest = components["schemas"]["UpdateOperationRequest"];
+export type OperationSaveResponse = components["schemas"]["OperationSaveResponse"];

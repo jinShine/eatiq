@@ -6,9 +6,11 @@ import {
   type BrandSettings,
   type CurrentBrandResponse,
   type IntroSaveResponse,
+  type OperationSaveResponse,
   type PageResponseBrandSummary,
   type UpdateBasicRequest,
   type UpdateIntroRequest,
+  type UpdateOperationRequest,
 } from "./brand.type";
 
 const BASE_PATH = "/api/brands";
@@ -20,6 +22,7 @@ const ENDPOINTS = {
   settings: (brandId: string) => `${buildPath(brandId)}/settings`,
   basic: (brandId: string) => `${buildPath(brandId)}/basic`,
   intro: (brandId: string) => `${buildPath(brandId)}/intro`,
+  operation: (brandId: string) => `${buildPath(brandId)}/operation`,
 };
 
 export async function getBrands(): Promise<PageResponseBrandSummary> {
@@ -48,5 +51,13 @@ export async function updateBrandBasic(brandId: string, body: UpdateBasicRequest
 
 export async function updateBrandIntro(brandId: string, body: UpdateIntroRequest): Promise<IntroSaveResponse> {
   const res = await axiosClientInstance.patch<ApiResponse<IntroSaveResponse>>(ENDPOINTS.intro(brandId), body);
+  return res.data.data;
+}
+
+export async function updateBrandOperation(
+  brandId: string,
+  body: UpdateOperationRequest,
+): Promise<OperationSaveResponse> {
+  const res = await axiosClientInstance.patch<ApiResponse<OperationSaveResponse>>(ENDPOINTS.operation(brandId), body);
   return res.data.data;
 }
