@@ -21,3 +21,6 @@ export type IntroSaveResponse = components["schemas"]["IntroSaveResponse"];
 export type BrandOperation = components["schemas"]["BrandOperationDto"];
 export type UpdateOperationRequest = components["schemas"]["UpdateOperationRequest"];
 export type OperationSaveResponse = components["schemas"]["OperationSaveResponse"];
+export type BrandContact = components["schemas"]["BrandContactDto"];
+export type UpdateContactRequest = components["schemas"]["UpdateContactRequest"];
+export type ContactSaveResponse = components["schemas"]["ContactSaveResponse"];

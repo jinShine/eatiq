@@ -1,5 +1,6 @@
 import CompletionStatusCard from "../completion/CompletionStatusCard";
 import BasicInfoSection from "../sections/BasicInfoSection";
+import ContactSection from "../sections/ContactSection";
 import IntroSection from "../sections/IntroSection";
 import OperationSection from "../sections/OperationSection";
 
@@ -15,6 +16,7 @@ export default function BasicInfoTab({ workspaceId }: BasicInfoTabProps) {
         <BasicInfoSection workspaceId={workspaceId} />
         <IntroSection workspaceId={workspaceId} />
         <OperationSection workspaceId={workspaceId} />
+        <ContactSection workspaceId={workspaceId} />
       </div>
     </div>
   );

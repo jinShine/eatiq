@@ -4,11 +4,13 @@ import { type ApiResponse } from "@services/types/common";
 import {
   type BasicSaveResponse,
   type BrandSettings,
+  type ContactSaveResponse,
   type CurrentBrandResponse,
   type IntroSaveResponse,
   type OperationSaveResponse,
   type PageResponseBrandSummary,
   type UpdateBasicRequest,
+  type UpdateContactRequest,
   type UpdateIntroRequest,
   type UpdateOperationRequest,
 } from "./brand.type";
@@ -23,6 +25,7 @@ const ENDPOINTS = {
   basic: (brandId: string) => `${buildPath(brandId)}/basic`,
   intro: (brandId: string) => `${buildPath(brandId)}/intro`,
   operation: (brandId: string) => `${buildPath(brandId)}/operation`,
+  contact: (brandId: string) => `${buildPath(brandId)}/contact`,
 };
 
 export async function getBrands(): Promise<PageResponseBrandSummary> {
@@ -59,5 +62,10 @@ export async function updateBrandOperation(
   body: UpdateOperationRequest,
 ): Promise<OperationSaveResponse> {
   const res = await axiosClientInstance.patch<ApiResponse<OperationSaveResponse>>(ENDPOINTS.operation(brandId), body);
+  return res.data.data;
+}
+
+export async function updateBrandContact(brandId: string, body: UpdateContactRequest): Promise<ContactSaveResponse> {
+  const res = await axiosClientInstance.patch<ApiResponse<ContactSaveResponse>>(ENDPOINTS.contact(brandId), body);
   return res.data.data;
 }
