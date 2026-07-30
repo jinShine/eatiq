@@ -61,6 +61,7 @@ export function Select({
         <SelectTrigger
           {...props}
           className={cn(
+            "w-full",
             props.disabled && "pointer-events-none bg-secondary-background",
             selectTriggerHeight,
             props.className,
