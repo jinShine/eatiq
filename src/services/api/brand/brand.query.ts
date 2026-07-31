@@ -5,16 +5,24 @@ import { useInvalidateQueries } from "@hooks/commons";
 import {
   getBrandSettings,
   getBrands,
+  updateBrandAreaCriteria,
   updateBrandBasic,
   updateBrandContact,
+  updateBrandContract,
+  updateBrandFee,
   updateBrandIntro,
   updateBrandOperation,
+  updateBrandPolicy,
 } from "./brand.api";
 import {
+  type UpdateAreaCriteriaRequest,
   type UpdateBasicRequest,
   type UpdateContactRequest,
+  type UpdateContractRequest,
+  type UpdateFeeRequest,
   type UpdateIntroRequest,
   type UpdateOperationRequest,
+  type UpdatePolicyRequest,
 } from "./brand.type";
 
 const JOURNEY_KEY_BY_TAB = {
@@ -111,6 +119,58 @@ export function useUpdateBrandContact(workspaceId: string) {
 
   return useMutation({
     mutationFn: (body: UpdateContactRequest) => updateBrandContact(workspaceId, body),
+    onSuccess: () => {
+      invalidateQueries.single(brandKeys.settings(workspaceId));
+    },
+  });
+}
+
+/************************************
+ * 계약 및 정책
+ ************************************/
+
+export function useUpdateBrandContract(workspaceId: string) {
+  const invalidateQueries = useInvalidateQueries();
+
+  return useMutation({
+    mutationFn: (body: UpdateContractRequest) => updateBrandContract(workspaceId, body),
+    onSuccess: () => {
+      invalidateQueries.single(brandKeys.settings(workspaceId));
+    },
+  });
+}
+
+export function useUpdateBrandPolicy(workspaceId: string) {
+  const invalidateQueries = useInvalidateQueries();
+
+  return useMutation({
+    mutationFn: (body: UpdatePolicyRequest) => updateBrandPolicy(workspaceId, body),
+    onSuccess: () => {
+      invalidateQueries.single(brandKeys.settings(workspaceId));
+    },
+  });
+}
+
+export function useUpdateBrandFee(workspaceId: string) {
+  const invalidateQueries = useInvalidateQueries();
+
+  return useMutation({
+    mutationFn: (body: UpdateFeeRequest) => updateBrandFee(workspaceId, body),
+    onSuccess: () => {
+      invalidateQueries.single(brandKeys.settings(workspaceId));
+    },
+  });
+}
+
+/************************************
+ * 상권분석 기준
+ ************************************/
+
+export function useUpdateBrandAreaCriteria(workspaceId: string) {
+  const invalidateQueries = useInvalidateQueries();
+
+  return useMutation({
+    mutationFn: (body: UpdateAreaCriteriaRequest) => updateBrandAreaCriteria(workspaceId, body),
     onSuccess: () => {
       invalidateQueries.single(brandKeys.settings(workspaceId));
     },

@@ -24,3 +24,23 @@ export type OperationSaveResponse = components["schemas"]["OperationSaveResponse
 export type BrandContact = components["schemas"]["BrandContactDto"];
 export type UpdateContactRequest = components["schemas"]["UpdateContactRequest"];
 export type ContactSaveResponse = components["schemas"]["ContactSaveResponse"];
+
+/************************************
+ * 계약 및 정책
+ ************************************/
+export type BrandContract = components["schemas"]["BrandContractDto"];
+export type UpdateContractRequest = components["schemas"]["UpdateContractRequest"];
+export type ContractSaveResponse = components["schemas"]["ContractSaveResponse"];
+export type BrandPolicy = components["schemas"]["BrandPolicyDto"];
+export type UpdatePolicyRequest = components["schemas"]["UpdatePolicyRequest"];
+export type PolicySaveResponse = components["schemas"]["PolicySaveResponse"];
+export type BrandFee = components["schemas"]["BrandFeeDto"];
+export type UpdateFeeRequest = components["schemas"]["UpdateFeeRequest"];
+export type FeeSaveResponse = components["schemas"]["FeeSaveResponse"];
+
+/************************************
+ * 상권분석 기준
+ ************************************/
+export type BrandAreaCriteria = components["schemas"]["BrandAreaCriteriaDto"];
+export type UpdateAreaCriteriaRequest = components["schemas"]["UpdateAreaCriteriaRequest"];
+export type AreaCriteriaSaveResponse = components["schemas"]["AreaCriteriaSaveResponse"];
