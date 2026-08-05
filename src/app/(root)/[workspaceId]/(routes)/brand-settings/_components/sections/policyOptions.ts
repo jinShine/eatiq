@@ -1,73 +1,82 @@
-// TODO(백엔드): 서버가 허용하는 코드값 목록을 받으면 교체 (현재는 디자인 기준 임시값)
+// v0.7 코드값 규약 기준 (2026-07-30 확정)
 type Option = { value: string; label: string };
 
 /** 계약 및 정책 */
 export const CONTRACT_TYPE_OPTIONS: Option[] = [
   { value: "master_franchise", label: "마스터 프랜차이즈" },
-  { value: "area_franchise", label: "지역 프랜차이즈" },
-  { value: "single_store", label: "단일 매장" },
-  { value: "joint_venture", label: "조인트 벤처" },
-  { value: "direct", label: "직영 진출" },
+  { value: "area_development", label: "지역 개발권" },
+  { value: "direct_operation", label: "직영" },
+  { value: "joint_venture", label: "합작법인 (JV)" },
+  { value: "licensing", label: "라이선스" },
+  { value: "distribution", label: "유통" },
+  { value: "undecided", label: "미정" },
 ];
 
-export const YES_NO_OPTIONS: Option[] = [
-  { value: "allowed", label: "가능" },
-  { value: "not_allowed", label: "불가" },
-  { value: "negotiable", label: "협의 가능" },
-];
-
-export const SUPPLY_SCOPE_OPTIONS: Option[] = [
+// 공통 척도: exclusivity · ingredientSupply · trademark
+export const ALLOWANCE_OPTIONS: Option[] = [
   { value: "required", label: "필수" },
-  { value: "core_only", label: "핵심 품목만" },
-  { value: "optional", label: "선택" },
-  { value: "not_required", label: "필요 없음" },
+  { value: "preferred", label: "선호" },
+  { value: "negotiable", label: "협의 가능" },
+  { value: "not_required", label: "자유 적용" },
 ];
 
+// 공통 척도: menuLocalization · interiorCompliance · manualCompliance
 export const COMPLIANCE_OPTIONS: Option[] = [
-  { value: "full", label: "전면 준수 필수" },
-  { value: "partial", label: "부분 조정 가능" },
-  { value: "flexible", label: "자율" },
+  { value: "strict", label: "엄격 준수" },
+  { value: "partial", label: "일부 조정 가능" },
+  { value: "flexible", label: "유연 조정 가능" },
+];
+
+export const BRAND_TYPE_OPTIONS: Option[] = [
+  { value: "franchise", label: "프랜차이즈" },
+  { value: "direct", label: "직영" },
 ];
 
 export const ROYALTY_BASE_OPTIONS: Option[] = [
-  { value: "gross_sales", label: "총매출" },
-  { value: "net_sales", label: "순매출" },
-  { value: "fixed", label: "정액" },
+  { value: "revenue_pct", label: "매출 비율 기준" },
+  { value: "fixed", label: "고정 금액 기준" },
 ];
 
 export const PAYMENT_CYCLE_OPTIONS: Option[] = [
-  { value: "monthly", label: "매월" },
-  { value: "quarterly", label: "매 분기" },
-  { value: "yearly", label: "매년" },
+  { value: "monthly", label: "월" },
+  { value: "quarterly", label: "분기" },
+  { value: "annual", label: "연" },
 ];
 
 /** 상권분석 기준 */
 export const AREA_TYPE_OPTIONS: Option[] = [
-  { value: "office", label: "오피스" },
-  { value: "residential", label: "주거 밀집" },
-  { value: "station", label: "역세권" },
+  { value: "transit", label: "역세권" },
   { value: "university", label: "대학가" },
-  { value: "downtown", label: "번화가" },
-  { value: "mall", label: "쇼핑몰·백화점" },
-  { value: "tourist", label: "관광지" },
+  { value: "office", label: "오피스" },
+  { value: "residential", label: "주거" },
+  { value: "tourist", label: "관광" },
+  { value: "shopping", label: "쇼핑" },
+  { value: "high_street", label: "중심 상업가" },
+  { value: "mixed_use", label: "복합" },
+  { value: "no_preference", label: "상관없음" },
 ];
 
 export const FLOOR_OPTIONS: Option[] = [
-  { value: "first_only", label: "1층만 가능" },
-  { value: "first_preferred", label: "1층 선호" },
-  { value: "any", label: "층수 무관" },
-  { value: "upper_ok", label: "2층 이상 가능" },
+  { value: "ground_only", label: "1층만 가능" },
+  { value: "ground_preferred", label: "1층 선호" },
+  { value: "second_preferred", label: "2층 선호" },
+  { value: "basement_allowed", label: "지하 가능" },
+  { value: "rooftop_preferred", label: "루프탑 선호" },
+  { value: "sky_lounge_preferred", label: "스카이라운지 선호" },
+  { value: "no_preference", label: "상관없음" },
 ];
 
+export const EXPANSION_STATUS_OPTIONS: Option[] = [
+  { value: "active", label: "적극 추진" },
+  { value: "exploring", label: "관심 단계" },
+  { value: "paused", label: "보류 중" },
+];
+
+// 공통 척도: 중요도 13개 필드 전부 (매출·설비 포함)
 export const IMPORTANCE_OPTIONS: Option[] = [
-  { value: "high", label: "높음" },
-  { value: "medium", label: "보통" },
+  { value: "must_have", label: "필수" },
+  { value: "important", label: "중요" },
+  { value: "normal", label: "보통" },
   { value: "low", label: "낮음" },
-  { value: "none", label: "없음" },
-];
-
-export const REQUIREMENT_OPTIONS: Option[] = [
-  { value: "required", label: "필수" },
-  { value: "preferred", label: "선호" },
-  { value: "optional", label: "무관" },
+  { value: "ignore", label: "고려 안 함" },
 ];

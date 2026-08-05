@@ -1,20 +1,18 @@
+// v0.7 코드값 규약 기준 (2026-07-30 확정)
 export const CATEGORY_OPTIONS = [
-  { value: "korean", label: "한식" },
-  { value: "western", label: "양식" },
-  { value: "japanese", label: "일식" },
-  { value: "chinese", label: "중식" },
-  { value: "asian", label: "아시안" },
-  { value: "cafe", label: "카페·디저트" },
+  { value: "beef_bbq", label: "소고기 구이" },
+  { value: "pork_bbq", label: "돼지고기 구이" },
+  { value: "korean_food", label: "한식" },
+  { value: "bunsik", label: "분식" },
   { value: "chicken", label: "치킨" },
-  { value: "pizza", label: "피자" },
-  { value: "burger", label: "버거" },
-  { value: "bakery", label: "베이커리" },
-  { value: "bar", label: "주류·바" },
-  { value: "etc", label: "기타" },
+  { value: "cafe", label: "카페" },
+  { value: "dessert", label: "디저트" },
+  { value: "other", label: "기타" },
 ] as const;
 
 export const PRICE_POSITIONING_OPTIONS = [
-  { value: "low", label: "저가 (객단가 1만원 이하)" },
-  { value: "mid", label: "중가 (객단가 12,000원 ~ 15,000원)" },
-  { value: "high", label: "고가 (객단가 2만원 이상)" },
+  { value: "mass", label: "대중 (~1만원)" },
+  { value: "mid", label: "중가 (1~3만원)" },
+  { value: "premium", label: "프리미엄 (3~6만원)" },
+  { value: "high_end", label: "하이엔드 (6만원~)" },
 ] as const;

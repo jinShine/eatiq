@@ -13,7 +13,7 @@ import { type BrandAreaCriteria } from "@services/api/brand/brand.type";
 import FormSelect from "../FormSelect";
 import SettingsSection from "../SettingsSection";
 import { mergeAreaCriteria, toNumber, toText } from "./areaCriteriaShared";
-import { AREA_TYPE_OPTIONS, FLOOR_OPTIONS, IMPORTANCE_OPTIONS, REQUIREMENT_OPTIONS } from "./policyOptions";
+import { AREA_TYPE_OPTIONS, FLOOR_OPTIONS, IMPORTANCE_OPTIONS } from "./policyOptions";
 
 const numberField = z.string().refine(v => !v || /^\d+$/.test(v), { message: "숫자만 입력해주세요" });
 
@@ -159,12 +159,12 @@ export default function LocationCriteriaSection({ workspaceId }: LocationCriteri
       </div>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-        <FormSelect control={control} name="parkingImportance" label="주차 필요 여부" options={REQUIREMENT_OPTIONS} />
+        <FormSelect control={control} name="parkingImportance" label="주차 필요 여부" options={IMPORTANCE_OPTIONS} />
         <FormSelect
           control={control}
           name="waitingSpaceImportance"
           label="대기공간 필요 여부"
-          options={REQUIREMENT_OPTIONS}
+          options={IMPORTANCE_OPTIONS}
         />
       </div>
 

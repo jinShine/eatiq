@@ -13,7 +13,7 @@ import { type BrandAreaCriteria } from "@services/api/brand/brand.type";
 import FormSelect from "../FormSelect";
 import SettingsSection from "../SettingsSection";
 import { mergeAreaCriteria } from "./areaCriteriaShared";
-import { REQUIREMENT_OPTIONS } from "./policyOptions";
+import { IMPORTANCE_OPTIONS } from "./policyOptions";
 
 const facilitySchema = z.object({
   gasImportance: z.string(),
@@ -77,18 +77,18 @@ export default function FacilitySection({ workspaceId }: FacilitySectionProps) {
       onSubmit={handleSubmit(onSubmit)}
     >
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-        <FormSelect control={control} name="gasImportance" label="가스 시설" options={REQUIREMENT_OPTIONS} />
-        <FormSelect control={control} name="waterImportance" label="급배수" options={REQUIREMENT_OPTIONS} />
-        <FormSelect control={control} name="openFlameImportance" label="직화 시설" options={REQUIREMENT_OPTIONS} />
+        <FormSelect control={control} name="gasImportance" label="가스 시설" options={IMPORTANCE_OPTIONS} />
+        <FormSelect control={control} name="waterImportance" label="급배수" options={IMPORTANCE_OPTIONS} />
+        <FormSelect control={control} name="openFlameImportance" label="직화 시설" options={IMPORTANCE_OPTIONS} />
       </div>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-        <FormSelect control={control} name="ventilationImportance" label="배기 시설" options={REQUIREMENT_OPTIONS} />
+        <FormSelect control={control} name="ventilationImportance" label="배기 시설" options={IMPORTANCE_OPTIONS} />
         <FormSelect
           control={control}
           name="refrigerationImportance"
           label="냉장/냉동 저장공간"
-          options={REQUIREMENT_OPTIONS}
+          options={IMPORTANCE_OPTIONS}
         />
       </div>
     </SettingsSection>

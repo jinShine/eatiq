@@ -12,7 +12,7 @@ import { type BrandPolicy, type UpdatePolicyRequest } from "@services/api/brand/
 
 import FormSelect from "../FormSelect";
 import SettingsSection from "../SettingsSection";
-import { COMPLIANCE_OPTIONS, CONTRACT_TYPE_OPTIONS, SUPPLY_SCOPE_OPTIONS, YES_NO_OPTIONS } from "./policyOptions";
+import { ALLOWANCE_OPTIONS, COMPLIANCE_OPTIONS, CONTRACT_TYPE_OPTIONS } from "./policyOptions";
 
 const policySchema = z.object({
   preferredContractType: z.string(),
@@ -94,9 +94,16 @@ export default function PolicySection({ workspaceId }: PolicySectionProps) {
       </div>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-        <FormSelect control={control} name="exclusivity" label="독점 여부" options={YES_NO_OPTIONS} />
-        <FormSelect control={control} name="menuLocalization" label="메뉴 현지화 여부" options={YES_NO_OPTIONS} />
-        <FormSelect control={control} name="interiorCompliance" label="인테리어 조정 여부" options={YES_NO_OPTIONS} />
+        {/* allowance_type 척도 */}
+        <FormSelect control={control} name="exclusivity" label="독점 여부" options={ALLOWANCE_OPTIONS} />
+        {/* compliance_level 척도 */}
+        <FormSelect control={control} name="menuLocalization" label="메뉴 현지화 여부" options={COMPLIANCE_OPTIONS} />
+        <FormSelect
+          control={control}
+          name="interiorCompliance"
+          label="인테리어 조정 여부"
+          options={COMPLIANCE_OPTIONS}
+        />
       </div>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
@@ -104,9 +111,9 @@ export default function PolicySection({ workspaceId }: PolicySectionProps) {
           control={control}
           name="ingredientSupply"
           label="식자재 공급 허용 범위"
-          options={SUPPLY_SCOPE_OPTIONS}
+          options={ALLOWANCE_OPTIONS}
         />
-        <FormSelect control={control} name="trademark" label="상표 및 브랜드 사용 기준" options={COMPLIANCE_OPTIONS} />
+        <FormSelect control={control} name="trademark" label="상표 및 브랜드 사용 기준" options={ALLOWANCE_OPTIONS} />
         <FormSelect
           control={control}
           name="manualCompliance"
