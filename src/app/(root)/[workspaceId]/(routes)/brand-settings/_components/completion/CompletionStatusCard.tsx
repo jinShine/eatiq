@@ -11,7 +11,7 @@ import { type BrandSettingsTab, useBrandJourney } from "@services/api/brand/bran
 
 import CircularProgress from "./CircularProgress";
 import JourneyStepper from "./JourneyStepper";
-import { JOURNEY_STAGES, resolveStageIndex } from "./journeyStages";
+import { EMPTY_STAGE_LABEL, JOURNEY_STAGES, resolveStageIndex } from "./journeyStages";
 
 // 피그마 기준 본문 높이 — 남은 항목이 늘어도 카드 높이를 고정하고 내부 스크롤
 const BODY_HEIGHT = 146;
@@ -85,8 +85,8 @@ export default function CompletionStatusCard({ workspaceId, tab, tabLabel }: Com
             <CircularProgress rate={rate} label={`${tabLabel} 완성률`} />
             <div className="min-w-0 space-y-1">
               <p className="text-sm font-bold">
-                <span className="text-primary">{JOURNEY_STAGES[stageIndex].label}</span>
-                <span className="text-text-primary"> 단계</span>
+                <span className="text-primary">{JOURNEY_STAGES[stageIndex]?.label ?? EMPTY_STAGE_LABEL}</span>
+                {stageIndex >= 0 && <span className="text-text-primary"> 단계</span>}
               </p>
               {nextBenefit && <p className="text-text-secondary text-xs leading-relaxed">{nextBenefit}</p>}
             </div>

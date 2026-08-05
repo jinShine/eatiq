@@ -45,7 +45,7 @@ export default function JourneyStepper({ currentIndex }: JourneyStepperProps) {
                 className={cn(
                   "text-sm font-semibold",
                   isDone ? "text-text-primary" : "text-text-disabled",
-                  index === currentIndex ? "inline" : "hidden sm:inline",
+                  index === Math.max(currentIndex, 0) ? "inline" : "hidden sm:inline",
                 )}
               >
                 {stage.label}
