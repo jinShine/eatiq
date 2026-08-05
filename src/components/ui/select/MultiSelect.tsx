@@ -66,6 +66,9 @@ interface MultiSelectProps
   /** The default selected values when the component mounts. */
   defaultValue?: string[];
 
+  /** 제어형으로 쓸 때 사용. 전달하면 이 값이 선택 상태의 소스가 된다 */
+  value?: string[];
+
   /**
    * Placeholder text to be displayed when no values are selected.
    * Optional, defaults to "Select options".
@@ -109,6 +112,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
       onValueChange,
       variant,
       defaultValue = [],
+      value: controlledValue,
       placeholder = "선택해주세요.",
       maxCount = 3,
       modalPopover = false,
@@ -120,10 +124,21 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
     },
     ref,
   ) => {
-    const [selectedValues, setSelectedValues] = React.useState<string[]>(defaultValue);
+    const [internalValues, setInternalValues] = React.useState<string[]>(defaultValue);
     const [isPopoverOpen, setIsPopoverOpen] = React.useState(false);
 
+    // value가 넘어오면 제어형, 아니면 내부 state 사용 (하이브리드)
+    const isControlled = controlledValue !== undefined;
+    const selectedValues = isControlled ? controlledValue : internalValues;
     const inputHeight = InputSize[size];
+
+    // 선택 변경 단일 진입점 — 비제어일 때만 내부 state를 갱신하고, 부모에는 항상 통지
+    const commit = (next: string[]) => {
+      if (!isControlled) {
+        setInternalValues(next);
+      }
+      onValueChange(next);
+    };
 
     const handleInputKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
       if (event.key === "Enter") {
@@ -131,8 +146,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
       } else if (event.key === "Backspace" && !event.currentTarget.value) {
         const newSelectedValues = [...selectedValues];
         newSelectedValues.pop();
-        setSelectedValues(newSelectedValues);
-        onValueChange(newSelectedValues);
+        commit(newSelectedValues);
       }
     };
 
@@ -140,13 +154,11 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
       const newSelectedValues = selectedValues.includes(option)
         ? selectedValues.filter(value => value !== option)
         : [...selectedValues, option];
-      setSelectedValues(newSelectedValues);
-      onValueChange(newSelectedValues);
+      commit(newSelectedValues);
     };
 
     const handleClear = () => {
-      setSelectedValues([]);
-      onValueChange([]);
+      commit([]);
     };
 
     const handleTogglePopover = () => {
@@ -155,17 +167,14 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 
     const clearExtraOptions = () => {
       const newSelectedValues = selectedValues.slice(0, maxCount);
-      setSelectedValues(newSelectedValues);
-      onValueChange(newSelectedValues);
+      commit(newSelectedValues);
     };
 
     const toggleAll = () => {
       if (selectedValues.length === options.length) {
         handleClear();
       } else {
-        const allValues = options.map(option => option.value);
-        setSelectedValues(allValues);
-        onValueChange(allValues);
+        commit(options.map(option => option.value));
       }
     };
 
