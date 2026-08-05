@@ -14,14 +14,16 @@ import FormSelect from "../FormSelect";
 import SettingsSection from "../SettingsSection";
 import { ALLOWANCE_OPTIONS, COMPLIANCE_OPTIONS, CONTRACT_TYPE_OPTIONS } from "./policyOptions";
 
+// PATCH /api/brands/{brandId}/policy — 전체 치환
+// ingredientSupplyRequired(boolean)는 화면에 없어 기존 저장값을 그대로 재전송한다 (용도 확인 중)
 const policySchema = z.object({
-  preferredContractType: z.string(),
-  exclusivity: z.string(),
-  menuLocalization: z.string(),
-  interiorCompliance: z.string(),
-  ingredientSupply: z.string(),
-  trademark: z.string(),
-  manualCompliance: z.string(),
+  preferredContractType: z.string(), // 선호 계약 방식 · contract_type
+  exclusivity: z.string(), // 독점권 · allowance_type
+  menuLocalization: z.string(), // 메뉴 현지화 수준 · compliance_level
+  interiorCompliance: z.string(), // 인테리어 준수 수준 · compliance_level
+  ingredientSupply: z.string(), // 식자재 공급 · allowance_type
+  trademark: z.string(), // 상표권 · allowance_type
+  manualCompliance: z.string(), // 매뉴얼 준수 수준 · compliance_level
 });
 
 type PolicyFormValues = z.infer<typeof policySchema>;

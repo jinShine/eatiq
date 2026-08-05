@@ -11,14 +11,15 @@ import { type BrandIntro, type UpdateIntroRequest } from "@services/api/brand/br
 import SettingsSection from "../SettingsSection";
 import { CATEGORY_OPTIONS, PRICE_POSITIONING_OPTIONS } from "./IntroOptions";
 
+// PATCH /api/brands/{brandId}/intro — 전체 치환
 const introSchema = z.object({
-  oneLiner: z.string().max(100, "100자 이내로 입력해주세요"),
-  description: z.string().max(500, "500자 이내로 입력해주세요"),
-  category: z.string(),
-  pricePositioning: z.string(),
-  differentiator1: z.string(),
-  differentiator2: z.string(),
-  differentiator3: z.string(),
+  oneLiner: z.string().max(100, "100자 이내로 입력해주세요"), // 한줄 소개
+  description: z.string().max(500, "500자 이내로 입력해주세요"), // 상세 소개 · Textarea
+  category: z.string(), // 업종 분류 · 코드값(CATEGORY_OPTIONS)
+  pricePositioning: z.string(), // 가격 포지셔닝 · 코드값(PRICE_POSITIONING_OPTIONS)
+  differentiator1: z.string(), // 핵심 차별점 1
+  differentiator2: z.string(), // 핵심 차별점 2
+  differentiator3: z.string(), // 핵심 차별점 3
 });
 
 type IntroFormValues = z.infer<typeof introSchema>;

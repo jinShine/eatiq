@@ -12,11 +12,13 @@ import { type BrandContract, type UpdateContractRequest } from "@services/api/br
 
 import SettingsSection from "../SettingsSection";
 
+// PATCH /api/brands/{brandId}/contract — 전체 치환
+// 서명권자 필드(signatory*)는 SignatorySection이 담당하며, 저장 시 서로의 값을 병합 전송한다
 const contractSchema = z.object({
-  contractContactNameKo: z.string(),
-  contractContactNameEn: z.string(),
-  contractContactTitle: z.string(),
-  contractContactEmail: z.union([z.string().email("올바른 이메일 형식이 아니에요"), z.literal("")]),
+  contractContactNameKo: z.string(), // 계약 담당자 이름(국문)
+  contractContactNameEn: z.string(), // 계약 담당자 이름(영문)
+  contractContactTitle: z.string(), // 계약 담당자 직책
+  contractContactEmail: z.union([z.string().email("올바른 이메일 형식이 아니에요"), z.literal("")]), // 계약 담당자 이메일 · 빈 값 허용
 });
 
 type ContractFormValues = z.infer<typeof contractSchema>;

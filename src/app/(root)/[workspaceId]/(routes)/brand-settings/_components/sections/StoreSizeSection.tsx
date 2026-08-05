@@ -15,11 +15,13 @@ import { mergeAreaCriteria, toNumber, toText } from "./areaCriteriaShared";
 
 const numberField = z.string().refine(v => !v || /^\d+$/.test(v), { message: "숫자만 입력해주세요" });
 
+// PATCH /api/brands/{brandId}/area-criteria — 전체 치환 (LocationCriteria·Facility와 엔드포인트 공유)
+// TODO(백엔드): 필드명은 ...Py(평)인데 디자인은 ㎡로 표기 — 저장 단위 확인 필요
 const storeSizeSchema = z.object({
-  recommendedSizePy: numberField,
-  sizeMinPy: numberField,
-  sizeMaxPy: numberField,
-  minFrontageM: numberField,
+  recommendedSizePy: numberField, // 권장 매장 평형
+  sizeMinPy: numberField, // 선호 매장 평형 최소
+  sizeMaxPy: numberField, // 선호 매장 평형 최대
+  minFrontageM: numberField, // 최소 전면폭 (m)
 });
 
 type StoreSizeFormValues = z.infer<typeof storeSizeSchema>;

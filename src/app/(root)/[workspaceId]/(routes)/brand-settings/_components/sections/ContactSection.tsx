@@ -8,13 +8,17 @@ import { Input, Toast } from "@components/ui";
 import { useBrandSettings, useUpdateBrandContact } from "@services/api/brand/brand.query";
 import { type BrandContact, type UpdateContactRequest } from "@services/api/brand/brand.type";
 
+import FormMultiSelect from "../FormMultiSelect";
 import SettingsSection from "../SettingsSection";
+import { CONTACT_LANGUAGE_OPTIONS } from "./IntroOptions";
 
+// PATCH /api/brands/{brandId}/contact — 전체 치환
 const contactSchema = z.object({
-  contactNameKo: z.string(),
-  contactNameEn: z.string(),
-  contactTitle: z.string(),
-  contactEmail: z.union([z.string().email("올바른 이메일 형식이 아니에요"), z.literal("")]),
+  contactNameKo: z.string(), // 담당자 이름(국문)
+  contactNameEn: z.string(), // 담당자 이름(영문)
+  contactTitle: z.string(), // 담당자 직책
+  contactEmail: z.union([z.string().email("올바른 이메일 형식이 아니에요"), z.literal("")]), // 담당자 이메일 · 빈 값 허용
+  contactLanguages: z.array(z.string()), // 가능 언어 · 다중, 코드값 배열(ko/en/ja…)
 });
 
 type ContactFormValues = z.infer<typeof contactSchema>;
@@ -24,6 +28,7 @@ const EMPTY_VALUES: ContactFormValues = {
   contactNameEn: "",
   contactTitle: "",
   contactEmail: "",
+  contactLanguages: [],
 };
 
 const toFormValues = (contact: BrandContact): ContactFormValues => ({
@@ -31,6 +36,7 @@ const toFormValues = (contact: BrandContact): ContactFormValues => ({
   contactNameEn: contact.contactNameEn ?? "",
   contactTitle: contact.contactTitle ?? "",
   contactEmail: contact.contactEmail ?? "",
+  contactLanguages: contact.contactLanguages ?? [],
 });
 
 const toRequest = (values: ContactFormValues): UpdateContactRequest => ({ ...values });
@@ -45,6 +51,7 @@ export default function ContactSection({ workspaceId }: ContactSectionProps) {
 
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors, isDirty },
   } = useForm<ContactFormValues>({
@@ -108,7 +115,13 @@ export default function ContactSection({ workspaceId }: ContactSectionProps) {
           errorText={errors.contactEmail?.message}
           {...register("contactEmail")}
         />
-        {/* TODO: 가능 언어(contactLanguages, 배열) — 서버 코드값 확정 후 MultiSelect 추가 */}
+        <FormMultiSelect
+          control={control}
+          name="contactLanguages"
+          label="가능 언어"
+          placeholder="언어를 선택해주세요"
+          options={CONTACT_LANGUAGE_OPTIONS}
+        />
       </div>
     </SettingsSection>
   );

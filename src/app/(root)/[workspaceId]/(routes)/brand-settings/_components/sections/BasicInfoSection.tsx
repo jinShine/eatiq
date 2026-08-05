@@ -10,15 +10,16 @@ import { type BrandBasic, type UpdateBasicRequest } from "@services/api/brand/br
 
 import SettingsSection from "../SettingsSection";
 
+// PATCH /api/brands/{brandId}/basic — 전체 치환
 const basicInfoSchema = z.object({
-  nameKo: z.string().min(1, "브랜드 이름(한국어)을 입력해주세요"),
-  nameEn: z.string().min(1, "브랜드 이름(영어)을 입력해주세요"),
-  launchYear: z.string().refine(v => !v || /^\d{4}$/.test(v), { message: "연도 4자리를 입력해주세요" }),
-  ceoNameKo: z.string(),
-  ceoNameEn: z.string(),
-  hqWebsite: z.string(),
-  hqEmail: z.union([z.string().email("올바른 이메일 형식이 아니에요"), z.literal("")]),
-  hqAddress: z.string(),
+  nameKo: z.string().min(1, "브랜드 이름(한국어)을 입력해주세요"), // 브랜드 이름(국문) · 필수
+  nameEn: z.string().min(1, "브랜드 이름(영어)을 입력해주세요"), // 브랜드 이름(영문) · 필수
+  launchYear: z.string().refine(v => !v || /^\d{4}$/.test(v), { message: "연도 4자리를 입력해주세요" }), // 설립 연도 · 4자리
+  ceoNameKo: z.string(), // 대표자 이름(국문)
+  ceoNameEn: z.string(), // 대표자 이름(영문)
+  hqWebsite: z.string(), // 본사 홈페이지
+  hqEmail: z.union([z.string().email("올바른 이메일 형식이 아니에요"), z.literal("")]), // 본사 대표 이메일 · 빈 값 허용
+  hqAddress: z.string(), // 본사 주소
 });
 
 type BasicInfoFormValues = z.infer<typeof basicInfoSchema>;

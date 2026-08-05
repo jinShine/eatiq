@@ -16,12 +16,13 @@ import { PAYMENT_CYCLE_OPTIONS, ROYALTY_BASE_OPTIONS } from "./policyOptions";
 
 const numberField = z.string().refine(v => !v || /^\d+(\.\d+)?$/.test(v), { message: "숫자만 입력해주세요" });
 
+// PATCH /api/brands/{brandId}/fee — 전체 치환 (franchise 유형 전용)
 const feeSchema = z.object({
-  franchiseFeeKrw: numberField,
-  royaltyBase: z.string(),
-  royaltyRatePct: numberField,
-  royaltyFixedKrw: numberField,
-  paymentCycle: z.string(),
+  franchiseFeeKrw: numberField, // 가맹비 (원) · TODO(백엔드) 단위 확인
+  royaltyBase: z.string(), // 로열티 산정 기준 · royalty_base(revenue_pct/fixed)
+  royaltyRatePct: numberField, // 매출 대비 로열티 비율 (%) · TODO(백엔드) 5 vs 0.05 확인
+  royaltyFixedKrw: numberField, // 고정 로열티 금액 (원)
+  paymentCycle: z.string(), // 정산 주기 · payment_cycle(monthly/quarterly/annual)
 });
 
 type FeeFormValues = z.infer<typeof feeSchema>;

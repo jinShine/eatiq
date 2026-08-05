@@ -17,21 +17,23 @@ import { AREA_TYPE_OPTIONS, FLOOR_OPTIONS, IMPORTANCE_OPTIONS } from "./policyOp
 
 const numberField = z.string().refine(v => !v || /^\d+$/.test(v), { message: "숫자만 입력해주세요" });
 
+// PATCH /api/brands/{brandId}/area-criteria — 전체 치환
+// StoreSizeSection·FacilitySection과 같은 엔드포인트를 공유하므로 mergeAreaCriteria로 병합 전송한다
 const locationSchema = z.object({
-  preferredArea1st: z.string(),
-  preferredArea2nd: z.string(),
-  preferredArea3rd: z.string(),
-  rentMinKrw: numberField,
-  rentMaxKrw: numberField,
-  allowableFloor: z.string(),
-  signageImportance: z.string(),
-  storeSizeImportance: z.string(),
-  parkingImportance: z.string(),
-  waitingSpaceImportance: z.string(),
-  lunchSalesImportance: z.string(),
-  latenightSalesImportance: z.string(),
-  weekdaySalesImportance: z.string(),
-  weekendSalesImportance: z.string(),
+  preferredArea1st: z.string(), // 1차 선호 상권 · area_type
+  preferredArea2nd: z.string(), // 2차 선호 상권 · area_type
+  preferredArea3rd: z.string(), // 3차 선호 상권 · area_type
+  rentMinKrw: numberField, // 허용 월 임대료 최소 (원)
+  rentMaxKrw: numberField, // 허용 월 임대료 최대 (원)
+  allowableFloor: z.string(), // 허용 층수 범위 · floor_type
+  signageImportance: z.string(), // 간판 노출 중요도 · importance_level
+  storeSizeImportance: z.string(), // 매장 노출 중요도 · importance_level
+  parkingImportance: z.string(), // 주차 필요 여부 · importance_level
+  waitingSpaceImportance: z.string(), // 대기공간 필요 여부 · importance_level
+  lunchSalesImportance: z.string(), // 점심 매출 중요도 · importance_level
+  latenightSalesImportance: z.string(), // 심야 매출 중요도 · importance_level
+  weekdaySalesImportance: z.string(), // 주중 매출 중요도 · importance_level
+  weekendSalesImportance: z.string(), // 주말 매출 중요도 · importance_level
 });
 
 type LocationFormValues = z.infer<typeof locationSchema>;

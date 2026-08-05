@@ -15,12 +15,13 @@ import SettingsSection from "../SettingsSection";
 import { mergeAreaCriteria } from "./areaCriteriaShared";
 import { IMPORTANCE_OPTIONS } from "./policyOptions";
 
+// PATCH /api/brands/{brandId}/area-criteria — 전체 치환 (LocationCriteria·StoreSize와 엔드포인트 공유)
 const facilitySchema = z.object({
-  gasImportance: z.string(),
-  waterImportance: z.string(),
-  openFlameImportance: z.string(),
-  ventilationImportance: z.string(),
-  refrigerationImportance: z.string(),
+  gasImportance: z.string(), // 가스 시설 · importance_level
+  waterImportance: z.string(), // 급배수 · importance_level
+  openFlameImportance: z.string(), // 직화(화기) 시설 · importance_level
+  ventilationImportance: z.string(), // 배기·환기 시설 · importance_level
+  refrigerationImportance: z.string(), // 냉장·냉동 저장공간 · importance_level
 });
 
 type FacilityFormValues = z.infer<typeof facilitySchema>;
