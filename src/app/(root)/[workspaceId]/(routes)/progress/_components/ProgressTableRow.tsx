@@ -1,5 +1,8 @@
 "use client";
 
+import Link from "next/link";
+import { useParams } from "next/navigation";
+
 import dayjs from "dayjs";
 import { EllipsisVertical } from "lucide-react";
 
@@ -53,16 +56,25 @@ type ProgressTableRowProps = {
 };
 
 export default function ProgressTableRow({ row }: ProgressTableRowProps) {
+  const { workspaceId } = useParams<{ workspaceId: string }>();
+
   const isClosed = CLOSED_STAGES.includes(row.stage);
   const dueTone = resolveDueTone(row.nextActionDueAt, isClosed);
+  const detailHref = `/${workspaceId}/progress/${row.id}`;
 
   return (
     <div
       role="row"
       className={cn("group grid h-[50px] items-center px-6 transition-colors hover:bg-[#fafafb]", PROGRESS_GRID_COLS)}
     >
-      <div role="cell" className="truncate pr-3 text-[13px] font-semibold text-[#111827]">
-        {row.buyerName}
+      <div role="cell" className="min-w-0 pr-3">
+        {/* 행 전체를 클릭 영역으로 만들면 케밥 버튼과 겹치므로 이름만 링크로 둔다 */}
+        <Link
+          href={detailHref}
+          className="focus-visible:ring-ring block truncate rounded text-[13px] font-semibold text-[#111827] hover:underline focus-visible:ring-2 focus-visible:outline-none"
+        >
+          {row.buyerName}
+        </Link>
       </div>
 
       <div role="cell" className="truncate pr-3 text-[13px] text-[#6b7280]">
@@ -104,8 +116,10 @@ export default function ProgressTableRow({ row }: ProgressTableRowProps) {
             </button>
           }
         >
-          {/* TODO(API): 진행 관리 API 연결 시 실제 동작을 붙인다 */}
-          <DropdownMenuItem disabled>상세 보기</DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href={detailHref}>상세 보기</Link>
+          </DropdownMenuItem>
+          {/* TODO(API): 나머지는 진행 관리 API 연결 시 동작을 붙인다 */}
           <DropdownMenuItem disabled>단계 변경</DropdownMenuItem>
           <DropdownMenuItem disabled variant="destructive">
             목록에서 제외
