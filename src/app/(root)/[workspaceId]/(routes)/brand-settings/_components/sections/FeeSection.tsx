@@ -1,6 +1,7 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useEffect } from "react";
+import { useForm, useWatch } from "react-hook-form";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
@@ -17,13 +18,18 @@ import { PAYMENT_CYCLE_OPTIONS, ROYALTY_BASE_OPTIONS } from "./policyOptions";
 const numberField = z.string().refine(v => !v || /^\d+(\.\d+)?$/.test(v), { message: "숫자만 입력해주세요" });
 
 // PATCH /api/brands/{brandId}/fee — 전체 치환 (franchise 유형 전용)
+// 서버 제약: brandType이 franchise가 아니면 요청 내용과 무관하게 400
+// 서버 제약: royaltyBase가 활성 로열티 필드를 결정하고, 비활성 필드를 보내면 400
+//   revenue_pct → royaltyRatePct만 / fixed → royaltyFixedKrw만 / 미선택 → 둘 다 보낼 수 없음
 const feeSchema = z.object({
-  franchiseFeeKrw: numberField, // 가맹비 (원) · TODO(백엔드) 단위 확인
+  franchiseFeeKrw: numberField, // 가맹비 (원) · 서버는 변환 없이 원 단위로 보관
   royaltyBase: z.string(), // 로열티 산정 기준 · royalty_base(revenue_pct/fixed)
-  royaltyRatePct: numberField, // 매출 대비 로열티 비율 (%) · TODO(백엔드) 5 vs 0.05 확인
+  royaltyRatePct: numberField, // 매출 대비 로열티 비율 (%) · 소수 허용(5.5 그대로 저장)
   royaltyFixedKrw: numberField, // 고정 로열티 금액 (원)
   paymentCycle: z.string(), // 정산 주기 · payment_cycle(monthly/quarterly/annual)
 });
+
+const ROYALTY_BASE = { rate: "revenue_pct", fixed: "fixed" } as const;
 
 type FeeFormValues = z.infer<typeof feeSchema>;
 
@@ -37,11 +43,13 @@ const EMPTY_VALUES: FeeFormValues = {
 
 const toText = (v?: number | null) => (v === null || v === undefined ? "" : String(v));
 
+// 서버가 royaltyBase 전환 시 비활성 필드를 지우지 않으므로(정률/정액 값이 동시에 남는다)
+// 화면에는 현재 기준에 해당하는 값만 노출한다
 const toFormValues = (fee: BrandFee): FeeFormValues => ({
   franchiseFeeKrw: toText(fee.franchiseFeeKrw),
   royaltyBase: fee.royaltyBase ?? "",
-  royaltyRatePct: toText(fee.royaltyRatePct),
-  royaltyFixedKrw: toText(fee.royaltyFixedKrw),
+  royaltyRatePct: fee.royaltyBase === ROYALTY_BASE.rate ? toText(fee.royaltyRatePct) : "",
+  royaltyFixedKrw: fee.royaltyBase === ROYALTY_BASE.fixed ? toText(fee.royaltyFixedKrw) : "",
   paymentCycle: fee.paymentCycle ?? "",
 });
 
@@ -60,6 +68,7 @@ export default function FeeSection({ workspaceId }: FeeSectionProps) {
   const {
     register,
     control,
+    setValue,
     handleSubmit,
     formState: { errors, isDirty },
   } = useForm<FeeFormValues>({
@@ -68,12 +77,28 @@ export default function FeeSection({ workspaceId }: FeeSectionProps) {
     values: settings?.brandFee ? toFormValues(settings.brandFee) : undefined,
   });
 
+  // royaltyBase가 어느 로열티 필드를 쓸지 결정한다 (파생 상태이므로 별도 state로 두지 않는다)
+  const royaltyBase = useWatch({ control, name: "royaltyBase" });
+  const isRateActive = royaltyBase === ROYALTY_BASE.rate;
+  const isFixedActive = royaltyBase === ROYALTY_BASE.fixed;
+
+  // 기준을 바꾸면 비활성 필드에 남은 값을 비운다 (disabled 칸에 이전 값이 보이는 것을 방지)
+  useEffect(() => {
+    if (!isRateActive) {
+      setValue("royaltyRatePct", "");
+    }
+    if (!isFixedActive) {
+      setValue("royaltyFixedKrw", "");
+    }
+  }, [isRateActive, isFixedActive, setValue]);
+
   const onSubmit = (values: FeeFormValues) => {
+    // 비활성 로열티 필드는 body에서 제외한다 (undefined는 JSON 직렬화 시 키 자체가 빠진다)
     const body: UpdateFeeRequest = {
       franchiseFeeKrw: toNumber(values.franchiseFeeKrw),
       royaltyBase: values.royaltyBase,
-      royaltyRatePct: toNumber(values.royaltyRatePct),
-      royaltyFixedKrw: toNumber(values.royaltyFixedKrw),
+      royaltyRatePct: isRateActive ? toNumber(values.royaltyRatePct) : undefined,
+      royaltyFixedKrw: isFixedActive ? toNumber(values.royaltyFixedKrw) : undefined,
       paymentCycle: values.paymentCycle,
     };
 
@@ -116,7 +141,8 @@ export default function FeeSection({ workspaceId }: FeeSectionProps) {
           size="md"
           labelClassName="text-xs"
           label="매출 대비 로열티 비율"
-          placeholder="예: 5"
+          placeholder={isRateActive ? "예: 5" : "매출 비율 기준 선택 시 입력"}
+          disabled={!isRateActive}
           inputMode="decimal"
           className="pr-10"
           endAdornment={<Unit>%</Unit>}
@@ -132,7 +158,8 @@ export default function FeeSection({ workspaceId }: FeeSectionProps) {
           size="md"
           labelClassName="text-xs"
           label="고정 로열티 금액 (원화 기준)"
-          placeholder="예: 30000000"
+          placeholder={isFixedActive ? "예: 30000000" : "고정 금액 기준 선택 시 입력"}
+          disabled={!isFixedActive}
           inputMode="numeric"
           className="pr-10"
           endAdornment={<Unit>원</Unit>}
