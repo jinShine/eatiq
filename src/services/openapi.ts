@@ -269,6 +269,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/admin/staging-buyers": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * 바이어 후보 수동 등록
+     * @description 운영자가 바이어 후보 1건을 직접 입력해 공통 수집 파이프라인(Normalize→Dedup/Merge)에 적재합니다. buyerName·countries(허용 4개국)만 필수, 나머지는 아는 만큼만 입력합니다. 동일 dedup_key(website 도메인→contact_email 도메인→정규화 회사명 우선순위)의 기존 후보 상태에 따라 신규 적재(201)·기존 pending/needs_research에 병합(200)·이미 거절/중복 처리된 후보라 스킵(409)으로 갈립니다.
+     */
+    post: operations["register"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/brands/{brandId}/policy": {
     parameters: {
       query?: never;
@@ -665,7 +685,7 @@ export interface components {
        */
       nameKo: string;
     };
-    /** @description 공통 오류 응답 { success:false, errorCode, message } */
+    /** @description 공통 오류 응답 { success:false, errorCode, message, details? } */
     ErrorResponse: {
       /** @example false */
       success?: boolean;
@@ -673,6 +693,8 @@ export interface components {
       errorCode?: string;
       /** @example 이메일 또는 비밀번호가 올바르지 않습니다. */
       message?: string;
+      /** @description 도메인별 부가 데이터(있을 때만 포함) */
+      details?: Record<string, never>;
     };
     BrandCreatedResponse: {
       brand?: components["schemas"]["BrandDetail"];
@@ -950,6 +972,26 @@ export interface components {
     EmailVerifyConfirmRequest: {
       /** @description 이메일 링크의 인증 토큰 */
       token: string;
+    };
+    AdminStagingBuyerResponse: {
+      /** @enum {string} */
+      outcome?:
+        | "INSERTED"
+        | "MERGED"
+        | "SKIPPED_REJECTED"
+        | "SKIPPED_DUPLICATE"
+        | "DISCARDED_OUT_OF_COUNTRY"
+        | "FAILED_MINIMUM_REQUIREMENTS"
+        | "INSERTED_COMPARISON";
+      stagingId?: string;
+    };
+    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
+    CommonResponseAdminStagingBuyerResponse: {
+      /** @example true */
+      success?: boolean;
+      data?: components["schemas"]["AdminStagingBuyerResponse"];
+      /** @example 요청이 성공했습니다. */
+      message?: string;
     };
     UpdatePolicyRequest: {
       preferredContractType?: string;
@@ -2192,6 +2234,75 @@ export interface operations {
       };
       /** @description VALIDATION_ERROR(토큰 누락) / AUTH_VERIFY_TOKEN_INVALID / AUTH_VERIFY_TOKEN_EXPIRED */
       400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  register: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["JsonNode"];
+      };
+    };
+    responses: {
+      /** @description 기존 pending/needs_research 후보에 병합(MERGED, staging_id=병합 대상 기존 행) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CommonResponseAdminStagingBuyerResponse"];
+        };
+      };
+      /** @description 신규 적재(INSERTED) 또는 기존 승인 후보와의 비교 검수용 신규 적재(INSERTED_COMPARISON) — 응답 헤더 Location에 상세 조회 경로 포함 */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CommonResponseAdminStagingBuyerResponse"];
+        };
+      };
+      /** @description 입력값 오류(VALIDATION_ERROR, 알 수 없는 필드·타입 불일치·허용되지 않은 국가·buyerName 누락 포함) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 관리자 권한 없음(AUTH_FORBIDDEN) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      /** @description 동일 dedup_key의 기존 후보가 이미 거절(rejected)되었거나 중복(duplicate) 처리되어 재적재를 스킵함(BUYER_STAGING_ALREADY_RESOLVED, details 참고) */
+      409: {
         headers: {
           [name: string]: unknown;
         };
