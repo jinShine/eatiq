@@ -33,10 +33,21 @@ export default function ProgressDetailContainer({ workspaceId }: ProgressDetailC
 
   const handleStageChange = (stage: StageCode) => setDetail(prev => ({ ...prev, stage }));
 
-  const handleToggleAction = (id: string, isDone: boolean) =>
+  // 좌측 요약 패널의 다음 액션 (detail.nextActions)
+  const handleToggleSummaryAction = (id: string, isDone: boolean) =>
     setDetail(prev => ({
       ...prev,
       nextActions: prev.nextActions.map(action => (action.id === id ? { ...action, isDone } : action)),
+    }));
+
+  const handleToggleRecordAction = (recordId: string, isDone: boolean) =>
+    setDetail(prev => ({
+      ...prev,
+      records: prev.records.map(record =>
+        record.id === recordId && record.nextAction
+          ? { ...record, nextAction: { ...record.nextAction, isDone } }
+          : record,
+      ),
     }));
 
   return (
@@ -76,11 +87,11 @@ export default function ProgressDetailContainer({ workspaceId }: ProgressDetailC
 
               <div className="h-px bg-[#f3f4f6]" />
 
-              <NextActionSummaryCard actions={detail.nextActions} onToggle={handleToggleAction} />
+              <NextActionSummaryCard actions={detail.nextActions} onToggle={handleToggleSummaryAction} />
             </aside>
 
             <div className="min-w-0 flex-1 overflow-y-auto p-6">
-              <ProgressTimeline />
+              <ProgressTimeline records={detail.records} onToggleAction={handleToggleRecordAction} />
             </div>
           </div>
 
