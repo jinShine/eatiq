@@ -6,6 +6,7 @@ import BaseContainerLayout from "@components/layout/base/BaseContainerLayout";
 import PageHeader from "@components/layout/header/PageHeader";
 
 import { CONTRACT_TYPE_OPTIONS, COUNTRY_FILTER_OPTIONS, type StageCode } from "../../_components/progressOptions";
+import AddProgressRecordSheet from "../_components/AddProgressRecordSheet";
 import BuyerInfoCard from "../_components/BuyerInfoCard";
 import NextActionSummaryCard from "../_components/NextActionSummaryCard";
 import ProgressDetailHeader from "../_components/ProgressDetailHeader";
@@ -24,6 +25,9 @@ type ProgressDetailContainerProps = {
 export default function ProgressDetailContainer({ workspaceId }: ProgressDetailContainerProps) {
   // TODO(API): 상세 조회 API가 준비되면 useQuery(progressId)로 교체한다.
   const [detail, setDetail] = useState(PROGRESS_DETAIL_MOCK);
+
+  // Sheet를 여는 버튼은 헤더에 있지만, 저장 후 타임라인을 갱신해야 하므로 공통 부모가 상태를 쥔다
+  const [isRecordSheetOpen, setIsRecordSheetOpen] = useState(false);
 
   const countryLabel = findLabel(COUNTRY_FILTER_OPTIONS, detail.countryCode);
 
@@ -45,6 +49,7 @@ export default function ProgressDetailContainer({ workspaceId }: ProgressDetailC
             country={countryLabel}
             city={detail.city}
             backHref={`/${workspaceId}/progress`}
+            onAddRecord={() => setIsRecordSheetOpen(true)}
           />
 
           {/* 좌: 고정 폭 요약 패널 · 우: 스크롤되는 타임라인 */}
@@ -78,6 +83,8 @@ export default function ProgressDetailContainer({ workspaceId }: ProgressDetailC
               <ProgressTimeline />
             </div>
           </div>
+
+          <AddProgressRecordSheet isOpen={isRecordSheetOpen} onOpenChange={setIsRecordSheetOpen} />
         </div>
       }
     />
