@@ -1,5 +1,13 @@
+import { use } from "react";
+
 import MarketAnalysisContainer from "./_container";
 
-export default function MarketAnalysisPage() {
-  return <MarketAnalysisContainer />;
+type MarketAnalysisPageProps = {
+  params: Promise<{ workspaceId: string }>;
+};
+
+export default function MarketAnalysisPage({ params }: MarketAnalysisPageProps) {
+  const { workspaceId } = use(params);
+
+  return <MarketAnalysisContainer workspaceId={workspaceId} />;
 }
