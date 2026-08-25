@@ -19,11 +19,21 @@
   --color-text-tertiary: var(--text-tertiary);
   --color-text-disabled: var(--text-disabled);
 
+  /* Primary scale */
+  --color-primary-50: var(--primary-50);
+  --color-primary-100: var(--primary-100);
+  --color-primary-500: var(--primary-500);
+  --color-primary-600: var(--primary-600);
+  --color-primary-700: var(--primary-700);
+
   /* Primary variants */
   --color-primary-emphasis: var(--primary-emphasis);
   --color-primary-light: var(--primary-light);
   --color-primary-medium: var(--primary-medium);
   --color-primary-background: var(--primary-background);
+
+  /* Status variants */
+  --color-warning-50: var(--warning-50);
 
   /* Secondary variants */
   --color-secondary-background: var(--secondary-background);
@@ -162,7 +172,7 @@
     --card-foreground: #1d1d1f; /* ink 통일 */
     --popover: #ffffff;
     --popover-foreground: #1d1d1f; /* ink 통일 */
-    --primary: #f83d5e; /* Primary/500 (Figma) */
+    --primary: var(--primary-500);
     --primary-foreground: #fafafa;
     --secondary: #6d788d;
     --secondary-foreground: #fafafa;
@@ -175,7 +185,7 @@
     --destructive-background: #ff3b301a; /* error 배경 — @theme error-background 대응 */
     --border: #e6e6e9; /* hair · 헤어라인 보더 */
     --input: #e6e6e9; /* hair · input 테두리 */
-    --ring: #f83d5e;
+    --ring: var(--primary-500);
     --radius: 0.75rem; /* 12px — 버튼·입력 기준. 카드는 컴포넌트에서 rounded-2xl로 별도 */
 
     /* --- Text --- */
@@ -184,16 +194,25 @@
     --text-tertiary: #6e6e73;
     --text-disabled: #a1a1a6;
 
-    /* --- Primary variants --- */
-    --primary-emphasis: #e02950; /* hover/active — 진한 로즈 */
-    --primary-light: #ffe6eb; /* Primary/100 (Figma) */
-    --primary-medium: #fb6b84;
-    --primary-background: #f83d5e1a;
+    /* --- Primary scale (Figma 디자인 시스템 실측) --- */
+    --primary-50: #fff5f7;
+    --primary-100: #ffe6eb;
+    --primary-500: #f83d5e;
+    --primary-600: #e12e50;
+    --primary-700: #c51f3e;
+
+    /* --- Primary variants — 스케일을 참조한다(값 중복 금지) --- */
+    --primary-emphasis: var(--primary-600); /* hover/active */
+    --primary-light: var(--primary-100);
+    --primary-medium: #fb6b84; /* 스케일 외 중간톤 — 현재 사용처 없음 */
+    --primary-background: #f83d5e1a; /* primary 10% — 옅은 채움 */
 
     /* --- Secondary variants --- */
     --secondary-background: #6d788d1a;
 
     /* --- Status --- */
+    /* 시안의 "확인이 필요한 조건" 카드 배경 (Figma Semantic/Brown_50) */
+    --warning-50: #fffbeb;
     --success: #34c759; /* green · 강점·완료·긍정 */
     --success-background: #34c7591a;
     --warning: #ff9500; /* amber · 주의·진행중 */
