@@ -2,6 +2,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 
 import { useInvalidateQueries } from "@hooks/commons";
 
+import { IS_MOCK, mockMutation, mockResolve } from "../mock";
 import {
   getBrandSettings,
   getBrands,
@@ -14,6 +15,7 @@ import {
   updateBrandOperation,
   updateBrandPolicy,
 } from "./brand.api";
+import { mergeMockSettings, mockBrandSettings, mockBrandsPage } from "./brand.mock";
 import {
   type UpdateAreaCriteriaRequest,
   type UpdateBasicRequest,
@@ -56,7 +58,7 @@ export const brandKeys = {
 export function useWorkspaces() {
   return useQuery({
     queryKey: brandKeys.list(),
-    queryFn: getBrands,
+    queryFn: IS_MOCK ? () => mockResolve(mockBrandsPage) : getBrands,
     select: page => (page.content ?? []).map(toWorkspace),
   });
 }
@@ -67,7 +69,7 @@ export function useWorkspaces() {
 export function useBrandSettings(workspaceId: string) {
   return useQuery({
     queryKey: brandKeys.settings(workspaceId),
-    queryFn: () => getBrandSettings(workspaceId),
+    queryFn: IS_MOCK ? () => mockResolve(mockBrandSettings) : () => getBrandSettings(workspaceId),
     enabled: Boolean(workspaceId),
   });
 }
@@ -76,7 +78,10 @@ export function useUpdateBrandBasic(workspaceId: string) {
   const invalidateQueries = useInvalidateQueries();
 
   return useMutation({
-    mutationFn: (body: UpdateBasicRequest) => updateBrandBasic(workspaceId, body),
+    mutationFn: mockMutation(
+      (body: UpdateBasicRequest) => updateBrandBasic(workspaceId, body),
+      body => mergeMockSettings("brand", body),
+    ),
     onSuccess: () => {
       invalidateQueries.single(brandKeys.settings(workspaceId));
     },
@@ -86,7 +91,7 @@ export function useUpdateBrandBasic(workspaceId: string) {
 export function useBrandJourney(workspaceId: string, tab: BrandSettingsTab) {
   return useQuery({
     queryKey: brandKeys.settings(workspaceId),
-    queryFn: () => getBrandSettings(workspaceId),
+    queryFn: IS_MOCK ? () => mockResolve(mockBrandSettings) : () => getBrandSettings(workspaceId),
     enabled: Boolean(workspaceId),
     select: settings => settings.journeys?.[JOURNEY_KEY_BY_TAB[tab]] ?? null,
   });
@@ -96,7 +101,10 @@ export function useUpdateBrandIntro(workspaceId: string) {
   const invalidateQueries = useInvalidateQueries();
 
   return useMutation({
-    mutationFn: (body: UpdateIntroRequest) => updateBrandIntro(workspaceId, body),
+    mutationFn: mockMutation(
+      (body: UpdateIntroRequest) => updateBrandIntro(workspaceId, body),
+      body => mergeMockSettings("brandIntro", body),
+    ),
     onSuccess: () => {
       invalidateQueries.single(brandKeys.settings(workspaceId));
     },
@@ -107,7 +115,10 @@ export function useUpdateBrandOperation(workspaceId: string) {
   const invalidateQueries = useInvalidateQueries();
 
   return useMutation({
-    mutationFn: (body: UpdateOperationRequest) => updateBrandOperation(workspaceId, body),
+    mutationFn: mockMutation(
+      (body: UpdateOperationRequest) => updateBrandOperation(workspaceId, body),
+      body => mergeMockSettings("brandOperation", body),
+    ),
     onSuccess: () => {
       invalidateQueries.single(brandKeys.settings(workspaceId));
     },
@@ -118,7 +129,10 @@ export function useUpdateBrandContact(workspaceId: string) {
   const invalidateQueries = useInvalidateQueries();
 
   return useMutation({
-    mutationFn: (body: UpdateContactRequest) => updateBrandContact(workspaceId, body),
+    mutationFn: mockMutation(
+      (body: UpdateContactRequest) => updateBrandContact(workspaceId, body),
+      body => mergeMockSettings("brandContact", body),
+    ),
     onSuccess: () => {
       invalidateQueries.single(brandKeys.settings(workspaceId));
     },
@@ -133,7 +147,10 @@ export function useUpdateBrandContract(workspaceId: string) {
   const invalidateQueries = useInvalidateQueries();
 
   return useMutation({
-    mutationFn: (body: UpdateContractRequest) => updateBrandContract(workspaceId, body),
+    mutationFn: mockMutation(
+      (body: UpdateContractRequest) => updateBrandContract(workspaceId, body),
+      body => mergeMockSettings("brandContract", body),
+    ),
     onSuccess: () => {
       invalidateQueries.single(brandKeys.settings(workspaceId));
     },
@@ -144,7 +161,10 @@ export function useUpdateBrandPolicy(workspaceId: string) {
   const invalidateQueries = useInvalidateQueries();
 
   return useMutation({
-    mutationFn: (body: UpdatePolicyRequest) => updateBrandPolicy(workspaceId, body),
+    mutationFn: mockMutation(
+      (body: UpdatePolicyRequest) => updateBrandPolicy(workspaceId, body),
+      body => mergeMockSettings("brandPolicy", body),
+    ),
     onSuccess: () => {
       invalidateQueries.single(brandKeys.settings(workspaceId));
     },
@@ -155,7 +175,10 @@ export function useUpdateBrandFee(workspaceId: string) {
   const invalidateQueries = useInvalidateQueries();
 
   return useMutation({
-    mutationFn: (body: UpdateFeeRequest) => updateBrandFee(workspaceId, body),
+    mutationFn: mockMutation(
+      (body: UpdateFeeRequest) => updateBrandFee(workspaceId, body),
+      body => mergeMockSettings("brandFee", body),
+    ),
     onSuccess: () => {
       invalidateQueries.single(brandKeys.settings(workspaceId));
     },
@@ -170,7 +193,10 @@ export function useUpdateBrandAreaCriteria(workspaceId: string) {
   const invalidateQueries = useInvalidateQueries();
 
   return useMutation({
-    mutationFn: (body: UpdateAreaCriteriaRequest) => updateBrandAreaCriteria(workspaceId, body),
+    mutationFn: mockMutation(
+      (body: UpdateAreaCriteriaRequest) => updateBrandAreaCriteria(workspaceId, body),
+      body => mergeMockSettings("brandAreaCriteria", body),
+    ),
     onSuccess: () => {
       invalidateQueries.single(brandKeys.settings(workspaceId));
     },

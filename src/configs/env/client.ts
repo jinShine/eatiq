@@ -1,6 +1,8 @@
 export const ENV_CLIENT = {
   // api
   API_URL: process.env.NEXT_PUBLIC_API_URL,
+  // 백엔드 부재 시 목 데이터로 UI 작업 (src/services/api/mock.ts)
+  USE_MOCK: process.env.NEXT_PUBLIC_USE_MOCK === "true",
 
   // lib
   KAKAO_CLIENT_ID: process.env.NEXT_PUBLIC_KAKAO_CLIENT_ID,

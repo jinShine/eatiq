@@ -1,6 +1,8 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 
+import { IS_MOCK, mockResolve } from "../mock";
 import { getMe, signIn } from "./auth.api";
+import { mockAuthResponse, mockMe } from "./auth.mock";
 
 export const authKeys = {
   all: ["auth"] as const,
@@ -9,13 +11,13 @@ export const authKeys = {
 
 export function useSignInMutation() {
   return useMutation({
-    mutationFn: signIn,
+    mutationFn: IS_MOCK ? () => mockResolve(mockAuthResponse) : signIn,
   });
 }
 
 export function useMe() {
   return useQuery({
     queryKey: authKeys.me(),
-    queryFn: getMe,
+    queryFn: IS_MOCK ? () => mockResolve(mockMe) : getMe,
   });
 }
