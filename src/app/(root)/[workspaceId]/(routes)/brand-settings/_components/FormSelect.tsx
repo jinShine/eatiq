@@ -10,6 +10,8 @@ type FormSelectProps<T extends FieldValues> = {
   label: string;
   placeholder?: string;
   options: readonly { value: string; label: string }[];
+  /** 선행 입력이 없어 아직 고를 수 없는 경우 (예: 국가를 고르기 전의 도시) */
+  disabled?: boolean;
   /** 값이 바뀔 때 폼 외 부수 작업이 필요한 경우 (예: 국가 변경 시 도시 초기화) */
   onValueChange?: (value: string) => void;
 };
@@ -21,6 +23,7 @@ export default function FormSelect<T extends FieldValues>({
   label,
   placeholder = "선택해주세요",
   options,
+  disabled,
   onValueChange,
 }: FormSelectProps<T>) {
   return (
@@ -35,6 +38,7 @@ export default function FormSelect<T extends FieldValues>({
             labelClassName="text-xs"
             label={label}
             placeholder={placeholder}
+            disabled={disabled}
             value={field.value}
             onValueChange={value => {
               field.onChange(value);

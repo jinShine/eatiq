@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useWatch } from "react-hook-form";
 
 import { Button, Input, Modal, ModalBody, ModalFooter, ModalHeader } from "@components/ui";
 
@@ -59,11 +60,11 @@ export default function StartAnalysisModal({
   const {
     register,
     control,
-    watch,
     formState: { errors },
   } = form;
 
-  const country = watch("country");
+  // reactCompiler가 켜져 있어 watch()는 리렌더를 트리거하지 못한다. 훅인 useWatch를 써야 한다
+  const country = useWatch({ control, name: "country" });
   const cityOptions = ANALYSIS_CITY_OPTIONS[country] ?? [];
 
   const handleOpenChange = (open: boolean) => {
@@ -115,6 +116,7 @@ export default function StartAnalysisModal({
                 label="분석 도시"
                 placeholder={country ? "선택해주세요" : "국가를 먼저 선택해주세요"}
                 options={cityOptions}
+                disabled={!country}
               />
             </div>
 
