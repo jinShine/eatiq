@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 import { tokenStorage } from "@services/token-storage";
 
 import { IS_MOCK, mockResolve } from "../mock";
-import { sendMagicLink, verifyMagicLink } from "./auth.api";
-import { mockAuthUser, mockVerifyResponse } from "./auth.mock";
+import { register, sendMagicLink, verifyMagicLink } from "./auth.api";
+import { MOCK_ACCESS_TOKEN, mockAuthUser, mockVerifyResponse } from "./auth.mock";
 import { type AuthUser } from "./auth.type";
 
 export const authKeys = {
@@ -22,10 +22,40 @@ export function useSendMagicLinkMutation() {
   });
 }
 
-/** 메일로 받은 토큰 검증 → access_token 수령 */
-export function useVerifyMagicLinkMutation() {
+/**
+ * 메일로 받은 토큰 검증 → access_token 수령
+ *
+ * 토큰이 1회용이라 호출 자체를 막아야 하는 경우가 있다(가입 진행 중 새로고침 등).
+ * 그럴 때 `enabled`를 false로 넘겨 호출을 건너뛴다.
+ */
+export function useVerifyMagicLink(email: string, token: string, enabled = true) {
+  return useQuery({
+    queryKey: [...authKeys.all, "verify", email, token],
+    queryFn: IS_MOCK ? () => mockResolve(mockVerifyResponse) : () => verifyMagicLink({ email, token }),
+    enabled: enabled && Boolean(email && token),
+    retry: false,
+    staleTime: Infinity,
+  });
+}
+
+/**
+ * 신규 회원 가입 완료.
+ *
+ * verify 응답의 `is_new_user`가 true면 access_token 대신 가입용 `token`만 온다.
+ * 그 토큰과 사용자가 입력한 이름을 함께 보내야 가입이 끝나고 access_token이 발급된다.
+ *
+ * 사용자가 버튼을 눌러 일으키는 행위라 verify(useQuery)와 달리 mutation으로 둔다.
+ */
+export function useRegisterMutation() {
   return useMutation({
-    mutationFn: IS_MOCK ? () => mockResolve(mockVerifyResponse) : verifyMagicLink,
+    mutationFn: IS_MOCK
+      ? () =>
+          mockResolve({
+            message: "회원가입이 완료되었습니다.",
+            access_token: MOCK_ACCESS_TOKEN,
+            user: mockAuthUser,
+          })
+      : register,
   });
 }
 

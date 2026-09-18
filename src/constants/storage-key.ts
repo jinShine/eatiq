@@ -5,6 +5,8 @@ export const STORAGE_KEY = {
     REFRESH_TOKEN: "eatiq@refresh-token",
     AUTH_USER: "eatiq@auth-user",
   },
-  SESSION: {},
+  SESSION: {
+    PENDING_SIGNUP: "eatiq@pending-signup",
+  },
   COOKIE: {},
 };
