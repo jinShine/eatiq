@@ -8,7 +8,7 @@ import z from "zod";
 import { Input, Toast } from "@components/ui";
 
 import { useBrandSettings, useUpdateBrandContract } from "@services/api/brand/brand.query";
-import { type BrandContract, type UpdateContractRequest } from "@services/api/brand/brand.type";
+import { type BrandContractView } from "@services/api/brand/brand.view";
 
 import SettingsSection from "../SettingsSection";
 
@@ -30,7 +30,7 @@ const EMPTY_VALUES: ContractFormValues = {
   contractContactEmail: "",
 };
 
-const toFormValues = (contract: BrandContract): ContractFormValues => ({
+const toFormValues = (contract: BrandContractView): ContractFormValues => ({
   contractContactNameKo: contract.contractContactNameKo ?? "",
   contractContactNameEn: contract.contractContactNameEn ?? "",
   contractContactTitle: contract.contractContactTitle ?? "",
@@ -57,7 +57,7 @@ export default function ContractSection({ workspaceId }: ContractSectionProps) {
 
   const onSubmit = (values: ContractFormValues) => {
     // /contract는 전체 치환이라 서명권자 필드도 함께 보내야 유실되지 않는다
-    const body: UpdateContractRequest = {
+    const body: BrandContractView = {
       ...values,
       signatoryNameKo: settings?.brandContract?.signatoryNameKo ?? "",
       signatoryNameEn: settings?.brandContract?.signatoryNameEn ?? "",

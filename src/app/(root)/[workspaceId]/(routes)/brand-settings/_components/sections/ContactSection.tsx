@@ -6,7 +6,7 @@ import z from "zod";
 import { Input, Toast } from "@components/ui";
 
 import { useBrandSettings, useUpdateBrandContact } from "@services/api/brand/brand.query";
-import { type BrandContact, type UpdateContactRequest } from "@services/api/brand/brand.type";
+import { type BrandContactView } from "@services/api/brand/brand.view";
 
 import FormMultiSelect from "../FormMultiSelect";
 import SettingsSection from "../SettingsSection";
@@ -31,7 +31,7 @@ const EMPTY_VALUES: ContactFormValues = {
   contactLanguages: [],
 };
 
-const toFormValues = (contact: BrandContact): ContactFormValues => ({
+const toFormValues = (contact: BrandContactView): ContactFormValues => ({
   contactNameKo: contact.contactNameKo ?? "",
   contactNameEn: contact.contactNameEn ?? "",
   contactTitle: contact.contactTitle ?? "",
@@ -39,7 +39,7 @@ const toFormValues = (contact: BrandContact): ContactFormValues => ({
   contactLanguages: contact.contactLanguages ?? [],
 });
 
-const toRequest = (values: ContactFormValues): UpdateContactRequest => ({ ...values });
+const toRequest = (values: ContactFormValues): BrandContactView => ({ ...values });
 
 type ContactSectionProps = {
   workspaceId: string;

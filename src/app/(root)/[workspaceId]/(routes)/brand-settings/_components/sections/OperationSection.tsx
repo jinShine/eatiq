@@ -6,7 +6,7 @@ import z from "zod";
 import { Input, Toast } from "@components/ui";
 
 import { useBrandSettings, useUpdateBrandOperation } from "@services/api/brand/brand.query";
-import { type BrandOperation, type UpdateOperationRequest } from "@services/api/brand/brand.type";
+import { type BrandOperationView } from "@services/api/brand/brand.view";
 
 import FormMultiSelect from "../FormMultiSelect";
 import SettingsSection from "../SettingsSection";
@@ -44,7 +44,7 @@ const EMPTY_VALUES: OperationFormValues = {
 
 const toText = (v?: number | null) => (v === null || v === undefined ? "" : String(v));
 
-const toFormValues = (operation: BrandOperation): OperationFormValues => ({
+const toFormValues = (operation: BrandOperationView): OperationFormValues => ({
   storeCountTotalDomestic: toText(operation.storeCountTotalDomestic),
   storeCountDirect: toText(operation.storeCountDirect),
   storeCountOverseas: toText(operation.storeCountOverseas),
@@ -59,7 +59,7 @@ const toFormValues = (operation: BrandOperation): OperationFormValues => ({
 const toNumber = (v: string) => (v ? Number(v) : undefined);
 
 // TODO(백엔드): monthlyRevenueAvg 단위 확인 필요 (화면은 만원 기준)
-const toRequest = (values: OperationFormValues): UpdateOperationRequest => ({
+const toRequest = (values: OperationFormValues): BrandOperationView => ({
   storeCountTotalDomestic: toNumber(values.storeCountTotalDomestic),
   storeCountDirect: toNumber(values.storeCountDirect),
   storeCountOverseas: toNumber(values.storeCountOverseas),

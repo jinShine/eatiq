@@ -10,7 +10,7 @@
     "build:main": "NEXT_PUBLIC_ENV=production next build",
     "lint": "eslint .",
     "type-check": "tsc --noEmit",
-    "gen:api": "openapi-typescript https://eatiqlink-dev.onrender.com/v3/api-docs -o src/services/openapi.ts",
+    "gen:api": "bash scripts/gen-api.sh",
     "format": "prettier --log-level warn --write \"**/*.{ts,tsx,css,md}\"",
     "prepare": "command -v husky >/dev/null && husky install || true",
     "storybook": "storybook dev -p 6006",

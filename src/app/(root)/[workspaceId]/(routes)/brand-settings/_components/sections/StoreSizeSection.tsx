@@ -8,7 +8,7 @@ import z from "zod";
 import { Input, Toast } from "@components/ui";
 
 import { useBrandSettings, useUpdateBrandAreaCriteria } from "@services/api/brand/brand.query";
-import { type BrandAreaCriteria } from "@services/api/brand/brand.type";
+import { type BrandAreaCriteriaView } from "@services/api/brand/brand.view";
 
 import SettingsSection from "../SettingsSection";
 import { mergeAreaCriteria, toNumber, toText } from "./areaCriteriaShared";
@@ -33,7 +33,7 @@ const EMPTY_VALUES: StoreSizeFormValues = {
   minFrontageM: "",
 };
 
-const toFormValues = (criteria: BrandAreaCriteria): StoreSizeFormValues => ({
+const toFormValues = (criteria: BrandAreaCriteriaView): StoreSizeFormValues => ({
   recommendedSizePy: toText(criteria.recommendedSizePy),
   sizeMinPy: toText(criteria.sizeMinPy),
   sizeMaxPy: toText(criteria.sizeMaxPy),

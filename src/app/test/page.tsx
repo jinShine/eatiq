@@ -3,7 +3,7 @@
 /* 임시 API 테스트 페이지 — 시연용, 이후 삭제 */
 import { useState } from "react";
 
-import { useSignInMutation } from "@services/api/auth/auth.query";
+import { useSendMagicLinkMutation, useVerifyMagicLinkMutation } from "@services/api/auth/auth.query";
 import axiosClient from "@services/axios.client";
 import { tokenStorage } from "@services/token-storage";
 
@@ -12,18 +12,34 @@ type Result = { label: string; data?: any; error?: any } | null;
 
 export default function TestPage() {
   const [email, setEmail] = useState("fetest_1784096342@example.com");
-  const [password, setPassword] = useState("Test1234!@");
+  // 매직링크 방식이라 비밀번호 대신 메일로 받은 인증 코드를 쓴다
+  const [password, setPassword] = useState("");
   const [result, setResult] = useState<Result>(null);
 
-  const { mutate: signIn, isPending } = useSignInMutation();
+  const { mutate: sendMagicLink } = useSendMagicLinkMutation();
+  const { mutate: verifyMagicLink, isPending } = useVerifyMagicLinkMutation();
+
+  const handleSendLink = () => {
+    sendMagicLink(
+      { email },
+      {
+        onSuccess: data => setResult({ label: "✅ 로그인 링크 발송", data }),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        onError: (e: any) => setResult({ label: "❌ 발송 실패", error: e.response?.data }),
+      },
+    );
+  };
 
   const handleLogin = () => {
-    signIn(
-      { email, password },
+    verifyMagicLink(
+      { email, token: password },
       {
         onSuccess: data => {
-          if (data.accessToken && data.refreshToken) {
-            tokenStorage.setTokens(data.accessToken, data.refreshToken);
+          if (data.access_token) {
+            tokenStorage.setAccessToken(data.access_token);
+          }
+          if (data.user) {
+            tokenStorage.setUser(data.user);
           }
           setResult({ label: "✅ 로그인 성공 (토큰 저장됨)", data });
         },
@@ -64,6 +80,9 @@ export default function TestPage() {
       </div>
 
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
+        <button onClick={handleSendLink} className="rounded border px-3 py-2 text-sm">
+          링크 발송
+        </button>
         <button onClick={handleLogin} disabled={isPending} style={btn}>
           {isPending ? "로그인 중..." : "① 로그인"}
         </button>

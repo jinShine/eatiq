@@ -5,7 +5,7 @@
  * 새 백엔드 URL·스펙이 오면 `NEXT_PUBLIC_USE_MOCK`을 끄고 이 파일을 삭제한다.
  * 타입은 실제 DTO(`brand.type.ts`)를 그대로 쓰므로, 스펙이 바뀌면 타입 에러로 드러난다.
  */
-import { type BrandSettings, type PageResponseBrandSummary } from "./brand.type";
+import { type BrandSettingsView } from "./brand.view";
 
 /** 목 설정에서 폼이 저장하는 섹션들 */
 type MockSettingsSection =
@@ -18,22 +18,7 @@ type MockSettingsSection =
   | "brandFee"
   | "brandAreaCriteria";
 
-/** 목 워크스페이스 id — URL의 [workspaceId]로 쓰인다 */
-export const MOCK_WORKSPACE_ID = "mock-workspace-1";
-
-export const mockBrandsPage: PageResponseBrandSummary = {
-  content: [
-    { id: MOCK_WORKSPACE_ID, nameKo: "몽탄", nameEn: "MONGTAN", role: "owner" },
-    { id: "mock-workspace-2", nameKo: "금돼지식당", nameEn: "GEUMDWAEJI", role: "user" },
-  ],
-  page: 0,
-  size: 20,
-  totalElements: 2,
-  totalPages: 1,
-  hasNext: false,
-};
-
-export const mockBrandSettings: BrandSettings = {
+export const mockBrandSettings: BrandSettingsView = {
   brand: {
     nameKo: "몽탄",
     nameEn: "MONGTAN",
@@ -161,5 +146,5 @@ export const mergeMockSettings = (section: MockSettingsSection, patch: object) =
   mockBrandSettings[section] = {
     ...(mockBrandSettings[section] ?? {}),
     ...patch,
-  } as BrandSettings[typeof section];
+  } as BrandSettingsView[typeof section];
 };

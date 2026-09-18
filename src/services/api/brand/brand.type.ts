@@ -1,46 +1,74 @@
 import { type components } from "@services/openapi";
 
-export type BrandSummary = components["schemas"]["BrandSummary"];
-export type BrandDetail = components["schemas"]["BrandDetail"];
-export type PageResponseBrandSummary = components["schemas"]["PageResponseBrandSummary"];
-export type CurrentBrandResponse = components["schemas"]["CurrentBrandResponse"];
+/************************************
+ * 조회
+ ************************************/
+export type BrandDetail = components["schemas"]["BrandDetailResponseDto"];
+export type BrandListItem = components["schemas"]["BrandListItemDto"];
+export type BrandListResponse = components["schemas"]["GetBrandListResponseDto"];
 
 /************************************
- * 브랜드 정보 설정
+ * 브랜드 정보 설정 — 섹션별 저장
+ *
+ * 이전 PATCH 한 방에 보내던 구조가 섹션별 PUT으로 나뉘었다.
+ * (basic / intro / status / contact / contract / contract-policy /
+ *  commission / location-standard / size-criteria / facility-req / menu / signature / visual)
  ************************************/
-export type BrandSettings = components["schemas"]["BrandSettingsResponse"];
-export type BrandBasic = components["schemas"]["BrandBasicDto"];
-export type UpdateBasicRequest = components["schemas"]["UpdateBasicRequest"];
-export type BasicSaveResponse = components["schemas"]["BasicSaveResponse"];
-export type BrandJourney = components["schemas"]["JourneyDto"];
-export type BrandMissingItem = components["schemas"]["MissingItemDto"];
-export type BrandNextAction = components["schemas"]["NextActionDto"];
-export type BrandIntro = components["schemas"]["BrandIntroDto"];
-export type UpdateIntroRequest = components["schemas"]["UpdateIntroRequest"];
-export type IntroSaveResponse = components["schemas"]["IntroSaveResponse"];
-export type BrandOperation = components["schemas"]["BrandOperationDto"];
-export type UpdateOperationRequest = components["schemas"]["UpdateOperationRequest"];
-export type OperationSaveResponse = components["schemas"]["OperationSaveResponse"];
-export type BrandContact = components["schemas"]["BrandContactDto"];
-export type UpdateContactRequest = components["schemas"]["UpdateContactRequest"];
-export type ContactSaveResponse = components["schemas"]["ContactSaveResponse"];
+
+/** 기본 정보 — 브랜드명·설립연도·대표자·본사 연락처 */
+export type UpdateBrandBasicRequest = components["schemas"]["UpdateBrandBasicDto"];
+export type UpdateBrandBasicResponse = components["schemas"]["UpdateBrandBasicResponseDto"];
+
+/** 브랜드 소개 — 한 줄·상세 소개, 업종, 가격대, 강점 */
+export type UpdateBrandIntroRequest = components["schemas"]["UpdateBrandIntroDto"];
+export type UpdateBrandIntroResponse = components["schemas"]["UpdateBrandIntroResponseDto"];
+
+/** 운영 현황 — 매장 수·매출·객단가·평형 (이전 operation) */
+export type UpdateBrandStatusRequest = components["schemas"]["UpdateBrandStatusDto"];
+export type UpdateBrandStatusResponse = components["schemas"]["UpdateBrandStatusResponseDto"];
+
+/** 브랜드 담당자 연락처 */
+export type UpdateBrandContactRequest = components["schemas"]["UpdateBrandContactDto"];
+export type UpdateBrandContactResponse = components["schemas"]["UpdateBrandContactResponseDto"];
+
+/** 계약 담당자 */
+export type UpdateBrandContractRequest = components["schemas"]["UpdateBrandContractDto"];
+export type UpdateBrandContractResponse = components["schemas"]["UpdateBrandContractResponseDto"];
+
+/** 계약 정책 — 독점권·현지화·상표·매뉴얼 */
+export type UpdateBrandContractPolicyRequest = components["schemas"]["UpdateBrandContractPolicyDto"];
+export type UpdateBrandContractPolicyResponse = components["schemas"]["UpdateBrandContractPolicyResponseDto"];
+
+/** 수수료 — 가맹비·로열티 (이전 fee) */
+export type UpdateBrandCommissionRequest = components["schemas"]["UpdateBrandCommissionDto"];
+export type UpdateBrandCommissionResponse = components["schemas"]["UpdateBrandCommissionResponseDto"];
+
+/** 입지 기준 — 선호 상권·임대료·층수·중요도 (이전 areaCriteria 일부) */
+export type UpdateBrandLocationStandardRequest = components["schemas"]["UpdateBrandLocationStandardDto"];
+export type UpdateBrandLocationStandardResponse = components["schemas"]["UpdateBrandLocationStandardResponseDto"];
+
+/** 면적 기준 — 권장·최소·최대 평형, 최소 전면 폭 */
+export type UpdateBrandSizeCriteriaRequest = components["schemas"]["UpdateBrandSizeCriteriaDto"];
+export type UpdateBrandSizeCriteriaResponse = components["schemas"]["UpdateBrandSizeCriteriaResponseDto"];
+
+/** 설비 요건 — 가스·급배수·직화·환기·냉장 */
+export type UpdateBrandFacilityReqRequest = components["schemas"]["UpdateBrandFacilityReqDto"];
+export type UpdateBrandFacilityReqResponse = components["schemas"]["UpdateBrandFacilityReqResponseDto"];
+
+/** 대표 메뉴 */
+export type UpdateBrandMenuRequest = components["schemas"]["UpdateBrandMenuDto"];
+export type UpdateBrandMenuResponse = components["schemas"]["UpdateBrandMenuResponseDto"];
+
+/** 시그니처 */
+export type UpdateBrandSignatureRequest = components["schemas"]["UpdateBrandSignatureDto"];
+export type UpdateBrandSignatureResponse = components["schemas"]["UpdateBrandSignatureResponseDto"];
 
 /************************************
- * 계약 및 정책
+ * 브랜드 비주얼
  ************************************/
-export type BrandContract = components["schemas"]["BrandContractDto"];
-export type UpdateContractRequest = components["schemas"]["UpdateContractRequest"];
-export type ContractSaveResponse = components["schemas"]["ContractSaveResponse"];
-export type BrandPolicy = components["schemas"]["BrandPolicyDto"];
-export type UpdatePolicyRequest = components["schemas"]["UpdatePolicyRequest"];
-export type PolicySaveResponse = components["schemas"]["PolicySaveResponse"];
-export type BrandFee = components["schemas"]["BrandFeeDto"];
-export type UpdateFeeRequest = components["schemas"]["UpdateFeeRequest"];
-export type FeeSaveResponse = components["schemas"]["FeeSaveResponse"];
-
-/************************************
- * 상권분석 기준
- ************************************/
-export type BrandAreaCriteria = components["schemas"]["BrandAreaCriteriaDto"];
-export type UpdateAreaCriteriaRequest = components["schemas"]["UpdateAreaCriteriaRequest"];
-export type AreaCriteriaSaveResponse = components["schemas"]["AreaCriteriaSaveResponse"];
+export type UpdateBrandLogoRequest = components["schemas"]["UpdateBrandLogoDto"];
+export type UpdateBrandLogoResponse = components["schemas"]["UpdateBrandLogoResponseDto"];
+export type UpdateBrandFeaturedImagesRequest = components["schemas"]["UpdateBrandFeaturedImagesDto"];
+export type UpdateBrandFeaturedImagesResponse = components["schemas"]["UpdateBrandFeaturedImagesResponseDto"];
+export type UpdateBrandFeaturedVideosRequest = components["schemas"]["UpdateBrandFeaturedVideosDto"];
+export type UpdateBrandFeaturedVideosResponse = components["schemas"]["UpdateBrandFeaturedVideosResponseDto"];

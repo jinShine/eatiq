@@ -1,117 +1,120 @@
 import axiosClientInstance from "@services/axios.client";
-import { type ApiResponse } from "@services/types/common";
 
 import {
-  type AreaCriteriaSaveResponse,
-  type BasicSaveResponse,
-  type BrandSettings,
-  type ContactSaveResponse,
-  type ContractSaveResponse,
-  type CurrentBrandResponse,
-  type FeeSaveResponse,
-  type IntroSaveResponse,
-  type OperationSaveResponse,
-  type PageResponseBrandSummary,
-  type PolicySaveResponse,
-  type UpdateAreaCriteriaRequest,
-  type UpdateBasicRequest,
-  type UpdateContactRequest,
-  type UpdateContractRequest,
-  type UpdateFeeRequest,
-  type UpdateIntroRequest,
-  type UpdateOperationRequest,
-  type UpdatePolicyRequest,
+  type BrandDetail,
+  type BrandListResponse,
+  type UpdateBrandBasicRequest,
+  type UpdateBrandBasicResponse,
+  type UpdateBrandCommissionRequest,
+  type UpdateBrandCommissionResponse,
+  type UpdateBrandContactRequest,
+  type UpdateBrandContactResponse,
+  type UpdateBrandContractPolicyRequest,
+  type UpdateBrandContractPolicyResponse,
+  type UpdateBrandContractRequest,
+  type UpdateBrandContractResponse,
+  type UpdateBrandFacilityReqRequest,
+  type UpdateBrandFacilityReqResponse,
+  type UpdateBrandIntroRequest,
+  type UpdateBrandIntroResponse,
+  type UpdateBrandLocationStandardRequest,
+  type UpdateBrandLocationStandardResponse,
+  type UpdateBrandSizeCriteriaRequest,
+  type UpdateBrandSizeCriteriaResponse,
+  type UpdateBrandStatusRequest,
+  type UpdateBrandStatusResponse,
 } from "./brand.type";
 
-const BASE_PATH = "/api/brands";
-const buildPath = (brandId: string) => `${BASE_PATH}/${brandId}`;
+const BASE_PATH = "/api/workspace";
+
+/** 브랜드 설정은 워크스페이스 하위 리소스다 */
+const buildBrandPath = (workspaceId: string) => `${BASE_PATH}/${workspaceId}/brand`;
 
 const ENDPOINTS = {
-  list: BASE_PATH,
-  current: `${BASE_PATH}/current`,
-  settings: (brandId: string) => `${buildPath(brandId)}/settings`,
-  basic: (brandId: string) => `${buildPath(brandId)}/basic`,
-  intro: (brandId: string) => `${buildPath(brandId)}/intro`,
-  operation: (brandId: string) => `${buildPath(brandId)}/operation`,
-  contact: (brandId: string) => `${buildPath(brandId)}/contact`,
-  contract: (brandId: string) => `${buildPath(brandId)}/contract`,
-  policy: (brandId: string) => `${buildPath(brandId)}/policy`,
-  fee: (brandId: string) => `${buildPath(brandId)}/fee`,
-  areaCriteria: (brandId: string) => `${buildPath(brandId)}/area-criteria`,
+  list: `${BASE_PATH}/brand/list`,
+  autocomplete: `${BASE_PATH}/brand/autocomplete`,
+  detail: (brandId: string) => `${BASE_PATH}/brand/${brandId}`,
+
+  basic: (workspaceId: string) => `${buildBrandPath(workspaceId)}/basic`,
+  intro: (workspaceId: string) => `${buildBrandPath(workspaceId)}/intro`,
+  status: (workspaceId: string) => `${buildBrandPath(workspaceId)}/status`,
+  contact: (workspaceId: string) => `${buildBrandPath(workspaceId)}/contact`,
+  contract: (workspaceId: string) => `${buildBrandPath(workspaceId)}/contract`,
+  contractPolicy: (workspaceId: string) => `${buildBrandPath(workspaceId)}/contract-policy`,
+  commission: (workspaceId: string) => `${buildBrandPath(workspaceId)}/commission`,
+  locationStandard: (workspaceId: string) => `${buildBrandPath(workspaceId)}/location-standard`,
+  sizeCriteria: (workspaceId: string) => `${buildBrandPath(workspaceId)}/size-criteria`,
+  facilityReq: (workspaceId: string) => `${buildBrandPath(workspaceId)}/facility-req`,
 };
 
-export async function getBrands(): Promise<PageResponseBrandSummary> {
-  const res = await axiosClientInstance.get<ApiResponse<PageResponseBrandSummary>>(ENDPOINTS.list);
-  return res.data.data;
+/************************************
+ * 조회
+ ************************************/
+export async function getBrandList(): Promise<BrandListResponse> {
+  const res = await axiosClientInstance.get<BrandListResponse>(ENDPOINTS.list);
+  return res.data;
 }
 
-export async function getCurrentBrand(): Promise<CurrentBrandResponse> {
-  const res = await axiosClientInstance.get<ApiResponse<CurrentBrandResponse>>(ENDPOINTS.current);
-  return res.data.data;
+export async function getBrandDetail(brandId: string): Promise<BrandDetail> {
+  const res = await axiosClientInstance.get<BrandDetail>(ENDPOINTS.detail(brandId));
+  return res.data;
 }
 
 /************************************
- * 브랜드 정보 설정
+ * 섹션별 저장 — 이전 PATCH 전체 치환에서 섹션 PUT으로 바뀌었다
  ************************************/
-
-export async function getBrandSettings(brandId: string): Promise<BrandSettings> {
-  const res = await axiosClientInstance.get<ApiResponse<BrandSettings>>(ENDPOINTS.settings(brandId));
-  return res.data.data;
+export async function updateBrandBasic(workspaceId: string, body: UpdateBrandBasicRequest) {
+  const res = await axiosClientInstance.put<UpdateBrandBasicResponse>(ENDPOINTS.basic(workspaceId), body);
+  return res.data;
 }
 
-export async function updateBrandBasic(brandId: string, body: UpdateBasicRequest): Promise<BasicSaveResponse> {
-  const res = await axiosClientInstance.patch<ApiResponse<BasicSaveResponse>>(ENDPOINTS.basic(brandId), body);
-  return res.data.data;
+export async function updateBrandIntro(workspaceId: string, body: UpdateBrandIntroRequest) {
+  const res = await axiosClientInstance.put<UpdateBrandIntroResponse>(ENDPOINTS.intro(workspaceId), body);
+  return res.data;
 }
 
-export async function updateBrandIntro(brandId: string, body: UpdateIntroRequest): Promise<IntroSaveResponse> {
-  const res = await axiosClientInstance.patch<ApiResponse<IntroSaveResponse>>(ENDPOINTS.intro(brandId), body);
-  return res.data.data;
+export async function updateBrandStatus(workspaceId: string, body: UpdateBrandStatusRequest) {
+  const res = await axiosClientInstance.put<UpdateBrandStatusResponse>(ENDPOINTS.status(workspaceId), body);
+  return res.data;
 }
 
-export async function updateBrandOperation(
-  brandId: string,
-  body: UpdateOperationRequest,
-): Promise<OperationSaveResponse> {
-  const res = await axiosClientInstance.patch<ApiResponse<OperationSaveResponse>>(ENDPOINTS.operation(brandId), body);
-  return res.data.data;
+export async function updateBrandContact(workspaceId: string, body: UpdateBrandContactRequest) {
+  const res = await axiosClientInstance.put<UpdateBrandContactResponse>(ENDPOINTS.contact(workspaceId), body);
+  return res.data;
 }
 
-export async function updateBrandContact(brandId: string, body: UpdateContactRequest): Promise<ContactSaveResponse> {
-  const res = await axiosClientInstance.patch<ApiResponse<ContactSaveResponse>>(ENDPOINTS.contact(brandId), body);
-  return res.data.data;
+export async function updateBrandContract(workspaceId: string, body: UpdateBrandContractRequest) {
+  const res = await axiosClientInstance.put<UpdateBrandContractResponse>(ENDPOINTS.contract(workspaceId), body);
+  return res.data;
 }
 
-/************************************
- * 계약 및 정책
- ************************************/
-
-export async function updateBrandContract(brandId: string, body: UpdateContractRequest): Promise<ContractSaveResponse> {
-  const res = await axiosClientInstance.patch<ApiResponse<ContractSaveResponse>>(ENDPOINTS.contract(brandId), body);
-  return res.data.data;
-}
-
-export async function updateBrandPolicy(brandId: string, body: UpdatePolicyRequest): Promise<PolicySaveResponse> {
-  const res = await axiosClientInstance.patch<ApiResponse<PolicySaveResponse>>(ENDPOINTS.policy(brandId), body);
-  return res.data.data;
-}
-
-export async function updateBrandFee(brandId: string, body: UpdateFeeRequest): Promise<FeeSaveResponse> {
-  const res = await axiosClientInstance.patch<ApiResponse<FeeSaveResponse>>(ENDPOINTS.fee(brandId), body);
-  return res.data.data;
-}
-
-/************************************
- * 상권분석 기준
- ************************************/
-
-export async function updateBrandAreaCriteria(
-  brandId: string,
-  body: UpdateAreaCriteriaRequest,
-): Promise<AreaCriteriaSaveResponse> {
-  const res = await axiosClientInstance.patch<ApiResponse<AreaCriteriaSaveResponse>>(
-    ENDPOINTS.areaCriteria(brandId),
+export async function updateBrandContractPolicy(workspaceId: string, body: UpdateBrandContractPolicyRequest) {
+  const res = await axiosClientInstance.put<UpdateBrandContractPolicyResponse>(
+    ENDPOINTS.contractPolicy(workspaceId),
     body,
   );
-  return res.data.data;
+  return res.data;
+}
+
+export async function updateBrandCommission(workspaceId: string, body: UpdateBrandCommissionRequest) {
+  const res = await axiosClientInstance.put<UpdateBrandCommissionResponse>(ENDPOINTS.commission(workspaceId), body);
+  return res.data;
+}
+
+export async function updateBrandLocationStandard(workspaceId: string, body: UpdateBrandLocationStandardRequest) {
+  const res = await axiosClientInstance.put<UpdateBrandLocationStandardResponse>(
+    ENDPOINTS.locationStandard(workspaceId),
+    body,
+  );
+  return res.data;
+}
+
+export async function updateBrandSizeCriteria(workspaceId: string, body: UpdateBrandSizeCriteriaRequest) {
+  const res = await axiosClientInstance.put<UpdateBrandSizeCriteriaResponse>(ENDPOINTS.sizeCriteria(workspaceId), body);
+  return res.data;
+}
+
+export async function updateBrandFacilityReq(workspaceId: string, body: UpdateBrandFacilityReqRequest) {
+  const res = await axiosClientInstance.put<UpdateBrandFacilityReqResponse>(ENDPOINTS.facilityReq(workspaceId), body);
+  return res.data;
 }

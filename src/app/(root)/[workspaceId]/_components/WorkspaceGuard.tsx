@@ -4,12 +4,12 @@ import { useEffect } from "react";
 
 import { useParams, useRouter } from "next/navigation";
 
-import { useWorkspaces } from "@services/api/brand/brand.query";
+import { useMyWorkspaces } from "@services/api/workspace/workspace.query";
 
 export default function WorkspaceGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { workspaceId } = useParams<{ workspaceId: string }>();
-  const { data: workspaces, isLoading } = useWorkspaces();
+  const { data: workspaces, isLoading } = useMyWorkspaces();
 
   const isMember = workspaces?.some(w => w.id === workspaceId);
 

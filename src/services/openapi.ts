@@ -4,31 +4,7 @@
  */
 
 export interface paths {
-  "/api/brands": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * 내 워크스페이스(브랜드) 목록
-     * @description 활성 멤버십 브랜드를 가입 최신순으로 페이지네이션하여 반환합니다. data는 페이지 객체.
-     */
-    get: operations["list"];
-    put?: never;
-    /**
-     * 워크스페이스(브랜드) 생성
-     * @description brand + brand_member(owner) + subscription(tier1) + usage_counter 8건을 단일 트랜잭션으로 생성합니다. brand 계정만 호출 가능.
-     */
-    post: operations["create"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/brands/{brandId}/menus": {
+  "/api/auth/magic-link": {
     parameters: {
       query?: never;
       header?: never;
@@ -38,17 +14,17 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * 대표 메뉴 등록
-     * @description nameKo만 필수(공백 불가), 나머지(nameEn/description/priceKrw) nullable. photoUrls/videoUrl은 이 엔드포인트에서 다루지 않습니다(미디어 업로드 API로 관리) — 요청 바디에 포함되면 알 수 없는 필드로 거부됩니다(400 VALIDATION_ERROR). 브랜드당 대표 메뉴는 최대 3개까지 등록 가능(초과 시 VALIDATION_ERROR).
+     * 매직링크 발송 (인증 메일 발송 / 로그인 / 회원가입)
+     * @description 사용자 이메일을 입력받아 1회용 인증 접속 링크가 담긴 이메일을 발송합니다.<br/><br/><b>[상세 역할 및 프론트엔드 연동 가이드]</b><br/>• <b>호출 시점</b>: 사용자가 이메일 주소를 입력하고 [로그인/인증 메일 받기] 버튼을 눌렀을 때 호출합니다.<br/>• <b>요청 데이터</b>: <code>{ "email": "user@example.com" }</code><br/>• <b>백엔드 동작</b>: 계정 가입 여부와 관계없이 1회용 64자리 보안 인증 토큰(유효시간 24시간)을 생성하여 해당 이메일로 접속 링크를 발송합니다.<br/>• <b>이메일 링크 규격</b>: <code>{FRONTEND_URL}/auth/verify?token={token}&email={email}</code><br/>• <b>프론트엔드 후속 처리</b>: API 성공 응답 수신 시, 사용자에게 "입력하신 이메일로 인증 링크가 전송되었습니다. 메일함을 확인해 주세요." 안내 UI(모달/알림 화면)를 노출합니다. 사용자가 수신된 메일의 링크를 클릭하면 프론트엔드 <code>/auth/verify</code> 라우트로 진입하게 되며, 이때 쿼리스트링 파라미터를 읽어 <code>POST /api/auth/verify</code>(매직링크 검증) API를 호출하시면 됩니다.
      */
-    post: operations["createMenu"];
+    post: operations["SendMagicLinkController_handle"];
     delete?: never;
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  "/api/brands/{brandId}/media/{fileId}/confirm": {
+  "/api/auth/verify": {
     parameters: {
       query?: never;
       header?: never;
@@ -58,17 +34,17 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * 업로드 완료 확정(confirm)
-     * @description presign으로 발급받은 fileId를 확정합니다. 업로드 바이트 검증(매직바이트·크기) 후 반영되며, 이미 attached된 파일을 다시 confirm하면 멱등하게 200을 반환합니다.
+     * 매직링크 토큰 검증 (로그인 / 회원가입 분기 확인)
+     * @description 사용자가 수신된 이메일의 매직링크를 클릭했을 때 전달된 토큰과 이메일을 검증합니다.<br/><br/><b>[상세 역할 및 프론트엔드 연동 가이드]</b><br/>• <b>호출 시점</b>: 사용자가 메일 속 링크(<code>/auth/verify?token=...&email=...</code>)를 클릭해 프론트엔드 검증 페이지로 진입했을 때, URL 쿼리 파라미터를 읽어 마운트 즉시 호출합니다.<br/>• <b>요청 데이터</b>: <code>{ "email": "user@example.com", "token": "64자리 토큰" }</code><br/>• <b>응답 결과 분기 처리</b>:<br/>&nbsp;&nbsp;1) <code>is_new_user === false</code> (기존 회원): 즉시 로그인 성공! 응답으로 전달된 <code>access_token</code>을 스토리지에 저장하고 메인/대시보드 화면으로 이동합니다.<br/>&nbsp;&nbsp;2) <code>is_new_user === true</code> (신규 회원): 회원가입 대상입니다. 응답으로 전달된 <code>email</code>과 <code>token</code>을 상태값으로 유지한 채 추가 정보 입력 화면(이름 입력 등 회원가입 UI)으로 이동합니다.<br/>• <b>주의 사항</b>: 링크 토큰은 1회용이거나 24시간 후 만료되므로 재사용 시 401 에러가 반환됩니다.
      */
-    post: operations["confirm"];
+    post: operations["VerifyMagicLinkController_handle"];
     delete?: never;
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  "/api/brands/{brandId}/media/uploads": {
+  "/api/auth/register": {
     parameters: {
       query?: never;
       header?: never;
@@ -78,114 +54,10 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * 업로드 URL 발급(presign)
-     * @description targetType·contentType·size(+menu_* 대상은 resourceId 필수)를 검증하고 presigned PUT URL을 발급합니다. 30분 내에 그 URL로 직접 업로드 후 confirm을 호출해야 합니다.
+     * 신규 회원가입 완료 및 AccessToken 발급
+     * @description 매직링크 이메일 인증을 완료한 신규 사용자의 이름과 이메일을 받아 최종 회원가입을 처리하고 JWT AccessToken을 발급합니다.<br/><br/><b>[상세 역할 및 프론트엔드 연동 가이드]</b><br/>• <b>호출 시점</b>: 신규 회원(<code>is_new_user === true</code>)이 추가 정보(이름 등)를 입력하고 [가입 완료] 버튼을 눌렀을 때 호출합니다.<br/>• <b>요청 데이터</b>: <code>{ "email": "user@example.com", "name": "홍길동", "token": "64자리 검증 토큰" }</code><br/>&nbsp;&nbsp;※ <code>token</code> 필드에는 매직링크 검증(<code>/api/auth/verify</code>) 단계에서 응답받은 64자리 토큰 값을 그대로 전달해야 합니다.<br/>• <b>응답 결과 처리</b>: 가입 완료와 동시에 로그인 세션이 생성되며 <code>access_token</code>이 반환됩니다. 토큰을 스토리지에 보관하고 서비스 온보딩 또는 메인 대시보드로 이동합니다.<br/>• <b>예외 처리</b>: 토큰이 만료되었거나 이미 사용된 경우 403 Forbidden 에러를 반환하므로, 사용자에게 "인증 유효시간이 만료되었습니다. 다시 시도해 주세요." 안내 후 처음(이메일 입력 화면)으로 이동시킵니다.
      */
-    post: operations["presign"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/brands/{brandId}/expansion-targets": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * 진출 목표 목록 조회
-     * @description priority 오름차순으로 정렬된 진출 목표 목록을 반환합니다.
-     */
-    get: operations["expansionTargets"];
-    put?: never;
-    /**
-     * 진출 목표 등록
-     * @description country/city 필수, status는 nullable(누락·null이면 서버가 exploring으로 설정). 브랜드당 진출 목표는 최대 4개까지 등록 가능(초과 시 VALIDATION_ERROR). 동일 (country,city) 중복 등록은 409(BRAND_EXPANSION_TARGET_CONFLICT).
-     */
-    post: operations["addExpansionTarget"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/auth/signup": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * 이메일 회원가입
-     * @description 가입 성공 시 access/refresh 토큰과 사용자 정보를 반환합니다.
-     */
-    post: operations["signup"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/auth/refresh": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * access token 재발급 (refresh 회전)
-     * @description 유효한 refresh token으로 새 access/refresh를 발급하고 기존 refresh는 폐기합니다.
-     */
-    post: operations["refresh"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/auth/password-reset/request": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * 비밀번호 재설정 요청 (메일 발송)
-     * @description 가입 여부와 무관하게 항상 동일한 성공 응답을 반환합니다(가입 여부 노출 방지). 활성 이메일 계정에는 재설정 링크를, Google 가입 계정에는 안내 메일을 보냅니다.
-     */
-    post: operations["requestPasswordReset"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/auth/password-reset/confirm": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * 비밀번호 재설정 (토큰 검증)
-     * @description 재설정 링크의 토큰과 새 비밀번호로 변경합니다. 성공 시 전 기기 로그아웃(모든 refresh 폐기). 자동 로그인 없음.
-     */
-    post: operations["confirmPasswordReset"];
+    post: operations["RegisterController_handle"];
     delete?: never;
     options?: never;
     head?: never;
@@ -201,383 +73,18 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** 현재 기기 로그아웃 (refresh 폐기) */
-    post: operations["logout"];
+    /**
+     * 계정 로그아웃
+     * @description 현재 로그인된 사용자의 세션을 종료(Soft Delete)하고 로그아웃 처리합니다.<br/><br/><b>[상세 역할 및 프론트엔드 연동 가이드]</b><br/>• <b>호출 시점</b>: 사용자가 [로그아웃] 버튼을 클릭했을 때 호출합니다.<br/>• <b>요청 헤더</b>: <code>Authorization: Bearer &lt;access_token&gt;</code> (필수)<br/>• <b>백엔드 동작</b>: 현재 기기의 로그인 세션을 만료 처리하여 토큰을 무효화합니다.<br/>• <b>프론트엔드 후속 처리</b>: API 응답 성공 후 로컬 스토리지/세션 스토리지/쿠키에 저장된 JWT <code>access_token</code> 및 사용자 정보를 모두 삭제하고 로그인 화면(<code>/auth/login</code>)으로 리다이렉트합니다.
+     */
+    post: operations["LogoutController_handle"];
     delete?: never;
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  "/api/auth/login": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * 이메일 로그인
-     * @description last_brand_id 폴백 포함. 성공 시 토큰과 사용자 정보를 반환합니다.
-     */
-    post: operations["login"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/auth/email-verify/resend": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * 인증 메일 재발송
-     * @description 미인증 상태에서 인증 메일을 다시 보냅니다. 이미 인증된 경우 안내 메시지를 반환합니다.
-     */
-    post: operations["resendEmailVerification"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/auth/email-verify/confirm": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * 이메일 인증 완료 (토큰 검증)
-     * @description 인증 링크의 토큰으로 email_verified를 true로 만듭니다. 이미 인증된 경우 안내 메시지를 반환합니다.
-     */
-    post: operations["confirmEmailVerification"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/admin/staging-buyers": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * 바이어 후보 수동 등록
-     * @description 운영자가 바이어 후보 1건을 직접 입력해 공통 수집 파이프라인(Normalize→Dedup/Merge)에 적재합니다. buyerName·countries(허용 4개국)만 필수, 나머지는 아는 만큼만 입력합니다. 동일 dedup_key(website 도메인→contact_email 도메인→정규화 회사명 우선순위)의 기존 후보 상태에 따라 신규 적재(201)·기존 pending/needs_research에 병합(200)·이미 거절/중복 처리된 후보라 스킵(409)으로 갈립니다.
-     */
-    post: operations["register"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/brands/{brandId}/policy": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /**
-     * 계약 정책 정보 저장(전체 치환)
-     * @description 전 필드 nullable(누락·null 모두 값 해제). ENUM 필드는 BrandProfileVocab 소속 검증됩니다.
-     */
-    patch: operations["policy"];
-    trace?: never;
-  };
-  "/api/brands/{brandId}/operation": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /**
-     * 브랜드 운영 정보 저장(전체 치환)
-     * @description 전 필드 nullable(누락·null 모두 값 해제). 빈 배열([])은 null과 동일하게 처리됩니다.
-     */
-    patch: operations["operation"];
-    trace?: never;
-  };
-  "/api/brands/{brandId}/menus/{menuId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    /**
-     * 대표 메뉴 삭제
-     * @description 삭제된 메뉴 자체는 반환하지 않고 재계산된 completionRate/journey만 반환합니다.
-     */
-    delete: operations["deleteMenu"];
-    options?: never;
-    head?: never;
-    /**
-     * 대표 메뉴 수정(전체 치환)
-     * @description nameKo만 필수(공백 불가), 나머지(nameEn/description/priceKrw) nullable. photoUrls/videoUrl은 이 엔드포인트에서 다루지 않습니다(미디어 업로드 API로 관리) — 요청 바디에 포함되면 알 수 없는 필드로 거부됩니다(400 VALIDATION_ERROR).
-     */
-    patch: operations["updateMenu"];
-    trace?: never;
-  };
-  "/api/brands/{brandId}/media/order": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /**
-     * 배열형 슬롯 재배열
-     * @description flagship_photo/menu_photo 등 배열형 대상만 지원합니다. fileIds는 현재 attached된 파일 집합과 정확히 일치해야 하며, 그 순서대로 sort_order(0..n-1)를 다시 부여합니다.
-     */
-    patch: operations["reorder"];
-    trace?: never;
-  };
-  "/api/brands/{brandId}/intro": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /**
-     * 브랜드 소개 저장(전체 치환)
-     * @description 전 필드 nullable(누락·null 모두 값 해제). category/pricePositioning은 ENUM.
-     */
-    patch: operations["intro"];
-    trace?: never;
-  };
-  "/api/brands/{brandId}/flagship-store": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /**
-     * 플래그십 스토어 저장(전체 치환)
-     * @description storeNameKo/storeNameEn/address 전 필드 nullable(누락·null 모두 값 해제). photoUrls/videoUrl은 이 엔드포인트에서 다루지 않습니다(미디어 업로드 API로 관리) — 요청 바디에 포함되면 알 수 없는 필드로 거부됩니다(400 VALIDATION_ERROR).
-     */
-    patch: operations["flagshipStore"];
-    trace?: never;
-  };
-  "/api/brands/{brandId}/fee": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /**
-     * 수수료 정보 저장(전체 치환, franchise 전용)
-     * @description brandType이 franchise가 아니면 요청 내용과 무관하게 400입니다. royaltyBase가 정하는 활성 로열티 필드 외 값을 보내면 400(VALIDATION_ERROR).
-     */
-    patch: operations["fee"];
-    trace?: never;
-  };
-  "/api/brands/{brandId}/expansion-targets/{expansionTargetId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    /**
-     * 진출 목표 삭제
-     * @description 삭제된 진출 목표 자체는 반환하지 않고 재계산된 completionRate/journey만 반환합니다. 남은 목표의 priority는 1..n으로 재정렬됩니다.
-     */
-    delete: operations["deleteExpansionTarget"];
-    options?: never;
-    head?: never;
-    /**
-     * 진출 목표 수정(전체 치환)
-     * @description city/status 전체 치환(country는 생성 후 불변이라 이 엔드포인트에서 다루지 않습니다) — 요청 바디에 country가 포함되면 알 수 없는 필드로 거부됩니다(400 VALIDATION_ERROR). city 변경으로 동일 (country,city) 다른 진출 목표와 겹치면 409(BRAND_EXPANSION_TARGET_CONFLICT).
-     */
-    patch: operations["updateExpansionTarget"];
-    trace?: never;
-  };
-  "/api/brands/{brandId}/expansion-targets/reorder": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /**
-     * 진출 목표 재정렬(배열형 전체 치환)
-     * @description items가 현재 활성 진출 목표 집합과 정확히 일치해야 합니다(id 집합 동일 + priority가 1..n을 각 1회씩 사용) — 불일치 시 400(VALIDATION_ERROR).
-     */
-    patch: operations["reorderExpansionTargets"];
-    trace?: never;
-  };
-  "/api/brands/{brandId}/contract": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /**
-     * 계약 담당자·서명권자 정보 저장(전체 치환)
-     * @description 전 필드 nullable(누락·null 모두 값 해제). 이메일 2필드는 형식 검증됩니다.
-     */
-    patch: operations["contract"];
-    trace?: never;
-  };
-  "/api/brands/{brandId}/contact": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /**
-     * 브랜드 담당자 정보 저장(전체 치환)
-     * @description 전 필드 nullable(누락·null 모두 값 해제). contactLanguages는 허용 언어코드 부분집합만 허용.
-     */
-    patch: operations["contact"];
-    trace?: never;
-  };
-  "/api/brands/{brandId}/brand-type": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /**
-     * 브랜드 유형 설정(franchise|direct)
-     * @description direct 전환 시에도 기존 수수료 값은 DB에 보존되나 응답에서는 숨겨집니다(franchise만 brandFee 노출).
-     */
-    patch: operations["brandType"];
-    trace?: never;
-  };
-  "/api/brands/{brandId}/basic": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /**
-     * 브랜드 기본정보 저장(전체 치환)
-     * @description nameKo만 필수, 나머지는 nullable(누락·null 모두 값 해제).
-     */
-    patch: operations["basic"];
-    trace?: never;
-  };
-  "/api/brands/{brandId}/area-criteria": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /**
-     * 상권분석 기준 저장(전체 치환)
-     * @description 전 필드 nullable(누락·null 모두 값 해제). ENUM 필드는 BrandProfileVocab 소속 검증되며, rentMinKrw는 rentMaxKrw 이하여야 합니다.
-     */
-    patch: operations["areaCriteria"];
-    trace?: never;
-  };
-  "/api/health": {
+  "/api/workspace/my": {
     parameters: {
       query?: never;
       header?: never;
@@ -585,10 +92,35 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * 헬스체크
-     * @description DB 왕복 확인. 정상 200 CommonResponse<HealthData>, DB 실패 503 ErrorResponse(HEALTH_DATABASE_UNAVAILABLE).
+     * 내가 가입된 워크스페이스 목록 조회
+     * @description ### 📌 상세 역할 및 개요
+     *     - 현재 로그인한 사용자가 **정식 가입(활성 상태: `status = "활성"`)**되어 있는 모든 워크스페이스 목록을 조회합니다.
+     *     - 최근 접속 일시(`last_connection_time`) 기준 내림차순 정렬되어 반환됩니다.
+     *     - 아직 수락하지 않은 초대 대기 목록은 `GET /api/workspace/my/invited`를 사용합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **요청 헤더**: `Authorization: Bearer <access_token>` 필수
+     *     2. **로그인 직후 라우팅 분기 처리**:
+     *        - `total_count === 0`: 소속된 워크스페이스가 없으므로 **워크스페이스 생성/온보딩 화면**으로 유도
+     *        - `total_count === 1`: 첫 번째 워크스페이스(`workspaces[0]`)를 기본 활성화하고 **대시보드로 바로 진입**
+     *        - `total_count >= 2`: **워크스페이스 선택 모달/페이지** 노출 (가장 최근 접속한 `workspaces[0]`을 기본 추천)
+     *     3. **GNB(헤더) 워크스페이스 스위처**:
+     *        - 상단 네비게이션 바의 워크스페이스 전환 드롭다운 목록 데이터로 바인딩
+     *     4. **권한별 UI 제어**:
+     *        - `my_member_info.grade`가 `관리자`인 경우에만 설정, 멤버 관리, 브랜드 프로필 수정 메뉴 활성화
+     *
+     *     ---
+     *
+     *     ### 🔑 주요 응답 필드
+     *     - `workspaces[].uid`: 워크스페이스 식별자 (모든 하위 API의 `workspace_uid`로 전달)
+     *     - `workspaces[].name`: 워크스페이스 이름
+     *     - `workspaces[].type`: 워크스페이스 유형 (`brand` 또는 `buyer`)
+     *     - `workspaces[].my_member_info.grade`: 내 권한 등급 (`관리자` | `사용자`)
+     *     - `workspaces[].my_member_info.last_connection_time`: 마지막 접속 일시
      */
-    get: operations["health"];
+    get: operations["GetMyWorkspacesController_handle"];
     put?: never;
     post?: never;
     delete?: never;
@@ -597,7 +129,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/brands/{brandId}/settings": {
+  "/api/workspace/my/invited": {
     parameters: {
       query?: never;
       header?: never;
@@ -605,10 +137,35 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * 브랜드 정보 설정 조회
-     * @description brand/brandIntro/brandOperation/brandContact/brandAsset/brandFlagshipStore/brandMenus/brandContract/brandPolicy/brandFee/brandAreaCriteria/expansionTargets + completionRates(basicInfo/brandVisual/contractPolicy/tradeAreaCriteria) + journeys(basicInfo/brandVisual/contractPolicy/tradeAreaCriteria, 각 scopeKey=BRAND_BASIC/BRAND_VISUAL/CONTRACT_POLICY/TRADE_AREA)를 반환합니다.
+     * 내가 초대받은(초대중) 워크스페이스 목록 조회
+     * @description ### 📌 상세 역할 및 개요
+     *     - 현재 로그인한 사용자가 초대받아 수락 대기 중인(`status: "초대중"`) 워크스페이스 목록을 조회합니다.
+     *     - 본인이 아직 수락/거절하지 않은 모든 초대 내역을 한눈에 확인할 수 있습니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **요청 헤더**: `Authorization: Bearer <access_token>` 필수
+     *     2. **노출 위치 및 시점**:
+     *        - 로그인 직후 워크스페이스 선택 화면, 또는 마이페이지/알림 모달의 '초대 목록' 카드 섹션
+     *     3. **수락 / 거절 처리 플로우**:
+     *        - 사용자가 **[수락]** 또는 **[거절]** 버튼 클릭 시, 해당 워크스페이스의 `uid`로 초대 응답 API를 호출합니다.
+     *        - **엔드포인트**: `POST /api/workspace-member/{workspace_uid}/invite/respond`
+     *        - **요청 Body**: `{ "action": "수락" }` 또는 `{ "action": "거절" }`
+     *     4. **수락 완료 후 권장 화면 전환**:
+     *        - 수락 완료 시 해당 워크스페이스가 활성화되므로, **내 워크스페이스 목록 재조회**(`GET /api/workspace/my`)를 트리거하여 활성 워크스페이스로 이동시킵니다.
+     *
+     *     ---
+     *
+     *     ### 🔑 주요 응답 필드
+     *     - `workspaces[].uid`: 워크스페이스 고유 ID (초대 수락/거절 API의 `workspace_uid` 경로 파라미터로 사용)
+     *     - `workspaces[].name`: 워크스페이스 이름
+     *     - `workspaces[].type`: 워크스페이스 유형 (`brand` 또는 `buyer`)
+     *     - `workspaces[].my_member_info.grade`: 부여받을 권한 등급 (`관리자` | `사용자`)
+     *     - `workspaces[].my_member_info.status`: 멤버 상태 (`초대중`)
+     *     - `workspaces[].my_member_info.invited_time`: 초대 일시 (ISO 8601)
      */
-    get: operations["settings"];
+    get: operations["GetMyInvitedWorkspacesController_handle"];
     put?: never;
     post?: never;
     delete?: never;
@@ -617,7 +174,75 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/brands/current": {
+  "/api/workspace": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * 워크스페이스 생성
+     * @description ### 📌 상세 역할 및 개요
+     *     - 로그인한 사용자가 신규 워크스페이스(`brand` 또는 `buyer`)를 생성합니다.
+     *     - **권한/멤버**: 생성을 요청한 회원은 해당 워크스페이스의 **'관리자'** 등급 및 **'활성'** 멤버로 자동 등록됩니다.
+     *     - **초기 프로필 생성**: 타입에 따라 브랜드(`etq_workspace_brand`) 또는 바이어(`etq_workspace_buyer`) 상세 프로필 기본 레코드가 함께 생성됩니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **요청 헤더**: `Authorization: Bearer <access_token>` 필수
+     *     2. **요청 파라미터 (JSON Body)**:
+     *        - `name` (string, 필수): 워크스페이스 이름
+     *        - `type` (string, 필수): `brand`(브랜드) 또는 `buyer`(바이어)
+     *     3. **생성 후 권장 플로우**:
+     *        - 응답으로 반환되는 `workspace.uid`를 현재 선택된 활성 워크스페이스로 클라이언트 상태(상태관리/세션)에 저장합니다.
+     *        - 이후 워크스페이스 상세 정보 조회(`GET /api/workspace/{workspace_uid}`) 또는 프로필 수정 API(`/api/workspace/brand/...` 등)를 호출하여 온보딩/초기 설정을 진행합니다.
+     */
+    post: operations["CreateWorkspaceController_handle"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/workspace/{workspace_uid}/name": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * 워크스페이스 이름 수정
+     * @description ### 📌 상세 역할 및 개요
+     *     - 지정된 워크스페이스(`workspace_uid`)의 기본 이름(`name`)을 수정합니다.
+     *     - **권한 요건**: 요청자(JWT 인증 회원)는 해당 워크스페이스에 소속되어 있어야 하며, 상태가 **'활성'**인 멤버여야 합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **요청 헤더**: `Authorization: Bearer <access_token>` 필수
+     *     2. **경로 파라미터 (Path)**:
+     *        - `workspace_uid` (number, 필수): 수정 대상 워크스페이스 UID
+     *     3. **요청 바디 (JSON Body)**:
+     *        - `name` (string, 필수): 변경할 새로운 워크스페이스 이름 (최대 255자)
+     *     4. **응답 처리 및 권장 플로우**:
+     *        - 성공 시 200 OK와 함께 수정된 `workspace_uid` 및 `name`이 반환됩니다.
+     *        - 응답받은 `name`으로 프론트엔드 전역 상태(GNB/사이드바 워크스페이스명 등)를 즉시 갱신(동기화)합니다.
+     */
+    patch: operations["UpdateWorkspaceNameController_handle"];
+    trace?: never;
+  };
+  "/api/workspace/{workspace_uid}": {
     parameters: {
       query?: never;
       header?: never;
@@ -625,27 +250,93 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * 현재 워크스페이스 상세 (last_brand_id 기준)
-     * @description 브랜드가 없거나 무효하면 data.brand = null로 200을 반환합니다.
+     * 워크스페이스 상세 정보 조회
+     * @description ### 📌 상세 역할 및 개요
+     *     - 워크스페이스의 기본 정보 및 타입(`brand` 또는 `buyer`)에 따른 프로필/설정 상세 데이터를 조회합니다.
+     *     - 요청자는 반드시 해당 워크스페이스에 소속된 **활성 멤버(`status = "활성"`)**여야 합니다.
+     *     - API 호출 시 해당 사용자의 최근 접속 일시(`last_connection_time`)가 **현재 시각으로 자동 갱신**됩니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 사용자가 워크스페이스에 진입할 때(대시보드 초기 로딩, 워크스페이스 전환 직후).
+     *        - 워크스페이스 설정 또는 브랜드/바이어 상세 프로필 관리 페이지 진입 시.
+     *     2. **타입(`type`)에 따른 화면 분기**:
+     *        - `type === 'brand'`: 브랜드 관련 메뉴/대시보드 노출 및 `brand` 객체 데이터 바인딩 (기본 정보, 비주얼, 정책 등).
+     *        - `type === 'buyer'`: 바이어 관련 메뉴/대시보드 노출 및 `buyer` 객체 데이터 바인딩 (기본 정보, 비즈니스 타입, 정책 등).
+     *     3. **권한 제어 (`my_member_info` 활용)**:
+     *        - `grade === '관리자'`: 워크스페이스 정보 수정, 멤버 초대/관리, 프로필 수정 등 관리자 전용 액션 버튼 활성화.
+     *        - `grade === '사용자'`: 일반 조회 권한 제공 (수정 폼/관리자 메뉴 숨김 또는 비활성화).
+     *     4. **에러 핸들링**:
+     *        - `403 Forbidden`: 멤버 권한이 없거나 탈퇴된 워크스페이스이므로 워크스페이스 목록 또는 메인으로 리다이렉트 처리.
+     *        - `404 Not Found`: 존재하지 않거나 삭제된 워크스페이스 알림 처리.
+     *
+     *     ---
+     *
+     *     ### 🔑 주요 응답 필드
+     *     - `uid` / `name` / `type`: 워크스페이스 기본 식별 정보 및 유형 (`brand` | `buyer`)
+     *     - `my_member_info`: 요청자의 멤버 등급(`grade`) 및 상태(`status`)
+     *     - `brand` / `buyer`: 타입별 상세 프로필 객체 (해당하지 않는 타입은 `null`)
      */
-    get: operations["current"];
+    get: operations["GetWorkspaceDetailController_handle"];
     put?: never;
     post?: never;
-    delete?: never;
+    /**
+     * 워크스페이스 삭제
+     * @description ### 📌 상세 역할 및 개요
+     *     - 워크스페이스를 소프트 삭제(Soft Delete) 처리합니다 (`deleted_time` 갱신).
+     *     - **요청 권한**: 해당 워크스페이스의 **'관리자'** 등급이자 **'활성'** 상태인 회원만 삭제할 수 있습니다.
+     *     - **선행 조건 (멤버 검증)**: 본인 외 다른 멤버(활성 또는 초대 대기 중)가 남아있는 경우 삭제할 수 없습니다. 모든 멤버를 탈퇴/초대 취소 처리한 후 진행해야 합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **요청 정보**:
+     *        - HTTP Method: `DELETE /api/workspace/{workspace_uid}`
+     *        - 헤더: `Authorization: Bearer <access_token>`
+     *        - 경로 파라미터: 삭제 대상 `workspace_uid` (숫자)
+     *     2. **삭제 사전 확인/예외 처리**:
+     *        - 삭제 전 반드시 사용자에게 재확인(컨펌 모달 등)을 거치는 것을 권장합니다.
+     *        - `400 Bad Request`: "다른 멤버가 존재하여 삭제할 수 없습니다" 응답 시, 멤버 관리 페이지로 이동하여 멤버 정리 후 재시도하도록 사용자에게 안내합니다.
+     *        - `403 Forbidden`: 관리자 권한이 없거나 비활성 상태일 때 반환됩니다.
+     *     3. **삭제 완료 후 처리**:
+     *        - 삭제 성공 시 로컬/글로벌 상태(State)에서 해당 워크스페이스를 제거합니다.
+     *        - 사용자가 소속된 다른 워크스페이스로 활성 워크스페이스를 전환하거나, 워크스페이스 목록/생성 페이지로 리다이렉트 처리합니다.
+     */
+    delete: operations["DeleteWorkspaceController_handle"];
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  "/api/auth/me": {
+  "/api/workspace/{workspace_uid}/members": {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
       cookie?: never;
     };
-    /** 현재 로그인 사용자 조회 (세션 복구) */
-    get: operations["me"];
+    /**
+     * 워크스페이스 멤버 목록 조회
+     * @description ### 📌 상세 역할 및 개요
+     *     - 워크스페이스에 소속된 모든 멤버(관리자, 일반 사용자, 초대 대기, 거절 등) 목록을 조회합니다.
+     *     - 요청자는 반드시 해당 워크스페이스의 **활성 멤버(`status = "활성"`)**여야 합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 워크스페이스 설정 내 [멤버 관리] 페이지/모달 진입 시.
+     *     2. **테이블/리스트 UI 구성 팁**:
+     *        - `status === '초대중'`: '초대 취소' 액션 버튼 노출 (관리자만 클릭 가능).
+     *        - `status === '활성'`: 등급 변경(관리자/사용자 드롭다운) 및 '강제 탈퇴' 액션 버튼 노출.
+     *        - 요청자 본인 행: 본인의 등급 변경/강제 탈퇴 버튼은 비활성화 처리.
+     *     3. **권한별 UI 제어**:
+     *        - 접속 중인 사용자의 등급이 `관리자`일 때만 멤버 초대 버튼 및 상태/등급 변경 버튼 활성화.
+     *        - `사용자` 등급인 경우 조회 전용 뷰로 제공.
+     */
+    get: operations["GetWorkspaceMemberListController_handle"];
     put?: never;
     post?: never;
     delete?: never;
@@ -654,7 +345,1303 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/brands/{brandId}/media/{fileId}": {
+  "/api/workspace/{workspace_uid}/member/invite": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * 워크스페이스 멤버 다중 초대
+     * @description ### 📌 상세 역할 및 개요
+     *     - 여러 명의 이메일(`emails`)을 받아 워크스페이스 멤버로 일괄 초대하고 각 사용자에게 초대 메일을 발송합니다.
+     *     - 멤버는 초기 권한 등급 `사용자`, 상태 `초대중`으로 등록됩니다.
+     *     - 요청자는 반드시 해당 워크스페이스의 **활성 멤버(`status = "활성"`)**여야 합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 멤버 관리 화면에서 [멤버 초대] 모달을 열고 이메일 입력 후 '초대 보내기' 버튼 클릭 시.
+     *     2. **요청 Body 작성**:
+     *        - `emails`: 이메일 문자열 배열 (예: `["user1@example.com", "user2@example.com"]`). 콤마/엔터 구분 입력 UI 지원 권장.
+     *     3. **응답 처리 및 피드백**:
+     *        - 응답의 `failed_items`(이미 활성 멤버 등)가 존재하면 토스트/모달 등으로 어떤 이메일이 실패했는지 안내합니다.
+     *        - 초대가 성공한 경우 멤버 목록 API(`GET /api/workspace/{workspace_uid}/members`)를 재호출하여 목록을 갱신합니다.
+     */
+    post: operations["InviteWorkspaceMemberController_handle"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/workspace/{workspace_uid}/invite/respond": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * 초대된 워크스페이스 수락 또는 거절
+     * @description ### 📌 상세 역할 및 개요
+     *     - 초대받은 사용자가 해당 워크스페이스 초대를 수락(`action: "수락"`)하거나 거절(`action: "거절"`)합니다.
+     *     - **수락 시**: 멤버 상태가 `활성`으로 전환되며 계정(`account_uid`)이 연결되어 즉시 워크스페이스 이용이 가능해집니다.
+     *     - **거절 시**: 멤버 상태가 `초대 거절`로 전환됩니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 초대받은 목록(`GET /api/workspace/my/invited`) 또는 이메일 초대 링크를 통해 진입한 후 [수락] / [거절] 버튼 클릭 시.
+     *     2. **요청 파라미터**:
+     *        - URL Path: `workspace_uid`
+     *        - Body: `{ "action": "수락" }` 또는 `{ "action": "거절" }`
+     *     3. **처리 후 화면 분기**:
+     *        - **수락 완료 시**: 내 워크스페이스 목록(`GET /api/workspace/my`)을 재조회하고 해당 워크스페이스 대시보드로 이동합니다.
+     *        - **거절 완료 시**: 초대 목록 화면에서 해당 항목을 제거하거나 안내 토스트 노출.
+     */
+    post: operations["RespondWorkspaceInviteController_handle"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/workspace/{workspace_uid}/member/{member_uid}/status": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * 관리자 멤버 상태 변경 (초대취소 / 강제탈퇴)
+     * @description ### 📌 상세 역할 및 개요
+     *     - 워크스페이스 관리자가 특정 멤버의 상태를 강제 변경합니다.
+     *     - **초대취소 (`status: "초대취소"`)**: 현재 `초대중` 상태인 멤버에 대해서만 가능합니다.
+     *     - **강제탈퇴 (`status: "강제탈퇴"`)**: 현재 `활성` 상태인 일반 멤버에 대해서만 가능합니다.
+     *     - **요청 권한**: 해당 워크스페이스의 **'관리자'** 등급 멤버만 호출 가능하며, 관리자 본인은 대상이 될 수 없습니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 멤버 관리 목록에서 [초대 취소] 또는 [강제 탈퇴] 버튼 클릭 후 확인 모달 승인 시.
+     *     2. **요청 Body 작성**:
+     *        - `{ "status": "초대취소" }` 또는 `{ "status": "강제탈퇴" }`
+     *     3. **UI/UX 권장 사항**:
+     *        - '강제 탈퇴'는 파괴적 작업이므로 별도의 경고 모달(Confirm Dialog)을 띄워 사용자의 재확인을 받습니다.
+     *        - 성공 시 멤버 목록 재조회(`GET /api/workspace/{workspace_uid}/members`)를 통해 화면을 즉시 갱신합니다.
+     */
+    patch: operations["UpdateWorkspaceMemberStatusController_updateStatus"];
+    trace?: never;
+  };
+  "/api/workspace/{workspace_uid}/member/withdraw": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * 멤버 자진 탈퇴
+     * @description ### 📌 상세 역할 및 개요
+     *     - 현재 로그인한 사용자가 특정 워크스페이스에서 자진 탈퇴합니다.
+     *     - **일반 사용자**: 즉시 탈퇴 처리되며 상태가 `탈퇴`로 변경됩니다.
+     *     - **관리자 (다른 관리자 존재 시)**: 즉시 탈퇴 처리됩니다.
+     *     - **관리자 (혼자 남은 경우)**: 멤버 탈퇴와 함께 워크스페이스 및 하위 데이터가 함께 소프트 삭제(`is_workspace_deleted: true`) 처리됩니다.
+     *     - **관리자 (다른 일반 멤버가 남아있는 경우)**: 탈퇴가 제한되며, 다른 멤버를 모두 탈퇴 처리하거나 관리자 권한을 위임해야 합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 워크스페이스 설정 또는 멤버 프로필 영역의 [워크스페이스 탈퇴하기] 버튼 클릭 시.
+     *     2. **응답 필드 분기 (`is_workspace_deleted`)**:
+     *        - `true`: 워크스페이스가 함께 영구 삭제되었음을 알리는 안내 노출 후 워크스페이스 목록 화면으로 이동.
+     *        - `false`: 단순 멤버 탈퇴 처리 완료 안내 노출 후 다른 워크스페이스 대시보드로 이동.
+     *     3. **에러 핸들링**:
+     *        - `400 Bad Request`: "다른 멤버가 남아있어 관리자는 탈퇴할 수 없습니다" 메시지 노출 시, 멤버 권한 위임 또는 멤버 정리 안내 유도.
+     */
+    post: operations["WithdrawWorkspaceMemberController_withdraw"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/workspace/{workspace_uid}/member/{member_uid}/grade": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * 멤버 권한 등급(grade) 변경
+     * @description ### 📌 상세 역할 및 개요
+     *     - 워크스페이스 관리자가 특정 멤버의 권한 등급을 `관리자` 또는 `사용자`로 변경합니다.
+     *     - **요청 권한**: 해당 워크스페이스의 **'관리자'** 등급이자 **'활성'** 상태인 사용자만 호출 가능합니다.
+     *     - **제약 조건**: 워크스페이스 내 최소 1명의 활성 관리자가 유지되어야 합니다. 유일한 관리자를 사용자로 변경하려 하면 에러(400)가 발생합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 멤버 관리 목록의 등급 변경 드롭다운/선택 모달에서 등급 선택 시.
+     *     2. **UI 제어 및 사전 검증**:
+     *        - 요청자 본인 계정이거나 이미 동일한 등급인 경우 선택 불가능(Disabled) 처리 권장.
+     *        - 워크스페이스 내 관리자가 1명뿐인 경우, 해당 관리자의 등급 하향 드롭다운을 비활성화하고 툴팁으로 안내합니다.
+     *     3. **에러 핸들링**:
+     *        - `400 Bad Request`: 동일 등급 변경 시도 또는 마지막 관리자 강등 시도 에러 메시지 토스트 노출.
+     *        - `403 Forbidden`: 관리자 권한이 없는 경우 접근 제한.
+     */
+    patch: operations["UpdateWorkspaceMemberGradeController_updateGrade"];
+    trace?: never;
+  };
+  "/api/workspace/brand/list": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * 브랜드 탐색 및 검색 목록 조회
+     * @description ### 📌 상세 역할 및 개요
+     *     - 바이어가 파트너 브랜드를 발굴하고 탐색할 수 있는 카드 뷰 목록 및 검색 필터 옵션을 조회합니다.
+     *     - JWT 인증 토큰(`access_token`)이 필요합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 파트너 발굴 / 브랜드 탐색 페이지 진입 시 및 필터/검색어 변경 시.
+     *     2. **필터 및 검색 파라미터**:
+     *        - `keyword`: 브랜드명(국/영문) 또는 한줄 소개 부분 일치 검색. (미입력 시 전체)
+     *        - `country` / `category` / `contract_type`: 비우거나 `"전체"`(또는 `"all"`) 전달 시 전체 조건 대상 검색.
+     *        - `page`(기본 1), `limit`(기본 12, 최대 50): 무한 스크롤 또는 페이지네이션 연동.
+     *     3. **화면 렌더링 활용**:
+     *        - `items`: 카드 그리드 목록에 필요한 브랜드명, 썸네일, 카테고리, 대표 메뉴, 태그 바인딩.
+     *        - `filter_options`: 상단 드롭다운 필터의 옵션 목록으로 즉시 바인딩 (`전체` 기본 포함).
+     */
+    get: operations["GetBrandListController_execute"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/workspace/brand/{brand_uid}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * 브랜드 탐색 상세 정보 조회
+     * @description ### 📌 상세 역할 및 개요
+     *     - 바이어가 특정 파트너 브랜드의 상세 프로필(기본 정보, 비주얼, 파트너십 조건, 메뉴, 담당자 등)을 조회합니다.
+     *     - JWT 인증 토큰(`access_token`)이 필요합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 브랜드 목록에서 특정 브랜드 카드 클릭 시 (상세 모달, 드로어, 또는 상세 페이지 진입 시).
+     *     2. **경로 파라미터**:
+     *        - `brand_uid`: 조회할 브랜드의 식별자(PK).
+     *     3. **화면 렌더링 활용**:
+     *        - 헤더/비주얼: `brand_name_ko`, `brand_name_en`, `logo_image`, `featured_image_list`.
+     *        - 파트너십 조건: 계약 형태(`preferred_contract_type`), 독점권, 로열티, 마진율 등 조건 표시.
+     *        - 보안 유의사항: 본사 공식 이메일 등 민감 정보는 마스킹되거나 응답에서 제외되어 있습니다.
+     */
+    get: operations["GetBrandDetailController_execute"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/workspace/brand/autocomplete": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * 브랜드 기업명 자동완성 조회
+     * @description ### 📌 상세 역할 및 개요
+     *     - 브랜드 검색창 및 바이어의 타깃 브랜드 입력 시 실시간 기업명 자동완성 추천 목록을 제공합니다.
+     *     - JWT 인증 토큰(`access_token`)이 필요합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 검색 인풋에 사용자가 2글자 이상 입력했을 때 실시간 호출 (디바운스 200~300ms 권장).
+     *     2. **요청 파라미터 (Query)**:
+     *        - `keyword` (string, 필수): 검색어 (최소 2글자 이상 필수, 미만 시 `400 Bad Request`).
+     *     3. **화면 렌더링 활용**:
+     *        - 자동완성 드롭다운에 브랜드명(`company_name`, `brand_name_en`), 로고(`logo_url`), 카테고리/국가 바인딩.
+     *        - 항목 선택 시 해당 브랜드 상세 모달 열기 또는 검색 필터 적용.
+     */
+    get: operations["AutocompleteBrandController_execute"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/workspace/{workspace_uid}/brand/basic": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * 브랜드 기본 정보 입력 및 업데이트
+     * @description ### 📌 상세 역할 및 개요
+     *     - 브랜드 워크스페이스의 기본 정보(`brand_basic`: 국/영문 브랜드명, 런칭연도, 대표자명, 웹사이트 등)를 등록 또는 수정합니다.
+     *     - 요청자는 해당 워크스페이스에 소속된 **활성 멤버**여야 합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 브랜드 프로필 관리 페이지 내 [기본 정보] 폼 저장/수정 완료 시.
+     *     2. **요청 파라미터 (Body)**:
+     *        - `brand_name_ko` (string, 필수): 브랜드 국문명
+     *        - `brand_name_en` (string, 필수): 브랜드 영문명
+     *        - `launch_year` (number, 선택): 런칭 연도 (1900~2100)
+     *        - `ceo_name_ko`, `ceo_name_en`, `website_url` 등 선택 항목 전달.
+     *     3. **처리 팁**:
+     *        - 성공 시 워크스페이스 상세 조회 캐시를 갱신하거나 응답값으로 로컬 상태를 업데이트합니다.
+     */
+    put: operations["UpdateBrandBasicController_handle"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/workspace/{workspace_uid}/brand/status": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * 브랜드 운영 현황 입력 및 업데이트
+     * @description ### 📌 상세 역할 및 개요
+     *     - 브랜드의 매장 수(국내/해외/직영), 연간 매출액, 주요 진출 국가 등 운영 현황(`brand_status`)을 등록 또는 수정합니다.
+     *     - 요청자는 해당 워크스페이스에 소속된 **활성 멤버**여야 합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 브랜드 프로필 관리 페이지 내 [운영 현황] 폼 저장/수정 완료 시.
+     *     2. **요청 파라미터 (Body)**:
+     *        - 매장 수: `domestic_store_total_cnt`, `domestic_store_direct_cnt`, `overseas_store_total_cnt` (숫자)
+     *        - 매출액: `annual_revenue_krw` (숫자, 선택)
+     *        - 진출 국가: `overseas_operating_countries` (문자열 배열, 선택)
+     *     3. **화면 렌더링 팁**:
+     *        - 바이어 탐색 카드 및 상세 정보의 매장 규모/운영 지표 뱃지로 활용됩니다.
+     */
+    put: operations["UpdateBrandStatusController_handle"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/workspace/{workspace_uid}/brand/intro": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * 브랜드 소개 정보 입력 및 업데이트
+     * @description ### 📌 상세 역할 및 개요
+     *     - 브랜드의 한줄 소개, 상세 소개, 업종 카테고리, 가격대 포지셔닝, 핵심 차별점(`key_point`)을 등록 또는 수정합니다.
+     *     - `category` 필드는 `etq_workspace_brand.category` 컬럼과도 자동 동기화되어 검색 및 필터에 즉시 반영됩니다.
+     *     - 요청자는 해당 워크스페이스에 소속된 **활성 멤버**여야 합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 브랜드 프로필 관리 페이지 내 [소개/스토리] 폼 저장 완료 시.
+     *     2. **요청 파라미터 (Body)**:
+     *        - `short_intro` (string, 필수): 한줄 소개 (최대 100자)
+     *        - `detail_intro` (string, 필수): 상세 소개 (최대 500자)
+     *        - `category` (string, 선택): `양식` | `한식` | `일식` | `중식`
+     *        - `price_positioning` (string, 선택): `저가` | `중가` | `고가`
+     *        - `key_point` (string[], 필수): 핵심 차별점 목록 (최대 3개)
+     *     3. **화면 렌더링 팁**:
+     *        - `short_intro`와 `key_point`는 바이어 탐색 카드에 바로 노출되는 주요 문구입니다.
+     */
+    put: operations["UpdateBrandIntroController_handle"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/workspace/{workspace_uid}/brand/contact": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * 브랜드 담당자 연락처 입력 및 업데이트
+     * @description ### 📌 상세 역할 및 개요
+     *     - 브랜드 워크스페이스의 담당자 연락처 정보(국/영문 이름, 직책, 이메일, 전화번호 등)를 등록 또는 수정합니다.
+     *     - 요청자는 해당 워크스페이스에 소속된 **활성 멤버**여야 합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 브랜드 프로필 관리 페이지 내 [담당자 연락처] 폼 저장/수정 완료 시.
+     *     2. **요청 파라미터 (Body)**:
+     *        - `name_ko` (string, 필수): 국문 이름
+     *        - `name_en` (string, 필수): 영문 이름
+     *        - `position` (string, 필수): 직책/직급
+     *        - `email` (string, 필수): 담당자 업무 이메일
+     *        - `phone_country_code`, `phone_number` (선택): 전화번호
+     */
+    put: operations["UpdateBrandContactController_handle"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/workspace/{workspace_uid}/brand/contract": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * 브랜드 계약 담당자 정보 입력 및 업데이트
+     * @description ### 📌 상세 역할 및 개요
+     *     - 브랜드 워크스페이스의 계약 담당자 정보(`brand_contract`: 국/영문 성명, 직책, 계약 전용 이메일, 전화번호 등)를 등록 또는 수정합니다.
+     *     - 요청자는 해당 워크스페이스에 소속된 **활성 멤버**여야 합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 브랜드 프로필 관리 페이지 내 [계약 담당자] 폼 저장/수정 완료 시.
+     *     2. **요청 파라미터 (Body)**:
+     *        - `name_ko` (string, 필수): 계약 담당자 국문 성명
+     *        - `name_en` (string, 필수): 계약 담당자 영문 성명
+     *        - `position` (string, 필수): 직책/부서
+     *        - `email` (string, 필수): 계약 전용 이메일
+     *        - `phone_country_code`, `phone_number` (선택): 전화번호
+     */
+    put: operations["UpdateBrandContractController_handle"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/workspace/{workspace_uid}/brand/signature": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * 브랜드 서명권자 정보 입력 및 업데이트
+     * @description ### 📌 상세 역할 및 개요
+     *     - 최종 계약 체결 권한을 가진 서명권자 정보(`brand_signature`: 국/영문 성명, 직책, 이메일, 전화번호 등)를 등록 또는 수정합니다.
+     *     - 요청자는 해당 워크스페이스에 소속된 **활성 멤버**여야 합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 브랜드 프로필 관리 페이지 내 [서명권자 정보] 폼 저장/수정 완료 시.
+     *     2. **요청 파라미터 (Body)**:
+     *        - `name_ko` (string, 필수): 서명권자 국문 성명
+     *        - `name_en` (string, 필수): 서명권자 영문 성명
+     *        - `position` (string, 필수): 직책 (예: 대표이사)
+     *        - `email` (string, 필수): 서명권자 이메일
+     *        - `phone_country_code`, `phone_number` (선택): 전화번호
+     */
+    put: operations["UpdateBrandSignatureController_handle"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/workspace/{workspace_uid}/brand/contract-policy": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * 브랜드 계약 정책 정보 입력 및 업데이트
+     * @description ### 📌 상세 역할 및 개요
+     *     - 선호 계약 방식, 진출 목표 국가, 독점권 여부, 메뉴 현지화 허용 범위, 식자재 공급망 정책 등 계약 정책 정보(`brand_contract_policy`)를 등록 또는 수정합니다.
+     *     - `preferred_contract_type` 및 `target_country`는 `etq_workspace_brand` 컬럼과 자동 동기화되어 탐색/필터에 즉시 반영됩니다.
+     *     - 요청자는 해당 워크스페이스에 소속된 **활성 멤버**여야 합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 브랜드 프로필 관리 페이지 내 [계약 정책 및 조건] 폼 저장 완료 시.
+     *     2. **주요 요청 파라미터 (Body)**:
+     *        - `preferred_contract_type` (선택): `마스터 프랜차이즈` | `지역 개발권` | `직영` | `합작법인` | `라이선스` | `유통` | `미정`
+     *        - `target_country` (선택): 진출 희망 국가 (예: `미국`, `일본` 등)
+     *        - `exclusivity_level`, `menu_localization_level`, `supply_chain_policy` 등 정책 선택지 전달.
+     *     3. **화면 렌더링 팁**:
+     *        - 바이어 탐색 화면의 핵심 필터 조건과 일치하므로 바이어 매칭 시 매우 중요한 데이터입니다.
+     */
+    put: operations["UpdateBrandContractPolicyController_handle"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/workspace/{workspace_uid}/brand/commission": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * 브랜드 계약 수수료 정보 입력 및 업데이트
+     * @description ### 📌 상세 역할 및 개요
+     *     - 브랜드 가맹비, 로열티 산정 기준, 로열티 비율, 납부 주기 등 계약 수수료 정보(`brand_commission`)를 등록 또는 수정합니다.
+     *     - 요청자는 해당 워크스페이스에 소속된 **활성 멤버**여야 합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 브랜드 프로필 관리 페이지 내 [계약 수수료/로열티] 폼 저장 완료 시.
+     *     2. **요청 파라미터 (Body)**:
+     *        - `franchise_fee` (number, 필수): 가맹비 (원)
+     *        - `royalty_calc_base` (string, 필수): `총매출` | `순매출`
+     *        - `royalty_rate` (number, 필수): 로열티 비율 (0~100%)
+     *        - `royalty_payment_cycle` (string, 필수): `매월` | `매 분기` | `매 반기` | `매년`
+     *        - `training_fee`, `supervision_fee`, `deposit` (number, 선택): 교육비, 감리비, 보증금 등
+     */
+    put: operations["UpdateBrandCommissionController_handle"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/workspace/{workspace_uid}/brand/location-standard": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * 브랜드 입지 및 상권 기준 정보 입력 및 업데이트
+     * @description ### 📌 상세 역할 및 개요
+     *     - 브랜드 매장 출점에 필요한 입지 선호도(층수, 전면 가시성, 주차, 대중교통 등) 및 상권 기준(`brand_location_standard`)을 등록 또는 수정합니다.
+     *     - 요청자는 해당 워크스페이스에 소속된 **활성 멤버**여야 합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 브랜드 프로필 관리 페이지 내 [입지/상권 기준] 폼 저장 완료 시.
+     *     2. **요청 파라미터 (Body)**:
+     *        - `floor_range` (string, 필수): `1층만 가능` | `1~2층` | `제한 없음`
+     *        - 가시성/주차/대중교통 중요도 (`visibility_importance`, `parking_importance`, `transportation_importance`)
+     *        - 매출 비중 중요도(홀/포장/배달) 등 전달.
+     */
+    put: operations["UpdateBrandLocationStandardController_handle"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/workspace/{workspace_uid}/brand/size-criteria": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * 브랜드 매장 크기 조건 정보 입력 및 업데이트
+     * @description ### 📌 상세 역할 및 개요
+     *     - 브랜드 매장 출점에 필요한 권장/최소/최대 면적(㎡) 및 최소 전면 폭(m), 층고(m) 등 매장 크기 기준(`brand_size_criteria`)을 등록 또는 수정합니다.
+     *     - 요청자는 해당 워크스페이스에 소속된 **활성 멤버**여야 합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 브랜드 프로필 관리 페이지 내 [매장 크기 조건] 폼 저장 완료 시.
+     *     2. **요청 파라미터 (Body)**:
+     *        - 면적 (㎡ 단위, 숫자): 권장 면적(`rec_area`), 최소 면적(`min_area`), 최대 면적(`max_area`)
+     *        - 규격 (m 단위, 숫자): 최소 전면 폭(`min_frontage`), 최소 층고(`min_ceiling_height`)
+     */
+    put: operations["UpdateBrandSizeCriteriaController_handle"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/workspace/{workspace_uid}/brand/facility-req": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * 브랜드 매장 시설 필수 조건 정보 입력 및 업데이트
+     * @description ### 📌 상세 역할 및 개요
+     *     - 브랜드 매장 입점에 필수적인 설비(가스, 급배수, 직화, 환기/덕트 등) 조건 정보(`brand_facility_req`)를 등록 또는 수정합니다.
+     *     - 요청자는 해당 워크스페이스에 소속된 **활성 멤버**여야 합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 브랜드 프로필 관리 페이지 내 [시설 필수 조건] 폼 저장 완료 시.
+     *     2. **요청 파라미터 (Body)**:
+     *        - 시설별 필요 여부 (`필수` | `선호` | `불필요`):
+     *          - `gas_req` (가스), `plumbing_req` (급배수), `fire_req` (직화), `ventilation_req` (환기/덕트)
+     */
+    put: operations["UpdateBrandFacilityReqController_handle"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/workspace/{workspace_uid}/brand/visual/logo": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * 브랜드 대표 로고 등록 및 수정/제거
+     * @description ### 📌 상세 역할 및 개요
+     *     - 브랜드 워크스페이스의 대표 로고(`logo_image`)를 등록, 변경하거나 제거합니다.
+     *     - 기존의 대표 이미지 및 영상 정보는 유지되며 로고 필드만 안전하게 갱신됩니다.
+     *     - 요청자는 해당 워크스페이스에 소속된 **활성 멤버**여야 합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 로고 업로드 후 저장 시, 또는 로고 삭제 버튼 클릭 시.
+     *     2. **사전 작업 (업로드 플로우)**:
+     *        - `POST /api/upload/image`를 먼저 호출하여 이미지를 S3에 업로드하고 반환된 이미지 URL을 획득합니다.
+     *     3. **요청 파라미터 (Body)**:
+     *        - `logo_image` (string | null): S3 이미지 URL (제거 시 `null` 또는 빈 문자열 전달)
+     */
+    put: operations["UpdateBrandLogoController_handle"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/workspace/{workspace_uid}/brand/visual/featured-images": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * 브랜드 대표 이미지 목록 등록 및 수정/제거
+     * @description ### 📌 상세 역할 및 개요
+     *     - 브랜드 워크스페이스의 대표 이미지 목록(`featured_image_list`, 최대 10개)을 등록, 순서 변경, 또는 전체 갱신합니다.
+     *     - 기존의 로고 및 영상 정보는 유지되며 대표 이미지 목록만 안전하게 갱신됩니다.
+     *     - 요청자는 해당 워크스페이스에 소속된 **활성 멤버**여야 합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 대표 이미지 갤러리 수정 후 저장 시.
+     *     2. **사전 작업 (업로드 플로우)**:
+     *        - 신규 이미지는 `POST /api/upload/image`로 개별 업로드 후 반환된 S3 URL들을 모아 배열로 구성합니다.
+     *     3. **요청 파라미터 (Body)**:
+     *        - `featured_image_list` (string[] | null): S3 URL 배열 (최대 10개, 빈 배열 `[]` 또는 `null` 전달 시 전체 제거)
+     */
+    put: operations["UpdateBrandFeaturedImagesController_handle"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/workspace/{workspace_uid}/brand/visual/featured-videos": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * 브랜드 대표 영상 목록 등록 및 수정/제거
+     * @description ### 📌 상세 역할 및 개요
+     *     - 브랜드 워크스페이스의 대표 영상 목록(`featured_video_list`, 최대 5개)을 등록, 순서 변경, 또는 전체 갱신합니다.
+     *     - 기존의 로고 및 대표 이미지 정보는 유지되며 영상 목록만 안전하게 갱신됩니다.
+     *     - 요청자는 해당 워크스페이스에 소속된 **활성 멤버**여야 합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 대표 영상 목록 수정 후 저장 시.
+     *     2. **사전 작업 (업로드 플로우)**:
+     *        - 신규 비디오 파일은 `POST /api/upload/video`로 업로드 후 반환된 S3 URL들을 모아 배열로 구성합니다.
+     *     3. **요청 파라미터 (Body)**:
+     *        - `featured_video_list` (string[] | null): S3 URL 배열 (최대 5개, 빈 배열 `[]` 또는 `null` 전달 시 전체 제거)
+     */
+    put: operations["UpdateBrandFeaturedVideosController_handle"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/workspace/{workspace_uid}/brand/menu": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * 브랜드 메뉴 목록 등록 및 업데이트
+     * @description ### 📌 상세 역할 및 개요
+     *     - 브랜드 대표 메뉴 목록(`brand_menu`: 국/영문명, 가격, 설명, 사진 URL 목록)을 전체 등록 또는 수정합니다.
+     *     - 기존 메뉴 목록을 전달받은 배열로 덮어씁니다.
+     *     - 요청자는 해당 워크스페이스에 소속된 **활성 멤버**여야 합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 브랜드 프로필 관리 페이지 내 [메뉴 관리] 폼 저장 완료 시.
+     *     2. **사전 작업 (사진 업로드)**:
+     *        - 메뉴별 사진은 `POST /api/upload/image`로 개별 업로드 후 S3 URL을 `image_list` 배열로 담아 전송합니다.
+     *     3. **요청 파라미터 (Body)**:
+     *        - `menu_list` (MenuItemDto[], 필수):
+     *          - `name_ko`, `name_en` (string): 메뉴명
+     *          - `price` (number): 가격
+     *          - `explain` (string): 메뉴 설명 (최대 300자)
+     *          - `image_list` (string[]): 메뉴 사진 S3 URL 목록
+     */
+    put: operations["UpdateBrandMenuController_handle"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/workspace/buyer/list": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * 바이어 탐색 및 목록 조회
+     * @description ### 📌 상세 역할 및 개요
+     *     - 해외 진출을 함께할 바이어/파트너 목록을 탐색 및 조회하는 메인 검색 API입니다.
+     *     - 국가, 선호 계약 조건, 카테고리(사업 유형), 키워드 필터링 및 페이징을 지원하며, 화면 상단 필터 드롭다운에 즉시 바인딩 가능한 `filterOptions` 목록을 함께 제공합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 바이어 탐색 메인 탭/페이지 초기 진입 시.
+     *        - 상단 필터(국가, 계약 조건, 사업 유형) 선택 변경 또는 검색어 입력 시.
+     *        - 페이지네이션 번호 클릭 또는 무한 스크롤 발생 시.
+     *     2. **요청 파라미터 (Query)**:
+     *        - `page` (number, 기본값 1): 요청 페이지 번호
+     *        - `limit` (number, 기본값 12, 최대 50): 페이지당 항목 수 (카드 그리드 UI에 맞춤)
+     *        - `country` (string, 선택): 국가 필터 (미지정 또는 `"전체"` 전달 시 전체 조회)
+     *        - `contract_type` (string, 선택): 계약 방식 필터 (`"전체"`, `"마스터 프랜차이즈"`, `"합작법인 (JV)"` 등)
+     *        - `category` (string, 선택): 사업 유형 필터 (`"전체"`, `"외식 운영사"`, `"유통"` 등)
+     *        - `keyword` (string, 선택): 바이어 회사명 또는 소개글 부분 일치 검색어
+     *     3. **UI 바인딩 팁**:
+     *        - **필터 드롭다운**: 응답의 `filterOptions` 객체 내 `countries`, `contract_types`, `categories` 배열을 셀렉트 박스 옵션으로 즉시 바인딩할 수 있습니다. (첫 번째 요소로 `"전체"`가 자동 포함됨)
+     *        - **바이어 카드 리스트**: `items` 배열의 데이터를 사용하여 프로토타입 형태의 카드(회사명, 이니셜, 국가, 운영 브랜드 수, 매칭 추천 포인트 등)를 렌더링합니다.
+     */
+    get: operations["GetBuyerListController_execute"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/workspace/buyer/{uid}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * 바이어 상세 조회
+     * @description ### 📌 상세 역할 및 개요
+     *     - 바이어 식별자(`uid`)를 기반으로 바이어의 프로필, 운영 브랜드, 파트너십 선호 조건, 회사 소개 및 담당자 연락처 전체 상세 정보를 조회합니다.
+     *     - 로그인된 사용자(`JwtAuthGuard`)만 접근 가능합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 바이어 목록에서 특정 바이어 카드를 클릭하여 상세 드로어(Drawer) 또는 상세 모달/페이지를 열 때.
+     *     2. **경로 파라미터 (Path)**:
+     *        - `uid` (number, 필수): 조회 대상 바이어 고유 식별자 (`etq_workspace_buyer.uid`)
+     *     3. **응답 데이터 구조 및 탭/섹션 매핑**:
+     *        - **기본 아이덴티티**: `company_name`(기업명), `initial`, `homepage_url`, `brand_summary`(대표 운영 브랜드 요약 문구)
+     *        - **주요 운영 브랜드 (`brands` 배열)**: 브랜드명(`brand_name`), 운영 방식(`contract_type`), 매장 수(`store_count`), 시작 연도(`started_year`), 출처(`source`)
+     *        - **선호 파트너십 조건 (`contract_policy` 객체)**: 희망 계약 방식(`preferred_contract_type`), 가격대(`target_price_tier`), 독점권/현지화/로열티/물류 공급망 선호도
+     *        - **회사 개요 (`basic_info` 객체)**: 상세 소개글(`detail_intro`), 사업 유형(`business_type`), 설립연도, 본사 위치, 국가, 업종 등
+     *        - **담당자 연락처 (`contact` 객체)**: 공식 이메일, 담당자명, 직책, 이메일, 구사 가능 언어 목록
+     *     4. **에러 핸들링**:
+     *        - `404 Not Found`: 유효하지 않거나 삭제된 바이어 식별자이므로 안내 토스트 팝업 표시 후 드로어를 닫습니다.
+     */
+    get: operations["GetBuyerDetailController_execute"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/workspace/buyer/autocomplete": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * 바이어 기업명 자동완성 조회
+     * @description ### 📌 상세 역할 및 개요
+     *     - 바이어 기업명 입력 시 일치하는 등록 바이어의 검색어 자동완성 및 프리뷰 목록을 반환합니다.
+     *     - 로그인된 사용자(`JwtAuthGuard`)만 조회 가능합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 바이어 검색창, 필터 입력창 등에서 사용자가 텍스트를 타이핑할 때 (Debounce 200~300ms 적용 권장).
+     *     2. **요청 파라미터**:
+     *        - `keyword` (필수, string): 검색 키워드 (**최소 2글자 이상**).
+     *        - 2글자 미만 입력 시 `400 Bad Request`가 반환되므로, 프론트엔드에서 2글자 이상 입력 시에만 API를 호출하도록 사전 제어하는 것을 권장합니다.
+     *     3. **UI 바인딩 팁**:
+     *        - 드롭다운 목록에 `company_name`(기업명)과 보조 정보(`country`, `city`, `contact_name`)를 표시하여 사용자가 원하는 바이어를 직관적으로 식별 및 선택할 수 있도록 구성합니다.
+     */
+    get: operations["AutocompleteBuyerController_execute"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/workspace/{workspace_uid}/buyer/basic": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * 바이어 회사 기본 정보 입력 및 업데이트
+     * @description ### 📌 상세 역할 및 개요
+     *     - 바이어 워크스페이스의 회사 기본 정보(`buyer_basic`: 회사명, 설립연도, 본사 위치, 국가, 도시, 주요 업종, 웹사이트 등)를 등록 또는 수정합니다.
+     *     - 요청자는 해당 워크스페이스에 소속된 **활성 멤버**여야 합니다.
+     *     - 바이어 테이블(`etq_workspace_buyer`)의 JSON 컬럼(`buyer_basic`)과 개별 인덱싱 컬럼(`business_type`, `country`, `city`)에 자동 동기화되어 저장됩니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 바이어 마이페이지 또는 설정 페이지 내 [회사 기본 정보] 폼 저장 버튼 클릭 시.
+     *     2. **파라미터**:
+     *        - **Path**: `workspace_uid` (number, 필수)
+     *        - **Body (JSON)**:
+     *          - `company_name` (string, 필수): 회사명
+     *          - `business_type` (string, 필수): 사업 유형 (예: "외식 운영사", "유통" 등)
+     *          - `country` (string, 필수): 소재 국가
+     *          - `city` (string, 필수): 소재 도시
+     *          - `founded_year`, `headquarter_location`, `target_industry`, `website_url` 등 선택 항목 전달
+     *     3. **에러 핸들링**:
+     *        - `400 Bad Request`: 필수 입력값 누락 또는 바이어 워크스페이스가 아닌 경우 (`"바이어 워크스페이스가 아닙니다."`)
+     *        - `403 Forbidden`: 해당 워크스페이스의 멤버 권한이 없는 경우
+     */
+    put: operations["UpdateBuyerBasicController_handle"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/workspace/{workspace_uid}/buyer/status": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * 바이어 현재 운영 현황 입력 및 업데이트
+     * @description ### 📌 상세 역할 및 개요
+     *     - 바이어 워크스페이스의 현재 외식/식품 사업 운영 현황(`buyer_status`: 총 매장 수, 연간 매출 규모, 주요 운영 브랜드 목록, 운영 국가 등)을 등록 또는 수정합니다.
+     *     - 요청자는 해당 워크스페이스에 소속된 **활성 멤버**여야 합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 바이어 설정 페이지 내 [현재 사업 및 운영 현황] 폼 저장 시.
+     *     2. **파라미터**:
+     *        - **Path**: `workspace_uid` (number, 필수)
+     *        - **Body (JSON)**:
+     *          - `total_store_count` (number, 선택): 현재 총 운영 매장 수
+     *          - `annual_revenue_scale` (string, 선택): 연간 매출 규모 구간
+     *          - `operating_brands` (array, 선택): 현재 운영 중인 브랜드 목록 객체 배열 (`brand_name`, `store_count`, `contract_type`, `started_year`, `source_url`)
+     *          - `operating_countries` (string[], 선택): 사업 진출 국가 목록
+     *     3. **에러 핸들링**:
+     *        - `400 Bad Request`: 바이어 워크스페이스가 아닌 경우
+     *        - `403 Forbidden`: 해당 워크스페이스 활성 멤버가 아닌 경우
+     */
+    put: operations["UpdateBuyerStatusController_handle"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/workspace/{workspace_uid}/buyer/intro": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * 바이어 회사 소개 정보 입력 및 업데이트
+     * @description ### 📌 상세 역할 및 개요
+     *     - 바이어 워크스페이스의 회사 소개 및 브랜딩 정보(`buyer_intro`: 한 줄 소개, 상세 소개글, 핵심 역량 태그, 첨부 카탈로그/소개서 파일 등)를 등록 또는 수정합니다.
+     *     - 요청자는 해당 워크스페이스에 소속된 **활성 멤버**여야 합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 바이어 설정 페이지 내 [회사 소개/브랜딩] 폼 저장 시.
+     *     2. **파라미터**:
+     *        - **Path**: `workspace_uid` (number, 필수)
+     *        - **Body (JSON)**:
+     *          - `tagline` (string, 선택): 회사를 대표하는 한 줄 슬로건/캐치프레이즈
+     *          - `detail_intro` (string, 선택): 회사 상세 소개글
+     *          - `strengths` (string[], 선택): 주요 강점/핵심 역량 태그 목록
+     *          - `attachments` (object[], 선택): 파일 업로드 API(`/api/upload`)를 통해 업로드된 첨부파일 메타데이터 배열
+     *     3. **에러 핸들링**:
+     *        - `400 Bad Request`: 바이어 워크스페이스가 아닌 경우
+     *        - `403 Forbidden`: 해당 워크스페이스 활성 멤버가 아닌 경우
+     */
+    put: operations["UpdateBuyerIntroController_handle"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/workspace/{workspace_uid}/buyer/contract-policy": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * 바이어 계약 정책 입력 및 업데이트
+     * @description ### 📌 상세 역할 및 개요
+     *     - 바이어 워크스페이스의 파트너십 선호 계약 정책(`buyer_contract_policy`: 선호 계약 방식, 희망 가격대, 독점권 조건, 메뉴 현지화 요구, 로열티 선호, 식자재 유통망 보유 여부 등)을 등록 또는 수정합니다.
+     *     - 요청자는 해당 워크스페이스에 소속된 **활성 멤버**여야 합니다.
+     *     - `preferred_contract_type`(선호 계약 방식)은 개별 컬럼에도 함께 자동 동기화됩니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 바이어 설정 페이지 내 [파트너십 및 계약 선호 조건] 폼 저장 시.
+     *     2. **파라미터**:
+     *        - **Path**: `workspace_uid` (number, 필수)
+     *        - **Body (JSON)**:
+     *          - `preferred_contract_type` (string, 필수): 희망 계약 방식 (예: "마스터 프랜차이즈", "합작법인 (JV)" 등)
+     *          - `target_price_tier` (string, 선택): 선호 객단가/가격대
+     *          - `exclusivity_requirement` (string, 선택): 독점권 요구 조건
+     *          - `localization_requirement` (string, 선택): 메뉴 현지화 수용 기준
+     *          - `preferred_royalty_type` (string, 선택): 선호 로열티 산정 방식
+     *          - `has_supply_chain` (boolean, 선택): 식자재/물류 공급망 보유 여부
+     *     3. **에러 핸들링**:
+     *        - `400 Bad Request`: 필수 파라미터 누락 또는 바이어 워크스페이스가 아님
+     *        - `403 Forbidden`: 해당 워크스페이스 활성 멤버가 아님
+     */
+    put: operations["UpdateBuyerContractPolicyController_handle"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/workspace/{workspace_uid}/buyer/contact": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * 바이어 담당자 연락처 입력 및 업데이트
+     * @description ### 📌 상세 역할 및 개요
+     *     - 바이어 워크스페이스의 공식 연락처 및 담당자 정보(`buyer_contact`: 대표 이메일, 담당자 이름, 직책, 이메일, 전화번호, 가능 언어 등)를 등록 또는 수정합니다.
+     *     - 요청자는 해당 워크스페이스에 소속된 **활성 멤버**여야 합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 바이어 설정 페이지 내 [담당자 및 연락처 정보] 폼 저장 시.
+     *     2. **파라미터**:
+     *        - **Path**: `workspace_uid` (number, 필수)
+     *        - **Body (JSON)**:
+     *          - `official_email` (string, 필수): 바이어 대표 이메일
+     *          - `contact_name` (string, 필수): 주 담당자 이름
+     *          - `contact_position` (string, 필수): 담당자 직책 (예: "해외사업팀 팀장")
+     *          - `contact_email` (string, 필수): 담당자 업무용 이메일
+     *          - `contact_phone` (string, 선택): 담당자 유선/휴대전화 번호
+     *          - `contact_languages` (string[], 선택): 담당자 구사 가능 언어 목록 (예: `["한국어", "영어", "일본어"]`)
+     *     3. **에러 핸들링**:
+     *        - `400 Bad Request`: 필수 이메일 형식 오류 등 유효성 검증 실패 또는 바이어 워크스페이스가 아님
+     *        - `403 Forbidden`: 해당 워크스페이스 활성 멤버가 아님
+     */
+    put: operations["UpdateBuyerContactController_handle"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/upload/image": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * 이미지 파일 업로드
+     * @description ### 📌 상세 역할 및 개요
+     *     - 이미지 파일을 AWS S3 스토리지에 업로드하고, CDN/S3 접근 가능 URL 및 메타데이터를 반환합니다.
+     *     - 브랜드 로고, 대표 비주얼 이미지, 프로필 사진, 메뉴 이미지 등 플랫폼 전반의 이미지 등록에 활용됩니다.
+     *     - 업로드된 파일명은 충돌 방지를 위해 UUID 기반의 고유 파일명으로 자동 변환되어 저장됩니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **요청 방식 (Multipart Form Data)**:
+     *        - `Content-Type: multipart/form-data` 형식으로 전송합니다.
+     *        - 폼 데이터(FormData)의 필드 키 이름은 반드시 **`file`**로 설정해야 합니다.
+     *          ```typescript
+     *          const formData = new FormData();
+     *          formData.append('file', selectedFile); // key: 'file'
+     *          ```
+     *     2. **연동 흐름 (2-Step Pattern)**:
+     *        - **Step 1**: 본 API를 호출하여 이미지 업로드 후 응답의 `url` 획득
+     *        - **Step 2**: 획득한 `url`을 대상 비즈니스 API(예: 로고 변경, 대표 이미지 등록 등)의 요청 Body에 전달하여 최종 저장
+     *     3. **허용 확장자 및 용량 제한**:
+     *        - 허용 포맷: `jpg`, `jpeg`, `png`, `webp`, `gif`, `svg`
+     *        - 최대 크기: **10MB** 이하 (초과 시 `400 Bad Request` 반환)
+     *     4. **에러 핸들링**:
+     *        - `400 Bad Request`: 파일 미첨부, 지원되지 않는 이미지 포맷 또는 10MB 용량 초과 시 발생하므로 프론트엔드에서 사전 유효성 검사를 권장합니다.
+     *        - `401 Unauthorized`: 만료되거나 유효하지 않은 토큰이므로 로그인 갱신 또는 재로그인 처리가 필요합니다.
+     */
+    post: operations["UploadImageController_handle"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/upload/video": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * 영상 파일 업로드
+     * @description ### 📌 상세 역할 및 개요
+     *     - 영상 파일을 AWS S3 스토리지에 업로드하고, CDN/S3 접근 가능 URL 및 메타데이터를 반환합니다.
+     *     - 브랜드 소개 영상, 홍보 영상 등 미디어 콘텐츠 등록에 활용됩니다.
+     *     - 업로드된 파일명은 충돌 방지를 위해 UUID 기반의 고유 파일명으로 자동 변환되어 저장됩니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **요청 방식 (Multipart Form Data)**:
+     *        - `Content-Type: multipart/form-data` 형식으로 전송합니다.
+     *        - 폼 데이터(FormData)의 필드 키 이름은 반드시 **`file`**로 설정해야 합니다.
+     *          ```typescript
+     *          const formData = new FormData();
+     *          formData.append('file', selectedVideoFile); // key: 'file'
+     *          ```
+     *     2. **연동 흐름 (2-Step Pattern)**:
+     *        - **Step 1**: 본 API를 호출하여 영상 업로드 후 응답의 `url` 획득
+     *        - **Step 2**: 획득한 `url`을 대상 비즈니스 API(예: 브랜드 대표 영상 등록 등)의 요청 Body에 전달하여 최종 저장
+     *     3. **허용 확장자 및 용량 제한**:
+     *        - 허용 포맷: `mp4`, `webm`, `mov`, `avi`, `mpeg`
+     *        - 최대 크기: **100MB** 이하 (초과 시 `400 Bad Request` 반환)
+     *     4. **프론트엔드 UX 팁**:
+     *        - 영상 파일은 용량이 크므로 업로드 진행 중 로딩 스피너 또는 프로그레스 바(Progress Bar) 표시를 권장합니다.
+     *     5. **에러 핸들링**:
+     *        - `400 Bad Request`: 파일 미첨부, 지원되지 않는 영상 포맷 또는 100MB 용량 초과 시 발생하므로 프론트엔드 사전 검증을 권장합니다.
+     *        - `401 Unauthorized`: 만료되거나 유효하지 않은 토큰이므로 로그인 갱신 또는 재로그인 처리가 필요합니다.
+     */
+    post: operations["UploadVideoController_handle"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/crm/list": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * 진행 관리(CRM) 목록 조회
+     * @description ### 📌 상세 역할 및 개요
+     *     - 현재 워크스페이스에 등록된 진행 관리(CRM) 대상(바이어/브랜드) 목록을 필터 및 페이징 조건에 맞춰 조회합니다.
+     *     - 각 대상의 기본 정보, 현재 진행 단계(`current_stage`), 최근 접점일, 다음 액션 예정 사항을 한 번에 제공합니다.
+     *     - 화면 상단 필터 칩에 즉시 바인딩 가능한 동적 옵션 목록(`filter_options`)을 함께 반환합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 진행 관리(CRM) 메인 목록 화면 진입 시.
+     *        - 상단 검색창 입력(`keyword`) 또는 필터 칩(국가, 카테고리, 계약방식) 변경 및 페이지네이션 전환 시.
+     *     2. **파라미터 전달**:
+     *        - `workspace_uid`: 특정 워크스페이스 컨텍스트에서 조회 시 전달 (미전달 시 사용자의 기본 활성 워크스페이스 적용).
+     *        - `country`, `category`, `contract_type`: '전체'일 경우 파라미터를 생략하거나 전달하지 않습니다.
+     *     3. **UI 바인딩 팁**:
+     *        - `items`: 테이블 또는 카드 리스트에 렌더링.
+     *        - `stage_class`: 각 진행 단계 뱃지의 CSS 클래스로 직접 활용 가능 (예: badge-blue, badge-yellow).
+     *        - `filter_options`: 응답의 필터 옵션 배열을 셀렉트 박스나 필터 칩 목록에 직접 맵핑.
+     *     4. **후속 액션 연계**:
+     *        - 행(Row) 클릭 시 해당 항목의 `uid`를 경로 파라미터로 사용하여 **CRM 상세 조회 API(`GET /api/crm/{crm_uid}`)**로 이동.
+     */
+    get: operations["GetCrmListController_execute"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/crm": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * 진행 관리(CRM) 관리 대상(바이어/브랜드) 추가
+     * @description ### 📌 상세 역할 및 개요
+     *     - 진행 관리(CRM)에 신규 관리 대상(바이어 또는 브랜드)을 등록합니다.
+     *     - 플랫폼 내 등록된 타 워크스페이스를 연동(`target_workspace_uid`)하거나, 수기 정보(`company_name` 등)로 등록할 수 있습니다.
+     *     - 등록자의 워크스페이스 타입에 맞춰 대상 유형(`workspace_type`)이 자동으로 결정됩니다 (브랜드 워크스페이스는 바이어를 등록, 바이어 워크스페이스는 브랜드를 등록).
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - '관리 바이어 추가' 또는 '관리 브랜드 추가' 모달/폼에서 '저장/추가' 버튼 클릭 시.
+     *     2. **입력 파라미터 구성**:
+     *        - `source_workspace_uid`: 현재 로그인된 활성 워크스페이스 UID (필수).
+     *        - `target_workspace_uid`: 플랫폼 내 워크스페이스 검색을 통해 선택한 경우 전달 (미선택 시 `null` 또는 생략).
+     *        - `company_name`: 대상 기업명 (필수).
+     *        - `country`, `city`, `category`, `contract_type`, `manager_name`, `manager_email`, `manager_phone`, `memo`: 부가 프로필 및 담당자 정보.
+     *     3. **성공 후 UX 처리**:
+     *        - 모달 닫기 및 CRM 목록 재조회(`GET /api/crm/list`), 또는 생성된 `uid`를 바탕으로 상세 페이지(`GET /api/crm/{uid}`)로 이동.
+     *     4. **에러 핸들링**:
+     *        - `400 Bad Request`: 필수값 누락 또는 동일 타입 워크스페이스 등록 시도 시(예: 브랜드가 브랜드를 target으로 지정).
+     */
+    post: operations["CreateCrmController_execute"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/crm/action": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * 진행 기록(crm_action) 및 다음 액션 등록
+     * @description ### 📌 상세 역할 및 개요
+     *     - 진행 관리 상세 화면에서 메인 진행 기록 1건과 선택적 복수 다음 액션(`next_actions`)을 단일 트랜잭션으로 등록합니다.
+     *     - 메인 진행 기록은 완료 상태(`is_done = "Y"`)로 자동 등록되며, 다음 액션들은 미완료(`is_done = "N"`) 상태로 저장됩니다.
+     *     - 첨부파일(`file_list`)은 파일 업로드 API를 통해 발급받은 URL과 메타데이터를 전달받아 함께 저장합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 상세 화면의 '진행 기록 추가' 드로어 또는 팝업에서 내용 작성 후 '등록' 클릭 시.
+     *     2. **연동 흐름**:
+     *        - 파일 첨부가 있는 경우: `POST /api/upload/crm-action` 등을 먼저 호출하여 파일 업로드 후 반환된 정보(`file_name`, `file_url`, `file_size`, `mime_type`)를 `file_list` 배열에 구성.
+     *        - 본 API 호출(`POST /api/crm/action`)하여 진행 기록 본문 및 다음 액션 항목들을 함께 전송.
+     *     3. **요청 파라미터 핵심**:
+     *        - `crm_uid`: 대상 CRM 레코드 UID (필수).
+     *        - `action_type`: '미팅', '이메일', '통화', '계약', '기타' 등 (필수).
+     *        - `title`, `action_time`: 필수.
+     *        - `next_actions`: 등록과 동시에 추가할 다음 액션 배열 (선택, 각 항목의 `action_type`, `title`, `action_time` 포함).
+     *     4. **성공 후 UX 처리**:
+     *        - 드로어/모달 닫기 및 CRM 상세 조회 API(`GET /api/crm/{crm_uid}`)를 다시 호출하여 타임라인 및 다음 액션 목록 갱신.
+     */
+    post: operations["CreateCrmActionController_createAction"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/crm/action/{action_uid}": {
     parameters: {
       query?: never;
       header?: never;
@@ -665,899 +1652,4038 @@ export interface paths {
     put?: never;
     post?: never;
     /**
-     * 첨부 파일 삭제
-     * @description 이미 attached된 파일을 삭제합니다. 배열형 대상은 남은 슬롯을 0..n-1로 재배치합니다.
+     * 진행 기록(crm_action) 삭제
+     * @description ### 📌 상세 역할 및 개요
+     *     - 등록된 진행 기록 또는 다음 액션을 논리 삭제(Soft Delete)합니다.
+     *     - 삭제된 항목은 타임라인 및 다음 액션 목록에서 제외됩니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 진행 기록 카드 또는 다음 액션 항목의 메뉴 > '삭제' 클릭 후 확인 컨펌 시.
+     *     2. **요청 파라미터**:
+     *        - Path: `action_uid` (삭제할 액션 UID)
+     *     3. **성공 후 UX 처리**:
+     *        - 타임라인 목록에서 해당 카드 애니메이션 제거(또는 CRM 상세 API `GET /api/crm/{crm_uid}` 재호출) 및 완료 토스트 노출.
+     *     4. **에러 핸들링**:
+     *        - `403 Forbidden`: 해당 워크스페이스에 대한 권한이 없거나 비활성 멤버인 경우.
+     *        - `404 Not Found`: 이미 삭제되었거나 존재하지 않는 항목.
      */
-    delete: operations["delete"];
+    delete: operations["DeleteCrmActionController_deleteAction"];
+    options?: never;
+    head?: never;
+    /**
+     * 진행 기록(crm_action) 수정
+     * @description ### 📌 상세 역할 및 개요
+     *     - 등록된 진행 기록 또는 다음 액션의 상세 내용(유형, 제목, 일시, 대상자, 내용, 첨부파일, 완료 여부 등)을 수정합니다.
+     *     - 전달된 필드만 부분 업데이트(Partial Update)됩니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 타임라인의 진행 기록 카드 또는 다음 액션 항목의 수정 드로어/모달에서 '저장' 버튼 클릭 시.
+     *     2. **요청 파라미터**:
+     *        - Path: `action_uid` (수정 대상 액션 UID)
+     *        - Body: 변경하고자 하는 필드만 선택적 전송 (`action_type`, `title`, `action_time`, `partner_name`, `content`, `file_list`, `is_done`).
+     *     3. **성공 후 UX 처리**:
+     *        - 수정 모달/드로어를 닫고, CRM 상세 조회 API(`GET /api/crm/{crm_uid}`)를 재호출하거나 로컬 상태를 업데이트하여 화면 반영.
+     *     4. **에러 핸들링**:
+     *        - `400 Bad Request`: 유효성 검증 실패 또는 변경할 필드가 하나도 전달되지 않은 경우.
+     *        - `404 Not Found`: 존재하지 않거나 이미 삭제된 액션 UID.
+     */
+    patch: operations["UpdateCrmActionController_updateAction"];
+    trace?: never;
+  };
+  "/api/crm/action/{action_uid}/done": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * 진행 완료 여부(is_done) 처리 및 토글
+     * @description ### 📌 상세 역할 및 개요
+     *     - 진행 관리 상세 화면의 '다음 액션' 목록이나 타임라인 카드에서 완료 스위치를 켜고 끌 때 사용합니다.
+     *     - Body에 값을 명시하거나 생략하여 반전(Toggle)시킬 수 있습니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 액션 체크박스 또는 토글 스위치를 클릭했을 때.
+     *     2. **요청 파라미터**:
+     *        - Path: `action_uid` (액션 UID)
+     *        - Body (선택):
+     *          - 미전달 또는 `{}`: 현재 완료 상태를 반전(Y ↔ N 토글).
+     *          - `{ "is_done": "Y" }` 또는 `{ "is_done": "N" }`: 특정 상태로 명시 변경.
+     *     3. **UX 팁 (Optimistic Update)**:
+     *        - 스위치 클릭 즉시 프론트 UI 상의 완료 스타일(취소선, 체크 활성화 등)을 변경하고 API를 호출합니다. 실패 시 이전 상태로 롤백.
+     *     4. **에러 핸들링**:
+     *        - `404 Not Found`: 유효하지 않거나 삭제된 액션 UID.
+     */
+    patch: operations["UpdateCrmActionDoneController_updateDone"];
+    trace?: never;
+  };
+  "/api/crm/{crm_uid}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * 진행 관리(CRM) 상세 정보 조회
+     * @description ### 📌 상세 역할 및 개요
+     *     - 특정 진행 관리 대상의 상세 프로필, 현재 진행 단계(`current_stage`), 예정된 다음 액션 목록(`next_actions`), 전체 진행 히스토리 타임라인(`actions`)을 한 번에 조회합니다.
+     *     - 상세 화면에서 필요한 모든 데이터를 단일 호출로 취합하여 반환합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - CRM 목록에서 특정 카드를 클릭하여 상세 페이지 진입 시.
+     *        - 액션 등록/수정/삭제 또는 단계 변경 후 최신 데이터 동기화 시.
+     *     2. **응답 데이터 구조 및 렌더링 영역**:
+     *        - `crm`: 상단 헤더 및 기본 정보 패널 (기업명, 국가/도시, 카테고리, 담당자 연락처, 메모 등).
+     *        - `current_stage`: 상단 단계 프로그레스 바 활성화 상태 표시.
+     *        - `next_actions`: 좌측 또는 상단 '예정된 다음 액션' 리스트 (완료 토글 스위치 제공).
+     *        - `actions`: 우측 메인 '진행 기록 타임라인' 목록 (날짜 역순 정렬, 첨부파일 목록 포함).
+     *     3. **에러 핸들링**:
+     *        - `404 Not Found`: 삭제되었거나 존재하지 않는 CRM 항목인 경우 목록 화면으로 리다이렉트 및 토스트 알림.
+     *        - `403 Forbidden`: 해당 CRM 대상의 워크스페이스에 접근 권한이 없는 경우 안내.
+     */
+    get: operations["GetCrmDetailController_getDetail"];
+    put?: never;
+    post?: never;
+    /**
+     * 진행 관리(CRM) 대상(바이어/브랜드) 삭제
+     * @description ### 📌 상세 역할 및 개요
+     *     - 진행 관리 대상(바이어/브랜드) 및 소속된 모든 하위 진행 기록(`crm_action`)을 논리 삭제(Soft Delete) 처리합니다.
+     *     - 삭제된 데이터는 목록 및 상세 조회에서 노출되지 않습니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - CRM 목록 행의 더보기(케밥) 메뉴 > '삭제' 클릭 시.
+     *        - CRM 상세 헤더의 케밥 메뉴 > '진행 삭제' 클릭 후 확인 모달에서 컨펌 시.
+     *     2. **요청 파라미터**:
+     *        - Path: `crm_uid` (삭제할 CRM 식별자)
+     *     3. **성공 후 UX 처리**:
+     *        - 목록 화면에서 삭제한 경우: 목록 재조회(`GET /api/crm/list`) 또는 로컬 상태에서 해당 행 제거.
+     *        - 상세 화면에서 삭제한 경우: CRM 메인 목록 화면으로 이동(리다이렉트) 및 완료 토스트 노출.
+     *     4. **에러 핸들링**:
+     *        - `403 Forbidden`: 해당 워크스페이스에 대한 삭제 권한이 없거나 비활성 멤버인 경우.
+     *        - `404 Not Found`: 이미 삭제되었거나 존재하지 않는 항목.
+     */
+    delete: operations["DeleteCrmController_deleteCrm"];
     options?: never;
     head?: never;
     patch?: never;
+    trace?: never;
+  };
+  "/api/crm/{crm_uid}/stage": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * 진행 관리(CRM) 현재 진행 단계(current_stage) 수정
+     * @description ### 📌 상세 역할 및 개요
+     *     - 진행 관리 대상의 현재 진행 단계(`current_stage`)를 직접 변경합니다.
+     *     - 허용 단계 값: `리드`, `연락중`, `미팅`, `계약협상`, `법리문서검토`, `계약완료`, `계약이탈`
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 상세 화면 상단의 단계 프로그레스 바 또는 상태 변경 드롭다운에서 다른 단계를 클릭/선택했을 때.
+     *     2. **요청 파라미터**:
+     *        - Path: `crm_uid` (대상 식별자)
+     *        - Body: `{ "current_stage": "계약협상" }` (허용된 7개 단계 중 하나)
+     *     3. **UX 팁**:
+     *        - UI에서 낙관적 업데이트(Optimistic Update)로 프로그레스 바 상태를 먼저 변경하고, 실패 시 이전 단계로 롤백 및 에러 토스트 노출.
+     *     4. **에러 핸들링**:
+     *        - `400 Bad Request`: 정의되지 않은 단계 문자열을 전달한 경우.
+     */
+    patch: operations["UpdateCrmStageController_updateStage"];
     trace?: never;
   };
 }
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
-    CreateBrandRequest: {
+    SendMagicLinkDto: {
       /**
-       * @description 워크스페이스 표시명 겸 브랜드 한국어명(1~255자)
-       * @example 테스트 브랜드
+       * @description 로그인 또는 회원가입할 사용자의 이메일 주소
+       * @example user@eatiqlink.com
        */
-      nameKo: string;
+      email: string;
     };
-    /** @description 공통 오류 응답 { success:false, errorCode, message, details? } */
-    ErrorResponse: {
-      /** @example false */
-      success?: boolean;
-      /** @example AUTH_INVALID_CREDENTIALS */
-      errorCode?: string;
-      /** @example 이메일 또는 비밀번호가 올바르지 않습니다. */
-      message?: string;
-      /** @description 도메인별 부가 데이터(있을 때만 포함) */
-      details?: Record<string, never>;
-    };
-    BrandCreatedResponse: {
-      brand?: components["schemas"]["BrandDetail"];
-      subscription?: components["schemas"]["SubscriptionSummary"];
-    };
-    BrandDetail: {
-      id?: string;
-      nameKo?: string;
-      nameEn?: string;
-      /** Format: date-time */
-      createdAt?: string;
-    };
-    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
-    CommonResponseBrandCreatedResponse: {
-      /** @example true */
-      success?: boolean;
-      data?: components["schemas"]["BrandCreatedResponse"];
-      /** @example 요청이 성공했습니다. */
-      message?: string;
-    };
-    SubscriptionSummary: {
-      /** @enum {string} */
-      planCode?: "tier1" | "tier2" | "tier3";
-      /** @enum {string} */
-      status?: "active" | "trialing" | "past_due" | "cancelled";
-      /** @enum {string} */
-      billingCycle?: "monthly" | "annual";
-    };
-    JsonNode: Record<string, never>;
-    BenefitDto: {
-      itemKey?: string;
-      benefitText?: string;
-    };
-    BrandMenuDto: {
-      menuId?: string;
-      nameKo?: string;
-      nameEn?: string;
-      description?: string;
-      /** Format: int32 */
-      priceKrw?: number;
-      photoUrls?: string[];
-      videoUrl?: string;
-      media?: components["schemas"]["MenuMediaDto"];
-    };
-    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
-    CommonResponseMenuSaveResponse: {
-      /** @example true */
-      success?: boolean;
-      data?: components["schemas"]["MenuSaveResponse"];
-      /** @example 요청이 성공했습니다. */
-      message?: string;
-    };
-    JourneyDto: {
-      scope?: string;
-      scopeKey?: string;
-      journeyStage?: string;
-      /** Format: int32 */
-      completionRate?: number;
-      /** Format: int32 */
-      nextStageRemaining?: number;
-      gateReason?: string;
-      gateMessage?: string;
-      missingItems?: components["schemas"]["MissingItemDto"][];
-      benefits?: components["schemas"]["BenefitDto"][];
-      nextAction?: components["schemas"]["NextActionDto"];
-    };
-    MediaFileDto: {
-      fileId?: string;
-      url?: string;
-      contentType?: string;
-      /** Format: int64 */
-      size?: number;
-      /** Format: int32 */
-      position?: number;
-    };
-    MenuMediaDto: {
-      photos?: components["schemas"]["MediaFileDto"][];
-      video?: components["schemas"]["MediaFileDto"];
-    };
-    MenuSaveResponse: {
-      brandMenu?: components["schemas"]["BrandMenuDto"];
-      completionRate?: components["schemas"]["TabRateDto"];
-      journey?: components["schemas"]["JourneyDto"];
-    };
-    MissingItemDto: {
-      key?: string;
-      label?: string;
-      section?: string;
-      isRequired?: boolean;
-      /** Format: int32 */
-      sortOrder?: number;
-      targetScreen?: string;
-      targetTab?: string;
-      targetAnchor?: string;
-    };
-    NextActionDto: {
-      label?: string;
-      targetScreen?: string;
-      targetTab?: string;
-      targetAnchor?: string;
-    };
-    TabRateDto: {
-      tab?: string;
-      /** Format: int32 */
-      rate?: number;
-      stage?: string;
-    };
-    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
-    CommonResponseMediaMutationResult: {
-      /** @example true */
-      success?: boolean;
-      data?: components["schemas"]["MediaMutationResult"];
-      /** @example 요청이 성공했습니다. */
-      message?: string;
-    };
-    MediaMutationResult: {
-      /** Format: int32 */
-      completionRate?: number;
-      journey?: components["schemas"]["JourneyDto"];
-    };
-    PresignRequest: {
-      targetType?: string;
-      contentType?: string;
-      /** Format: int64 */
-      size?: number;
-      resourceId?: string;
-      /** Format: int32 */
-      position?: number;
-    };
-    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
-    CommonResponsePresignResponse: {
-      /** @example true */
-      success?: boolean;
-      data?: components["schemas"]["PresignResponse"];
-      /** @example 요청이 성공했습니다. */
-      message?: string;
-    };
-    PresignResponse: {
-      fileId?: string;
-      putUrl?: string;
-      method?: string;
-      requiredHeaders?: {
-        [key: string]: string;
-      };
-      /** Format: int64 */
-      expectedSize?: number;
-      /** Format: date-time */
-      expiresAt?: string;
-    };
-    CreateExpansionTargetRequest: {
-      country?: string;
-      city?: string;
-      status?: string;
-    };
-    BrandExpansionTargetDto: {
-      expansionTargetId?: string;
-      country?: string;
-      city?: string;
-      status?: string;
-      /** Format: int32 */
-      priority?: number;
-    };
-    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
-    CommonResponseExpansionTargetSaveResponse: {
-      /** @example true */
-      success?: boolean;
-      data?: components["schemas"]["ExpansionTargetSaveResponse"];
-      /** @example 요청이 성공했습니다. */
-      message?: string;
-    };
-    ExpansionTargetSaveResponse: {
-      expansionTarget?: components["schemas"]["BrandExpansionTargetDto"];
-      completionRate?: components["schemas"]["TabRateDto"];
-      journey?: components["schemas"]["JourneyDto"];
-    };
-    SignupRequest: {
+    SendMagicLinkResponseDto: {
       /**
-       * Format: email
-       * @example test@example.com
+       * @description 결과 메시지
+       * @example 입력하신 이메일로 로그인 접속 링크를 발송했습니다.
+       */
+      message: string;
+    };
+    VerifyMagicLinkDto: {
+      /**
+       * @description 로그인/회원가입 인증 대상 이메일 주소
+       * @example user@eatiqlink.com
        */
       email: string;
       /**
-       * @description 영문 대소문자·숫자·특수문자 포함 8자 이상, 72바이트 이하
-       * @example Aa1!aaaa
+       * @description 이메일 매직링크 접속 시 URL에 포함된 64자리 인증 토큰
+       * @example d7a8f9c1b2e3456789abcdef0123456789abcdef0123456789abcdef01234567
        */
-      password: string;
-      /** @example 지환 */
+      token: string;
+    };
+    AuthUserResponseDto: {
+      /**
+       * @description 계정 고유 식별자 (uid)
+       * @example 1
+       */
+      uid: number;
+      /**
+       * @description 이메일 주소
+       * @example user@eatiqlink.com
+       */
+      email: string;
+      /**
+       * @description 사용자 이름
+       * @example 홍길동
+       */
+      name?: Record<string, never>;
+    };
+    VerifyMagicLinkResponseDto: {
+      /**
+       * @description 신규 회원 여부. true이면 아직 회원가입이 완료되지 않은 유저이며, false이면 기존 가입 회원으로 로그인 완료됨을 의미합니다.
+       * @example false
+       */
+      is_new_user: boolean;
+      /**
+       * @description 인증 완료된 이메일 주소
+       * @example user@eatiqlink.com
+       */
+      email: string;
+      /**
+       * @description 로그인 성공 시 발급되는 JWT AccessToken (기존 회원일 때만 제공)
+       * @example eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImVtYWlsIjoidXNlckBlYXRpcWxpbmsuY29tIiwiaWF0IjoxNzg4NDg0MDAwLCJleHAiOjE3ODg1NzA0MDB9.signature...
+       */
+      access_token?: string;
+      /** @description 계정 기본 프로필 정보 (기존 회원일 때만 제공) */
+      user?: components["schemas"]["AuthUserResponseDto"];
+      /**
+       * @description 신규 회원가입 시 /api/auth/register 요청에 필요한 매직링크 인증 토큰 (신규 유저일 때 반환)
+       * @example 4f8b9e6c2d1a3f5e7b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a
+       */
+      token?: string;
+      /**
+       * @description 신규 회원일 때 프론트엔드 안내 문구
+       * @example 회원가입이 필요합니다. 추가 정보를 입력해 주세요.
+       */
+      message?: string;
+    };
+    RegisterDto: {
+      /**
+       * @description 매직링크 인증을 완료한 이메일 주소
+       * @example user@eatiqlink.com
+       */
+      email: string;
+      /**
+       * @description 가입할 사용자의 이름
+       * @example 홍길동
+       */
       name: string;
       /**
-       * @description 가입 후 변경 불가
+       * @description 매직링크 인증 시 발급/검증에 사용된 64자리 인증 토큰
+       * @example 4f8b9e6c2d1a3f5e7b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a
+       */
+      token: string;
+    };
+    RegisterResponseDto: {
+      /**
+       * @description 처리 결과 메시지
+       * @example 회원가입이 완료되었습니다.
+       */
+      message: string;
+      /**
+       * @description 회원가입 즉시 로그인 유지를 위해 발급된 JWT AccessToken
+       * @example eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImVtYWlsIjoidXNlckBlYXRpcWxpbmsuY29tIiwiaWF0IjoxNzg4NDg0MDAwLCJleHAiOjE3ODg1NzA0MDB9.signature...
+       */
+      access_token: string;
+      /** @description 생성된 계정 기본 프로필 정보 */
+      user: components["schemas"]["AuthUserResponseDto"];
+    };
+    LogoutResponseDto: {
+      /**
+       * @description 로그아웃 성공 여부
+       * @example true
+       */
+      success: boolean;
+      /**
+       * @description 결과 메시지
+       * @example 성공적으로 로그아웃되었습니다.
+       */
+      message: string;
+    };
+    WorkspaceMemberSummaryDto: {
+      /**
+       * @description 멤버 레코드 고유 식별자 (uid)
+       * @example 1
+       */
+      uid: number;
+      /**
+       * @description 내 멤버 등급 (관리자, 사용자 등)
+       * @example 관리자
+       */
+      grade: string;
+      /**
+       * @description 내 멤버 상태 (활성, 초대중, 초대 거절 등)
+       * @example 활성
+       */
+      status: string;
+      /**
+       * @description 마지막 접속 시간
+       * @example 2026-06-24T10:00:00.000Z
+       */
+      last_connection_time?: Record<string, never>;
+    };
+    MyWorkspaceItemDto: {
+      /**
+       * @description 워크스페이스 고유 식별자 (uid)
+       * @example 1
+       */
+      uid: number;
+      /**
+       * @description 워크스페이스 이름
+       * @example 플러그푸드 코리아
+       */
+      name: string;
+      /**
+       * @description 워크스페이스 타입 (brand 또는 buyer)
+       * @example brand
+       */
+      type: string;
+      /** @description 로그인 사용자의 멤버십 정보 */
+      my_member_info: components["schemas"]["WorkspaceMemberSummaryDto"];
+      /**
+       * @description 워크스페이스 생성 일시
+       * @example 2026-01-01T00:00:00.000Z
+       */
+      created_time?: Record<string, never>;
+    };
+    GetMyWorkspacesResponseDto: {
+      /**
+       * @description 응답 메시지
+       * @example 내가 소속된 워크스페이스 목록을 성공적으로 조회했습니다.
+       */
+      message: string;
+      /**
+       * @description 조회된 워크스페이스 총 개수
+       * @example 2
+       */
+      total_count: number;
+      /** @description 소속 워크스페이스 목록 */
+      workspaces: components["schemas"]["MyWorkspaceItemDto"][];
+    };
+    InvitedWorkspaceMemberSummaryDto: {
+      /**
+       * @description 멤버 레코드 고유 식별자 (uid)
+       * @example 1
+       */
+      uid: number;
+      /**
+       * @description 초대된 권한 등급 (관리자, 사용자 등)
+       * @example 사용자
+       */
+      grade: string;
+      /**
+       * @description 멤버 상태
+       * @example 초대중
+       */
+      status: string;
+      /**
+       * @description 초대받은 이메일
+       * @example user@example.com
+       */
+      email: string;
+      /**
+       * @description 초대 일시
+       * @example 2026-06-24T10:00:00.000Z
+       */
+      invited_time?: Record<string, never>;
+    };
+    InvitedWorkspaceItemDto: {
+      /**
+       * @description 워크스페이스 고유 식별자 (uid)
+       * @example 1
+       */
+      uid: number;
+      /**
+       * @description 워크스페이스 이름
+       * @example 플러그푸드 코리아
+       */
+      name: string;
+      /**
+       * @description 워크스페이스 타입 (brand 또는 buyer)
+       * @example brand
+       */
+      type: string;
+      /** @description 나의 초대 상태 정보 */
+      my_member_info: components["schemas"]["InvitedWorkspaceMemberSummaryDto"];
+      /**
+       * @description 워크스페이스 생성 일시
+       * @example 2026-01-01T00:00:00.000Z
+       */
+      created_time?: Record<string, never>;
+    };
+    GetMyInvitedWorkspacesResponseDto: {
+      /**
+       * @description 응답 메시지
+       * @example 초대 대기 중인 워크스페이스 목록을 성공적으로 조회했습니다.
+       */
+      message: string;
+      /**
+       * @description 조회된 초대 대기 워크스페이스 총 개수
+       * @example 1
+       */
+      total_count: number;
+      /** @description 초대 대기 중인 워크스페이스 목록 */
+      workspaces: components["schemas"]["InvitedWorkspaceItemDto"][];
+    };
+    CreateWorkspaceDto: {
+      /**
+       * @description 생성할 워크스페이스 이름
+       * @example 플러그푸드 코리아
+       */
+      name: string;
+      /**
+       * @description 워크스페이스 타입 (brand: 브랜드, buyer: 바이어)
        * @example brand
        * @enum {string}
        */
-      userType: "brand" | "buyer";
+      type: "brand" | "buyer";
     };
-    AuthResponse: {
-      accessToken?: string;
-      refreshToken?: string;
-      /** Format: int64 */
-      expiresIn?: number;
-      user?: components["schemas"]["UserDto"];
-    };
-    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
-    CommonResponseAuthResponse: {
-      /** @example true */
-      success?: boolean;
-      data?: components["schemas"]["AuthResponse"];
-      /** @example 요청이 성공했습니다. */
-      message?: string;
-    };
-    UserDto: {
-      id?: string;
-      email?: string;
-      name?: string;
-      /** @enum {string} */
-      userType?: "brand" | "buyer";
-      emailVerified?: boolean;
-      lastBrandId?: string;
-    };
-    RefreshRequest: {
-      /** @description 로그인/가입 응답의 refreshToken */
-      refreshToken: string;
-    };
-    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
-    CommonResponseTokenResponse: {
-      /** @example true */
-      success?: boolean;
-      data?: components["schemas"]["TokenResponse"];
-      /** @example 요청이 성공했습니다. */
-      message?: string;
-    };
-    TokenResponse: {
-      accessToken?: string;
-      refreshToken?: string;
-      /** Format: int64 */
-      expiresIn?: number;
-    };
-    PasswordResetRequestRequest: {
+    WorkspaceResponseDataDto: {
       /**
-       * Format: email
-       * @example test@example.com
+       * @description 생성된 워크스페이스 uid
+       * @example 1
+       */
+      uid: number;
+      /**
+       * @description 워크스페이스 이름
+       * @example 플러그푸드 코리아
+       */
+      name: string;
+      /**
+       * @description 워크스페이스 타입 (brand, buyer)
+       * @example brand
+       */
+      type: string;
+    };
+    CreateWorkspaceResponseDto: {
+      /**
+       * @description 결과 메시지
+       * @example 워크스페이스가 성공적으로 생성되었습니다.
+       */
+      message: string;
+      /** @description 생성된 워크스페이스 정보 */
+      workspace: components["schemas"]["WorkspaceResponseDataDto"];
+    };
+    UpdateWorkspaceNameDto: {
+      /**
+       * @description 변경할 워크스페이스 이름
+       * @example 새로운 워크스페이스 이름
+       */
+      name: string;
+    };
+    UpdateWorkspaceNameResponseDto: {
+      /**
+       * @description 결과 메시지
+       * @example 워크스페이스 이름이 성공적으로 변경되었습니다.
+       */
+      message: string;
+      /**
+       * @description 워크스페이스 UID
+       * @example 1
+       */
+      workspace_uid: number;
+      /**
+       * @description 변경된 워크스페이스 이름
+       * @example 새로운 워크스페이스 이름
+       */
+      name: string;
+    };
+    WorkspaceDetailBrandDto: {
+      /**
+       * @description 브랜드 테이블 고유 식별자 (uid)
+       * @example 1
+       */
+      uid: number;
+      /**
+       * @description 소속 워크스페이스 uid
+       * @example 1
+       */
+      workspace_uid: number;
+      /**
+       * @description 업종/카테고리
+       * @example 외식업
+       */
+      category?: Record<string, never>;
+      /**
+       * @description 선호 계약 형태
+       * @example 프랜차이즈
+       */
+      preferred_contract_type?: Record<string, never>;
+      /**
+       * @description 진출 목표 국가
+       * @example 일본
+       */
+      target_country?: Record<string, never>;
+      /**
+       * @description 브랜드 기본 정보
+       * @example {
+       *       "brand_name_ko": "플러그푸드",
+       *       "brand_name_en": "PlugFood",
+       *       "launch_year": 2021,
+       *       "ceo_name_ko": "홍길동",
+       *       "ceo_name_en": "Gildong Hong",
+       *       "homepage_url": "https://www.plugfood.com",
+       *       "official_email": "contact@plugfood.com",
+       *       "official_address": "서울특별시 강남구 테헤란로 123, 4층"
+       *     }
+       */
+      brand_basic?: Record<string, never>;
+      /** @description 브랜드 소개 정보 */
+      brand_intro?: Record<string, never>;
+      /** @description 브랜드 현황 정보 */
+      brand_status?: Record<string, never>;
+      /** @description 브랜드 담당자 연락처 */
+      brand_contact?: Record<string, never>;
+      /** @description 브랜드 계약 담당자 */
+      brand_contract?: Record<string, never>;
+      /** @description 브랜드 서명권자 */
+      brand_signature?: Record<string, never>;
+      /** @description 브랜드 비주얼(로고, 이미지 등) */
+      brand_visual?: Record<string, never>;
+      /** @description 브랜드 메뉴 정보 */
+      brand_menu?: Record<string, never>;
+      /** @description 브랜드 계약 정책 */
+      brand_contract_policy?: Record<string, never>;
+      /** @description 브랜드 수수료 정책 */
+      brand_commission?: Record<string, never>;
+      /** @description 브랜드 입지 및 상권 기준 */
+      brand_location_standard?: Record<string, never>;
+      /** @description 브랜드 매장 크기 조건 */
+      brand_size_criteria?: Record<string, never>;
+      /** @description 브랜드 매장 시설 필수 조건 */
+      brand_facility_req?: Record<string, never>;
+    };
+    WorkspaceDetailBuyerDto: {
+      /**
+       * @description 바이어 테이블 고유 식별자 (uid)
+       * @example 1
+       */
+      uid: number;
+      /**
+       * @description 소속 워크스페이스 uid
+       * @example 2
+       */
+      workspace_uid: number;
+      /**
+       * @description 업태/비즈니스 타입
+       * @example 유통
+       */
+      business_type?: Record<string, never>;
+      /**
+       * @description 선호 계약 형태
+       * @example 마스터 프랜차이즈
+       */
+      preferred_contract_type?: Record<string, never>;
+      /**
+       * @description 국가
+       * @example 대한민국
+       */
+      country?: Record<string, never>;
+      /**
+       * @description 도시
+       * @example 서울
+       */
+      city?: Record<string, never>;
+      /** @description 바이어 기본 정보 */
+      buyer_basic?: Record<string, never>;
+      /** @description 바이어 소개 정보 */
+      buyer_intro?: Record<string, never>;
+      /** @description 바이어 현황 정보 */
+      buyer_status?: Record<string, never>;
+      /** @description 바이어 계약 정책 */
+      buyer_contract_policy?: Record<string, never>;
+      /** @description 바이어 담당자 연락처 */
+      buyer_contact?: Record<string, never>;
+      /** @description 바이어 내부 수집 브랜드 목록 */
+      buyer_collection?: Record<string, never>;
+    };
+    WorkspaceDetailResponseDto: {
+      /**
+       * @description 워크스페이스 uid
+       * @example 1
+       */
+      uid: number;
+      /**
+       * @description 워크스페이스 이름
+       * @example 플러그푸드 코리아
+       */
+      name: string;
+      /**
+       * @description 워크스페이스 타입 (brand 또는 buyer)
+       * @example brand
+       */
+      type: string;
+      /** @description 요청한 사용자의 워크스페이스 멤버 정보 */
+      my_member_info: components["schemas"]["WorkspaceMemberSummaryDto"];
+      /** @description 브랜드 상세 정보 (type이 brand일 때 제공) */
+      brand?: components["schemas"]["WorkspaceDetailBrandDto"];
+      /** @description 바이어 상세 정보 (type이 buyer일 때 제공) */
+      buyer?: components["schemas"]["WorkspaceDetailBuyerDto"];
+    };
+    DeleteWorkspaceResponseDto: {
+      /**
+       * @description 결과 메시지
+       * @example '이틱링크' 워크스페이스가 성공적으로 삭제되었습니다.
+       */
+      message: string;
+      /**
+       * @description 삭제된 워크스페이스 고유 식별자 (uid)
+       * @example 1
+       */
+      workspace_uid: number;
+      /**
+       * @description 삭제 처리 일시 (ISO 8601)
+       * @example 2026-09-14T10:30:00.000Z
+       */
+      deleted_time: string;
+    };
+    WorkspaceMemberItemDto: {
+      /**
+       * @description 멤버 레코드 식별자 (uid)
+       * @example 1
+       */
+      uid: number;
+      /**
+       * @description 워크스페이스 식별자 (workspace_uid)
+       * @example 1
+       */
+      workspace_uid: number;
+      /**
+       * @description 가입된 계정 식별자 (account_uid, 미가입 시 null)
+       * @example 10
+       */
+      account_uid?: Record<string, never>;
+      /**
+       * @description 사용자 이름 (계정 등록된 이름, 없을 시 null)
+       * @example 김지환
+       */
+      name?: Record<string, never>;
+      /**
+       * @description 멤버 이메일
+       * @example jihwan.kim@eatiq.io
        */
       email: string;
-    };
-    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
-    CommonResponseVoid: {
-      /** @example true */
-      success?: boolean;
-      data?: Record<string, never>;
-      /** @example 요청이 성공했습니다. */
-      message?: string;
-    };
-    PasswordResetConfirmRequest: {
-      /** @description 이메일 링크의 재설정 토큰 */
-      token: string;
       /**
-       * @description 영문 대소문자·숫자·특수문자 포함 8자 이상, 72바이트 이하
-       * @example Aa1!aaaa
+       * @description 멤버 권한 등급 (관리자, 사용자 등)
+       * @example 관리자
        */
-      newPassword: string;
-    };
-    LogoutRequest: {
-      /** @description 폐기할 현재 기기의 refresh token */
-      refreshToken: string;
-    };
-    LoginRequest: {
+      grade: string;
       /**
-       * Format: email
-       * @example test@example.com
+       * @description 멤버 상태 (활성, 초대중, 초대 거절 등)
+       * @example 활성
+       */
+      status: string;
+      /**
+       * @description 최근 접속 일시 (접속 이력 없을 시 null)
+       * @example 2026-06-24T10:00:00.000Z
+       */
+      last_connection_time?: Record<string, never>;
+      /**
+       * @description 초대/등록 일시
+       * @example 2026-06-24T10:00:00.000Z
+       */
+      created_time?: Record<string, never>;
+    };
+    GetWorkspaceMemberListResponseDto: {
+      /**
+       * @description 결과 메시지
+       * @example 워크스페이스 멤버 목록을 성공적으로 조회했습니다.
+       */
+      message: string;
+      /**
+       * @description 조회된 멤버 총 인원수
+       * @example 4
+       */
+      total_count: number;
+      /** @description 워크스페이스 멤버 목록 */
+      members: components["schemas"]["WorkspaceMemberItemDto"][];
+    };
+    InviteWorkspaceMemberDto: {
+      /**
+       * @description 초대할 사용자들의 이메일 목록
+       * @example [
+       *       "user1@example.com",
+       *       "user2@example.com"
+       *     ]
+       */
+      emails: string[];
+    };
+    InviteFailedItemDto: {
+      /**
+       * @description 초대 실패한 이메일
+       * @example already_active@example.com
        */
       email: string;
-      /** @example Aa1!aaaa */
-      password: string;
-    };
-    EmailVerifyConfirmRequest: {
-      /** @description 이메일 링크의 인증 토큰 */
-      token: string;
-    };
-    AdminStagingBuyerResponse: {
-      /** @enum {string} */
-      outcome?:
-        | "INSERTED"
-        | "MERGED"
-        | "SKIPPED_REJECTED"
-        | "SKIPPED_DUPLICATE"
-        | "DISCARDED_OUT_OF_COUNTRY"
-        | "FAILED_MINIMUM_REQUIREMENTS"
-        | "INSERTED_COMPARISON";
-      stagingId?: string;
-    };
-    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
-    CommonResponseAdminStagingBuyerResponse: {
-      /** @example true */
-      success?: boolean;
-      data?: components["schemas"]["AdminStagingBuyerResponse"];
-      /** @example 요청이 성공했습니다. */
-      message?: string;
-    };
-    UpdatePolicyRequest: {
-      preferredContractType?: string;
-      exclusivity?: string;
-      menuLocalization?: string;
-      interiorCompliance?: string;
-      ingredientSupply?: string;
-      ingredientSupplyRequired?: boolean;
-      trademark?: string;
-      manualCompliance?: string;
-    };
-    BrandPolicyDto: {
-      preferredContractType?: string;
-      exclusivity?: string;
-      menuLocalization?: string;
-      interiorCompliance?: string;
-      ingredientSupply?: string;
-      ingredientSupplyRequired?: boolean;
-      trademark?: string;
-      manualCompliance?: string;
-    };
-    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
-    CommonResponsePolicySaveResponse: {
-      /** @example true */
-      success?: boolean;
-      data?: components["schemas"]["PolicySaveResponse"];
-      /** @example 요청이 성공했습니다. */
-      message?: string;
-    };
-    PolicySaveResponse: {
-      brandPolicy?: components["schemas"]["BrandPolicyDto"];
-      completionRate?: components["schemas"]["TabRateDto"];
-      journey?: components["schemas"]["JourneyDto"];
-    };
-    UpdateOperationRequest: {
-      /** Format: int32 */
-      storeCountTotalDomestic?: number;
-      /** Format: int32 */
-      storeCountDirect?: number;
-      /** Format: int32 */
-      storeCountOverseas?: number;
-      /** Format: int64 */
-      monthlyRevenueAvg?: number;
-      /** Format: int32 */
-      avgStoreSizePy?: number;
-      /** Format: int32 */
-      avgSpendPerPerson?: number;
-      /** Format: int32 */
-      avgSeatCount?: number;
-      targetCustomers?: string[];
-      usageOccasions?: string[];
-    };
-    BrandOperationDto: {
-      /** Format: int32 */
-      storeCountTotalDomestic?: number;
-      /** Format: int32 */
-      storeCountDirect?: number;
-      /** Format: int32 */
-      storeCountOverseas?: number;
-      /** Format: int64 */
-      monthlyRevenueAvg?: number;
-      /** Format: int32 */
-      avgStoreSizePy?: number;
-      /** Format: int32 */
-      avgSpendPerPerson?: number;
-      /** Format: int32 */
-      avgSeatCount?: number;
-      targetCustomers?: string[];
-      usageOccasions?: string[];
-    };
-    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
-    CommonResponseOperationSaveResponse: {
-      /** @example true */
-      success?: boolean;
-      data?: components["schemas"]["OperationSaveResponse"];
-      /** @example 요청이 성공했습니다. */
-      message?: string;
-    };
-    OperationSaveResponse: {
-      brandOperation?: components["schemas"]["BrandOperationDto"];
-      completionRate?: components["schemas"]["TabRateDto"];
-      journey?: components["schemas"]["JourneyDto"];
-    };
-    ReorderRequest: {
-      targetType?: string;
-      resourceId?: string;
-      fileIds?: string[];
-    };
-    UpdateIntroRequest: {
-      oneLiner?: string;
-      description?: string;
-      category?: string;
-      pricePositioning?: string;
-      differentiator1?: string;
-      differentiator2?: string;
-      differentiator3?: string;
-    };
-    BrandIntroDto: {
-      oneLiner?: string;
-      description?: string;
-      category?: string;
-      pricePositioning?: string;
-      differentiator1?: string;
-      differentiator2?: string;
-      differentiator3?: string;
-    };
-    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
-    CommonResponseIntroSaveResponse: {
-      /** @example true */
-      success?: boolean;
-      data?: components["schemas"]["IntroSaveResponse"];
-      /** @example 요청이 성공했습니다. */
-      message?: string;
-    };
-    IntroSaveResponse: {
-      brandIntro?: components["schemas"]["BrandIntroDto"];
-      completionRate?: components["schemas"]["TabRateDto"];
-      journey?: components["schemas"]["JourneyDto"];
-    };
-    BrandFlagshipStoreDto: {
-      storeNameKo?: string;
-      storeNameEn?: string;
-      address?: string;
-      photoUrls?: string[];
-      videoUrl?: string;
-    };
-    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
-    CommonResponseFlagshipStoreSaveResponse: {
-      /** @example true */
-      success?: boolean;
-      data?: components["schemas"]["FlagshipStoreSaveResponse"];
-      /** @example 요청이 성공했습니다. */
-      message?: string;
-    };
-    FlagshipStoreSaveResponse: {
-      brandFlagshipStore?: components["schemas"]["BrandFlagshipStoreDto"];
-      completionRate?: components["schemas"]["TabRateDto"];
-      journey?: components["schemas"]["JourneyDto"];
-    };
-    UpdateFeeRequest: {
-      /** Format: int64 */
-      franchiseFeeKrw?: number;
-      royaltyBase?: string;
-      royaltyRatePct?: number;
-      /** Format: int64 */
-      royaltyFixedKrw?: number;
-      paymentCycle?: string;
-    };
-    BrandFeeDto: {
-      /** Format: int64 */
-      franchiseFeeKrw?: number;
-      royaltyBase?: string;
-      royaltyRatePct?: number;
-      /** Format: int64 */
-      royaltyFixedKrw?: number;
-      paymentCycle?: string;
-    };
-    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
-    CommonResponseFeeSaveResponse: {
-      /** @example true */
-      success?: boolean;
-      data?: components["schemas"]["FeeSaveResponse"];
-      /** @example 요청이 성공했습니다. */
-      message?: string;
-    };
-    FeeSaveResponse: {
-      brandFee?: components["schemas"]["BrandFeeDto"];
-      completionRate?: components["schemas"]["TabRateDto"];
-      journey?: components["schemas"]["JourneyDto"];
-    };
-    UpdateExpansionTargetRequest: {
-      city?: string;
-      status?: string;
-    };
-    ReorderExpansionTargetsRequest: {
-      items?: components["schemas"]["ReorderItem"][];
-    };
-    ReorderItem: {
-      expansionTargetId?: string;
-      /** Format: int32 */
-      priority?: number;
-    };
-    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
-    CommonResponseExpansionTargetsSaveResponse: {
-      /** @example true */
-      success?: boolean;
-      data?: components["schemas"]["ExpansionTargetsSaveResponse"];
-      /** @example 요청이 성공했습니다. */
-      message?: string;
-    };
-    ExpansionTargetsSaveResponse: {
-      expansionTargets?: components["schemas"]["BrandExpansionTargetDto"][];
-      completionRate?: components["schemas"]["TabRateDto"];
-      journey?: components["schemas"]["JourneyDto"];
-    };
-    UpdateContractRequest: {
-      contractContactNameKo?: string;
-      contractContactNameEn?: string;
-      contractContactTitle?: string;
-      contractContactEmail?: string;
-      signatoryNameKo?: string;
-      signatoryNameEn?: string;
-      signatoryTitle?: string;
-      signatoryEmail?: string;
-    };
-    BrandContractDto: {
-      contractContactNameKo?: string;
-      contractContactNameEn?: string;
-      contractContactTitle?: string;
-      contractContactEmail?: string;
-      signatoryNameKo?: string;
-      signatoryNameEn?: string;
-      signatoryTitle?: string;
-      signatoryEmail?: string;
-    };
-    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
-    CommonResponseContractSaveResponse: {
-      /** @example true */
-      success?: boolean;
-      data?: components["schemas"]["ContractSaveResponse"];
-      /** @example 요청이 성공했습니다. */
-      message?: string;
-    };
-    ContractSaveResponse: {
-      brandContract?: components["schemas"]["BrandContractDto"];
-      completionRate?: components["schemas"]["TabRateDto"];
-      journey?: components["schemas"]["JourneyDto"];
-    };
-    UpdateContactRequest: {
-      contactNameKo?: string;
-      contactNameEn?: string;
-      contactTitle?: string;
-      contactEmail?: string;
-      contactLanguages?: string[];
-    };
-    BrandContactDto: {
-      contactNameKo?: string;
-      contactNameEn?: string;
-      contactTitle?: string;
-      contactEmail?: string;
-      contactLanguages?: string[];
-    };
-    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
-    CommonResponseContactSaveResponse: {
-      /** @example true */
-      success?: boolean;
-      data?: components["schemas"]["ContactSaveResponse"];
-      /** @example 요청이 성공했습니다. */
-      message?: string;
-    };
-    ContactSaveResponse: {
-      brandContact?: components["schemas"]["BrandContactDto"];
-      completionRate?: components["schemas"]["TabRateDto"];
-      journey?: components["schemas"]["JourneyDto"];
-    };
-    SetBrandTypeRequest: {
-      brandType?: string;
-    };
-    BrandTypeSaveResponse: {
-      brandType?: string;
-      brandFee?: components["schemas"]["BrandFeeDto"];
-      completionRate?: components["schemas"]["TabRateDto"];
-      journey?: components["schemas"]["JourneyDto"];
-    };
-    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
-    CommonResponseBrandTypeSaveResponse: {
-      /** @example true */
-      success?: boolean;
-      data?: components["schemas"]["BrandTypeSaveResponse"];
-      /** @example 요청이 성공했습니다. */
-      message?: string;
-    };
-    UpdateBasicRequest: {
-      nameKo?: string;
-      nameEn?: string;
-      /** Format: int32 */
-      launchYear?: number;
-      ceoNameKo?: string;
-      ceoNameEn?: string;
-      hqEmail?: string;
-      hqWebsite?: string;
-      hqAddress?: string;
-    };
-    BasicSaveResponse: {
-      brand?: components["schemas"]["BrandBasicDto"];
-      completionRate?: components["schemas"]["TabRateDto"];
-      journey?: components["schemas"]["JourneyDto"];
-    };
-    BrandBasicDto: {
-      nameKo?: string;
-      nameEn?: string;
-      /** Format: int32 */
-      launchYear?: number;
-      ceoNameKo?: string;
-      ceoNameEn?: string;
-      hqEmail?: string;
-      hqWebsite?: string;
-      hqAddress?: string;
-    };
-    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
-    CommonResponseBasicSaveResponse: {
-      /** @example true */
-      success?: boolean;
-      data?: components["schemas"]["BasicSaveResponse"];
-      /** @example 요청이 성공했습니다. */
-      message?: string;
-    };
-    UpdateAreaCriteriaRequest: {
-      preferredArea1st?: string;
-      preferredArea2nd?: string;
-      preferredArea3rd?: string;
-      /** Format: int64 */
-      rentMinKrw?: number;
-      /** Format: int64 */
-      rentMaxKrw?: number;
-      allowableFloor?: string;
-      signageImportance?: string;
-      storeSizeImportance?: string;
-      parkingImportance?: string;
-      waitingSpaceImportance?: string;
-      lunchSalesImportance?: string;
-      latenightSalesImportance?: string;
-      weekdaySalesImportance?: string;
-      weekendSalesImportance?: string;
-      /** Format: int32 */
-      recommendedSizePy?: number;
-      /** Format: int32 */
-      sizeMinPy?: number;
-      /** Format: int32 */
-      sizeMaxPy?: number;
-      minFrontageM?: number;
-      gasImportance?: string;
-      waterImportance?: string;
-      openFlameImportance?: string;
-      ventilationImportance?: string;
-      refrigerationImportance?: string;
-    };
-    AreaCriteriaSaveResponse: {
-      brandAreaCriteria?: components["schemas"]["BrandAreaCriteriaDto"];
-      completionRate?: components["schemas"]["TabRateDto"];
-      journey?: components["schemas"]["JourneyDto"];
-    };
-    BrandAreaCriteriaDto: {
-      preferredArea1st?: string;
-      preferredArea2nd?: string;
-      preferredArea3rd?: string;
-      /** Format: int64 */
-      rentMinKrw?: number;
-      /** Format: int64 */
-      rentMaxKrw?: number;
-      allowableFloor?: string;
-      signageImportance?: string;
-      storeSizeImportance?: string;
-      parkingImportance?: string;
-      waitingSpaceImportance?: string;
-      lunchSalesImportance?: string;
-      latenightSalesImportance?: string;
-      weekdaySalesImportance?: string;
-      weekendSalesImportance?: string;
-      /** Format: int32 */
-      recommendedSizePy?: number;
-      /** Format: int32 */
-      sizeMinPy?: number;
-      /** Format: int32 */
-      sizeMaxPy?: number;
-      minFrontageM?: number;
-      gasImportance?: string;
-      waterImportance?: string;
-      openFlameImportance?: string;
-      ventilationImportance?: string;
-      refrigerationImportance?: string;
-    };
-    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
-    CommonResponseAreaCriteriaSaveResponse: {
-      /** @example true */
-      success?: boolean;
-      data?: components["schemas"]["AreaCriteriaSaveResponse"];
-      /** @example 요청이 성공했습니다. */
-      message?: string;
-    };
-    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
-    CommonResponseHealthData: {
-      /** @example true */
-      success?: boolean;
-      data?: components["schemas"]["HealthData"];
-      /** @example 요청이 성공했습니다. */
-      message?: string;
-    };
-    HealthData: {
-      status?: string;
-      db?: string;
-      /** Format: int64 */
-      latencyMs?: number;
-      /** Format: date-time */
-      timestamp?: string;
-    };
-    BrandSummary: {
-      id?: string;
-      nameKo?: string;
-      nameEn?: string;
-      /** @enum {string} */
-      role?: "owner" | "user";
-      /** Format: date-time */
-      joinedAt?: string;
-    };
-    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
-    CommonResponsePageResponseBrandSummary: {
-      /** @example true */
-      success?: boolean;
-      data?: components["schemas"]["PageResponseBrandSummary"];
-      /** @example 요청이 성공했습니다. */
-      message?: string;
-    };
-    /** @description 목록 페이지 객체 { content, page, size, totalElements, totalPages, hasNext } */
-    PageResponseBrandSummary: {
-      content?: components["schemas"]["BrandSummary"][];
       /**
-       * Format: int32
-       * @description 0-based 페이지 번호
+       * @description 실패 사유
+       * @example 이미 해당 워크스페이스의 활성 멤버입니다.
+       */
+      reason: string;
+    };
+    InviteWorkspaceMemberResponseDto: {
+      /**
+       * @description 결과 메시지
+       * @example 워크스페이스 멤버 초대가 처리되었습니다.
+       */
+      message: string;
+      /**
+       * @description 성공적으로 초대(또는 재초대)된 멤버 수
+       * @example 2
+       */
+      invited_count: number;
+      /**
+       * @description 초대 실패한 멤버 수
        * @example 0
        */
-      page?: number;
+      failed_count: number;
+      /** @description 성공적으로 초대된 멤버 목록 */
+      invited_members: components["schemas"]["WorkspaceMemberSummaryDto"][];
+      /** @description 초대 실패한 항목 목록 (이미 활성 멤버 등) */
+      failed_items: components["schemas"]["InviteFailedItemDto"][];
+    };
+    RespondWorkspaceInviteDto: {
       /**
-       * Format: int32
+       * @description 초대 처리 액션 (수락 또는 거절)
+       * @example 수락
+       * @enum {string}
+       */
+      action: "수락" | "거절";
+    };
+    RespondWorkspaceInviteResponseDto: {
+      /**
+       * @description 결과 안내 메시지
+       * @example 워크스페이스 초대를 수락했습니다.
+       */
+      message: string;
+      /**
+       * @description 워크스페이스 고유 식별자 (uid)
+       * @example 1
+       */
+      workspace_uid: number;
+      /**
+       * @description 워크스페이스 이름
+       * @example 플러그푸드 코리아
+       */
+      workspace_name: string;
+      /**
+       * @description 워크스페이스 멤버 고유 식별자 (uid)
+       * @example 10
+       */
+      member_uid: number;
+      /**
+       * @description 처리 후 멤버 상태 (활성 또는 초대 거절)
+       * @example 활성
+       */
+      status: string;
+      /**
+       * @description 멤버 권한 등급 (관리자, 사용자 등)
+       * @example 사용자
+       */
+      grade: string;
+    };
+    UpdateWorkspaceMemberStatusDto: {
+      /**
+       * @description 변경할 멤버 상태 ("초대취소" 또는 "강제탈퇴")
+       * @example 초대취소
+       * @enum {string}
+       */
+      status: "초대취소" | "강제탈퇴";
+    };
+    UpdateWorkspaceMemberStatusResponseDto: {
+      /**
+       * @description 결과 메시지
+       * @example 멤버 상태가 성공적으로 변경되었습니다.
+       */
+      message: string;
+      /**
+       * @description 워크스페이스 식별자
+       * @example 1
+       */
+      workspace_uid: number;
+      /**
+       * @description 멤버 레코드 식별자
+       * @example 12
+       */
+      member_uid: number;
+      /**
+       * @description 변경 전 멤버 상태
+       * @example 초대중
+       */
+      previous_status: string;
+      /**
+       * @description 변경된 멤버 상태
+       * @example 초대취소
+       */
+      status: string;
+      /**
+       * @description 상태 갱신 일시
+       * @example 2026-06-24T12:00:00.000Z
+       */
+      updated_time: string;
+    };
+    WithdrawWorkspaceMemberResponseDto: {
+      /**
+       * @description 결과 메시지
+       * @example 워크스페이스에서 성공적으로 탈퇴하였습니다.
+       */
+      message: string;
+      /**
+       * @description 워크스페이스 식별자
+       * @example 1
+       */
+      workspace_uid: number;
+      /**
+       * @description 멤버 레코드 식별자
+       * @example 12
+       */
+      member_uid: number;
+      /**
+       * @description 변경된 멤버 상태
+       * @example 탈퇴
+       */
+      status: string;
+      /**
+       * @description 워크스페이스 삭제 여부 (마지막 관리자 혼자 남았을 때 자진 탈퇴 시 워크스페이스가 함께 삭제됩니다)
+       * @example false
+       */
+      is_workspace_deleted: boolean;
+      /**
+       * @description 탈퇴 처리 일시
+       * @example 2026-06-24T12:00:00.000Z
+       */
+      withdrawn_time: string;
+    };
+    UpdateWorkspaceMemberGradeDto: {
+      /**
+       * @description 변경할 멤버 권한 등급 ("관리자" 또는 "사용자")
+       * @example 관리자
+       * @enum {string}
+       */
+      grade: "관리자" | "사용자";
+    };
+    UpdateWorkspaceMemberGradeResponseDto: {
+      /**
+       * @description 결과 메시지
+       * @example 멤버의 권한 등급이 성공적으로 변경되었습니다.
+       */
+      message: string;
+      /**
+       * @description 워크스페이스 식별자
+       * @example 1
+       */
+      workspace_uid: number;
+      /**
+       * @description 멤버 레코드 식별자
+       * @example 12
+       */
+      member_uid: number;
+      /**
+       * @description 변경 전 권한 등급
+       * @example 사용자
+       */
+      previous_grade: string;
+      /**
+       * @description 변경된 권한 등급
+       * @example 관리자
+       */
+      grade: string;
+      /**
+       * @description 등급 갱신 일시
+       * @example 2026-06-24T12:00:00.000Z
+       */
+      updated_time: string;
+    };
+    BrandListItemDto: {
+      /**
+       * @description 브랜드 고유 식별자 (uid)
+       * @example 3
+       */
+      uid: number;
+      /**
+       * @description 소속 워크스페이스 uid
+       * @example 4
+       */
+      workspace_uid: number;
+      /**
+       * @description 브랜드 이름 (한글)
+       * @example 본수원갈비
+       */
+      brand_name_ko: string;
+      /**
+       * @description 브랜드 이름 (영문)
+       * @example Bonsuwon Galbi
+       */
+      brand_name_en?: Record<string, never>;
+      /**
+       * @description 브랜드 로고 이미지 URL
+       * @example https://eatiqlink.s3.ap-northeast-2.amazonaws.com/logo.png
+       */
+      logo_image?: Record<string, never>;
+      /**
+       * @description 브랜드 대표 히어로 이미지 URL
+       * @example https://images.unsplash.com/photo-1544025162-d76694265947
+       */
+      featured_image?: Record<string, never>;
+      /**
+       * @description 카테고리 / 업종
+       * @example 한식
+       */
+      category?: Record<string, never>;
+      /**
+       * @description 브랜드 한줄 소개 (카드 태그 문구)
+       * @example 40년 전통의 수원 전통 숯불 소갈비 전문 프리미엄 다이닝
+       */
+      short_intro?: Record<string, never>;
+      /**
+       * @description 카드 메타 정보 (론칭 연도 · 매장 수 · 가격 포지셔닝 요약)
+       * @example 2015년 론칭 · 국내 18개 매장 · 고가 브랜드
+       */
+      meta_text?: Record<string, never>;
+      /**
+       * @description 브랜드 론칭 연도
+       * @example 2015
+       */
+      launch_year?: Record<string, never>;
+      /**
+       * @description 국내 매장 수
+       * @example 18
+       */
+      domestic_store_total_cnt?: Record<string, never>;
+      /**
+       * @description 가격 포지셔닝 (저가/중가/고가)
+       * @example 고가
+       */
+      price_positioning?: Record<string, never>;
+      /**
+       * @description 대표 시그니처 메뉴명
+       * @example 양념 생갈비
+       */
+      rep_menu_name_ko?: Record<string, never>;
+      /**
+       * @description 선호 계약 방식 (마스터 프랜차이즈, 지역 개발권 등)
+       * @example 마스터 프랜차이즈
+       */
+      preferred_contract_type?: Record<string, never>;
+      /**
+       * @description 진출 목표/희망 국가 목록
+       * @example [
+       *       "일본",
+       *       "싱가포르"
+       *     ]
+       */
+      target_country?: string[];
+    };
+    GetBrandListResponseDto: {
+      /** @description 브랜드 목록 */
+      items: components["schemas"]["BrandListItemDto"][];
+      /**
+       * @description 전체 검색된 브랜드 수
+       * @example 28
+       */
+      total: number;
+      /**
+       * @description 현재 페이지 번호
+       * @example 1
+       */
+      page: number;
+      /**
+       * @description 페이지당 표시 개수
+       * @example 12
+       */
+      limit: number;
+      /**
+       * @description 총 페이지 수
+       * @example 3
+       */
+      total_pages: number;
+    };
+    BrandDetailPartnershipConditionsDto: {
+      /**
+       * @description 선호 계약 방식
+       * @example 마스터 프랜차이즈
+       */
+      preferred_contract_type?: Record<string, never>;
+      /**
+       * @description 독점권 요구 수준 (필수/협의 필요/불가)
+       * @example 필수
+       */
+      exclusivity_level?: Record<string, never>;
+      /**
+       * @description 메뉴 현지화 요구 수준 (불가/협의 필요/가능/일부 허용)
+       * @example 일부 허용
+       */
+      menu_localization?: Record<string, never>;
+      /**
+       * @description 로열티 선호 조건 요약 (비율 또는 금액)
+       * @example 5%
+       */
+      royalty?: Record<string, never>;
+      /**
+       * @description 식자재 공급망 (필수/협의 필요/불필요/자체 공급 가능)
+       * @example 자체 공급 가능
+       */
+      supply_chain?: Record<string, never>;
+      /**
+       * @description 인테리어 기준 선호 (가능/협의 필요/불가)
+       * @example 협의 필요
+       */
+      interior_criteria?: Record<string, never>;
+      /**
+       * @description 상표 및 브랜드 사용 기준
+       * @example 전면 준수 필수
+       */
+      trademark_standard?: Record<string, never>;
+      /**
+       * @description 운영 매뉴얼 준수 수준
+       * @example 전면 준수 필수
+       */
+      manual_compliance?: Record<string, never>;
+    };
+    BrandDetailContactDto: {
+      /**
+       * @description 담당자 이름 (한국어)
+       * @example 고상우
+       */
+      name_ko?: Record<string, never>;
+      /**
+       * @description 담당자 이름 (영어)
+       * @example Sangwoo Ko
+       */
+      name_en?: Record<string, never>;
+      /**
+       * @description 직책
+       * @example 대표이사 / 글로벌 총괄
+       */
+      position?: Record<string, never>;
+      /**
+       * @description 가능 언어 목록
+       * @example [
+       *       "한국어",
+       *       "영어",
+       *       "일본어"
+       *     ]
+       */
+      languages?: string[];
+    };
+    BrandDetailResponseDto: {
+      /**
+       * @description 브랜드 고유 식별자 (uid)
+       * @example 1
+       */
+      uid: number;
+      /**
+       * @description 소속 워크스페이스 고유 식별자 (workspace_uid)
+       * @example 1
+       */
+      workspace_uid: number;
+      /**
+       * @description 브랜드명 (한국어)
+       * @example 설빙
+       */
+      brand_name_ko: string;
+      /**
+       * @description 브랜드명 (영어)
+       * @example Sulbing
+       */
+      brand_name_en?: Record<string, never>;
+      /**
+       * @description 브랜드 로고 이미지 URL
+       * @example https://eatiqlink.s3.ap-northeast-2.amazonaws.com/logo.png
+       */
+      logo_image?: Record<string, never>;
+      /**
+       * @description 브랜드 대표 히어로 이미지 URL
+       * @example https://images.unsplash.com/photo-1544025162-d76694265947
+       */
+      featured_image?: Record<string, never>;
+      /**
+       * @description 카테고리 / 업종
+       * @example 디저트
+       */
+      category?: Record<string, never>;
+      /**
+       * @description 브랜드 런칭 연도
+       * @example 2013
+       */
+      launch_year?: Record<string, never>;
+      /**
+       * @description 국내 매장 수
+       * @example 85
+       */
+      domestic_store_total_cnt?: Record<string, never>;
+      /**
+       * @description 해외 매장 수
+       * @example 43
+       */
+      overseas_store_total_cnt?: Record<string, never>;
+      /**
+       * @description 가격 포지셔닝 (저가/중가/고가)
+       * @example 중가
+       */
+      price_positioning?: Record<string, never>;
+      /**
+       * @description 메타 텍스트 (론칭 연도 · 매장 수 · 가격 포지션 요약)
+       * @example 2013년 론칭 · 국내 85개 매장 · 중가 브랜드
+       */
+      meta_text?: Record<string, never>;
+      /**
+       * @description 공식 홈페이지 URL
+       * @example https://sulbing.com
+       */
+      homepage_url?: Record<string, never>;
+      /**
+       * @description 브랜드 한줄 소개
+       * @example 4계절 맛있는 대한민국 대표 디저트 팥빙수
+       */
+      short_intro?: Record<string, never>;
+      /**
+       * @description 브랜드 상세 소개
+       * @example 대한민국 대표 디저트 카페 설빙은 전통 디저트를 트렌디하게 재해석합니다.
+       */
+      detail_intro?: Record<string, never>;
+      /**
+       * @description 진출 희망 국가 목록
+       * @example [
+       *       "일본",
+       *       "대만"
+       *     ]
+       */
+      target_country?: string[];
+      /** @description 파트너십 선호 조건 */
+      partnership_conditions?: components["schemas"]["BrandDetailPartnershipConditionsDto"];
+      /** @description 담당자 연락처 정보 */
+      contact?: components["schemas"]["BrandDetailContactDto"];
+      /**
+       * @description 브랜드 데이터 생성 일시 (ISO-8601)
+       * @example 2026-09-10T04:20:00.000Z
+       */
+      created_time: string;
+      /**
+       * @description 브랜드 데이터 수정 일시 (ISO-8601)
+       * @example 2026-09-10T04:20:00.000Z
+       */
+      updated_time: string;
+    };
+    BrandAutocompleteItemDto: {
+      /**
+       * @description 브랜드 고유 식별자 (uid)
+       * @example 1
+       */
+      uid: number;
+      /**
+       * @description 브랜드 기업명/브랜드명 (한국어)
+       * @example 플러그푸드
+       */
+      company_name: string;
+      /**
+       * @description 브랜드 영문명
+       * @example PlugFood
+       */
+      brand_name_en?: Record<string, never>;
+      /**
+       * @description 업종/카테고리
+       * @example 외식/식음료
+       */
+      category?: Record<string, never>;
+      /**
+       * @description 본사 위치/국가
+       * @example 대한민국
+       */
+      country?: Record<string, never>;
+      /**
+       * @description 담당자 이름
+       * @example 홍길동
+       */
+      contact_name?: Record<string, never>;
+      /**
+       * @description 담당자 이메일
+       * @example contact@plugfood.com
+       */
+      contact_email?: Record<string, never>;
+      /**
+       * @description 브랜드 로고 이미지 URL
+       * @example https://storage.eatiqlink.com/logos/plugfood.png
+       */
+      logo_url?: Record<string, never>;
+    };
+    AutocompleteBrandResponseDto: {
+      /** @description 자동완성 검색 결과 목록 */
+      items: components["schemas"]["BrandAutocompleteItemDto"][];
+      /**
+       * @description 조회된 결과 건수
+       * @example 3
+       */
+      total: number;
+    };
+    UpdateBrandBasicDto: {
+      /**
+       * @description 브랜드 이름 (한국어)
+       * @example 플러그푸드
+       */
+      brand_name_ko: string;
+      /**
+       * @description 브랜드 이름 (영어)
+       * @example PlugFood
+       */
+      brand_name_en: string;
+      /**
+       * @description 런칭 연도 (예: 2021)
+       * @example 2021
+       */
+      launch_year?: number;
+      /**
+       * @description 대표자 이름 (한국어)
+       * @example 홍길동
+       */
+      ceo_name_ko?: string;
+      /**
+       * @description 대표자 이름 (영어)
+       * @example Gildong Hong
+       */
+      ceo_name_en?: string;
+      /**
+       * @description 본사 홈페이지 URL
+       * @example https://www.plugfood.com
+       */
+      homepage_url?: string;
+      /**
+       * @description 본사 대표 이메일
+       * @example contact@plugfood.com
+       */
+      official_email?: string;
+      /**
+       * @description 본사 주소
+       * @example 서울특별시 강남구 테헤란로 123, 4층
+       */
+      official_address?: string;
+    };
+    BrandBasicDataDto: {
+      /**
+       * @description 브랜드 이름 (한국어)
+       * @example 플러그푸드
+       */
+      brand_name_ko: string;
+      /**
+       * @description 브랜드 이름 (영어)
+       * @example PlugFood
+       */
+      brand_name_en: string;
+      /**
+       * @description 런칭 연도
+       * @example 2021
+       */
+      launch_year?: Record<string, never>;
+      /**
+       * @description 대표자 이름 (한국어)
+       * @example 홍길동
+       */
+      ceo_name_ko?: Record<string, never>;
+      /**
+       * @description 대표자 이름 (영어)
+       * @example Gildong Hong
+       */
+      ceo_name_en?: Record<string, never>;
+      /**
+       * @description 본사 홈페이지
+       * @example https://www.plugfood.com
+       */
+      homepage_url?: Record<string, never>;
+      /**
+       * @description 본사 대표 이메일
+       * @example contact@plugfood.com
+       */
+      official_email?: Record<string, never>;
+      /**
+       * @description 본사 주소
+       * @example 서울특별시 강남구 테헤란로 123, 4층
+       */
+      official_address?: Record<string, never>;
+    };
+    UpdateBrandBasicResponseDto: {
+      /**
+       * @description 결과 메시지
+       * @example 브랜드 기본 정보가 성공적으로 업데이트되었습니다.
+       */
+      message: string;
+      /**
+       * @description 워크스페이스 UID
+       * @example 1
+       */
+      workspace_uid: number;
+      /** @description 업데이트된 브랜드 기본 정보 (brand_basic) */
+      brand_basic: components["schemas"]["BrandBasicDataDto"];
+    };
+    UpdateBrandStatusDto: {
+      /**
+       * @description 국내 전체 매장 수 (개)
+       * @example 120
+       */
+      domestic_store_total_cnt: number;
+      /**
+       * @description 국내 직영점 수 (개)
+       * @example 15
+       */
+      domestic_store_direct_cnt: number;
+      /**
+       * @description 해외 전체 매장 수 (개)
+       * @example 5
+       */
+      overseas_store_total_cnt: number;
+      /**
+       * @description 월평균 매출 (원)
+       * @example 45000000
+       */
+      avg_monthly_sales: number;
+      /**
+       * @description 평균 객단가 (원)
+       * @example 18000
+       */
+      avg_cost_per_customer: number;
+      /**
+       * @description 평균 매장 평형 (평)
+       * @example 25.5
+       */
+      avg_store_area: number;
+      /**
+       * @description 평균 좌석 수 (석)
+       * @example 40
+       */
+      avg_seat_cnt: number;
+      /**
+       * @description 주요 고객층 (선택사항, 예: 20대, 30대, 가족 단위 등)
+       * @example [
+       *       "20대",
+       *       "30대"
+       *     ]
+       */
+      target_audience?: string[];
+      /**
+       * @description 주 이용 상황 (선택사항, 예: 혼밥, 데이트, 회식 등)
+       * @example [
+       *       "혼밥",
+       *       "데이트"
+       *     ]
+       */
+      usage_context?: string[];
+    };
+    BrandStatusDataDto: {
+      /**
+       * @description 국내 전체 매장 수 (개)
+       * @example 120
+       */
+      domestic_store_total_cnt: number;
+      /**
+       * @description 국내 직영점 수 (개)
+       * @example 15
+       */
+      domestic_store_direct_cnt: number;
+      /**
+       * @description 해외 전체 매장 수 (개)
+       * @example 5
+       */
+      overseas_store_total_cnt: number;
+      /**
+       * @description 월평균 매출 (원)
+       * @example 45000000
+       */
+      avg_monthly_sales: number;
+      /**
+       * @description 평균 객단가 (원)
+       * @example 18000
+       */
+      avg_cost_per_customer: number;
+      /**
+       * @description 평균 매장 평형 (평)
+       * @example 25.5
+       */
+      avg_store_area: number;
+      /**
+       * @description 평균 좌석 수 (석)
+       * @example 40
+       */
+      avg_seat_cnt: number;
+      /**
+       * @description 주요 고객층
+       * @example [
+       *       "20대",
+       *       "30대"
+       *     ]
+       */
+      target_audience?: string[];
+      /**
+       * @description 주 이용 상황
+       * @example [
+       *       "혼밥",
+       *       "데이트"
+       *     ]
+       */
+      usage_context?: string[];
+    };
+    UpdateBrandStatusResponseDto: {
+      /**
+       * @description 결과 메시지
+       * @example 브랜드 운영 현황 정보가 성공적으로 업데이트되었습니다.
+       */
+      message: string;
+      /**
+       * @description 워크스페이스 UID
+       * @example 1
+       */
+      workspace_uid: number;
+      /** @description 업데이트된 브랜드 운영 현황 정보 (brand_status) */
+      brand_status: components["schemas"]["BrandStatusDataDto"];
+    };
+    UpdateBrandIntroDto: {
+      /**
+       * @description 한줄 소개 (100자 이내)
+       * @example 신선한 재료로 만드는 건강한 슬로우푸드 브랜드
+       */
+      short_intro: string;
+      /**
+       * @description 상세 소개 (500자 이내)
+       * @example 플러그푸드는 국내산 친환경 식자재만을 사용하여 남녀노소 누구나 안심하고 즐길 수 있는 식단을 제공합니다. 도심 속 현대인을 위한 힐링 키친을 지향하며, 지속 가능한 미식 경험을 연구합니다.
+       */
+      detail_intro: string;
+      /**
+       * @description 업종 분류 (선택지: 양식, 한식, 일식, 중식)
+       * @example 양식
+       * @enum {string}
+       */
+      category?: "양식" | "한식" | "일식" | "중식";
+      /**
+       * @description 가격 포지셔닝 (선택지: 저가, 중가, 고가)
+       * @example 중가
+       * @enum {string}
+       */
+      price_positioning?: "저가" | "중가" | "고가";
+      /**
+       * @description 핵심 차별점 (문자열 배열, 최대 3개)
+       * @example [
+       *       "당일 직배송 로컬 식자재 100% 사용",
+       *       "특허받은 저염 숙성 조리 공법",
+       *       "친환경 생분해 패키지 전 매장 도입"
+       *     ]
+       */
+      key_point: string[];
+    };
+    BrandIntroDataDto: {
+      /**
+       * @description 한줄 소개 (100자 이내)
+       * @example 신선한 재료로 만드는 건강한 슬로우푸드 브랜드
+       */
+      short_intro: string;
+      /**
+       * @description 상세 소개 (500자 이내)
+       * @example 플러그푸드는 국내산 친환경 식자재만을 사용하여 남녀노소 누구나 안심하고 즐길 수 있는 식단을 제공합니다.
+       */
+      detail_intro: string;
+      /**
+       * @description 업종 분류 (양식, 한식, 일식, 중식)
+       * @example 양식
+       * @enum {string}
+       */
+      category?: "양식" | "한식" | "일식" | "중식";
+      /**
+       * @description 가격 포지셔닝 (저가, 중가, 고가)
+       * @example 중가
+       * @enum {string}
+       */
+      price_positioning?: "저가" | "중가" | "고가";
+      /**
+       * @description 핵심 차별점 (최대 3개)
+       * @example [
+       *       "당일 직배송 로컬 식자재 100% 사용",
+       *       "특허받은 저염 숙성 조리 공법",
+       *       "친환경 생분해 패키지 전 매장 도입"
+       *     ]
+       */
+      key_point: string[];
+    };
+    UpdateBrandIntroResponseDto: {
+      /**
+       * @description 결과 메시지
+       * @example 브랜드 소개 정보가 성공적으로 업데이트되었습니다.
+       */
+      message: string;
+      /**
+       * @description 워크스페이스 UID
+       * @example 1
+       */
+      workspace_uid: number;
+      /**
+       * @description 업종 분류 컬럼 값
+       * @example 양식
+       * @enum {string}
+       */
+      category?: "양식" | "한식" | "일식" | "중식";
+      /** @description 업데이트된 브랜드 소개 정보 (brand_intro) */
+      brand_intro: components["schemas"]["BrandIntroDataDto"];
+    };
+    UpdateBrandContactDto: {
+      /**
+       * @description 이름 (한국어)
+       * @example 홍길동
+       */
+      name_ko: string;
+      /**
+       * @description 이름 (영어)
+       * @example Gildong Hong
+       */
+      name_en: string;
+      /**
+       * @description 직책/직급
+       * @example 해외사업팀 팀장
+       */
+      position: string;
+      /**
+       * @description 이메일 주소
+       * @example gdhong@plugfood.com
+       */
+      email: string;
+      /**
+       * @description 가능 언어 (선택사항, 예: 한국어, 영어, 일본어 등)
+       * @example [
+       *       "한국어",
+       *       "영어"
+       *     ]
+       */
+      languages?: string[];
+    };
+    BrandContactDataDto: {
+      /**
+       * @description 이름 (한국어)
+       * @example 홍길동
+       */
+      name_ko: string;
+      /**
+       * @description 이름 (영어)
+       * @example Gildong Hong
+       */
+      name_en: string;
+      /**
+       * @description 직책/직급
+       * @example 해외사업팀 팀장
+       */
+      position: string;
+      /**
+       * @description 이메일 주소
+       * @example gdhong@plugfood.com
+       */
+      email: string;
+      /**
+       * @description 가능 언어
+       * @example [
+       *       "한국어",
+       *       "영어"
+       *     ]
+       */
+      languages?: string[];
+    };
+    UpdateBrandContactResponseDto: {
+      /**
+       * @description 결과 메시지
+       * @example 브랜드 연락처 정보가 성공적으로 업데이트되었습니다.
+       */
+      message: string;
+      /**
+       * @description 워크스페이스 UID
+       * @example 1
+       */
+      workspace_uid: number;
+      /** @description 업데이트된 브랜드 연락처 정보 (brand_contact) */
+      brand_contact: components["schemas"]["BrandContactDataDto"];
+    };
+    UpdateBrandContractDto: {
+      /**
+       * @description 계약 담당자 이름 (한국어)
+       * @example 홍길동
+       */
+      name_ko: string;
+      /**
+       * @description 계약 담당자 이름 (영어)
+       * @example Gildong Hong
+       */
+      name_en: string;
+      /**
+       * @description 계약 담당자 직책/직급
+       * @example 법무계약팀 팀장
+       */
+      position: string;
+      /**
+       * @description 계약 담당자 이메일 주소
+       * @example contract@plugfood.com
+       */
+      email: string;
+    };
+    BrandContractDataDto: {
+      /**
+       * @description 계약 담당자 이름 (한국어)
+       * @example 홍길동
+       */
+      name_ko: string;
+      /**
+       * @description 계약 담당자 이름 (영어)
+       * @example Gildong Hong
+       */
+      name_en: string;
+      /**
+       * @description 계약 담당자 직책/직급
+       * @example 법무계약팀 팀장
+       */
+      position: string;
+      /**
+       * @description 계약 담당자 이메일 주소
+       * @example contract@plugfood.com
+       */
+      email: string;
+    };
+    UpdateBrandContractResponseDto: {
+      /**
+       * @description 결과 메시지
+       * @example 브랜드 계약 담당자 정보가 성공적으로 업데이트되었습니다.
+       */
+      message: string;
+      /**
+       * @description 워크스페이스 UID
+       * @example 1
+       */
+      workspace_uid: number;
+      /** @description 업데이트된 브랜드 계약 담당자 정보 (brand_contract) */
+      brand_contract: components["schemas"]["BrandContractDataDto"];
+    };
+    UpdateBrandSignatureDto: {
+      /**
+       * @description 서명권자 이름 (한국어)
+       * @example 홍길동
+       */
+      name_ko: string;
+      /**
+       * @description 서명권자 이름 (영어)
+       * @example Gildong Hong
+       */
+      name_en: string;
+      /**
+       * @description 서명권자 직책/직급
+       * @example 대표이사
+       */
+      position: string;
+      /**
+       * @description 서명권자 이메일 주소
+       * @example ceo@plugfood.com
+       */
+      email: string;
+    };
+    BrandSignatureDataDto: {
+      /**
+       * @description 서명권자 이름 (한국어)
+       * @example 홍길동
+       */
+      name_ko: string;
+      /**
+       * @description 서명권자 이름 (영어)
+       * @example Gildong Hong
+       */
+      name_en: string;
+      /**
+       * @description 서명권자 직책/직급
+       * @example 대표이사
+       */
+      position: string;
+      /**
+       * @description 서명권자 이메일 주소
+       * @example ceo@plugfood.com
+       */
+      email: string;
+    };
+    UpdateBrandSignatureResponseDto: {
+      /**
+       * @description 결과 메시지
+       * @example 브랜드 서명권자 정보가 성공적으로 업데이트되었습니다.
+       */
+      message: string;
+      /**
+       * @description 워크스페이스 UID
+       * @example 1
+       */
+      workspace_uid: number;
+      /** @description 업데이트된 브랜드 서명권자 정보 (brand_signature) */
+      brand_signature: components["schemas"]["BrandSignatureDataDto"];
+    };
+    UpdateBrandContractPolicyDto: {
+      /**
+       * @description 진출 목표 국가 (선택지: 일본, 홍콩, 싱가포르, 태국)
+       * @example 일본
+       * @enum {string}
+       */
+      target_country?: "일본" | "홍콩" | "싱가포르" | "태국";
+      /**
+       * @description 선호 계약 방식 (선택지: 마스터 프랜차이즈, 지역 개발권, 직영, 합작법인, 라이선스, 유통, 미정)
+       * @example 마스터 프랜차이즈
+       * @enum {string}
+       */
+      preferred_contract_type?:
+        | "마스터 프랜차이즈"
+        | "지역 개발권"
+        | "직영"
+        | "합작법인"
+        | "라이선스"
+        | "유통"
+        | "미정";
+      /**
+       * @description 독점권 요구 수준 (선택지: 불가, 협의 필요, 가능)
+       * @example 협의 필요
+       * @enum {string}
+       */
+      exclusivity_level: "불가" | "협의 필요" | "가능";
+      /**
+       * @description 메뉴 현지화 요구 수준 (선택지: 불가, 협의 필요, 가능)
+       * @example 가능
+       * @enum {string}
+       */
+      menu_localization_level: "불가" | "협의 필요" | "가능";
+      /**
+       * @description 인테리어 기준 선호 (선택지: 가능, 협의 필요, 불가)
+       * @example 협의 필요
+       * @enum {string}
+       */
+      interior_standard_policy: "가능" | "협의 필요" | "불가";
+      /**
+       * @description 자체 식자재 공급망 (선택지: 협의 필요, 필수, 불필요)
+       * @example 필수
+       * @enum {string}
+       */
+      supply_chain_policy: "협의 필요" | "필수" | "불필요";
+      /**
+       * @description 상표 및 브랜드 사용 기준 (선택지: 전면 준수 필수, 부분 협의 가능)
+       * @example 전면 준수 필수
+       * @enum {string}
+       */
+      trademark_compliance_level: "전면 준수 필수" | "부분 협의 가능";
+      /**
+       * @description 운영 매뉴얼 준수 수준 (선택지: 전면 준수 필수, 부분 협의 가능)
+       * @example 전면 준수 필수
+       * @enum {string}
+       */
+      manual_compliance_level: "전면 준수 필수" | "부분 협의 가능";
+    };
+    BrandContractPolicyDataDto: {
+      /**
+       * @description 진출 목표 국가 (선택지: 일본, 홍콩, 싱가포르, 태국)
+       * @example 일본
+       * @enum {string}
+       */
+      target_country?: "일본" | "홍콩" | "싱가포르" | "태국";
+      /**
+       * @description 선호 계약 방식 (선택지: 마스터 프랜차이즈, 지역 개발권, 직영, 합작법인, 라이선스, 유통, 미정)
+       * @example 마스터 프랜차이즈
+       * @enum {string}
+       */
+      preferred_contract_type?:
+        | "마스터 프랜차이즈"
+        | "지역 개발권"
+        | "직영"
+        | "합작법인"
+        | "라이선스"
+        | "유통"
+        | "미정";
+      /**
+       * @description 독점권 요구 수준 (선택지: 불가, 협의 필요, 가능)
+       * @example 협의 필요
+       * @enum {string}
+       */
+      exclusivity_level: "불가" | "협의 필요" | "가능";
+      /**
+       * @description 메뉴 현지화 요구 수준 (선택지: 불가, 협의 필요, 가능)
+       * @example 가능
+       * @enum {string}
+       */
+      menu_localization_level: "불가" | "협의 필요" | "가능";
+      /**
+       * @description 인테리어 기준 선호 (선택지: 가능, 협의 필요, 불가)
+       * @example 협의 필요
+       * @enum {string}
+       */
+      interior_standard_policy: "가능" | "협의 필요" | "불가";
+      /**
+       * @description 원부자재 공급 정책 (선택지: 협의 필요, 필수, 불필요)
+       * @example 협의 필요
+       * @enum {string}
+       */
+      supply_chain_policy: "협의 필요" | "필수" | "불필요";
+      /**
+       * @description 상표/브랜드 아이덴티티 준수 (선택지: 전면 준수 필수, 부분 협의 가능)
+       * @example 전면 준수 필수
+       * @enum {string}
+       */
+      trademark_compliance_level: "전면 준수 필수" | "부분 협의 가능";
+      /**
+       * @description 운영 매뉴얼/SOP 준수 (선택지: 전면 준수 필수, 부분 협의 가능)
+       * @example 전면 준수 필수
+       * @enum {string}
+       */
+      manual_compliance_level: "전면 준수 필수" | "부분 협의 가능";
+    };
+    UpdateBrandContractPolicyResponseDto: {
+      /**
+       * @description 결과 메시지
+       * @example 브랜드 계약 정책 정보가 성공적으로 업데이트되었습니다.
+       */
+      message: string;
+      /**
+       * @description 워크스페이스 UID
+       * @example 1
+       */
+      workspace_uid: number;
+      /**
+       * @description 선호 계약 방식 컬럼 값
+       * @example 마스터 프랜차이즈
+       * @enum {string}
+       */
+      preferred_contract_type?:
+        | "마스터 프랜차이즈"
+        | "지역 개발권"
+        | "직영"
+        | "합작법인"
+        | "라이선스"
+        | "유통"
+        | "미정";
+      /**
+       * @description 진출 목표 국가 컬럼 값
+       * @example 일본
+       * @enum {string}
+       */
+      target_country?: "일본" | "홍콩" | "싱가포르" | "태국";
+      /** @description 업데이트된 브랜드 계약 정책 정보 (brand_contract_policy) */
+      brand_contract_policy: components["schemas"]["BrandContractPolicyDataDto"];
+    };
+    UpdateBrandCommissionDto: {
+      /**
+       * @description 가맹비 (원)
+       * @example 10000000
+       */
+      franchise_fee: number;
+      /**
+       * @description 매출 대비 로열티 산정 기준 (선택지: 총매출, 순매출)
+       * @example 총매출
+       * @enum {string}
+       */
+      royalty_calc_base: "총매출" | "순매출";
+      /**
+       * @description 매출 대비 로열티 비율 (%)
+       * @example 3.5
+       */
+      royalty_rate: number;
+      /**
+       * @description 고정 로열티 금액 (원)
+       * @example 500000
+       */
+      fixed_royalty: number;
+      /**
+       * @description 지급 주기 (선택지: 매월, 매 분기, 매 반기, 매년)
+       * @example 매월
+       * @enum {string}
+       */
+      royalty_payment_cycle: "매월" | "매 분기" | "매 반기" | "매년";
+    };
+    BrandCommissionDataDto: {
+      /**
+       * @description 가맹비 (원)
+       * @example 10000000
+       */
+      franchise_fee: number;
+      /**
+       * @description 매출 대비 로열티 산정 기준 (선택지: 총매출, 순매출)
+       * @example 총매출
+       * @enum {string}
+       */
+      royalty_calc_base: "총매출" | "순매출";
+      /**
+       * @description 매출 대비 로열티 비율 (%)
+       * @example 3.5
+       */
+      royalty_rate: number;
+      /**
+       * @description 고정 로열티 금액 (원)
+       * @example 500000
+       */
+      fixed_royalty: number;
+      /**
+       * @description 지급 주기 (선택지: 매월, 매 분기, 매 반기, 매년)
+       * @example 매월
+       * @enum {string}
+       */
+      royalty_payment_cycle: "매월" | "매 분기" | "매 반기" | "매년";
+    };
+    UpdateBrandCommissionResponseDto: {
+      /**
+       * @description 결과 메시지
+       * @example 브랜드 계약 수수료 정보가 성공적으로 업데이트되었습니다.
+       */
+      message: string;
+      /**
+       * @description 워크스페이스 UID
+       * @example 1
+       */
+      workspace_uid: number;
+      /** @description 업데이트된 브랜드 계약 수수료 정보 (brand_commission) */
+      brand_commission: components["schemas"]["BrandCommissionDataDto"];
+    };
+    UpdateBrandLocationStandardDto: {
+      /**
+       * @description 1차 선호 상권 (예: 오피스, 주거 밀집, 대학가, 번화가 등)
+       * @example 오피스
+       */
+      district_01: string;
+      /**
+       * @description 2차 선호 상권 (예: 오피스, 주거 밀집, 대학가, 번화가 등)
+       * @example 번화가
+       */
+      district_02: string;
+      /**
+       * @description 3차 선호 상권 (선택사항, 예: 미입력, 오피스, 주거 밀집, 대학가 등)
+       * @example 대학가
+       */
+      district_03?: string;
+      /**
+       * @description 허용 월 임대료 - 최소 (숫자 입력, 원 단위)
+       * @example 3000000
+       */
+      min_rent: number;
+      /**
+       * @description 허용 월 임대료 - 최대 (숫자 입력, 원 단위)
+       * @example 7000000
+       */
+      max_rent: number;
+      /**
+       * @description 허용 층수 범위 (선택지: 1층만 가능, 1~2층, 제한 없음)
+       * @example 1층만 가능
+       * @enum {string}
+       */
+      floor_range: "1층만 가능" | "1~2층" | "제한 없음";
+      /**
+       * @description 간판 노출 중요도 (선택지: 낮음, 보통, 높음)
+       * @example 높음
+       * @enum {string}
+       */
+      sign_imp: "낮음" | "보통" | "높음";
+      /**
+       * @description 매장 노출 중요도 (선택지: 낮음, 보통, 높음)
+       * @example 높음
+       * @enum {string}
+       */
+      store_imp: "낮음" | "보통" | "높음";
+      /**
+       * @description 주차 필요 여부 (선택지: 필수, 선호, 불필요)
+       * @example 선호
+       * @enum {string}
+       */
+      parking_req: "필수" | "선호" | "불필요";
+      /**
+       * @description 대기공간 필요 여부 (선택지: 필수, 선호, 불필요)
+       * @example 선호
+       * @enum {string}
+       */
+      waiting_req: "필수" | "선호" | "불필요";
+      /**
+       * @description 점심 매출 중요도 (선택지: 높음, 보통, 낮음, 없음)
+       * @example 높음
+       * @enum {string}
+       */
+      lunch_imp: "없음" | "낮음" | "보통" | "높음";
+      /**
+       * @description 심야 매출 중요도 (선택지: 없음, 낮음, 보통, 높음)
+       * @example 낮음
+       * @enum {string}
+       */
+      night_imp: "없음" | "낮음" | "보통" | "높음";
+      /**
+       * @description 주중 매출 중요도 (선택지: 높음, 보통, 낮음)
+       * @example 높음
+       * @enum {string}
+       */
+      weekday_imp: "낮음" | "보통" | "높음";
+      /**
+       * @description 주말 매출 중요도 (선택지: 높음, 보통, 낮음)
+       * @example 보통
+       * @enum {string}
+       */
+      weekend_imp: "낮음" | "보통" | "높음";
+    };
+    BrandLocationStandardDataDto: {
+      /**
+       * @description 1차 선호 상권
+       * @example 오피스
+       */
+      district_01: string;
+      /**
+       * @description 2차 선호 상권
+       * @example 번화가
+       */
+      district_02: string;
+      /**
+       * @description 3차 선호 상권
+       * @example 대학가
+       */
+      district_03?: Record<string, never>;
+      /**
+       * @description 허용 월 임대료 - 최소 (원)
+       * @example 3000000
+       */
+      min_rent: number;
+      /**
+       * @description 허용 월 임대료 - 최대 (원)
+       * @example 7000000
+       */
+      max_rent: number;
+      /**
+       * @description 허용 층수 범위 (선택지: 1층만 가능, 1~2층, 제한 없음)
+       * @example 1층만 가능
+       * @enum {string}
+       */
+      floor_range: "1층만 가능" | "1~2층" | "제한 없음";
+      /**
+       * @description 간판 노출 중요도 (선택지: 낮음, 보통, 높음)
+       * @example 높음
+       * @enum {string}
+       */
+      sign_imp: "낮음" | "보통" | "높음";
+      /**
+       * @description 매장 노출 중요도 (선택지: 낮음, 보통, 높음)
+       * @example 높음
+       * @enum {string}
+       */
+      store_imp: "낮음" | "보통" | "높음";
+      /**
+       * @description 주차 필요 여부 (선택지: 필수, 선호, 불필요)
+       * @example 선호
+       * @enum {string}
+       */
+      parking_req: "필수" | "선호" | "불필요";
+      /**
+       * @description 대기공간 필요 여부 (선택지: 필수, 선호, 불필요)
+       * @example 선호
+       * @enum {string}
+       */
+      waiting_req: "필수" | "선호" | "불필요";
+      /**
+       * @description 점심 매출 중요도 (선택지: 높음, 보통, 낮음, 없음)
+       * @example 높음
+       * @enum {string}
+       */
+      lunch_imp: "없음" | "낮음" | "보통" | "높음";
+      /**
+       * @description 심야 매출 중요도 (선택지: 없음, 낮음, 보통, 높음)
+       * @example 낮음
+       * @enum {string}
+       */
+      night_imp: "없음" | "낮음" | "보통" | "높음";
+      /**
+       * @description 주중 매출 중요도 (선택지: 높음, 보통, 낮음)
+       * @example 높음
+       * @enum {string}
+       */
+      weekday_imp: "낮음" | "보통" | "높음";
+      /**
+       * @description 주말 매출 중요도 (선택지: 높음, 보통, 낮음)
+       * @example 보통
+       * @enum {string}
+       */
+      weekend_imp: "낮음" | "보통" | "높음";
+    };
+    UpdateBrandLocationStandardResponseDto: {
+      /**
+       * @description 결과 메시지
+       * @example 브랜드 입지 및 상권 기준 정보가 성공적으로 업데이트되었습니다.
+       */
+      message: string;
+      /**
+       * @description 워크스페이스 UID
+       * @example 1
+       */
+      workspace_uid: number;
+      /** @description 업데이트된 브랜드 입지 및 상권 기준 정보 (brand_location_standard) */
+      brand_location_standard: components["schemas"]["BrandLocationStandardDataDto"];
+    };
+    UpdateBrandSizeCriteriaDto: {
+      /**
+       * @description 권장 매장 평형 (숫자 입력, ㎡ 단위)
+       * @example 99.17
+       */
+      rec_area: number;
+      /**
+       * @description 선호 매장 평형 - 최소 (숫자 입력, ㎡ 단위)
+       * @example 66.12
+       */
+      min_area: number;
+      /**
+       * @description 선호 매장 평형 - 최대 (숫자 입력, ㎡ 단위)
+       * @example 132.23
+       */
+      max_area: number;
+      /**
+       * @description 최소 전면 폭 (숫자 입력, m 단위)
+       * @example 4.5
+       */
+      min_front_w: number;
+    };
+    BrandSizeCriteriaDataDto: {
+      /**
+       * @description 권장 매장 평형 (㎡)
+       * @example 99.17
+       */
+      rec_area: number;
+      /**
+       * @description 선호 매장 평형 - 최소 (㎡)
+       * @example 66.12
+       */
+      min_area: number;
+      /**
+       * @description 선호 매장 평형 - 최대 (㎡)
+       * @example 132.23
+       */
+      max_area: number;
+      /**
+       * @description 최소 전면 폭 (m)
+       * @example 4.5
+       */
+      min_front_w: number;
+    };
+    UpdateBrandSizeCriteriaResponseDto: {
+      /**
+       * @description 결과 메시지
+       * @example 브랜드 매장 크기 조건 정보가 성공적으로 업데이트되었습니다.
+       */
+      message: string;
+      /**
+       * @description 워크스페이스 UID
+       * @example 1
+       */
+      workspace_uid: number;
+      /** @description 업데이트된 브랜드 매장 크기 조건 정보 (brand_size_criteria) */
+      brand_size_criteria: components["schemas"]["BrandSizeCriteriaDataDto"];
+    };
+    UpdateBrandFacilityReqDto: {
+      /**
+       * @description 가스 시설 필요 여부 (선택지: 필수, 선호, 불필요)
+       * @example 필수
+       * @enum {string}
+       */
+      gas_req: "필수" | "선호" | "불필요";
+      /**
+       * @description 급배수 시설 필요 여부 (선택지: 필수, 선호, 불필요)
+       * @example 필수
+       * @enum {string}
+       */
+      plumbing_req: "필수" | "선호" | "불필요";
+      /**
+       * @description 직화 시설 필요 여부 (선택지: 필수, 선호, 불필요)
+       * @example 선호
+       * @enum {string}
+       */
+      direct_fire_req: "필수" | "선호" | "불필요";
+      /**
+       * @description 배기 시설 필요 여부 (선택지: 필수, 선호, 불필요)
+       * @example 필수
+       * @enum {string}
+       */
+      vent_req: "필수" | "선호" | "불필요";
+      /**
+       * @description 냉장/냉동 저장공간 필요 여부 (선택지: 필수, 선호, 불필요)
+       * @example 필수
+       * @enum {string}
+       */
+      cold_storage_req: "필수" | "선호" | "불필요";
+    };
+    BrandFacilityReqDataDto: {
+      /**
+       * @description 가스 시설 필요 여부 (선택지: 필수, 선호, 불필요)
+       * @example 필수
+       * @enum {string}
+       */
+      gas_req: "필수" | "선호" | "불필요";
+      /**
+       * @description 급배수 시설 필요 여부 (선택지: 필수, 선호, 불필요)
+       * @example 필수
+       * @enum {string}
+       */
+      plumbing_req: "필수" | "선호" | "불필요";
+      /**
+       * @description 직화 시설 필요 여부 (선택지: 필수, 선호, 불필요)
+       * @example 선호
+       * @enum {string}
+       */
+      direct_fire_req: "필수" | "선호" | "불필요";
+      /**
+       * @description 배기 시설 필요 여부 (선택지: 필수, 선호, 불필요)
+       * @example 필수
+       * @enum {string}
+       */
+      vent_req: "필수" | "선호" | "불필요";
+      /**
+       * @description 냉장/냉동 저장공간 필요 여부 (선택지: 필수, 선호, 불필요)
+       * @example 필수
+       * @enum {string}
+       */
+      cold_storage_req: "필수" | "선호" | "불필요";
+    };
+    UpdateBrandFacilityReqResponseDto: {
+      /**
+       * @description 결과 메시지
+       * @example 브랜드 매장 시설 필수 조건 정보가 성공적으로 업데이트되었습니다.
+       */
+      message: string;
+      /**
+       * @description 워크스페이스 UID
+       * @example 1
+       */
+      workspace_uid: number;
+      /** @description 업데이트된 브랜드 매장 시설 필수 조건 정보 (brand_facility_req) */
+      brand_facility_req: components["schemas"]["BrandFacilityReqDataDto"];
+    };
+    UpdateBrandLogoDto: {
+      /**
+       * @description 브랜드 대표 로고 이미지 URL (/api/upload/image 로 업로드 후 반환된 S3 URL). null 또는 빈 문자열 전달 시 기존 로고 제거
+       * @example https://eatiqlink-s3-bucket.s3.ap-northeast-2.amazonaws.com/uploads/images/2026/09/logo-uuid.png
+       */
+      logo_image?: Record<string, never> | null;
+    };
+    BrandVisualDataDto: {
+      /**
+       * @description 브랜드 대표 로고 이미지 URL
+       * @example https://eatiqlink-s3-bucket.s3.ap-northeast-2.amazonaws.com/uploads/images/2026/09/logo-uuid.png
+       */
+      logo_image?: Record<string, never>;
+      /**
+       * @description 브랜드 대표 이미지 URL 배열
+       * @example [
+       *       "https://eatiqlink-s3-bucket.s3.ap-northeast-2.amazonaws.com/uploads/images/2026/09/featured-1.png"
+       *     ]
+       */
+      featured_image_list?: string[];
+      /**
+       * @description 브랜드 대표 영상 URL 배열
+       * @example [
+       *       "https://eatiqlink-s3-bucket.s3.ap-northeast-2.amazonaws.com/uploads/videos/2026/09/video-1.mp4"
+       *     ]
+       */
+      featured_video_list?: string[];
+    };
+    UpdateBrandLogoResponseDto: {
+      /**
+       * @description 처리 결과 메시지
+       * @example 브랜드 대표 로고가 성공적으로 업데이트되었습니다.
+       */
+      message: string;
+      /**
+       * @description 워크스페이스 식별자
+       * @example 1
+       */
+      workspace_uid: number;
+      /** @description 업데이트 후 최신 브랜드 비주얼 정보 */
+      brand_visual: components["schemas"]["BrandVisualDataDto"];
+    };
+    UpdateBrandFeaturedImagesDto: {
+      /**
+       * @description 브랜드 대표 이미지 URL 배열 (/api/upload/image 업로드 후 반환된 S3 URL). 빈 배열 [] 또는 미전송 시 이미지 목록 제거
+       * @example [
+       *       "https://eatiqlink-s3-bucket.s3.ap-northeast-2.amazonaws.com/uploads/images/2026/09/image1.png",
+       *       "https://eatiqlink-s3-bucket.s3.ap-northeast-2.amazonaws.com/uploads/images/2026/09/image2.png"
+       *     ]
+       */
+      featured_image_list?: string[];
+    };
+    UpdateBrandFeaturedImagesResponseDto: {
+      /**
+       * @description 처리 결과 메시지
+       * @example 브랜드 대표 이미지가 성공적으로 업데이트되었습니다.
+       */
+      message: string;
+      /**
+       * @description 워크스페이스 식별자
+       * @example 1
+       */
+      workspace_uid: number;
+      /** @description 업데이트 후 최신 브랜드 비주얼 정보 */
+      brand_visual: components["schemas"]["BrandVisualDataDto"];
+    };
+    UpdateBrandFeaturedVideosDto: {
+      /**
+       * @description 브랜드 대표 영상 URL 배열 (/api/upload/video 업로드 후 반환된 S3 URL). 빈 배열 [] 또는 미전송 시 영상 목록 제거
+       * @example [
+       *       "https://eatiqlink-s3-bucket.s3.ap-northeast-2.amazonaws.com/uploads/videos/2026/09/video1.mp4"
+       *     ]
+       */
+      featured_video_list?: string[];
+    };
+    UpdateBrandFeaturedVideosResponseDto: {
+      /**
+       * @description 처리 결과 메시지
+       * @example 브랜드 대표 영상이 성공적으로 업데이트되었습니다.
+       */
+      message: string;
+      /**
+       * @description 워크스페이스 식별자
+       * @example 1
+       */
+      workspace_uid: number;
+      /** @description 업데이트 후 최신 브랜드 비주얼 정보 */
+      brand_visual: components["schemas"]["BrandVisualDataDto"];
+    };
+    MenuItemDto: {
+      /**
+       * @description 메뉴 이름 (한국어)
+       * @example 갈릭 불고기 피자
+       */
+      name_ko: string;
+      /**
+       * @description 메뉴 이름 (영어)
+       * @example Garlic Bulgogi Pizza
+       */
+      name_en: string;
+      /**
+       * @description 메뉴 가격 (원화 또는 기본 통화 단위)
+       * @example 18900
+       */
+      price: number;
+      /**
+       * @description 메뉴 설명
+       * @example 특제 마늘 소스와 직화 불고기의 풍미가 어우러진 시그니처 대표 피자
+       */
+      explain: string;
+      /**
+       * @description 메뉴 사진 URL 배열 (/api/upload/image 로 업로드 후 반환된 S3 URL)
+       * @example [
+       *       "https://eatiqlink-s3-bucket.s3.ap-northeast-2.amazonaws.com/uploads/images/2026/09/menu1.png",
+       *       "https://eatiqlink-s3-bucket.s3.ap-northeast-2.amazonaws.com/uploads/images/2026/09/menu2.png"
+       *     ]
+       */
+      image_list: string[];
+    };
+    UpdateBrandMenuDto: {
+      /** @description 브랜드 메뉴 목록 (json array) */
+      menu_list: components["schemas"]["MenuItemDto"][];
+    };
+    MenuItemResponseDto: {
+      /**
+       * @description 메뉴 이름 (한국어)
+       * @example 갈릭 불고기 피자
+       */
+      name_ko: string;
+      /**
+       * @description 메뉴 이름 (영어)
+       * @example Garlic Bulgogi Pizza
+       */
+      name_en: string;
+      /**
+       * @description 메뉴 가격
+       * @example 18900
+       */
+      price: number;
+      /**
+       * @description 메뉴 설명
+       * @example 특제 마늘 소스와 직화 불고기의 풍미가 어우러진 시그니처 대표 피자
+       */
+      explain: string;
+      /**
+       * @description 메뉴 사진 URL 배열
+       * @example [
+       *       "https://eatiqlink-s3-bucket.s3.ap-northeast-2.amazonaws.com/uploads/images/2026/09/menu1.png",
+       *       "https://eatiqlink-s3-bucket.s3.ap-northeast-2.amazonaws.com/uploads/images/2026/09/menu2.png"
+       *     ]
+       */
+      image_list: string[];
+    };
+    UpdateBrandMenuResponseDto: {
+      /**
+       * @description 결과 메시지
+       * @example 브랜드 메뉴 정보가 성공적으로 업데이트되었습니다.
+       */
+      message: string;
+      /**
+       * @description 워크스페이스 UID
+       * @example 1
+       */
+      workspace_uid: number;
+      /** @description 업데이트된 브랜드 메뉴 목록 (brand_menu) */
+      brand_menu: components["schemas"]["MenuItemResponseDto"][];
+    };
+    BuyerListItemDto: {
+      /**
+       * @description 바이어 고유 식별자 (uid)
+       * @example 1
+       */
+      uid: number;
+      /**
+       * @description 소속 워크스페이스 uid
+       * @example 32
+       */
+      workspace_uid: number;
+      /**
+       * @description 바이어 회사명
+       * @example WATAMI CO., LTD.
+       */
+      company_name: string;
+      /**
+       * @description 국가
+       * @example 일본
+       */
+      country?: Record<string, never>;
+      /**
+       * @description 도시 / 세부 지역
+       * @example 도쿄도 오타구
+       */
+      city?: Record<string, never>;
+      /**
+       * @description 사업 유형
+       * @example 외식 프랜차이즈 그룹
+       */
+      business_type?: Record<string, never>;
+      /**
+       * @description 선호 계약 조건/방식
+       * @example 마스터 프랜차이즈
+       */
+      preferred_contract_type?: Record<string, never>;
+      /**
+       * @description 바이어 공식 홈페이지 URL
+       * @example https://www.watami.co.jp/
+       */
+      homepage_url?: Record<string, never>;
+      /**
+       * @description 바이어 상세 소개 (buyer_intro => detail_intro)
+       * @example Subway Japan을 인수하고 bb.q 치킨을 운영하는 상장 외식 운영사
+       */
+      detail_intro?: Record<string, never>;
+      /**
+       * @description 대표 운영 브랜드 요약 문구
+       * @example 운영 브랜드 : Subway Japan · bb.q Japan
+       */
+      brand_summary?: Record<string, never>;
+      /**
+       * @description 프로토타입 카드 메타 요약 정보 (브랜드 개수 · 매장 수 범위)
+       * @example 브랜드 8개 · 매장 100~500개
+       */
+      meta_text?: Record<string, never>;
+      /**
+       * @description 보유 매장 수
+       * @example 400
+       */
+      store_cnt?: Record<string, never>;
+      /**
+       * @description 보유 브랜드 개수
+       * @example 8
+       */
+      brand_count?: Record<string, never>;
+      /**
+       * @description 브랜드 경험 유형 목록
+       * @example [
+       *       "마스터 프랜차이즈 운영",
+       *       "직영 매장 운영",
+       *       "프랜차이즈 가맹점 운영"
+       *     ]
+       */
+      brand_experience_types?: string[];
+      /**
+       * @description 한국 브랜드 운영 경험 여부
+       * @example true
+       */
+      korean_brand_experience?: Record<string, never>;
+    };
+    GetBuyerListResponseDto: {
+      /** @description 바이어 카드 목록 */
+      items: components["schemas"]["BuyerListItemDto"][];
+      /**
+       * @description 전체 검색 결과 수
+       * @example 48
+       */
+      total: number;
+      /**
+       * @description 현재 페이지 번호
+       * @example 1
+       */
+      page: number;
+      /**
+       * @description 한 페이지 표시 개수
+       * @example 12
+       */
+      limit: number;
+      /**
+       * @description 전체 페이지 수
+       * @example 4
+       */
+      total_pages: number;
+    };
+    OperatingBrandDto: {
+      /**
+       * @description 브랜드명
+       * @example 서브웨이 재팬
+       */
+      brand_name: string;
+      /**
+       * @description 운영 방식 / 계약 형태
+       * @example 마스터 프랜차이즈
+       */
+      contract_type?: Record<string, never>;
+      /**
+       * @description 운영 매장 수
+       * @example 12
+       */
+      store_count?: Record<string, never>;
+      /**
+       * @description 운영 시작 연도
+       * @example 2016
+       */
+      started_year?: Record<string, never>;
+      /**
+       * @description 정보 출처 (공개 자료, 공시, 바이어 제공 등)
+       * @example 공개 자료에서 확인
+       */
+      source?: Record<string, never>;
+      /**
+       * @description 출처 URL
+       * @example https://www.watami.co.jp/
+       */
+      source_url?: Record<string, never>;
+    };
+    BuyerContractPolicyDetailDto: {
+      /**
+       * @description 희망 계약 방식
+       * @example 마스터 프랜차이즈
+       */
+      preferred_contract_type?: Record<string, never>;
+      /**
+       * @description 선호 브랜드 가격대
+       * @example 중가 (1~3만원) 이상
+       */
+      target_price_tier?: Record<string, never>;
+      /**
+       * @description 독점권 요구 수준
+       * @example 국가 독점
+       */
+      exclusivity_requirement?: Record<string, never>;
+      /**
+       * @description 메뉴 현지화 요구 수준
+       * @example 일부 허용
+       */
+      localization_requirement?: Record<string, never>;
+      /**
+       * @description 선호 로열티 방식
+       * @example 총매출 기준 비율
+       */
+      preferred_royalty_type?: Record<string, never>;
+      /**
+       * @description 식자재 공급망 보유/공급 방식
+       * @example 자체 공급 가능
+       */
+      has_supply_chain?: Record<string, never>;
+      /**
+       * @description 인테리어 기준 선호
+       * @example 본사 표준안 전면 적용
+       */
+      interior_preference?: Record<string, never>;
+    };
+    BuyerBasicDetailDto: {
+      /**
+       * @description 회사 상세 소개글
+       * @example Watami CO.는 2008년 설립된 일본의 다브랜드 외식 운영사입니다. 일본 전역에서 마스터 프랜차이즈 방식으로 외식 브랜드를 운영하며 현재 4개 브랜드, 38개 매장을 운영하고 있습니다.
+       */
+      detail_intro?: Record<string, never>;
+      /**
+       * @description 사업 유형
+       * @example 마스터 프랜차이즈 운영사
+       */
+      business_type?: Record<string, never>;
+      /**
+       * @description 설립 연도
+       * @example 2008
+       */
+      founded_year?: Record<string, never>;
+      /**
+       * @description 본사 위치 / 도시
+       * @example 일본 도쿄
+       */
+      headquarter_location?: Record<string, never>;
+      /**
+       * @description 주요 운영 국가
+       * @example 일본
+       */
+      country?: Record<string, never>;
+      /**
+       * @description 주요 운영 업종
+       * @example 외식 F&B
+       */
+      target_industry?: Record<string, never>;
+      /**
+       * @description 정보 확인/검증 일자
+       * @example 2026. 08. 12
+       */
+      verified_at?: Record<string, never>;
+    };
+    BuyerContactDetailDto: {
+      /**
+       * @description 대표 이메일 주소
+       * @example contact@watami.co.jp
+       */
+      official_email?: Record<string, never>;
+      /**
+       * @description 담당자명
+       * @example 야마다 타로
+       */
+      contact_name?: Record<string, never>;
+      /**
+       * @description 직책
+       * @example 해외사업개발팀 총괄
+       */
+      contact_position?: Record<string, never>;
+      /**
+       * @description 담당자 이메일
+       * @example yamada@watami.co.jp
+       */
+      contact_email?: Record<string, never>;
+      /**
+       * @description 가능 언어 목록
+       * @example [
+       *       "일본어",
+       *       "영어"
+       *     ]
+       */
+      contact_languages?: string[];
+    };
+    GetBuyerDetailResponseDto: {
+      /**
+       * @description 바이어 고유 식별자 (uid)
+       * @example 1
+       */
+      uid: number;
+      /**
+       * @description 소속 워크스페이스 uid
+       * @example 32
+       */
+      workspace_uid: number;
+      /**
+       * @description 바이어 회사명
+       * @example Watami CO.
+       */
+      company_name: string;
+      /**
+       * @description 회사명 이니셜
+       * @example W
+       */
+      initial: string;
+      /**
+       * @description 바이어 공식 홈페이지 URL
+       * @example https://www.watami.co.jp/
+       */
+      homepage_url?: Record<string, never>;
+      /**
+       * @description 대표 운영 브랜드 요약 문구
+       * @example 운영 브랜드 : Subway Japan · bb.q Japan
+       */
+      brand_summary?: Record<string, never>;
+      /** @description 주요 운영 브랜드 목록 */
+      brands: components["schemas"]["OperatingBrandDto"][];
+      /** @description 파트너십 선호 조건 정보 */
+      contract_policy: components["schemas"]["BuyerContractPolicyDetailDto"];
+      /** @description 회사 소개 및 기업 개요 정보 */
+      basic_info: components["schemas"]["BuyerBasicDetailDto"];
+      /** @description 대표 연락처 및 담당자 정보 */
+      contact: components["schemas"]["BuyerContactDetailDto"];
+    };
+    BuyerAutocompleteItemDto: {
+      /**
+       * @description 바이어 고유 식별자 (uid)
+       * @example 1
+       */
+      uid: number;
+      /**
+       * @description 바이어 기업명
+       * @example WDI Corporation
+       */
+      company_name: string;
+      /**
+       * @description 국가
+       * @example 일본
+       */
+      country?: Record<string, never>;
+      /**
+       * @description 도시
+       * @example 도쿄도 미나토구
+       */
+      city?: Record<string, never>;
+      /**
+       * @description 연락처 담당자 이름
+       * @example 홍길동
+       */
+      contact_name?: Record<string, never>;
+      /**
+       * @description 연락처 담당자 메일
+       * @example contact@wdi.co.jp
+       */
+      contact_email?: Record<string, never>;
+    };
+    AutocompleteBuyerResponseDto: {
+      /** @description 자동완성 검색 결과 목록 */
+      items: components["schemas"]["BuyerAutocompleteItemDto"][];
+      /**
+       * @description 조회된 결과 건수
+       * @example 3
+       */
+      total: number;
+    };
+    UpdateBuyerBasicDto: {
+      /**
+       * @description 회사명
+       * @example 글로벌푸드 트레이딩
+       */
+      company_name: string;
+      /**
+       * @description 설립 연도 (예: 2018)
+       * @example 2018
+       */
+      founded_year?: number;
+      /**
+       * @description 사업유형
+       * @example 식음료 유통 및 도소매
+       */
+      business_type?: string;
+      /**
+       * @description 대표자 이름
+       * @example 김대표
+       */
+      ceo_name?: string;
+      /**
+       * @description 운영 국가
+       * @example 대한민국
+       */
+      country?: string;
+      /**
+       * @description 운영 도시
+       * @example 서울
+       */
+      city?: string;
+      /**
+       * @description 본사 홈페이지 URL
+       * @example https://www.globalfood.com
+       */
+      homepage_url?: string;
+      /**
+       * @description 본사 대표 이메일
+       * @example contact@globalfood.com
+       */
+      official_email?: string;
+      /**
+       * @description 본사 주소
+       * @example 서울특별시 강남구 테헤란로 456, 10층
+       */
+      official_address?: string;
+    };
+    BuyerBasicDataDto: {
+      /**
+       * @description 회사명
+       * @example 글로벌푸드 트레이딩
+       */
+      company_name: string;
+      /**
+       * @description 설립 연도
+       * @example 2018
+       */
+      founded_year?: Record<string, never>;
+      /**
+       * @description 사업유형
+       * @example 식음료 유통 및 도소매
+       */
+      business_type?: Record<string, never>;
+      /**
+       * @description 대표자 이름
+       * @example 김대표
+       */
+      ceo_name?: Record<string, never>;
+      /**
+       * @description 운영 국가
+       * @example 대한민국
+       */
+      country?: Record<string, never>;
+      /**
+       * @description 운영 도시
+       * @example 서울
+       */
+      city?: Record<string, never>;
+      /**
+       * @description 본사 홈페이지 URL
+       * @example https://www.globalfood.com
+       */
+      homepage_url?: Record<string, never>;
+      /**
+       * @description 본사 대표 이메일
+       * @example contact@globalfood.com
+       */
+      official_email?: Record<string, never>;
+      /**
+       * @description 본사 주소
+       * @example 서울특별시 강남구 테헤란로 456, 10층
+       */
+      official_address?: Record<string, never>;
+    };
+    UpdateBuyerBasicResponseDto: {
+      /**
+       * @description 결과 메시지
+       * @example 바이어 회사 기본 정보가 성공적으로 업데이트되었습니다.
+       */
+      message: string;
+      /**
+       * @description 워크스페이스 UID
+       * @example 1
+       */
+      workspace_uid: number;
+      /**
+       * @description 사업유형 컬럼 값
+       * @example 식음료 유통 및 도소매
+       */
+      business_type?: Record<string, never>;
+      /**
+       * @description 운영 국가 컬럼 값
+       * @example 대한민국
+       */
+      country?: Record<string, never>;
+      /**
+       * @description 운영 도시 컬럼 값
+       * @example 서울
+       */
+      city?: Record<string, never>;
+      /** @description 업데이트된 바이어 회사 기본 정보 (buyer_basic) */
+      buyer_basic: components["schemas"]["BuyerBasicDataDto"];
+    };
+    UpdateBuyerStatusDto: {
+      /**
+       * @description 현재 운영 중인 업종 (선택지: 양식, 한식, 일식, 중식, 카페/베이커리, 패스트푸드, 주점, 식음료 유통/도소매, 기타)
+       * @example 양식
+       * @enum {string}
+       */
+      current_industry:
+        | "양식"
+        | "한식"
+        | "일식"
+        | "중식"
+        | "카페/베이커리"
+        | "패스트푸드"
+        | "주점"
+        | "식음료 유통/도소매"
+        | "기타";
+      /**
+       * @description 운영 매장 수 (개)
+       * @example 5
+       */
+      store_cnt: number;
+      /**
+       * @description 브랜드 운영 경험 (선택지: 프랜차이즈 가맹점 운영, 직영 매장 운영, 마스터 프랜차이즈 운영, 해외 브랜드 라이선스 운영, 자체 브랜드 개발/운영, 해당 없음)
+       * @example [
+       *       "프랜차이즈 가맹점 운영",
+       *       "직영 매장 운영"
+       *     ]
+       */
+      brand_experience_types: (
+        | "프랜차이즈 가맹점 운영"
+        | "직영 매장 운영"
+        | "마스터 프랜차이즈 운영"
+        | "해외 브랜드 라이선스 운영"
+        | "자체 브랜드 개발/운영"
+        | "해당 없음"
+      )[];
+      /**
+       * @description 연매출 규모 구간 (선택지: 10억 미만, 10억 ~ 50억, 50억 ~ 100억, 100억 ~ 500억, 500억 이상)
+       * @example 10억 ~ 50억
+       * @enum {string}
+       */
+      annual_revenue_scale: "10억 미만" | "10억 ~ 50억" | "50억 ~ 100억" | "100억 ~ 500억" | "500억 이상";
+      /**
+       * @description 한국 브랜드 운영 경험 여부
+       * @example true
+       */
+      korean_brand_experience?: boolean;
+      /**
+       * @description 보유 브랜드 개수
+       * @example 8
+       */
+      brand_count?: number;
+    };
+    BuyerStatusDataDto: {
+      /**
+       * @description 현재 운영 중인 업종
+       * @example 양식
+       * @enum {string}
+       */
+      current_industry:
+        | "양식"
+        | "한식"
+        | "일식"
+        | "중식"
+        | "카페/베이커리"
+        | "패스트푸드"
+        | "주점"
+        | "식음료 유통/도소매"
+        | "기타";
+      /**
+       * @description 운영 매장 수 (개)
+       * @example 5
+       */
+      store_cnt: number;
+      /**
+       * @description 브랜드 운영 경험
+       * @example [
+       *       "프랜차이즈 가맹점 운영",
+       *       "직영 매장 운영"
+       *     ]
+       */
+      brand_experience_types: (
+        | "프랜차이즈 가맹점 운영"
+        | "직영 매장 운영"
+        | "마스터 프랜차이즈 운영"
+        | "해외 브랜드 라이선스 운영"
+        | "자체 브랜드 개발/운영"
+        | "해당 없음"
+      )[];
+      /**
+       * @description 연매출 규모 구간
+       * @example 10억 ~ 50억
+       * @enum {string}
+       */
+      annual_revenue_scale: "10억 미만" | "10억 ~ 50억" | "50억 ~ 100억" | "100억 ~ 500억" | "500억 이상";
+      /**
+       * @description 한국 브랜드 운영 경험 여부
+       * @example true
+       */
+      korean_brand_experience?: boolean;
+      /**
+       * @description 보유 브랜드 개수
+       * @example 8
+       */
+      brand_count?: Record<string, never>;
+    };
+    UpdateBuyerStatusResponseDto: {
+      /**
+       * @description 결과 메시지
+       * @example 바이어 현재 운영 현황 정보가 성공적으로 업데이트되었습니다.
+       */
+      message: string;
+      /**
+       * @description 워크스페이스 UID
+       * @example 1
+       */
+      workspace_uid: number;
+      /** @description 업데이트된 바이어 현재 운영 현황 정보 (buyer_status) */
+      buyer_status: components["schemas"]["BuyerStatusDataDto"];
+    };
+    UpdateBuyerIntroDto: {
+      /**
+       * @description 회사 소개 (500자 내외)
+       * @example 글로벌 F&B 브랜드를 발굴하여 아시아 및 북미 시장에 성공적으로 안착시키는 외식 프랜차이즈 전문 기업입니다. 검증된 운영 역량과 강력한 로컬 네트워크를 바탕으로 파트너사와 동반 성장을 추구합니다.
+       */
+      detail_intro: string;
+      /**
+       * @description 핵심 차별점 01 (선택)
+       * @example 수도권 및 주요 광역시 핵심 상권 직영·가맹 50여 개 운영 노하우
+       */
+      key_point_01?: string;
+      /**
+       * @description 핵심 차별점 02 (선택)
+       * @example 자체 콜드체인 물류망 및 전국 식자재 일일 배송 시스템 완비
+       */
+      key_point_02?: string;
+      /**
+       * @description 핵심 차별점 03 (선택)
+       * @example 현지 로컬라이징 R&D 전담 연구소 및 전문 마케팅 조직 보유
+       */
+      key_point_03?: string;
+    };
+    BuyerIntroDataDto: {
+      /**
+       * @description 회사 소개 (500자 내외)
+       * @example 글로벌 F&B 브랜드를 발굴하여 아시아 및 북미 시장에 성공적으로 안착시키는 외식 프랜차이즈 전문 기업입니다. 검증된 운영 역량과 강력한 로컬 네트워크를 바탕으로 파트너사와 동반 성장을 추구합니다.
+       */
+      detail_intro: string;
+      /**
+       * @description 핵심 차별점 01
+       * @example 수도권 및 주요 광역시 핵심 상권 직영·가맹 50여 개 운영 노하우
+       */
+      key_point_01?: Record<string, never>;
+      /**
+       * @description 핵심 차별점 02
+       * @example 자체 콜드체인 물류망 및 전국 식자재 일일 배송 시스템 완비
+       */
+      key_point_02?: Record<string, never>;
+      /**
+       * @description 핵심 차별점 03
+       * @example 현지 로컬라이징 R&D 전담 연구소 및 전문 마케팅 조직 보유
+       */
+      key_point_03?: Record<string, never>;
+    };
+    UpdateBuyerIntroResponseDto: {
+      /**
+       * @description 결과 메시지
+       * @example 바이어 회사 소개 정보가 성공적으로 업데이트되었습니다.
+       */
+      message: string;
+      /**
+       * @description 워크스페이스 UID
+       * @example 1
+       */
+      workspace_uid: number;
+      /** @description 업데이트된 바이어 회사 소개 정보 (buyer_intro) */
+      buyer_intro: components["schemas"]["BuyerIntroDataDto"];
+    };
+    UpdateBuyerContractPolicyDto: {
+      /**
+       * @description 도입 희망 업종 (선택지: 양식, 한식, 일식, 중식, 카페/베이커리, 패스트푸드, 주점, 식음료 유통/도소매, 기타)
+       * @example 양식
+       * @enum {string}
+       */
+      target_industry:
+        | "양식"
+        | "한식"
+        | "일식"
+        | "중식"
+        | "카페/베이커리"
+        | "패스트푸드"
+        | "주점"
+        | "식음료 유통/도소매"
+        | "기타";
+      /**
+       * @description 선호 계약 방식 (선택지: 마스터 프랜차이즈, 지역 개발권, 직영, 합작법인, 라이선스, 유통, 미정)
+       * @example 마스터 프랜차이즈
+       * @enum {string}
+       */
+      preferred_contract_type?:
+        | "마스터 프랜차이즈"
+        | "지역 개발권"
+        | "직영"
+        | "합작법인"
+        | "라이선스"
+        | "유통"
+        | "미정";
+      /**
+       * @description 희망 파트너 역할 (선택지: 총판/마스터 파트너, 합작투자(JV) 파트너, 단일/복수 가맹점주, 유통/공급 대행)
+       * @example 총판/마스터 파트너
+       * @enum {string}
+       */
+      target_partner_role: "총판/마스터 파트너" | "합작투자(JV) 파트너" | "단일/복수 가맹점주" | "유통/공급 대행";
+      /**
+       * @description 초기 투자 가능 금액 (선택지: 1억 미만, 1억 ~ 3억, 3억 ~ 5억, 5억 ~ 10억, 10억 이상)
+       * @example 3억 ~ 5억
+       * @enum {string}
+       */
+      investment_budget_scale: "1억 미만" | "1억 ~ 3억" | "3억 ~ 5억" | "5억 ~ 10억" | "10억 이상";
+      /**
+       * @description 선호 로열티 방식 (선택지: 총매출 기준 비율, 순매출 기준 비율, 고정 로열티(정액제), 협의 필요)
+       * @example 총매출 기준 비율
+       * @enum {string}
+       */
+      preferred_royalty_type: "총매출 기준 비율" | "순수익 기준 비율" | "월정액" | "로열티 없음" | "협의 가능";
+      /**
+       * @description 선호 가격대 (선택지: 저가, 중가, 고가)
+       * @example 중가
+       * @enum {string}
+       */
+      target_price_tier: "1만원 미만" | "1만 ~ 2만원" | "2만 ~ 4만원" | "4만원 이상";
+      /**
+       * @description 독점권 요구 수준 (선택지: 국가 독점, 지역/권역 독점, 독점권 불필요, 협의 필요)
+       * @example 국가 독점
+       * @enum {string}
+       */
+      exclusivity_requirement: "국가 단위 독점 필수" | "지역 단위 독점 희망" | "비독점 수용 가능" | "협의 필요";
+      /**
+       * @description 메뉴 현지화 요구 수준 (선택지: 적극적 현지화 희망, 원형 유지 희망, 협의 필요)
+       * @example 적극적 현지화 희망
+       * @enum {string}
+       */
+      localization_requirement:
+        | "할랄 인증 필수"
+        | "비건/채식 메뉴 필수"
+        | "현지 입맛 조정 필수"
+        | "원작 유지 선호"
+        | "협의 가능";
+      /**
+       * @description 인테리어 기준 선호 (선택지: 본사 표준안 전면 적용, 현지 사정 맞춰 일부 수정, 자체 디자인 적용(협의), 협의 필요)
+       * @example 본사 표준안 전면 적용
+       * @enum {string}
+       */
+      interior_preference: "현지 직접 조달 희망" | "본사 지정 감리/구매 수용" | "협의 가능";
+      /**
+       * @description 자체 식자재 공급망 (선택지: 보유(자체 공급망 활용), 미보유(본사 공급 필요), 협의 필요)
+       * @example 보유(자체 공급망 활용)
+       * @enum {string}
+       */
+      has_supply_chain: "자체 유통망 보유" | "협력 물류망 활용 가능" | "본사 지원 필요";
+    };
+    BuyerContractPolicyDataDto: {
+      /**
+       * @description 도입 희망 업종
+       * @example 양식
+       * @enum {string}
+       */
+      target_industry:
+        | "양식"
+        | "한식"
+        | "일식"
+        | "중식"
+        | "카페/베이커리"
+        | "패스트푸드"
+        | "주점"
+        | "식음료 유통/도소매"
+        | "기타";
+      /**
+       * @description 선호 계약 방식 (선택지: 마스터 프랜차이즈, 지역 개발권, 직영, 합작법인, 라이선스, 유통, 미정)
+       * @example 마스터 프랜차이즈
+       * @enum {string}
+       */
+      preferred_contract_type?:
+        | "마스터 프랜차이즈"
+        | "지역 개발권"
+        | "직영"
+        | "합작법인"
+        | "라이선스"
+        | "유통"
+        | "미정";
+      /**
+       * @description 희망 파트너 역할
+       * @example 총판/마스터 파트너
+       * @enum {string}
+       */
+      target_partner_role: "총판/마스터 파트너" | "합작투자(JV) 파트너" | "단일/복수 가맹점주" | "유통/공급 대행";
+      /**
+       * @description 초기 투자 가능 금액
+       * @example 3억 ~ 5억
+       * @enum {string}
+       */
+      investment_budget_scale: "1억 미만" | "1억 ~ 3억" | "3억 ~ 5억" | "5억 ~ 10억" | "10억 이상";
+      /**
+       * @description 선호 로열티 방식
+       * @example 총매출 기준 비율
+       * @enum {string}
+       */
+      preferred_royalty_type: "총매출 기준 비율" | "순수익 기준 비율" | "월정액" | "로열티 없음" | "협의 가능";
+      /**
+       * @description 선호 가격대
+       * @example 중가
+       * @enum {string}
+       */
+      target_price_tier: "1만원 미만" | "1만 ~ 2만원" | "2만 ~ 4만원" | "4만원 이상";
+      /**
+       * @description 독점권 요구 수준
+       * @example 국가 독점
+       * @enum {string}
+       */
+      exclusivity_requirement: "국가 단위 독점 필수" | "지역 단위 독점 희망" | "비독점 수용 가능" | "협의 필요";
+      /**
+       * @description 메뉴 현지화 요구 수준
+       * @example 적극적 현지화 희망
+       * @enum {string}
+       */
+      localization_requirement:
+        | "할랄 인증 필수"
+        | "비건/채식 메뉴 필수"
+        | "현지 입맛 조정 필수"
+        | "원작 유지 선호"
+        | "협의 가능";
+      /**
+       * @description 인테리어 기준 선호
+       * @example 본사 표준안 전면 적용
+       * @enum {string}
+       */
+      interior_preference: "현지 직접 조달 희망" | "본사 지정 감리/구매 수용" | "협의 가능";
+      /**
+       * @description 자체 식자재 공급망
+       * @example 보유(자체 공급망 활용)
+       * @enum {string}
+       */
+      has_supply_chain: "자체 유통망 보유" | "협력 물류망 활용 가능" | "본사 지원 필요";
+    };
+    UpdateBuyerContractPolicyResponseDto: {
+      /**
+       * @description 결과 메시지
+       * @example 바이어 계약 정책 정보가 성공적으로 업데이트되었습니다.
+       */
+      message: string;
+      /**
+       * @description 워크스페이스 UID
+       * @example 1
+       */
+      workspace_uid: number;
+      /** @description 업데이트된 바이어 계약 정책 정보 (buyer_contract_policy) */
+      buyer_contract_policy: components["schemas"]["BuyerContractPolicyDataDto"];
+    };
+    UpdateBuyerContactDto: {
+      /**
+       * @description 담당자 이름
+       * @example 홍길동
+       */
+      contact_name: string;
+      /**
+       * @description 직책/직급
+       * @example 구매 총괄 팀장
+       */
+      contact_position: string;
+      /**
+       * @description 담당자 이메일
+       * @example buyer.hong@globalfood.com
+       */
+      contact_email: string;
+      /**
+       * @description 가능 언어 (선택사항)
+       * @example [
+       *       "한국어",
+       *       "영어",
+       *       "일본어"
+       *     ]
+       */
+      contact_languages?: string[];
+    };
+    BuyerContactDataDto: {
+      /**
+       * @description 담당자 이름 (contact_name)
+       * @example 홍길동
+       */
+      contact_name: string;
+      /**
+       * @description 직책 (contact_position)
+       * @example 구매 총괄 팀장
+       */
+      contact_position: string;
+      /**
+       * @description 담당자 이메일 (contact_email)
+       * @example buyer.hong@globalfood.com
+       */
+      contact_email: string;
+      /**
+       * @description 가능 언어 (contact_languages)
+       * @example [
+       *       "한국어",
+       *       "영어",
+       *       "일본어"
+       *     ]
+       */
+      contact_languages?: string[];
+    };
+    UpdateBuyerContactResponseDto: {
+      /**
+       * @description 결과 메시지
+       * @example 바이어 연락처 정보가 성공적으로 업데이트되었습니다.
+       */
+      message: string;
+      /**
+       * @description 워크스페이스 UID
+       * @example 1
+       */
+      workspace_uid: number;
+      /** @description 업데이트된 바이어 연락처 정보 (buyer_contact) */
+      buyer_contact: components["schemas"]["BuyerContactDataDto"];
+    };
+    UploadImageDto: {
+      /**
+       * Format: binary
+       * @description 업로드할 이미지 파일 (jpeg, jpg, png, webp, gif, svg 지원, 최대 10MB)
+       */
+      file: string;
+    };
+    UploadImageResponseDto: {
+      /**
+       * @description S3/CloudFront에 업로드된 이미지 파일 URL
+       * @example https://d1pkdqo8o4d6zs.cloudfront.net/images/f47ac10b-58cc-4372-a567-0e02b2c3d479.png
+       */
+      url: string;
+      /**
+       * @description S3 버킷 내 객체 키(Key) 경로
+       * @example images/f47ac10b-58cc-4372-a567-0e02b2c3d479.png
+       */
+      key: string;
+      /**
+       * @description 원본 파일명
+       * @example brand-logo.png
+       */
+      original_name: string;
+      /**
+       * @description 파일의 MIME 타입
+       * @example image/png
+       */
+      mimetype: string;
+      /**
+       * @description 파일 크기 (Byte 단위)
+       * @example 1048576
+       */
+      size: number;
+    };
+    UploadVideoDto: {
+      /**
+       * Format: binary
+       * @description 업로드할 영상 파일 (mp4, webm, quicktime/mov, avi 지원, 최대 100MB)
+       */
+      file: string;
+    };
+    UploadVideoResponseDto: {
+      /**
+       * @description S3/CloudFront에 업로드된 영상 파일 URL
+       * @example https://d1pkdqo8o4d6zs.cloudfront.net/videos/b839a89c-4821-4f3b-ba2d-42d106606fca.mp4
+       */
+      url: string;
+      /**
+       * @description S3 버킷 내 객체 키(Key) 경로
+       * @example videos/b839a89c-4821-4f3b-ba2d-42d106606fca.mp4
+       */
+      key: string;
+      /**
+       * @description 원본 파일명
+       * @example intro-video.mp4
+       */
+      original_name: string;
+      /**
+       * @description 파일의 MIME 타입
+       * @example video/mp4
+       */
+      mimetype: string;
+      /**
+       * @description 파일 크기 (Byte 단위)
+       * @example 15728640
+       */
+      size: number;
+    };
+    CrmListItemDto: {
+      /**
+       * @description CRM 레코드 UID (`etq_crm.uid`)
+       * @example 1
+       */
+      crm_uid: number;
+      /**
+       * @description 내 워크스페이스 UID (`source_workspace_uid`)
+       * @example 1
+       */
+      source_workspace_uid: number;
+      /**
+       * @description 대상 워크스페이스 UID (`target_workspace_uid`, 수기 등록 시 null)
+       * @example 2
+       */
+      target_workspace_uid?: Record<string, never>;
+      /**
+       * @description 대상 워크스페이스 타입 (`buyer` 또는 `brand`)
+       * @example buyer
+       */
+      workspace_type: string;
+      /**
+       * @description 바이어 / 기업 이름
+       * @example Antenna Retail
+       */
+      company_name: string;
+      /**
+       * @description 국가
+       * @example 일본
+       */
+      country?: Record<string, never>;
+      /**
+       * @description 도시
+       * @example 도쿄
+       */
+      city?: Record<string, never>;
+      /**
+       * @description 국가 및 도시 표기 (프로토타입 k2 컬럼)
+       * @example 일본 · 도쿄
+       */
+      location: string;
+      /**
+       * @description 카테고리 / 사업유형
+       * @example 외식
+       */
+      category?: Record<string, never>;
+      /**
+       * @description 계약 방식 (프로토타입 k3 컬럼)
+       * @example 마스터 프랜차이즈
+       */
+      contract_type?: Record<string, never>;
+      /**
+       * @description 현재 단계 (가장 최근 완료된 진행 기록 기준, 없을 시 "리드")
+       * @example 미팅
+       */
+      current_stage: string;
+      /**
+       * @description 단계 배지 CSS 클래스 (`lead`, `contact`, `meet`, `nego`, `legal`, `won`, `lost`)
+       * @example meet
+       */
+      stage_class: string;
+      /**
+       * @description 최근 접점일 (YYYY.MM.DD 또는 YYYY-MM-DD, 기록 없을 시 null)
+       * @example 2026.06.24
+       */
+      recent_contact_date?: Record<string, never>;
+      /**
+       * @description 다음 액션 제목 (미완료 액션 중 가장 빠른 마감일 액션, 없을 시 null)
+       * @example 소개서 발송
+       */
+      next_action_title?: Record<string, never>;
+      /**
+       * @description 다음 액션 기한일 (YYYY.MM.DD 또는 YYYY-MM-DD, 없을 시 null)
+       * @example 2026.07.14
+       */
+      next_action_due_date?: Record<string, never>;
+      /**
+       * @description 담당자 이름
+       * @example 홍길동
+       */
+      contact_name?: Record<string, never>;
+      /**
+       * @description 담당자 이메일
+       * @example contact@partner.com
+       */
+      contact_email?: Record<string, never>;
+      /**
+       * @description 생성 일시
+       * @example 2026-09-15T04:00:00.000Z
+       */
+      created_time: Record<string, never>;
+    };
+    CrmFilterOptionsDto: {
+      /**
+       * @description 국가 필터 옵션 목록
+       * @example [
+       *       "전체",
+       *       "일본",
+       *       "홍콩",
+       *       "싱가포르",
+       *       "태국",
+       *       "대한민국"
+       *     ]
+       */
+      countries: string[];
+      /**
+       * @description 카테고리 필터 옵션 목록
+       * @example [
+       *       "전체",
+       *       "외식",
+       *       "유통",
+       *       "제조"
+       *     ]
+       */
+      categories: string[];
+      /**
+       * @description 계약 조건 필터 옵션 목록
+       * @example [
+       *       "전체",
+       *       "마스터 프랜차이즈",
+       *       "합작법인 (JV)",
+       *       "지역 개발권",
+       *       "라이선스",
+       *       "유통",
+       *       "직영"
+       *     ]
+       */
+      contract_types: string[];
+    };
+    GetCrmListResponseDto: {
+      /**
+       * @description HTTP 응답 상태 코드
+       * @example 200
+       */
+      statusCode: number;
+      /**
+       * @description 응답 메시지
+       * @example 진행 관리 목록을 성공적으로 조회하였습니다.
+       */
+      message: string;
+      /** @description 진행 관리 대상 목록 */
+      items: components["schemas"]["CrmListItemDto"][];
+      /**
+       * @description 전체 검색 건수
+       * @example 8
+       */
+      total: number;
+      /**
+       * @description 현재 페이지 번호
+       * @example 1
+       */
+      page: number;
+      /**
+       * @description 페이지당 표시 개수
        * @example 20
+       */
+      limit: number;
+      /**
+       * @description 전체 페이지 수
+       * @example 1
+       */
+      total_pages: number;
+      /** @description 화면 상단 필터 칩 옵션 데이터 */
+      filter_options: components["schemas"]["CrmFilterOptionsDto"];
+    };
+    CreateCrmDto: {
+      /**
+       * @description 내 워크스페이스 고유 식별자 (source_workspace_uid)
+       * @example 1
+       */
+      source_workspace_uid: number;
+      /**
+       * @description 관리 대상 워크스페이스 고유 식별자 (target_workspace_uid).<br/>• source가 브랜드일 때: 바이어 워크스페이스 uid (`etq_workspace.uid`)<br/>• source가 바이어일 때: 브랜드 워크스페이스 uid (`etq_workspace.uid`)<br/>• 수기 직접 입력 시: null 또는 생략 가능
+       * @example 2
+       */
+      target_workspace_uid?: Record<string, never>;
+      /**
+       * @description 기업명 (회사 이름)
+       * @example Antenna Retail
+       */
+      company_name: string;
+      /**
+       * @description 국가
+       * @example 일본
+       */
+      country?: Record<string, never>;
+      /**
+       * @description 도시
+       * @example 도쿄
+       */
+      city?: Record<string, never>;
+      /**
+       * @description 계약 방식 (예: 마스터 프랜차이즈, 합작법인, 라이선스, 유통, 직영 등)
+       * @example 마스터 프랜차이즈
+       */
+      contract_type?: Record<string, never>;
+      /**
+       * @description 담당자 이름
+       * @example 홍길동
+       */
+      contact_name?: Record<string, never>;
+      /**
+       * @description 담당자 메일 (이메일)
+       * @example contact@antennaretail.jp
+       */
+      contact_email?: Record<string, never>;
+    };
+    CrmItemDto: {
+      /**
+       * @description CRM 레코드 고유 식별자 (uid)
+       * @example 1
+       */
+      uid: number;
+      /**
+       * @description 진행 관리하는 내 워크스페이스 UID (source_workspace_uid)
+       * @example 1
+       */
+      source_workspace_uid: number;
+      /**
+       * @description 관리 대상 워크스페이스 UID (target_workspace_uid, 수기 등록 시 null)
+       * @example 2
+       */
+      target_workspace_uid?: Record<string, never>;
+      /**
+       * @description 워크스페이스 타입.<br/>• target_workspace_uid가 있을 경우: target 워크스페이스의 타입<br/>• target_workspace_uid가 null일 경우: source_workspace_uid의 반대 타입 (source가 brand면 buyer, source가 buyer면 brand)
+       * @example buyer
+       */
+      workspace_type: string;
+      /**
+       * @description 기업명
+       * @example Antenna Retail
+       */
+      company_name: string;
+      /**
+       * @description 국가
+       * @example 일본
+       */
+      country?: Record<string, never>;
+      /**
+       * @description 도시
+       * @example 도쿄
+       */
+      city?: Record<string, never>;
+      /**
+       * @description 계약 방식
+       * @example 마스터 프랜차이즈
+       */
+      contract_type?: Record<string, never>;
+      /**
+       * @description 담당자 이름
+       * @example 홍길동
+       */
+      contact_name?: Record<string, never>;
+      /**
+       * @description 담당자 메일
+       * @example contact@antennaretail.jp
+       */
+      contact_email?: Record<string, never>;
+      /**
+       * @description 등록 일시
+       * @example 2026-09-15T04:00:00.000Z
+       */
+      created_time: Record<string, never>;
+      /**
+       * @description 수정 일시
+       * @example 2026-09-15T04:00:00.000Z
+       */
+      updated_time?: Record<string, never>;
+    };
+    CreateCrmResponseDto: {
+      /**
+       * @description 결과 메시지
+       * @example 진행 관리(CRM) 대상이 성공적으로 추가되었습니다.
+       */
+      message: string;
+      /** @description 추가된 CRM 레코드 정보 */
+      crm: components["schemas"]["CrmItemDto"];
+    };
+    ActionFileDto: {
+      /**
+       * @description 원본 파일명
+       * @example 회의록_20260702.pdf
+       */
+      name: string;
+      /**
+       * @description 파일 URL
+       * @example https://d1pkdqo8o4d6zs.cloudfront.net/files/sample.pdf
+       */
+      url: string;
+      /**
+       * @description 파일 크기 (Byte)
+       * @example 1048576
        */
       size?: number;
       /**
-       * Format: int64
+       * @description 파일 MIME 타입
+       * @example application/pdf
+       */
+      mimetype?: string;
+    };
+    NextActionItemDto: {
+      /**
+       * @description 다음 액션 제목
+       * @example 로열티 조건 자료 요청
+       */
+      title: string;
+      /**
+       * @description 다음 액션 마감일 (YYYY-MM-DD)
+       * @example 2026-07-10
+       */
+      action_time?: string;
+      /**
+       * @description 다음 액션 담당자
+       * @example 김도경
+       */
+      partner_name?: string;
+      /**
+       * @description 다음 액션 관련 메모/내용
+       * @example 본사 승인 필요 조건 검토
+       */
+      content?: string;
+    };
+    CreateCrmActionDto: {
+      /**
+       * @description 대상 CRM 레코드 고유 식별자 (`etq_crm.uid`)
        * @example 1
        */
-      totalElements?: number;
+      crm_uid: number;
       /**
-       * Format: int32
-       * @example 1
-       */
-      totalPages?: number;
-      /** @example false */
-      hasNext?: boolean;
-    };
-    AssetMediaDto: {
-      logo?: components["schemas"]["MediaFileDto"];
-      mainImage?: components["schemas"]["MediaFileDto"];
-      brandVideo?: components["schemas"]["MediaFileDto"];
-      brochure?: components["schemas"]["MediaFileDto"];
-    };
-    BrandAssetDto: {
-      logoUrl?: string;
-      mainImageUrl?: string;
-      brandVideoUrl?: string;
-      brochureUrl?: string;
-    };
-    BrandSettingsResponse: {
-      brand?: components["schemas"]["BrandBasicDto"];
-      brandIntro?: components["schemas"]["BrandIntroDto"];
-      brandOperation?: components["schemas"]["BrandOperationDto"];
-      brandContact?: components["schemas"]["BrandContactDto"];
-      brandAsset?: components["schemas"]["BrandAssetDto"];
-      brandAssetMedia?: components["schemas"]["AssetMediaDto"];
-      brandFlagshipStore?: components["schemas"]["BrandFlagshipStoreDto"];
-      brandFlagshipMedia?: components["schemas"]["FlagshipMediaDto"];
-      brandMenus?: components["schemas"]["BrandMenuDto"][];
-      brandType?: string;
-      brandContract?: components["schemas"]["BrandContractDto"];
-      brandPolicy?: components["schemas"]["BrandPolicyDto"];
-      brandFee?: components["schemas"]["BrandFeeDto"];
-      brandAreaCriteria?: components["schemas"]["BrandAreaCriteriaDto"];
-      expansionTargets?: components["schemas"]["BrandExpansionTargetDto"][];
-      completionRates?: {
-        [key: string]: components["schemas"]["RateStageDto"];
-      };
-      journeys?: {
-        [key: string]: components["schemas"]["JourneyDto"];
-      };
-    };
-    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
-    CommonResponseBrandSettingsResponse: {
-      /** @example true */
-      success?: boolean;
-      data?: components["schemas"]["BrandSettingsResponse"];
-      /** @example 요청이 성공했습니다. */
-      message?: string;
-    };
-    FlagshipMediaDto: {
-      photos?: components["schemas"]["MediaFileDto"][];
-      video?: components["schemas"]["MediaFileDto"];
-    };
-    RateStageDto: {
-      /** Format: int32 */
-      rate?: number;
-      stage?: string;
-    };
-    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
-    CommonResponseExpansionTargetsResponse: {
-      /** @example true */
-      success?: boolean;
-      data?: components["schemas"]["ExpansionTargetsResponse"];
-      /** @example 요청이 성공했습니다. */
-      message?: string;
-    };
-    ExpansionTargetsResponse: {
-      expansionTargets?: components["schemas"]["BrandExpansionTargetDto"][];
-    };
-    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
-    CommonResponseCurrentBrandResponse: {
-      /** @example true */
-      success?: boolean;
-      data?: components["schemas"]["CurrentBrandResponse"];
-      /** @example 요청이 성공했습니다. */
-      message?: string;
-    };
-    CurrentBrandResponse: {
-      /** @description 워크스페이스가 없으면 null(항상 존재하는 필드) */
-      brand: components["schemas"]["BrandDetail"];
-      /**
-       * @description 브랜드 있을 때만 포함
+       * @description 진행 타입:<br/>• 지정안됨<br/>• 리드<br/>• 연락중<br/>• 미팅<br/>• 계약협상<br/>• 법리문서검토<br/>• 계약완료<br/>• 계약이탈
+       * @example 미팅
        * @enum {string}
        */
-      role?: "owner" | "user";
-      /** @description 브랜드 있을 때만 포함 */
-      subscription?: components["schemas"]["SubscriptionDetail"];
+      action_type: "지정안됨" | "리드" | "연락중" | "미팅" | "계약협상" | "법리문서검토" | "계약완료" | "계약이탈";
+      /**
+       * @description 진행 기록 제목
+       * @example 1차 조건 협의 미팅
+       */
+      title: string;
+      /**
+       * @description 진행 날짜 (YYYY-MM-DD)
+       * @example 2026-07-02
+       */
+      action_time: string;
+      /**
+       * @description 상대방 / 미팅 대상자
+       * @example Antenna Retail Yuki Tanaka
+       */
+      partner_name?: string;
+      /**
+       * @description 진행 내용
+       * @example 신주쿠 지점 방문 미팅 진행. 매장 컨디션 확인 및 로열티 조건 논의.
+       */
+      content?: string;
+      /** @description 진행 기록 첨부 파일 목록 (최대 3개 권장, 다음 액션이 아닌 진행기록에만 저장됩니다) */
+      file_list?: components["schemas"]["ActionFileDto"][];
+      /** @description 함께 등록할 다음 액션 목록 (복수 등록 가능) */
+      next_actions?: components["schemas"]["NextActionItemDto"][];
     };
-    SubscriptionDetail: {
-      /** @enum {string} */
-      planCode?: "tier1" | "tier2" | "tier3";
-      /** @enum {string} */
-      status?: "active" | "trialing" | "past_due" | "cancelled";
-      /** @enum {string} */
-      billingCycle?: "monthly" | "annual";
-      /** Format: date-time */
-      expiredAt?: string;
+    CrmActionRecordDto: {
+      /**
+       * @description 등록된 액션 레코드 UID (`etq_crm_action.uid`)
+       * @example 10
+       */
+      uid: number;
+      /**
+       * @description 연결된 CRM 레코드 UID (`etq_crm.uid`)
+       * @example 1
+       */
+      crm_uid: number;
+      /**
+       * @description 진행 타입
+       * @example 미팅
+       */
+      action_type: string;
+      /**
+       * @description 완료 여부 (진행 기록은 Y, 다음 액션은 N)
+       * @example Y
+       */
+      is_done: string;
+      /**
+       * @description 제목
+       * @example 1차 조건 협의 미팅
+       */
+      title: string;
+      /**
+       * @description 진행 날짜 또는 마감일
+       * @example 2026-07-02
+       */
+      action_time?: Record<string, never>;
+      /**
+       * @description 상대 / 담당자
+       * @example Antenna Retail Yuki Tanaka
+       */
+      partner_name?: Record<string, never>;
+      /**
+       * @description 내용 또는 메모
+       * @example 신주쿠 지점 미팅 내용
+       */
+      content?: Record<string, never>;
+      /**
+       * @description 첨부 파일 목록 (진행 기록에만 존재)
+       * @example [
+       *       {
+       *         "name": "회의록.pdf",
+       *         "url": "https://d1pkdqo8o4d6zs.cloudfront.net/files/sample.pdf"
+       *       }
+       *     ]
+       */
+      file_list?: Record<string, never>;
+      /**
+       * Format: date-time
+       * @description 생성 일시
+       * @example 2026-09-15T05:00:00.000Z
+       */
+      created_time: string;
     };
-    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
-    CommonResponseMeResponse: {
-      /** @example true */
-      success?: boolean;
-      data?: components["schemas"]["MeResponse"];
-      /** @example 요청이 성공했습니다. */
-      message?: string;
+    CreateCrmActionDataDto: {
+      /** @description 등록된 메인 진행 기록 */
+      main_action: components["schemas"]["CrmActionRecordDto"];
+      /** @description 함께 등록된 다음 액션 목록 (없을 경우 빈 배열) */
+      next_actions: components["schemas"]["CrmActionRecordDto"][];
     };
-    MeResponse: {
-      user?: components["schemas"]["UserDto"];
+    CreateCrmActionResponseDto: {
+      /**
+       * @description HTTP 상태 코드
+       * @example 201
+       */
+      statusCode: number;
+      /**
+       * @description 결과 메시지
+       * @example 진행 기록이 성공적으로 등록되었습니다.
+       */
+      message: string;
+      /** @description 등록 결과 데이터 */
+      data: components["schemas"]["CreateCrmActionDataDto"];
     };
-    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
-    CommonResponseMenuDeleteResponse: {
-      /** @example true */
-      success?: boolean;
-      data?: components["schemas"]["MenuDeleteResponse"];
-      /** @example 요청이 성공했습니다. */
-      message?: string;
+    UpdateCrmActionDto: {
+      /**
+       * @description 진행 타입:<br/>• 지정안됨<br/>• 리드<br/>• 연락중<br/>• 미팅<br/>• 계약협상<br/>• 법리문서검토<br/>• 계약완료<br/>• 계약이탈
+       * @example 미팅
+       * @enum {string}
+       */
+      action_type?: "지정안됨" | "리드" | "연락중" | "미팅" | "계약협상" | "법리문서검토" | "계약완료" | "계약이탈";
+      /**
+       * @description 진행 기록 제목
+       * @example 1차 조건 협의 미팅 (수정)
+       */
+      title?: string;
+      /**
+       * @description 진행 날짜 (YYYY-MM-DD)
+       * @example 2026-07-05
+       */
+      action_time?: string;
+      /**
+       * @description 상대방 / 미팅 대상자
+       * @example Antenna Retail Yuki Tanaka
+       */
+      partner_name?: string;
+      /**
+       * @description 진행 내용
+       * @example 신주쿠 지점 방문 미팅 진행. 매장 컨디션 재확인 및 수정된 로열티 조건 협의.
+       */
+      content?: string;
+      /**
+       * @description 완료 여부 (Y 또는 N)
+       * @example Y
+       * @enum {string}
+       */
+      is_done?: "Y" | "N";
+      /** @description 첨부 파일 목록 (배열 전달 시 기존 파일 목록을 대체합니다) */
+      file_list?: components["schemas"]["ActionFileDto"][];
     };
-    MenuDeleteResponse: {
-      completionRate?: components["schemas"]["TabRateDto"];
-      journey?: components["schemas"]["JourneyDto"];
+    UpdateCrmActionResponseDto: {
+      /**
+       * @description HTTP 상태 코드
+       * @example 200
+       */
+      statusCode: number;
+      /**
+       * @description 결과 메시지
+       * @example 진행 기록이 성공적으로 수정되었습니다.
+       */
+      message: string;
+      /** @description 수정된 진행 기록 데이터 */
+      data: components["schemas"]["CrmActionRecordDto"];
     };
-    /** @description 성공 응답 공통 래퍼 { success:true, data, message } */
-    CommonResponseExpansionTargetDeleteResponse: {
-      /** @example true */
-      success?: boolean;
-      data?: components["schemas"]["ExpansionTargetDeleteResponse"];
-      /** @example 요청이 성공했습니다. */
-      message?: string;
+    UpdateCrmActionDoneDto: {
+      /**
+       * @description 완료 여부 (`Y` 또는 `N`).<br/>생략하거나 전달하지 않을 경우 현재 값의 반대 상태로 토글(Y↔N)됩니다.
+       * @example Y
+       * @enum {string}
+       */
+      is_done?: "Y" | "N";
     };
-    ExpansionTargetDeleteResponse: {
-      completionRate?: components["schemas"]["TabRateDto"];
-      journey?: components["schemas"]["JourneyDto"];
+    UpdateCrmActionDoneDataDto: {
+      /**
+       * @description 액션 레코드 식별자 (`etq_crm_action.uid`)
+       * @example 10
+       */
+      uid: number;
+      /**
+       * @description CRM 레코드 식별자 (`etq_crm.uid`)
+       * @example 1
+       */
+      crm_uid: number;
+      /**
+       * @description 변경 후 완료 여부 (Y 또는 N)
+       * @example Y
+       */
+      is_done: string;
+      /**
+       * Format: date-time
+       * @description 수정 일시
+       * @example 2026-09-15T05:15:00.000Z
+       */
+      updated_time: string;
+    };
+    UpdateCrmActionDoneResponseDto: {
+      /**
+       * @description HTTP 상태 코드
+       * @example 200
+       */
+      statusCode: number;
+      /**
+       * @description 결과 메시지
+       * @example 완료 상태가 성공적으로 변경되었습니다.
+       */
+      message: string;
+      /** @description 완료 상태 변경 결과 데이터 */
+      data: components["schemas"]["UpdateCrmActionDoneDataDto"];
+    };
+    DeleteCrmActionDataDto: {
+      /**
+       * @description 삭제된 진행 기록 식별자 (`etq_crm_action.uid`)
+       * @example 10
+       */
+      uid: number;
+      /**
+       * @description 연결된 CRM 식별자 (`etq_crm.uid`)
+       * @example 1
+       */
+      crm_uid: number;
+      /**
+       * Format: date-time
+       * @description 삭제 일시
+       * @example 2026-09-15T05:20:00.000Z
+       */
+      deleted_time: string;
+    };
+    DeleteCrmActionResponseDto: {
+      /**
+       * @description HTTP 상태 코드
+       * @example 200
+       */
+      statusCode: number;
+      /**
+       * @description 결과 메시지
+       * @example 진행 기록이 성공적으로 삭제되었습니다.
+       */
+      message: string;
+      /** @description 삭제 결과 데이터 */
+      data: components["schemas"]["DeleteCrmActionDataDto"];
+    };
+    DeleteCrmDataDto: {
+      /**
+       * @description 삭제된 CRM 레코드 식별자 (`etq_crm.uid`)
+       * @example 1
+       */
+      uid: number;
+      /**
+       * Format: date-time
+       * @description 삭제 일시
+       * @example 2026-09-15T05:30:00.000Z
+       */
+      deleted_time: string;
+    };
+    DeleteCrmResponseDto: {
+      /**
+       * @description HTTP 상태 코드
+       * @example 200
+       */
+      statusCode: number;
+      /**
+       * @description 결과 메시지
+       * @example 진행 관리 대상이 성공적으로 삭제되었습니다.
+       */
+      message: string;
+      /** @description 삭제 결과 데이터 */
+      data: components["schemas"]["DeleteCrmDataDto"];
+    };
+    NextActionSummaryDto: {
+      /**
+       * @description 액션 UID (`etq_crm_action.uid`)
+       * @example 12
+       */
+      uid: number;
+      /**
+       * @description 액션 제목
+       * @example 로열티 조건 자료 요청
+       */
+      title: string;
+      /**
+       * @description 마감일 (YYYY-MM-DD)
+       * @example 2026-07-02
+       */
+      action_time?: Record<string, never>;
+      /**
+       * @description 담당자
+       * @example Yuki Tanaka
+       */
+      partner_name?: Record<string, never>;
+      /**
+       * @description 내용 / 메모
+       * @example 본사 승인 필요 조건 검토
+       */
+      content?: Record<string, never>;
+      /**
+       * @description 완료 여부 (Y 또는 N)
+       * @example N
+       */
+      is_done: string;
+      /**
+       * Format: date-time
+       * @description 생성 일시
+       * @example 2026-09-15T05:00:00.000Z
+       */
+      created_time: string;
+    };
+    GetCrmDetailDataDto: {
+      /** @description CRM 기본 정보 (기업명, 국가, 도시, 계약방식, 담당자 등) */
+      crm: components["schemas"]["CrmItemDto"];
+      /**
+       * @description 현재 진행 단계 (최근 등록된 진행 기록의 action_type 또는 기본값)
+       * @example 미팅
+       */
+      current_stage: string;
+      /** @description 다음 액션 요약 목록 (좌측 사이드바: 미완료/완료 액션 목록) */
+      next_actions: components["schemas"]["NextActionSummaryDto"][];
+      /** @description 진행 기록 타임라인 목록 (우측 메인: 완료된 활동 기록 목록, 최신순) */
+      actions: components["schemas"]["CrmActionRecordDto"][];
+    };
+    GetCrmDetailResponseDto: {
+      /**
+       * @description HTTP 상태 코드
+       * @example 200
+       */
+      statusCode: number;
+      /**
+       * @description 결과 메시지
+       * @example 진행 관리 정보를 성공적으로 조회하였습니다.
+       */
+      message: string;
+      /** @description 진행 관리 상세 데이터 */
+      data: components["schemas"]["GetCrmDetailDataDto"];
+    };
+    UpdateCrmStageDto: {
+      /**
+       * @description 변경할 CRM 현재 단계 (current_stage).<br/>• 허용값: `리드`, `연락중`, `미팅`, `계약협상`, `법리문서검토`, `계약완료`, `계약이탈`
+       * @example 미팅
+       * @enum {string}
+       */
+      current_stage: "리드" | "연락중" | "미팅" | "계약협상" | "법리문서검토" | "계약완료" | "계약이탈";
+    };
+    UpdateCrmStageDataDto: {
+      /**
+       * @description CRM 레코드 UID (`etq_crm.uid`)
+       * @example 1
+       */
+      crm_uid: number;
+      /**
+       * @description 수정된 현재 단계
+       * @example 미팅
+       * @enum {string}
+       */
+      current_stage: "리드" | "연락중" | "미팅" | "계약협상" | "법리문서검토" | "계약완료" | "계약이탈";
+      /**
+       * @description 수정 일시
+       * @example 2026-09-16T01:25:00.000Z
+       */
+      updated_time: Record<string, never>;
+    };
+    UpdateCrmStageResponseDto: {
+      /**
+       * @description HTTP 상태 코드
+       * @example 200
+       */
+      statusCode: number;
+      /**
+       * @description 결과 메시지
+       * @example 진행 단계(current_stage)가 성공적으로 변경되었습니다.
+       */
+      message: string;
+      /** @description 수정된 CRM 단계 정보 */
+      data: components["schemas"]["UpdateCrmStageDataDto"];
     };
   };
   responses: never;
@@ -1568,41 +5694,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-  list: {
-    parameters: {
-      query?: {
-        /** @description 0-based 페이지 번호 */
-        page?: number;
-        /** @description 페이지 크기(1~100) */
-        size?: number;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description 소속 브랜드 페이지 */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["CommonResponsePageResponseBrandSummary"];
-        };
-      };
-      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-    };
-  };
-  create: {
+  SendMagicLinkController_handle: {
     parameters: {
       query?: never;
       header?: never;
@@ -1611,504 +5703,118 @@ export interface operations {
     };
     requestBody: {
       content: {
-        "application/json": components["schemas"]["CreateBrandRequest"];
+        "application/json": components["schemas"]["SendMagicLinkDto"];
       };
     };
     responses: {
-      /** @description 생성 성공 */
-      201: {
+      /** @description 매직링크 이메일 발송 완료 */
+      200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["CommonResponseBrandCreatedResponse"];
+          "application/json": components["schemas"]["SendMagicLinkResponseDto"];
         };
       };
-      /** @description nameKo 누락/초과(VALIDATION_ERROR) */
+      /** @description 입력값 유효성 검증 실패 (잘못된 이메일 형식 등) */
       400: {
         headers: {
           [name: string]: unknown;
         };
+        content?: never;
+      };
+    };
+  };
+  VerifyMagicLinkController_handle: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["VerifyMagicLinkDto"];
+      };
+    };
+    responses: {
+      /** @description 토큰 검증 성공 (가입 여부에 따라 분기 응답) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
         content: {
-          "application/json": components["schemas"]["ErrorResponse"];
+          "application/json": components["schemas"]["VerifyMagicLinkResponseDto"];
         };
       };
-      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
+      /** @description 유효하지 않거나 이미 사용되었거나 만료된 토큰 */
       401: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["ErrorResponse"];
+          "application/json": unknown;
         };
       };
-      /** @description brand 계정 아님(BRAND_FORBIDDEN_USER_TYPE) / 워크스페이스 상한 초과(BRAND_WORKSPACE_LIMIT) */
+    };
+  };
+  RegisterController_handle: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RegisterDto"];
+      };
+    };
+    responses: {
+      /** @description 회원가입 완료 및 로그인 성공 (AccessToken 반환) */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RegisterResponseDto"];
+        };
+      };
+      /** @description 입력값 유효성 검증 실패 (이메일/이름 누락 등) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 이메일 인증 미완료 또는 인증 시간(24시간) 만료 */
       403: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["ErrorResponse"];
+          "application/json": unknown;
         };
       };
-      /** @description plan 미시드(PLAN_NOT_SEEDED) 등 서버 오류 */
-      500: {
+      /** @description 이미 가입된 이메일 계정 */
+      409: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["ErrorResponse"];
+          "application/json": unknown;
         };
       };
     };
   };
-  createMenu: {
+  LogoutController_handle: {
     parameters: {
       query?: never;
       header?: never;
-      path: {
-        brandId: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["JsonNode"];
-      };
-    };
-    responses: {
-      /** @description 등록 성공 */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["CommonResponseMenuSaveResponse"];
-        };
-      };
-      /** @description 입력값 오류(VALIDATION_ERROR, 메뉴 3개 초과·알 수 없는 필드 포함) */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-      /** @description 브랜드를 찾을 수 없음(비멤버·비활성 멤버·미존재 모두 동일, BRAND_NOT_FOUND) */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-    };
-  };
-  confirm: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        brandId: string;
-        fileId: string;
-      };
+      path?: never;
       cookie?: never;
     };
     requestBody?: never;
-    responses: {
-      /** @description 확정 성공(또는 이미 확정된 파일의 멱등 재확인) */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["CommonResponseMediaMutationResult"];
-        };
-      };
-      /** @description 업로드 파일이 유효하지 않음(VALIDATION_ERROR, 매직바이트·크기 불일치) */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-      /** @description 브랜드를 찾을 수 없음(비멤버·비활성 멤버·미존재 모두 동일, BRAND_NOT_FOUND) 또는 파일/업로드 세션을 찾을 수 없음(MEDIA_FILE_NOT_FOUND) */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-      /** @description 업로드 상태가 올바르지 않음(MEDIA_UPLOAD_INVALID_STATE) */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-      /** @description 업로드 세션 만료(MEDIA_UPLOAD_EXPIRED) */
-      410: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-      /** @description 스토리지를 사용할 수 없음(MEDIA_STORAGE_UNAVAILABLE) */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-    };
-  };
-  presign: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        brandId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: {
-      content: {
-        "application/json": components["schemas"]["PresignRequest"];
-      };
-    };
-    responses: {
-      /** @description 발급 성공 */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["CommonResponsePresignResponse"];
-        };
-      };
-      /** @description 입력값 오류(VALIDATION_ERROR, 허용 안 된 콘텐츠타입·용량초과·슬롯초과 포함) */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-      /** @description 브랜드를 찾을 수 없음(비멤버·비활성 멤버·미존재 모두 동일, BRAND_NOT_FOUND) 또는 메뉴를 찾을 수 없음(BRAND_MENU_NOT_FOUND) */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-    };
-  };
-  expansionTargets: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        brandId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description 조회 성공 */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["CommonResponseExpansionTargetsResponse"];
-        };
-      };
-      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-      /** @description 브랜드를 찾을 수 없음(비멤버·비활성 멤버·미존재 모두 동일, BRAND_NOT_FOUND) */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-    };
-  };
-  addExpansionTarget: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        brandId: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["CreateExpansionTargetRequest"];
-      };
-    };
-    responses: {
-      /** @description 등록 성공 */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["CommonResponseExpansionTargetSaveResponse"];
-        };
-      };
-      /** @description 입력값 오류(VALIDATION_ERROR, 4개 초과 포함) */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-      /** @description 브랜드를 찾을 수 없음(비멤버·비활성 멤버·미존재 모두 동일, BRAND_NOT_FOUND) */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-      /** @description 동일 (country,city) 진출 목표 중복(BRAND_EXPANSION_TARGET_CONFLICT) */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-    };
-  };
-  signup: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["SignupRequest"];
-      };
-    };
-    responses: {
-      /** @description 가입 성공 — 토큰 발급 */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["CommonResponseAuthResponse"];
-        };
-      };
-      /** @description 필수값 누락 / 비밀번호 정책 위반 / userType 오류(VALIDATION_ERROR) */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-      /** @description 이미 존재하는 이메일(AUTH_EMAIL_DUPLICATED) */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-    };
-  };
-  refresh: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["RefreshRequest"];
-      };
-    };
-    responses: {
-      /** @description 재발급 성공 */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["CommonResponseTokenResponse"];
-        };
-      };
-      /** @description refreshToken 누락(VALIDATION_ERROR) */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-      /** @description 유효하지 않거나 만료/폐기된 refresh token(AUTH_REFRESH_TOKEN_EXPIRED) */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-    };
-  };
-  requestPasswordReset: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["PasswordResetRequestRequest"];
-      };
-    };
-    responses: {
-      /** @description 요청 접수(항상 동일 응답) */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["CommonResponseVoid"];
-        };
-      };
-      /** @description 이메일 형식 오류(VALIDATION_ERROR) */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-    };
-  };
-  confirmPasswordReset: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["PasswordResetConfirmRequest"];
-      };
-    };
-    responses: {
-      /** @description 재설정 완료 */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["CommonResponseVoid"];
-        };
-      };
-      /** @description VALIDATION_ERROR(토큰 누락/비밀번호 정책) / AUTH_RESET_TOKEN_INVALID / AUTH_RESET_TOKEN_EXPIRED / AUTH_RESET_TOKEN_USED */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-    };
-  };
-  logout: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["LogoutRequest"];
-      };
-    };
     responses: {
       /** @description 로그아웃 성공 */
       200: {
@@ -2116,72 +5822,19 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["CommonResponseVoid"];
+          "application/json": components["schemas"]["LogoutResponseDto"];
         };
       };
-      /** @description refreshToken 누락(VALIDATION_ERROR) */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-      /** @description 인증 필요 / 토큰 무효(AUTH_UNAUTHORIZED) */
+      /** @description 인증 실패 (유효하지 않거나 만료된 AccessToken) */
       401: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
+        content?: never;
       };
     };
   };
-  login: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["LoginRequest"];
-      };
-    };
-    responses: {
-      /** @description 로그인 성공 */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["CommonResponseAuthResponse"];
-        };
-      };
-      /** @description 필수값 누락(VALIDATION_ERROR) */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-      /** @description 잘못된 자격증명(AUTH_INVALID_CREDENTIALS) / 삭제된 계정(AUTH_ACCOUNT_DELETED) */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-    };
-  };
-  resendEmailVerification: {
+  GetMyWorkspacesController_handle: {
     parameters: {
       query?: never;
       header?: never;
@@ -2190,27 +5843,52 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description 재발송 완료 또는 이미 인증됨 안내 */
+      /** @description 워크스페이스 목록 조회 성공 */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["CommonResponseVoid"];
+          "application/json": components["schemas"]["GetMyWorkspacesResponseDto"];
         };
       };
-      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
+      /** @description 인증 실패 (유효하지 않거나 만료된 AccessToken) */
       401: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
+        content?: never;
       };
     };
   };
-  confirmEmailVerification: {
+  GetMyInvitedWorkspacesController_handle: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 초대받은 워크스페이스 목록 조회 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["GetMyInvitedWorkspacesResponseDto"];
+        };
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 AccessToken) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  CreateWorkspaceController_handle: {
     parameters: {
       query?: never;
       header?: never;
@@ -2219,1108 +5897,2372 @@ export interface operations {
     };
     requestBody: {
       content: {
-        "application/json": components["schemas"]["EmailVerifyConfirmRequest"];
+        "application/json": components["schemas"]["CreateWorkspaceDto"];
       };
     };
     responses: {
-      /** @description 인증 완료 또는 이미 인증됨 안내 */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["CommonResponseVoid"];
-        };
-      };
-      /** @description VALIDATION_ERROR(토큰 누락) / AUTH_VERIFY_TOKEN_INVALID / AUTH_VERIFY_TOKEN_EXPIRED */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-    };
-  };
-  register: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["JsonNode"];
-      };
-    };
-    responses: {
-      /** @description 기존 pending/needs_research 후보에 병합(MERGED, staging_id=병합 대상 기존 행) */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["CommonResponseAdminStagingBuyerResponse"];
-        };
-      };
-      /** @description 신규 적재(INSERTED) 또는 기존 승인 후보와의 비교 검수용 신규 적재(INSERTED_COMPARISON) — 응답 헤더 Location에 상세 조회 경로 포함 */
+      /** @description 워크스페이스 생성 성공 */
       201: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["CommonResponseAdminStagingBuyerResponse"];
+          "application/json": components["schemas"]["CreateWorkspaceResponseDto"];
         };
       };
-      /** @description 입력값 오류(VALIDATION_ERROR, 알 수 없는 필드·타입 불일치·허용되지 않은 국가·buyerName 누락 포함) */
+      /** @description 입력값 유효성 검증 실패 (이름 누락, 지원되지 않는 타입 등) */
       400: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
+        content?: never;
       };
-      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
+      /** @description 인증 실패 (유효하지 않거나 만료된 AccessToken) */
       401: {
         headers: {
           [name: string]: unknown;
         };
+        content?: never;
+      };
+    };
+  };
+  UpdateWorkspaceNameController_handle: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 워크스페이스 고유 식별자 (uid) */
+        workspace_uid: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateWorkspaceNameDto"];
+      };
+    };
+    responses: {
+      /** @description 워크스페이스 이름 수정 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
         content: {
-          "application/json": components["schemas"]["ErrorResponse"];
+          "application/json": components["schemas"]["UpdateWorkspaceNameResponseDto"];
         };
       };
-      /** @description 관리자 권한 없음(AUTH_FORBIDDEN) */
+      /** @description 유효성 검증 실패 */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 AccessToken) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 접근 권한 없음 (해당 워크스페이스의 활성 멤버가 아님) */
       403: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
+        content?: never;
       };
-      /** @description 동일 dedup_key의 기존 후보가 이미 거절(rejected)되었거나 중복(duplicate) 처리되어 재적재를 스킵함(BUYER_STAGING_ALREADY_RESOLVED, details 참고) */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-    };
-  };
-  policy: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        brandId: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["UpdatePolicyRequest"];
-      };
-    };
-    responses: {
-      /** @description 저장 성공 */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["CommonResponsePolicySaveResponse"];
-        };
-      };
-      /** @description 입력값 오류(VALIDATION_ERROR) */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-      /** @description 브랜드를 찾을 수 없음(비멤버·비활성 멤버·미존재 모두 동일, BRAND_NOT_FOUND) */
+      /** @description 워크스페이스를 찾을 수 없음 */
       404: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
+        content?: never;
       };
     };
   };
-  operation: {
+  GetWorkspaceDetailController_handle: {
     parameters: {
       query?: never;
       header?: never;
       path: {
-        brandId: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["UpdateOperationRequest"];
-      };
-    };
-    responses: {
-      /** @description 저장 성공 */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["CommonResponseOperationSaveResponse"];
-        };
-      };
-      /** @description 입력값 오류(VALIDATION_ERROR) */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-      /** @description 브랜드를 찾을 수 없음(비멤버·비활성 멤버·미존재 모두 동일, BRAND_NOT_FOUND) */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-    };
-  };
-  deleteMenu: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        brandId: string;
-        menuId: string;
+        /** @description 조회할 워크스페이스 고유 식별자 (uid) */
+        workspace_uid: number;
       };
       cookie?: never;
     };
     requestBody?: never;
     responses: {
-      /** @description 삭제 성공 */
+      /** @description 워크스페이스 정보 조회 성공 */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["CommonResponseMenuDeleteResponse"];
+          "application/json": components["schemas"]["WorkspaceDetailResponseDto"];
         };
       };
-      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
+      /** @description 인증 실패 (유효하지 않거나 만료된 AccessToken) */
       401: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
+        content?: never;
       };
-      /** @description 메뉴를 찾을 수 없음(미존재·타 브랜드 소유 모두 동일, BRAND_MENU_NOT_FOUND) */
+      /** @description 접근 권한 없음 (해당 워크스페이스의 활성 멤버가 아님) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 워크스페이스를 찾을 수 없음 */
       404: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
+        content?: never;
       };
     };
   };
-  updateMenu: {
+  DeleteWorkspaceController_handle: {
     parameters: {
       query?: never;
       header?: never;
       path: {
-        brandId: string;
-        menuId: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["JsonNode"];
-      };
-    };
-    responses: {
-      /** @description 수정 성공 */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["CommonResponseMenuSaveResponse"];
-        };
-      };
-      /** @description 입력값 오류(VALIDATION_ERROR, 알 수 없는 필드 포함) */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-      /** @description 메뉴를 찾을 수 없음(미존재·타 브랜드 소유 모두 동일, BRAND_MENU_NOT_FOUND) */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-    };
-  };
-  reorder: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        brandId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: {
-      content: {
-        "application/json": components["schemas"]["ReorderRequest"];
-      };
-    };
-    responses: {
-      /** @description 재배열 성공 */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["CommonResponseMediaMutationResult"];
-        };
-      };
-      /** @description 입력값 오류(VALIDATION_ERROR, 배열형이 아님·fileIds 불일치·중복 포함) */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-      /** @description 브랜드를 찾을 수 없음(비멤버·비활성 멤버·미존재 모두 동일, BRAND_NOT_FOUND) 또는 메뉴를 찾을 수 없음(BRAND_MENU_NOT_FOUND) */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-    };
-  };
-  intro: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        brandId: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["UpdateIntroRequest"];
-      };
-    };
-    responses: {
-      /** @description 저장 성공 */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["CommonResponseIntroSaveResponse"];
-        };
-      };
-      /** @description 입력값 오류(VALIDATION_ERROR) */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-      /** @description 브랜드를 찾을 수 없음(비멤버·비활성 멤버·미존재 모두 동일, BRAND_NOT_FOUND) */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-    };
-  };
-  flagshipStore: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        brandId: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["JsonNode"];
-      };
-    };
-    responses: {
-      /** @description 저장 성공 */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["CommonResponseFlagshipStoreSaveResponse"];
-        };
-      };
-      /** @description 입력값 오류(VALIDATION_ERROR, 알 수 없는 필드·타입 불일치·형식 오류 포함) */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-      /** @description 브랜드를 찾을 수 없음(비멤버·비활성 멤버·미존재 모두 동일, BRAND_NOT_FOUND) */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-    };
-  };
-  fee: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        brandId: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["UpdateFeeRequest"];
-      };
-    };
-    responses: {
-      /** @description 저장 성공 */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["CommonResponseFeeSaveResponse"];
-        };
-      };
-      /** @description 입력값 오류(VALIDATION_ERROR, brandType!=franchise 포함) */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-      /** @description 브랜드를 찾을 수 없음(비멤버·비활성 멤버·미존재 모두 동일, BRAND_NOT_FOUND) */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-    };
-  };
-  deleteExpansionTarget: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        brandId: string;
-        expansionTargetId: string;
+        /** @description 삭제할 워크스페이스 고유 식별자 (uid) */
+        workspace_uid: number;
       };
       cookie?: never;
     };
     requestBody?: never;
     responses: {
-      /** @description 삭제 성공 */
+      /** @description 워크스페이스 삭제 성공 */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["CommonResponseExpansionTargetDeleteResponse"];
+          "application/json": components["schemas"]["DeleteWorkspaceResponseDto"];
         };
       };
-      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
+      /** @description 다른 멤버가 남아있어 삭제할 수 없음 */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 AccessToken) */
       401: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
+        content?: never;
       };
-      /** @description 진출 목표를 찾을 수 없음(미존재·타 브랜드 소유 모두 동일, BRAND_EXPANSION_TARGET_NOT_FOUND) */
+      /** @description 접근 권한 없음 (해당 워크스페이스의 활성 관리자가 아님) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 워크스페이스를 찾을 수 없음 */
       404: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
+        content?: never;
       };
     };
   };
-  updateExpansionTarget: {
+  GetWorkspaceMemberListController_handle: {
     parameters: {
       query?: never;
       header?: never;
       path: {
-        brandId: string;
-        expansionTargetId: string;
+        /** @description 조회할 워크스페이스 고유 식별자 (uid) */
+        workspace_uid: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 워크스페이스 멤버 목록 조회 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["GetWorkspaceMemberListResponseDto"];
+        };
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 AccessToken) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 접근 권한 없음 (해당 워크스페이스의 활성 멤버가 아님) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 워크스페이스를 찾을 수 없음 */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  InviteWorkspaceMemberController_handle: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 워크스페이스 고유 식별자 (uid) */
+        workspace_uid: number;
       };
       cookie?: never;
     };
     requestBody: {
       content: {
-        "application/json": components["schemas"]["UpdateExpansionTargetRequest"];
+        "application/json": components["schemas"]["InviteWorkspaceMemberDto"];
       };
     };
     responses: {
-      /** @description 수정 성공 */
-      200: {
+      /** @description 멤버 초대 처리 완료 (성공/실패 내역 반환) */
+      201: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["CommonResponseExpansionTargetSaveResponse"];
+          "application/json": components["schemas"]["InviteWorkspaceMemberResponseDto"];
         };
       };
-      /** @description 입력값 오류(VALIDATION_ERROR, 알 수 없는 필드 포함) */
+      /** @description 유효성 검증 실패 (이메일 목록 미입력 또는 유효하지 않은 이메일 형식) */
       400: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
+        content?: never;
       };
-      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
+      /** @description 인증 실패 (유효하지 않거나 만료된 AccessToken) */
       401: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
+        content?: never;
       };
-      /** @description 진출 목표를 찾을 수 없음(미존재·타 브랜드 소유 모두 동일, BRAND_EXPANSION_TARGET_NOT_FOUND) */
+      /** @description 해당 워크스페이스에 접근 권한이 없거나 활성 멤버가 아닌 경우 */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 워크스페이스를 찾을 수 없음 */
       404: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
+        content?: never;
       };
-      /** @description 동일 (country,city) 진출 목표 중복(BRAND_EXPANSION_TARGET_CONFLICT) */
+      /** @description 이미 해당 워크스페이스의 활성 멤버인 경우 */
       409: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
+        content?: never;
       };
     };
   };
-  reorderExpansionTargets: {
+  RespondWorkspaceInviteController_handle: {
     parameters: {
       query?: never;
       header?: never;
       path: {
-        brandId: string;
+        /** @description 수락/거절할 워크스페이스 고유 식별자 (uid) */
+        workspace_uid: number;
       };
       cookie?: never;
     };
     requestBody: {
       content: {
-        "application/json": components["schemas"]["ReorderExpansionTargetsRequest"];
+        "application/json": components["schemas"]["RespondWorkspaceInviteDto"];
       };
     };
     responses: {
-      /** @description 재정렬 성공 */
+      /** @description 초대 응답 처리 성공 */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["CommonResponseExpansionTargetsSaveResponse"];
+          "application/json": components["schemas"]["RespondWorkspaceInviteResponseDto"];
         };
       };
-      /** @description 입력값 오류(VALIDATION_ERROR, 집합 불일치 포함) */
+      /** @description 이미 활성 멤버이거나 유효하지 않은 초대 상태/파라미터인 경우 */
       400: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
+        content?: never;
       };
-      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
+      /** @description 인증 실패 (유효하지 않거나 만료된 AccessToken) */
       401: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
+        content?: never;
       };
-      /** @description 브랜드를 찾을 수 없음(비멤버·비활성 멤버·미존재 모두 동일, BRAND_NOT_FOUND) */
+      /** @description 워크스페이스 또는 해당 사용자의 초대 내역을 찾을 수 없는 경우 */
       404: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
+        content?: never;
       };
     };
   };
-  contract: {
+  UpdateWorkspaceMemberStatusController_updateStatus: {
     parameters: {
       query?: never;
       header?: never;
       path: {
-        brandId: string;
+        /** @description 워크스페이스 고유 식별자 (uid) */
+        workspace_uid: number;
+        /** @description 멤버 레코드 고유 식별자 (etq_workspace_member.uid) */
+        member_uid: number;
       };
       cookie?: never;
     };
     requestBody: {
       content: {
-        "application/json": components["schemas"]["UpdateContractRequest"];
+        "application/json": components["schemas"]["UpdateWorkspaceMemberStatusDto"];
       };
     };
     responses: {
-      /** @description 저장 성공 */
+      /** @description 멤버 상태 변경 성공 */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["CommonResponseContractSaveResponse"];
+          "application/json": components["schemas"]["UpdateWorkspaceMemberStatusResponseDto"];
         };
       };
-      /** @description 입력값 오류(VALIDATION_ERROR) */
+      /** @description 상태 전이 불가 (초대중이 아닌데 초대취소 시도, 활성이 아닌데 강제탈퇴 시도, 본인 대상 시도 등) */
       400: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
+        content?: never;
       };
-      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
+      /** @description 인증 실패 (AccessToken 누락 또는 만료) */
       401: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
+        content?: never;
       };
-      /** @description 브랜드를 찾을 수 없음(비멤버·비활성 멤버·미존재 모두 동일, BRAND_NOT_FOUND) */
+      /** @description 권한 없음 (관리자가 아니거나 활성 멤버가 아님) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 워크스페이스 또는 대상 멤버를 찾을 수 없음 */
       404: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
+        content?: never;
       };
     };
   };
-  contact: {
+  WithdrawWorkspaceMemberController_withdraw: {
     parameters: {
       query?: never;
       header?: never;
       path: {
-        brandId: string;
+        /** @description 탈퇴할 워크스페이스 고유 식별자 (uid) */
+        workspace_uid: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 워크스페이스 탈퇴 처리 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["WithdrawWorkspaceMemberResponseDto"];
+        };
+      };
+      /** @description 탈퇴 불가 (활성 멤버가 아니거나, 유일한 관리자인데 다른 멤버가 남아있는 경우) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 AccessToken) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 접근 권한 없음 (해당 워크스페이스 소속 멤버가 아님) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 워크스페이스를 찾을 수 없음 */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  UpdateWorkspaceMemberGradeController_updateGrade: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 워크스페이스 고유 식별자 (uid) */
+        workspace_uid: number;
+        /** @description 멤버 레코드 고유 식별자 (etq_workspace_member.uid) */
+        member_uid: number;
       };
       cookie?: never;
     };
     requestBody: {
       content: {
-        "application/json": components["schemas"]["UpdateContactRequest"];
+        "application/json": components["schemas"]["UpdateWorkspaceMemberGradeDto"];
       };
     };
     responses: {
-      /** @description 저장 성공 */
+      /** @description 멤버 권한 등급 변경 성공 */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["CommonResponseContactSaveResponse"];
+          "application/json": components["schemas"]["UpdateWorkspaceMemberGradeResponseDto"];
         };
       };
-      /** @description 입력값 오류(VALIDATION_ERROR) */
+      /** @description 유효성 검증 실패 (동일 등급 변경 시도, 최소 1인 관리자 유지 조건 위반, 비활성 멤버 등) */
       400: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
+        content?: never;
       };
-      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
+      /** @description 인증 실패 (유효하지 않거나 만료된 AccessToken) */
       401: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
+        content?: never;
       };
-      /** @description 브랜드를 찾을 수 없음(비멤버·비활성 멤버·미존재 모두 동일, BRAND_NOT_FOUND) */
+      /** @description 접근 권한 없음 (요청자가 워크스페이스 관리자가 아님) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 워크스페이스 또는 대상 멤버를 찾을 수 없음 */
       404: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
+        content?: never;
       };
     };
   };
-  brandType: {
+  GetBrandListController_execute: {
     parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        brandId: string;
+      query?: {
+        /** @description 진출 목표 국가 필터 (예: "전체", "일본", "태국", "싱가포르", "홍콩", "대만", "미국" 등). 미입력 또는 "전체" 전달 시 모든 국가 대상 검색 */
+        country?: string;
+        /** @description 카테고리/업종 필터 (예: "전체", "한식", "일식", "양식", "중식", "치킨", "디저트", "커피" 등). 미입력 또는 "전체" 전달 시 모든 카테고리 대상 검색 */
+        category?: string;
+        /** @description 선호 계약 조건/방식 필터 (예: "전체", "마스터 프랜차이즈", "지역 개발권", "합작법인", "직영", "라이선스" 등). 미입력 또는 "전체" 전달 시 모든 계약 조건 대상 검색 */
+        contract_type?: string;
+        /** @description 브랜드명 또는 키워드 검색어. 미입력하거나 빈칸(공백) 입력 시 키워드 조건 없이 전체 브랜드가 검색됩니다. */
+        keyword?: string;
+        /** @description 페이지 번호 (1부터 시작, 기본값: 1) */
+        page?: number;
+        /** @description 페이지당 표시할 개수 (기본값: 12, 최대: 50) */
+        limit?: number;
       };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["SetBrandTypeRequest"];
-      };
-    };
-    responses: {
-      /** @description 저장 성공 */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["CommonResponseBrandTypeSaveResponse"];
-        };
-      };
-      /** @description 입력값 오류(VALIDATION_ERROR, franchise|direct 외 값) */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-      /** @description 브랜드를 찾을 수 없음(비멤버·비활성 멤버·미존재 모두 동일, BRAND_NOT_FOUND) */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-    };
-  };
-  basic: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        brandId: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["UpdateBasicRequest"];
-      };
-    };
-    responses: {
-      /** @description 저장 성공 */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["CommonResponseBasicSaveResponse"];
-        };
-      };
-      /** @description 입력값 오류(VALIDATION_ERROR) */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-      /** @description 브랜드를 찾을 수 없음(비멤버·비활성 멤버·미존재 모두 동일, BRAND_NOT_FOUND) */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-    };
-  };
-  areaCriteria: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        brandId: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["UpdateAreaCriteriaRequest"];
-      };
-    };
-    responses: {
-      /** @description 저장 성공 */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["CommonResponseAreaCriteriaSaveResponse"];
-        };
-      };
-      /** @description 입력값 오류(VALIDATION_ERROR, ENUM 불일치·rentMin>rentMax 포함) */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-      /** @description 브랜드를 찾을 수 없음(비멤버·비활성 멤버·미존재 모두 동일, BRAND_NOT_FOUND) */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
-      };
-    };
-  };
-  health: {
-    parameters: {
-      query?: never;
       header?: never;
       path?: never;
       cookie?: never;
     };
     requestBody?: never;
     responses: {
-      /** @description 정상 — CommonResponse<HealthData>{ status, db, latencyMs, timestamp } */
+      /** @description 브랜드 목록 조회 성공 */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["CommonResponseHealthData"];
+          "application/json": components["schemas"]["GetBrandListResponseDto"];
         };
       };
-      /** @description DB 연결 실패(HEALTH_DATABASE_UNAVAILABLE) */
-      503: {
+      /** @description 인증 실패 (유효하지 않거나 만료된 토큰 또는 미제공) */
+      401: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
+        content?: never;
       };
     };
   };
-  settings: {
+  GetBrandDetailController_execute: {
     parameters: {
       query?: never;
       header?: never;
       path: {
-        brandId: string;
+        /** @description 조회할 브랜드 고유 식별자 (uid) */
+        brand_uid: number;
       };
       cookie?: never;
     };
     requestBody?: never;
     responses: {
-      /** @description 조회 성공 */
+      /** @description 브랜드 상세 정보 조회 성공 */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["CommonResponseBrandSettingsResponse"];
+          "application/json": components["schemas"]["BrandDetailResponseDto"];
         };
       };
-      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
+      /** @description 인증 실패 (유효하지 않거나 만료된 토큰 또는 미제공) */
       401: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
+        content?: never;
       };
-      /** @description 브랜드를 찾을 수 없음(비멤버·비활성 멤버·미존재 모두 동일, BRAND_NOT_FOUND) */
+      /** @description 브랜드를 찾을 수 없음 */
       404: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
+        content?: never;
       };
     };
   };
-  current: {
+  AutocompleteBrandController_execute: {
     parameters: {
-      query?: never;
+      query: {
+        /** @description 브랜드 기업명 검색어 (최소 2글자 이상 필수) */
+        keyword: string;
+      };
       header?: never;
       path?: never;
       cookie?: never;
     };
     requestBody?: never;
     responses: {
-      /** @description 현재 브랜드 상세 또는 data.brand = null */
+      /** @description 브랜드 기업명 자동완성 조회 성공 */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["CommonResponseCurrentBrandResponse"];
+          "application/json": components["schemas"]["AutocompleteBrandResponseDto"];
         };
       };
-      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
+      /** @description 잘못된 요청 (최소 2글자 미만 입력 시 유효성 검사 실패) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 토큰 또는 미제공) */
       401: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
+        content?: never;
       };
     };
   };
-  me: {
+  UpdateBrandBasicController_handle: {
     parameters: {
       query?: never;
+      header?: never;
+      path: {
+        /** @description 워크스페이스 고유 식별자 (uid) */
+        workspace_uid: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateBrandBasicDto"];
+      };
+    };
+    responses: {
+      /** @description 브랜드 기본 정보 업데이트 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UpdateBrandBasicResponseDto"];
+        };
+      };
+      /** @description 유효성 검증 실패 또는 브랜드 워크스페이스가 아님 */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 AccessToken) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 접근 권한 없음 (해당 워크스페이스의 활성 멤버가 아님) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 워크스페이스를 찾을 수 없음 */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  UpdateBrandStatusController_handle: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 워크스페이스 고유 식별자 (uid) */
+        workspace_uid: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateBrandStatusDto"];
+      };
+    };
+    responses: {
+      /** @description 브랜드 운영 현황 업데이트 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UpdateBrandStatusResponseDto"];
+        };
+      };
+      /** @description 유효성 검증 실패 또는 브랜드 워크스페이스가 아님 */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 AccessToken) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 접근 권한 없음 (해당 워크스페이스의 활성 멤버가 아님) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 워크스페이스를 찾을 수 없음 */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  UpdateBrandIntroController_handle: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 워크스페이스 고유 식별자 (uid) */
+        workspace_uid: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateBrandIntroDto"];
+      };
+    };
+    responses: {
+      /** @description 브랜드 소개 정보 업데이트 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UpdateBrandIntroResponseDto"];
+        };
+      };
+      /** @description 유효성 검증 실패 또는 브랜드 워크스페이스가 아님 */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 AccessToken) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 접근 권한 없음 (해당 워크스페이스의 활성 멤버가 아님) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 워크스페이스를 찾을 수 없음 */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  UpdateBrandContactController_handle: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 워크스페이스 고유 식별자 (uid) */
+        workspace_uid: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateBrandContactDto"];
+      };
+    };
+    responses: {
+      /** @description 브랜드 연락처 정보 업데이트 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UpdateBrandContactResponseDto"];
+        };
+      };
+      /** @description 유효성 검증 실패 또는 브랜드 워크스페이스가 아님 */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 AccessToken) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 접근 권한 없음 (해당 워크스페이스의 활성 멤버가 아님) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 워크스페이스를 찾을 수 없음 */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  UpdateBrandContractController_handle: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 워크스페이스 고유 식별자 (uid) */
+        workspace_uid: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateBrandContractDto"];
+      };
+    };
+    responses: {
+      /** @description 브랜드 계약 담당자 정보 업데이트 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UpdateBrandContractResponseDto"];
+        };
+      };
+      /** @description 유효성 검증 실패 또는 브랜드 워크스페이스가 아님 */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 AccessToken) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 접근 권한 없음 (해당 워크스페이스의 활성 멤버가 아님) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 워크스페이스를 찾을 수 없음 */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  UpdateBrandSignatureController_handle: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 워크스페이스 고유 식별자 (uid) */
+        workspace_uid: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateBrandSignatureDto"];
+      };
+    };
+    responses: {
+      /** @description 브랜드 서명권자 정보 업데이트 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UpdateBrandSignatureResponseDto"];
+        };
+      };
+      /** @description 유효성 검증 실패 또는 브랜드 워크스페이스가 아님 */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 AccessToken) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 접근 권한 없음 (해당 워크스페이스의 활성 멤버가 아님) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 워크스페이스를 찾을 수 없음 */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  UpdateBrandContractPolicyController_handle: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 워크스페이스 고유 식별자 (uid) */
+        workspace_uid: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateBrandContractPolicyDto"];
+      };
+    };
+    responses: {
+      /** @description 브랜드 계약 정책 정보 업데이트 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UpdateBrandContractPolicyResponseDto"];
+        };
+      };
+      /** @description 유효성 검증 실패 또는 브랜드 워크스페이스가 아님 */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 AccessToken) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 접근 권한 없음 (해당 워크스페이스의 활성 멤버가 아님) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 워크스페이스를 찾을 수 없음 */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  UpdateBrandCommissionController_handle: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 워크스페이스 고유 식별자 (uid) */
+        workspace_uid: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateBrandCommissionDto"];
+      };
+    };
+    responses: {
+      /** @description 브랜드 계약 수수료 정보 업데이트 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UpdateBrandCommissionResponseDto"];
+        };
+      };
+      /** @description 유효성 검증 실패 또는 브랜드 워크스페이스가 아님 */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 AccessToken) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 접근 권한 없음 (해당 워크스페이스의 활성 멤버가 아님) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 워크스페이스를 찾을 수 없음 */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  UpdateBrandLocationStandardController_handle: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 워크스페이스 고유 식별자 (uid) */
+        workspace_uid: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateBrandLocationStandardDto"];
+      };
+    };
+    responses: {
+      /** @description 브랜드 입지 및 상권 기준 정보 업데이트 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UpdateBrandLocationStandardResponseDto"];
+        };
+      };
+      /** @description 유효성 검증 실패 또는 브랜드 워크스페이스가 아님 */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 AccessToken) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 접근 권한 없음 (해당 워크스페이스의 활성 멤버가 아님) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 워크스페이스를 찾을 수 없음 */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  UpdateBrandSizeCriteriaController_handle: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 워크스페이스 고유 식별자 (uid) */
+        workspace_uid: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateBrandSizeCriteriaDto"];
+      };
+    };
+    responses: {
+      /** @description 브랜드 매장 크기 조건 정보 업데이트 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UpdateBrandSizeCriteriaResponseDto"];
+        };
+      };
+      /** @description 유효성 검증 실패 또는 브랜드 워크스페이스가 아님 */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 AccessToken) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 접근 권한 없음 (해당 워크스페이스의 활성 멤버가 아님) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 워크스페이스를 찾을 수 없음 */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  UpdateBrandFacilityReqController_handle: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 워크스페이스 고유 식별자 (uid) */
+        workspace_uid: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateBrandFacilityReqDto"];
+      };
+    };
+    responses: {
+      /** @description 브랜드 매장 시설 필수 조건 정보 업데이트 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UpdateBrandFacilityReqResponseDto"];
+        };
+      };
+      /** @description 유효성 검증 실패 또는 브랜드 워크스페이스가 아님 */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 AccessToken) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 접근 권한 없음 (해당 워크스페이스의 활성 멤버가 아님) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 워크스페이스를 찾을 수 없음 */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  UpdateBrandLogoController_handle: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 워크스페이스 고유 식별자 (uid) */
+        workspace_uid: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateBrandLogoDto"];
+      };
+    };
+    responses: {
+      /** @description 브랜드 대표 로고 업데이트 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UpdateBrandLogoResponseDto"];
+        };
+      };
+      /** @description 유효성 검증 실패 또는 브랜드 워크스페이스가 아님 */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 AccessToken) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 접근 권한 없음 (해당 워크스페이스의 활성 멤버가 아님) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 워크스페이스를 찾을 수 없음 */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  UpdateBrandFeaturedImagesController_handle: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 워크스페이스 고유 식별자 (uid) */
+        workspace_uid: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateBrandFeaturedImagesDto"];
+      };
+    };
+    responses: {
+      /** @description 브랜드 대표 이미지 목록 업데이트 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UpdateBrandFeaturedImagesResponseDto"];
+        };
+      };
+      /** @description 유효성 검증 실패 또는 브랜드 워크스페이스가 아님 */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 AccessToken) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 접근 권한 없음 (해당 워크스페이스의 활성 멤버가 아님) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 워크스페이스를 찾을 수 없음 */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  UpdateBrandFeaturedVideosController_handle: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 워크스페이스 고유 식별자 (uid) */
+        workspace_uid: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateBrandFeaturedVideosDto"];
+      };
+    };
+    responses: {
+      /** @description 브랜드 대표 영상 목록 업데이트 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UpdateBrandFeaturedVideosResponseDto"];
+        };
+      };
+      /** @description 유효성 검증 실패 또는 브랜드 워크스페이스가 아님 */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 AccessToken) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 접근 권한 없음 (해당 워크스페이스의 활성 멤버가 아님) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 워크스페이스를 찾을 수 없음 */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  UpdateBrandMenuController_handle: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 워크스페이스 고유 식별자 (uid) */
+        workspace_uid: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateBrandMenuDto"];
+      };
+    };
+    responses: {
+      /** @description 브랜드 메뉴 목록 업데이트 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UpdateBrandMenuResponseDto"];
+        };
+      };
+      /** @description 유효성 검증 실패 또는 브랜드 워크스페이스가 아님 */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 AccessToken) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 접근 권한 없음 (해당 워크스페이스의 활성 멤버가 아님) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 워크스페이스를 찾을 수 없음 */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  GetBuyerListController_execute: {
+    parameters: {
+      query?: {
+        /** @description 국가 필터 (예: "전체", "일본", "홍콩", "싱가포르", "태국", "대한민국" 등). 미입력 또는 "전체" 전달 시 모든 국가 대상 검색 */
+        country?: string;
+        /** @description 선호 계약 조건/방식 필터 (예: "전체", "마스터 프랜차이즈", "합작법인 (JV)", "지역 개발권", "라이선스", "유통", "직영" 등). 미입력 또는 "전체" 전달 시 모든 계약 조건 대상 검색 */
+        contract_type?: string;
+        /** @description 카테고리/사업유형 필터 (예: "전체", "외식 멀티브랜드 운영", "식음료 유통 및 도소매", "외식 프랜차이즈 그룹" 등). 미입력 또는 "전체" 전달 시 모든 카테고리 대상 검색 */
+        category?: string;
+        /** @description 바이어명 또는 키워드 검색어. 미입력하거나 빈칸(공백) 입력 시 키워드 조건 없이 전체 바이어가 검색됩니다. */
+        keyword?: string;
+        /** @description 페이지 번호 (1부터 시작, 기본값: 1) */
+        page?: number;
+        /** @description 페이지당 표시할 개수 (기본값: 12, 최대: 50) */
+        limit?: number;
+      };
       header?: never;
       path?: never;
       cookie?: never;
     };
     requestBody?: never;
     responses: {
-      /** @description 사용자 정보 */
+      /** @description 바이어 목록 조회 성공 */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["CommonResponseMeResponse"];
+          "application/json": components["schemas"]["GetBuyerListResponseDto"];
         };
       };
-      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
+      /** @description 인증 실패 (유효하지 않거나 만료된 토큰 또는 미제공) */
       401: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
+        content?: never;
       };
     };
   };
-  delete: {
+  GetBuyerDetailController_execute: {
     parameters: {
       query?: never;
       header?: never;
       path: {
-        brandId: string;
-        fileId: string;
+        /** @description 바이어 고유 식별자 (uid) */
+        uid: number;
       };
       cookie?: never;
     };
     requestBody?: never;
     responses: {
-      /** @description 삭제 성공 */
+      /** @description 바이어 상세 정보 조회 성공 */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["CommonResponseMediaMutationResult"];
+          "application/json": components["schemas"]["GetBuyerDetailResponseDto"];
         };
       };
-      /** @description 인증 필요(AUTH_UNAUTHORIZED) */
+      /** @description 인증 실패 (유효하지 않거나 만료된 토큰 또는 미제공) */
       401: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
+        content?: never;
       };
-      /** @description 브랜드를 찾을 수 없음(비멤버·비활성 멤버·미존재 모두 동일, BRAND_NOT_FOUND) 또는 파일/업로드 세션을 찾을 수 없음(MEDIA_FILE_NOT_FOUND) */
+      /** @description 존재하지 않거나 삭제된 바이어 */
       404: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "application/json": components["schemas"]["ErrorResponse"];
-        };
+        content?: never;
       };
-      /** @description 업로드 상태가 올바르지 않음(MEDIA_UPLOAD_INVALID_STATE, attached가 아님) */
-      409: {
+    };
+  };
+  AutocompleteBuyerController_execute: {
+    parameters: {
+      query: {
+        /** @description 바이어 기업명 검색어 (최소 2글자 이상 필수) */
+        keyword: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 바이어 기업명 자동완성 조회 성공 */
+      200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["ErrorResponse"];
+          "application/json": components["schemas"]["AutocompleteBuyerResponseDto"];
         };
+      };
+      /** @description 잘못된 요청 (최소 2글자 미만 입력 시 유효성 검사 실패) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 토큰 또는 미제공) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  UpdateBuyerBasicController_handle: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 워크스페이스 고유 식별자 (workspace_uid) */
+        workspace_uid: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateBuyerBasicDto"];
+      };
+    };
+    responses: {
+      /** @description 바이어 회사 기본 정보 업데이트 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UpdateBuyerBasicResponseDto"];
+        };
+      };
+      /** @description 유효성 검증 실패 또는 바이어 워크스페이스가 아님 */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 AccessToken) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 접근 권한 없음 (해당 워크스페이스의 활성 멤버가 아님) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 워크스페이스를 찾을 수 없음 */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  UpdateBuyerStatusController_handle: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 워크스페이스 고유 식별자 (workspace_uid) */
+        workspace_uid: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateBuyerStatusDto"];
+      };
+    };
+    responses: {
+      /** @description 바이어 현재 운영 현황 업데이트 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UpdateBuyerStatusResponseDto"];
+        };
+      };
+      /** @description 유효성 검증 실패 또는 바이어 워크스페이스가 아님 */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 AccessToken) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 접근 권한 없음 (해당 워크스페이스의 활성 멤버가 아님) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 워크스페이스를 찾을 수 없음 */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  UpdateBuyerIntroController_handle: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 워크스페이스 고유 식별자 (workspace_uid) */
+        workspace_uid: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateBuyerIntroDto"];
+      };
+    };
+    responses: {
+      /** @description 바이어 회사 소개 정보 업데이트 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UpdateBuyerIntroResponseDto"];
+        };
+      };
+      /** @description 유효성 검증 실패 또는 바이어 워크스페이스가 아님 */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 AccessToken) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 접근 권한 없음 (해당 워크스페이스의 활성 멤버가 아님) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 워크스페이스를 찾을 수 없음 */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  UpdateBuyerContractPolicyController_handle: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 워크스페이스 고유 식별자 (workspace_uid) */
+        workspace_uid: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateBuyerContractPolicyDto"];
+      };
+    };
+    responses: {
+      /** @description 바이어 계약 정책 정보 업데이트 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UpdateBuyerContractPolicyResponseDto"];
+        };
+      };
+      /** @description 유효성 검증 실패 또는 바이어 워크스페이스가 아님 */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 AccessToken) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 접근 권한 없음 (해당 워크스페이스의 활성 멤버가 아님) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 워크스페이스를 찾을 수 없음 */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  UpdateBuyerContactController_handle: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 워크스페이스 고유 식별자 (workspace_uid) */
+        workspace_uid: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateBuyerContactDto"];
+      };
+    };
+    responses: {
+      /** @description 바이어 연락처 정보 업데이트 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UpdateBuyerContactResponseDto"];
+        };
+      };
+      /** @description 유효성 검증 실패 또는 바이어 워크스페이스가 아님 */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 AccessToken) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 접근 권한 없음 (해당 워크스페이스의 활성 멤버가 아님) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 워크스페이스를 찾을 수 없음 */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  UploadImageController_handle: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description 업로드할 단일 이미지 파일 */
+    requestBody: {
+      content: {
+        "multipart/form-data": components["schemas"]["UploadImageDto"];
+      };
+    };
+    responses: {
+      /** @description 이미지 업로드 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UploadImageResponseDto"];
+        };
+      };
+      /** @description 파일이 없거나 지원되지 않는 이미지 형식 또는 10MB 초과 */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 AccessToken) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description S3 업로드 중 서버 오류 발생 */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  UploadVideoController_handle: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description 업로드할 단일 영상 파일 */
+    requestBody: {
+      content: {
+        "multipart/form-data": components["schemas"]["UploadVideoDto"];
+      };
+    };
+    responses: {
+      /** @description 영상 업로드 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UploadVideoResponseDto"];
+        };
+      };
+      /** @description 파일이 없거나 지원되지 않는 영상 형식 또는 100MB 초과 */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 AccessToken) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description S3 업로드 중 서버 오류 발생 */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  GetCrmListController_execute: {
+    parameters: {
+      query?: {
+        /** @description 내 워크스페이스 UID (source_workspace_uid). 미입력 시 요청자가 속한 활성 워크스페이스의 CRM 목록을 조회합니다. */
+        workspace_uid?: number;
+        /** @description 검색어 키워드 (바이어/브랜드 기업명, 담당자명, 담당자 이메일, 도시 검색). 미입력 또는 공백 시 전체 조회 */
+        keyword?: string;
+        /** @description 국가 필터 (예: "전체", "일본", "홍콩", "싱가포르", "태국" 등). 미입력 또는 "전체" 전달 시 모든 국가 대상 검색 */
+        country?: string;
+        /** @description 카테고리 필터 (예: "전체", "외식", "유통", "제조" 등). 미입력 또는 "전체" 전달 시 모든 카테고리 대상 검색 */
+        category?: string;
+        /** @description 계약 조건/방식 필터 (예: "전체", "마스터 프랜차이즈", "합작법인 (JV)", "지역 개발권", "라이선스", "유통", "직영" 등). 미입력 또는 "전체" 전달 시 모든 계약 조건 대상 검색 */
+        contract_type?: string;
+        /** @description 페이지 번호 (1부터 시작, 기본값: 1) */
+        page?: number;
+        /** @description 페이지당 표시할 개수 (기본값: 20, 최대: 100) */
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 진행 관리 목록 조회 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["GetCrmListResponseDto"];
+        };
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 AccessToken) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 접근 권한 없음 (해당 워크스페이스의 활성 멤버가 아님) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  CreateCrmController_execute: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateCrmDto"];
+      };
+    };
+    responses: {
+      /** @description 진행 관리(CRM) 추가 성공 */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CreateCrmResponseDto"];
+        };
+      };
+      /** @description 입력값 유효성 검증 실패 또는 워크스페이스 타입에 맞지 않는 target_workspace_uid 지정 */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 AccessToken) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 해당 source 워크스페이스에 대한 접근 권한이 없거나 비활성 상태인 경우 */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 지정된 source_workspace_uid 또는 target_workspace_uid를 찾을 수 없음 */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  CreateCrmActionController_createAction: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateCrmActionDto"];
+      };
+    };
+    responses: {
+      /** @description 진행 기록 및 다음 액션 등록 성공 */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CreateCrmActionResponseDto"];
+        };
+      };
+      /** @description 입력값 유효성 검증 실패 */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 AccessToken) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 해당 워크스페이스에 대한 접근 권한이 없거나 비활성 상태인 경우 */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 대상 CRM 레코드를 찾을 수 없는 경우 */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  DeleteCrmActionController_deleteAction: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 삭제할 진행 기록 고유 식별자 (`etq_crm_action.uid`) */
+        action_uid: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 진행 기록 삭제 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DeleteCrmActionResponseDto"];
+        };
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 AccessToken) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 해당 워크스페이스에 대한 접근 권한이 없거나 비활성 상태인 경우 */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 대상 진행 기록 또는 CRM 레코드를 찾을 수 없는 경우 */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  UpdateCrmActionController_updateAction: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 수정할 진행 기록 고유 식별자 (`etq_crm_action.uid`) */
+        action_uid: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateCrmActionDto"];
+      };
+    };
+    responses: {
+      /** @description 진행 기록 수정 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UpdateCrmActionResponseDto"];
+        };
+      };
+      /** @description 입력값 유효성 검증 실패 또는 수정할 필드가 전달되지 않음 */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 AccessToken) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 해당 워크스페이스에 대한 접근 권한이 없거나 비활성 상태인 경우 */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 대상 진행 기록 또는 CRM 레코드를 찾을 수 없는 경우 */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  UpdateCrmActionDoneController_updateDone: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 완료 상태를 변경할 액션 레코드 UID (`etq_crm_action.uid`) */
+        action_uid: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateCrmActionDoneDto"];
+      };
+    };
+    responses: {
+      /** @description 완료 상태 변경 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UpdateCrmActionDoneResponseDto"];
+        };
+      };
+      /** @description 입력값 유효성 검증 실패 */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 AccessToken) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 해당 워크스페이스에 대한 접근 권한이 없거나 비활성 상태인 경우 */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 대상 진행 기록 또는 CRM 레코드를 찾을 수 없는 경우 */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  GetCrmDetailController_getDetail: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 조회할 CRM 레코드 고유 식별자 (`etq_crm.uid`) */
+        crm_uid: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 진행 관리 상세 정보 조회 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["GetCrmDetailResponseDto"];
+        };
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 AccessToken) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 해당 워크스페이스에 대한 접근 권한이 없거나 비활성 상태인 경우 */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 대상 CRM 레코드를 찾을 수 없는 경우 */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  DeleteCrmController_deleteCrm: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 삭제할 CRM 레코드 고유 식별자 (`etq_crm.uid`) */
+        crm_uid: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 진행 관리 대상 삭제 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DeleteCrmResponseDto"];
+        };
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 AccessToken) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 해당 워크스페이스에 대한 접근 권한이 없거나 비활성 상태인 경우 */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 대상 CRM 레코드를 찾을 수 없는 경우 */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  UpdateCrmStageController_updateStage: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 단계를 변경할 CRM 레코드 UID (`etq_crm.uid`) */
+        crm_uid: number;
+      };
+      cookie?: never;
+    };
+    /** @description 변경할 단계 정보 */
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateCrmStageDto"];
+      };
+    };
+    responses: {
+      /** @description 진행 단계 변경 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UpdateCrmStageResponseDto"];
+        };
+      };
+      /** @description 입력값 유효성 검증 실패 (허용되지 않은 단계 값 등) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 AccessToken) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 해당 CRM 항목에 대한 접근/수정 권한이 없는 경우 */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 대상 CRM 레코드를 찾을 수 없는 경우 */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };

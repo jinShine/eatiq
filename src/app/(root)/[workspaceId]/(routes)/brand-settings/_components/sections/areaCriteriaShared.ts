@@ -1,10 +1,10 @@
-import { type BrandAreaCriteria, type UpdateAreaCriteriaRequest } from "@services/api/brand/brand.type";
+import { type BrandAreaCriteriaView } from "@services/api/brand/brand.view";
 
 // /area-criteria 는 전체 치환이라, 카드 하나를 저장할 때도 나머지 필드를 함께 보내야 유실되지 않는다.
 export const mergeAreaCriteria = (
-  current: BrandAreaCriteria | undefined,
-  patch: UpdateAreaCriteriaRequest,
-): UpdateAreaCriteriaRequest => ({
+  current: BrandAreaCriteriaView | undefined,
+  patch: BrandAreaCriteriaView,
+): BrandAreaCriteriaView => ({
   preferredArea1st: current?.preferredArea1st ?? "",
   preferredArea2nd: current?.preferredArea2nd ?? "",
   preferredArea3rd: current?.preferredArea3rd ?? "",

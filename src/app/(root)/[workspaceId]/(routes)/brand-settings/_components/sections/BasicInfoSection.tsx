@@ -6,7 +6,7 @@ import z from "zod";
 import { Input, Toast } from "@components/ui";
 
 import { useBrandSettings, useUpdateBrandBasic } from "@services/api/brand/brand.query";
-import { type BrandBasic, type UpdateBasicRequest } from "@services/api/brand/brand.type";
+import { type BrandBasicView } from "@services/api/brand/brand.view";
 
 import SettingsSection from "../SettingsSection";
 
@@ -36,7 +36,7 @@ const EMPTY_VALUES: BasicInfoFormValues = {
 };
 
 // 서버 DTO → 폼 값
-const toFormValues = (brand: BrandBasic): BasicInfoFormValues => ({
+const toFormValues = (brand: BrandBasicView): BasicInfoFormValues => ({
   nameKo: brand.nameKo ?? "",
   nameEn: brand.nameEn ?? "",
   launchYear: brand.launchYear ? String(brand.launchYear) : "",
@@ -47,7 +47,7 @@ const toFormValues = (brand: BrandBasic): BasicInfoFormValues => ({
   hqAddress: brand.hqAddress ?? "",
 });
 
-const toRequest = (values: BasicInfoFormValues): UpdateBasicRequest => ({
+const toRequest = (values: BasicInfoFormValues): BrandBasicView => ({
   ...values,
   launchYear: values.launchYear ? Number(values.launchYear) : undefined,
 });

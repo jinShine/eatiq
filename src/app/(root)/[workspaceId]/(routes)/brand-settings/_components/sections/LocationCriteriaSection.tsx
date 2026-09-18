@@ -8,7 +8,7 @@ import z from "zod";
 import { Input, Toast } from "@components/ui";
 
 import { useBrandSettings, useUpdateBrandAreaCriteria } from "@services/api/brand/brand.query";
-import { type BrandAreaCriteria } from "@services/api/brand/brand.type";
+import { type BrandAreaCriteriaView } from "@services/api/brand/brand.view";
 
 import FormSelect from "../FormSelect";
 import SettingsSection from "../SettingsSection";
@@ -55,7 +55,7 @@ const EMPTY_VALUES: LocationFormValues = {
   weekendSalesImportance: "",
 };
 
-const toFormValues = (criteria: BrandAreaCriteria): LocationFormValues => ({
+const toFormValues = (criteria: BrandAreaCriteriaView): LocationFormValues => ({
   preferredArea1st: criteria.preferredArea1st ?? "",
   preferredArea2nd: criteria.preferredArea2nd ?? "",
   preferredArea3rd: criteria.preferredArea3rd ?? "",

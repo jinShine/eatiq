@@ -9,7 +9,7 @@ import z from "zod";
 import { Input, Toast } from "@components/ui";
 
 import { useBrandSettings, useUpdateBrandFee } from "@services/api/brand/brand.query";
-import { type BrandFee, type UpdateFeeRequest } from "@services/api/brand/brand.type";
+import { type BrandFeeView } from "@services/api/brand/brand.view";
 
 import FormSelect from "../FormSelect";
 import SettingsSection from "../SettingsSection";
@@ -45,7 +45,7 @@ const toText = (v?: number | null) => (v === null || v === undefined ? "" : Stri
 
 // 서버가 royaltyBase 전환 시 비활성 필드를 지우지 않으므로(정률/정액 값이 동시에 남는다)
 // 화면에는 현재 기준에 해당하는 값만 노출한다
-const toFormValues = (fee: BrandFee): FeeFormValues => ({
+const toFormValues = (fee: BrandFeeView): FeeFormValues => ({
   franchiseFeeKrw: toText(fee.franchiseFeeKrw),
   royaltyBase: fee.royaltyBase ?? "",
   royaltyRatePct: fee.royaltyBase === ROYALTY_BASE.rate ? toText(fee.royaltyRatePct) : "",
@@ -94,7 +94,7 @@ export default function FeeSection({ workspaceId }: FeeSectionProps) {
 
   const onSubmit = (values: FeeFormValues) => {
     // 비활성 로열티 필드는 body에서 제외한다 (undefined는 JSON 직렬화 시 키 자체가 빠진다)
-    const body: UpdateFeeRequest = {
+    const body: BrandFeeView = {
       franchiseFeeKrw: toNumber(values.franchiseFeeKrw),
       royaltyBase: values.royaltyBase,
       royaltyRatePct: isRateActive ? toNumber(values.royaltyRatePct) : undefined,

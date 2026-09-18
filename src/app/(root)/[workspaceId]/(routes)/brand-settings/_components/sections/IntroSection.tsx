@@ -6,7 +6,7 @@ import z from "zod";
 import { Input, Select, SelectItem, Textarea, Toast } from "@components/ui";
 
 import { useBrandSettings, useUpdateBrandIntro } from "@services/api/brand/brand.query";
-import { type BrandIntro, type UpdateIntroRequest } from "@services/api/brand/brand.type";
+import { type BrandIntroView } from "@services/api/brand/brand.view";
 
 import SettingsSection from "../SettingsSection";
 import { CATEGORY_OPTIONS, PRICE_POSITIONING_OPTIONS } from "./IntroOptions";
@@ -34,7 +34,7 @@ const EMPTY_VALUES: IntroFormValues = {
   differentiator3: "",
 };
 
-const toFormValues = (intro: BrandIntro): IntroFormValues => ({
+const toFormValues = (intro: BrandIntroView): IntroFormValues => ({
   oneLiner: intro.oneLiner ?? "",
   description: intro.description ?? "",
   category: intro.category ?? "",
@@ -44,7 +44,7 @@ const toFormValues = (intro: BrandIntro): IntroFormValues => ({
   differentiator3: intro.differentiator3 ?? "",
 });
 
-const toRequest = (values: IntroFormValues): UpdateIntroRequest => ({ ...values });
+const toRequest = (values: IntroFormValues): BrandIntroView => ({ ...values });
 
 type IntroSectionProps = {
   workspaceId: string;

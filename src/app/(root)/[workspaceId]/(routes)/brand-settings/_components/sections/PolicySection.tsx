@@ -8,7 +8,7 @@ import z from "zod";
 import { Toast } from "@components/ui";
 
 import { useBrandSettings, useUpdateBrandPolicy } from "@services/api/brand/brand.query";
-import { type BrandPolicy, type UpdatePolicyRequest } from "@services/api/brand/brand.type";
+import { type BrandPolicyView } from "@services/api/brand/brand.view";
 
 import FormSelect from "../FormSelect";
 import SettingsSection from "../SettingsSection";
@@ -38,7 +38,7 @@ const EMPTY_VALUES: PolicyFormValues = {
   manualCompliance: "",
 };
 
-const toFormValues = (policy: BrandPolicy): PolicyFormValues => ({
+const toFormValues = (policy: BrandPolicyView): PolicyFormValues => ({
   preferredContractType: policy.preferredContractType ?? "",
   exclusivity: policy.exclusivity ?? "",
   menuLocalization: policy.menuLocalization ?? "",
@@ -67,7 +67,7 @@ export default function PolicySection({ workspaceId }: PolicySectionProps) {
   });
 
   const onSubmit = (values: PolicyFormValues) => {
-    const body: UpdatePolicyRequest = {
+    const body: BrandPolicyView = {
       ...values,
       ingredientSupplyRequired: settings?.brandPolicy?.ingredientSupplyRequired ?? false,
     };

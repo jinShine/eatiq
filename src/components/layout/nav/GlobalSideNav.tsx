@@ -15,8 +15,8 @@ import {
   Users,
 } from "lucide-react";
 
-import { useMe } from "@services/api/auth/auth.query";
-import { useWorkspaces } from "@services/api/brand/brand.query";
+import { useAuthUser } from "@services/api/auth/auth.query";
+import { useMyWorkspaces } from "@services/api/workspace/workspace.query";
 
 import { useUserSettingsStore } from "@stores/useUserSettingsStore";
 
@@ -57,8 +57,9 @@ export default function GlobalSideNav() {
   const pathname = usePathname();
   const { workspaceId } = useParams<{ workspaceId: string }>();
 
-  const { data: workspaces, isLoading: isWorkspacesLoading } = useWorkspaces();
-  const { data: me, isLoading: isMeLoading } = useMe();
+  const { data: workspaces, isLoading: isWorkspacesLoading } = useMyWorkspaces();
+  const me = useAuthUser();
+  const isMeLoading = me === null;
 
   // URL 경로에서 현재 섹션 추출: /workspace/:workspaceId/:section -> section
   const currentSection = pathname.split("/")[2] ?? "";
@@ -129,8 +130,8 @@ export default function GlobalSideNav() {
       <div className="shrink-0 border-t border-white/10 p-2">
         <SidebarUserProfile
           user={{
-            name: me?.user?.name ?? "",
-            email: me?.user?.email ?? "",
+            name: String(me?.name ?? ""),
+            email: me?.email ?? "",
           }}
           collapsed={collapsed}
           isLoading={isMeLoading}

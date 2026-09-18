@@ -8,7 +8,7 @@ import z from "zod";
 import { Toast } from "@components/ui";
 
 import { useBrandSettings, useUpdateBrandAreaCriteria } from "@services/api/brand/brand.query";
-import { type BrandAreaCriteria } from "@services/api/brand/brand.type";
+import { type BrandAreaCriteriaView } from "@services/api/brand/brand.view";
 
 import FormSelect from "../FormSelect";
 import SettingsSection from "../SettingsSection";
@@ -34,7 +34,7 @@ const EMPTY_VALUES: FacilityFormValues = {
   refrigerationImportance: "",
 };
 
-const toFormValues = (criteria: BrandAreaCriteria): FacilityFormValues => ({
+const toFormValues = (criteria: BrandAreaCriteriaView): FacilityFormValues => ({
   gasImportance: criteria.gasImportance ?? "",
   waterImportance: criteria.waterImportance ?? "",
   openFlameImportance: criteria.openFlameImportance ?? "",

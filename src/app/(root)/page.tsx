@@ -4,17 +4,15 @@ import { useEffect } from "react";
 
 import { useRouter } from "next/navigation";
 
-import { useMe } from "@services/api/auth/auth.query";
-import { useWorkspaces } from "@services/api/brand/brand.query";
+import { useMyWorkspaces } from "@services/api/workspace/workspace.query";
 
 export default function RootPage() {
   const router = useRouter();
-  const { data: me, isLoading: meLoading } = useMe();
-  const { data: workspaces, isLoading: wsLoading } = useWorkspaces();
+  const { data: workspaces, isLoading } = useMyWorkspaces();
 
-  const isLoading = meLoading || wsLoading;
-  // 우선순위: 마지막 워크스페이스 → 목록 첫 번째
-  const targetId = me?.user?.lastBrandId ?? workspaces?.[0]?.id;
+  // 새 백엔드에는 마지막 워크스페이스(lastBrandId) 개념이 없어 목록 첫 번째로 보낸다.
+  // TODO(API): 마지막 접속 워크스페이스를 기억하는 필드가 생기면 그것을 우선한다.
+  const targetId = workspaces?.[0]?.id;
 
   useEffect(() => {
     if (isLoading) {
