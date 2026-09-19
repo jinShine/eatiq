@@ -19,7 +19,7 @@ export default function SettingsSection({
   children,
 }: SettingsSectionProps) {
   return (
-    <form onSubmit={onSubmit} className="border-border overflow-hidden rounded-2xl border">
+    <form noValidate onSubmit={onSubmit} className="border-border overflow-hidden rounded-2xl border">
       {/* 헤더 */}
       <div className="border-border border-b px-6 py-4">
         <h3 className="text-text-primary text-base font-bold tracking-tight">{title}</h3>

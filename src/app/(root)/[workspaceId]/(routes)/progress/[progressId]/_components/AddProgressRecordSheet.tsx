@@ -43,7 +43,7 @@ export default function AddProgressRecordSheet({ isOpen, onOpenChange }: AddProg
         </Button>
       }
     >
-      <form onSubmit={submit} className="flex flex-col gap-8 px-1 py-4">
+      <form noValidate onSubmit={submit} className="flex flex-col gap-8 px-1 py-4">
         {/* AI 초안 생성 */}
         <section className="flex flex-col gap-3">
           <h3 className="text-text-primary text-sm font-bold">AI 초안 생성</h3>

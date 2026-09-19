@@ -202,7 +202,7 @@ export default function AuthVerifyContainer({ token, email }: Props) {
 
   if (isNewUser) {
     return (
-      <form onSubmit={handleSubmit(handleRegister)} className="flex flex-col gap-6 p-6">
+      <form noValidate onSubmit={handleSubmit(handleRegister)} className="flex flex-col gap-6 p-6">
         <div className="flex flex-col gap-2">
           <h1 className="text-text-primary text-lg font-bold tracking-[-0.9px]">처음 오셨네요</h1>
           <p className="text-text-tertiary text-xs leading-relaxed">

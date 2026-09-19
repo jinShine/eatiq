@@ -71,7 +71,8 @@ export default function SignInContainer() {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 p-6">
+    // noValidate가 없으면 브라우저 기본 검증이 제출을 가로채 zod 검증이 돌지 않는다
+    <form noValidate onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 p-6">
       <div className="flex flex-col gap-2">
         <h1 className="text-text-primary text-lg font-bold tracking-[-0.9px]">로그인</h1>
         <p className="text-text-tertiary text-xs leading-relaxed">
