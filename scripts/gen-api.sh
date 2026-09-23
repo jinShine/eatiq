@@ -28,4 +28,9 @@ curl -fsSL --max-time 60 -u "$API_DOCS_USER:$API_DOCS_PASSWORD" "$API_DOCS_URL" 
 echo "→ 타입 생성 중: src/services/openapi.ts"
 bunx openapi-typescript "$spec" -o src/services/openapi.ts
 
+# openapi-typescript의 출력은 프로젝트 포맷과 달라, 정리하지 않으면 재생성할 때마다
+# 들여쓰기 차이만으로 수천 줄 diff가 생긴다.
+echo "→ 포맷 정리 중"
+bunx prettier --write src/services/openapi.ts >/dev/null
+
 echo "✓ 완료"

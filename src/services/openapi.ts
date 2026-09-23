@@ -589,6 +589,205 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/workspace/{workspace_uid}/brand/completion/basic": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * 🔥 [NEW 26.09.23] 브랜드(기본정보) 정보 완성 현황 조회
+     * @description > 🆕 **신규 추가 API (26.09.23)**
+     *
+     *     ### 📌 상세 역할 및 개요
+     *     - 브랜드 워크스페이스의 기본 정보 완성 현황(완성도 %, 입력 완료된 필드 수/총 필드 수, 섹션별 세부 입력 여부)을 조회합니다.
+     *     - 평가 대상 4개 섹션(총 29개 세부 필드):
+     *       1. **브랜드 기본 정보** (8개): 브랜드명(한/영), 런칭연도, 대표자명(한/영), 본사홈페이지, 본사대표이메일, 본사주소
+     *       2. **브랜드 소개** (7개): 한줄소개, 상세소개, 업종분류, 가격포지셔닝, 핵심차별점(1/2/3)
+     *       3. **운영 현황** (9개): 국내전체매장수, 국내직영점수, 해외전체매장수, 월평균매출, 평균객단가, 평균매장평형, 평균좌석수, 주요고객층, 주이용상황
+     *       4. **연락처** (5개): 담당자이름(한/영), 직책, 담당자이메일, 가능언어
+     *     - **다음으로 해야 할 일(`next_task`)**: 미입력 항목 중 우선순위가 가장 높은 1개 항목과 안내 문구를 제공합니다. (모두 완료 시 `null`)
+     *     - **남은 주요 항목(`remaining_tasks`)**: `next_task`를 제외하고 다음으로 채워야 할 미입력 항목 최대 3개를 순서대로 제공합니다.
+     *     - 요청자는 해당 워크스페이스에 소속된 **활성 멤버**여야 합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 브랜드 프로필 관리/설정 페이지 진입 시 상단 완성도 프로그레스 바 렌더링.
+     *        - 각 섹션(기본정보, 소개, 운영현황, 연락처) 탭 배지(Badge) 및 미입력 필드 안내 표시 시.
+     *        - 대시보드 상단 '다음으로 해야 할 일' 및 '남은 주요 항목' 카드 컴포넌트 렌더링 시.
+     *     2. **응답 필드 활용**:
+     *        - `completion_rate`: 전체 완성률(0 ~ 100).
+     *        - `stage`: 정보완성 단계 및 안내 문구 (`step`: 시작/성장/준비/완성, `message`: 단계별 문구).
+     *          - **시작 (0~24%)**: "회사 소개 자료를 브랜드의 말로 쓸 수 있어요"
+     *          - **성장 (25~59%)**: "회사 정보가 모이고 있어요. \n채울수록 정확하게 브랜드를 소개할 수 있어요"
+     *          - **준비 (60~89%)**: "거의 다 왔어요.\n바이어가 확실히 우리 브랜드를 찾을 수 있어요."
+     *          - **완성 (90~100%)**: "소개자료와 AI가 우리 브랜드를 바이어들에게 정확하게 설명해요"
+     *        - `next_task`: 우선순위 1순위 미입력 항목 (`title`, `description`, `section_key`, `field_key`, `is_required`, `priority`).
+     *        - `remaining_tasks`: 다음 미입력 항목 최대 3개 목록.
+     *        - `sections.[섹션키].completion_rate`: 각 섹션별 완성률.
+     *        - `sections.[섹션키].fields.[필드명]`: 해당 필드의 입력 완료 여부(boolean).
+     */
+    get: operations["GetBrandCompletionBasicController_getBrandCompletion"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/workspace/{workspace_uid}/brand/completion/visual": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * 🔥 [NEW 26.09.23] 브랜드(비주얼) 정보 완성 현황 조회
+     * @description > 🆕 **신규 추가/업데이트 API (26.09.23)**
+     *
+     *     ### 📌 상세 역할 및 개요
+     *     - 브랜드 워크스페이스의 비주얼 자산 등록 완성 현황(완성도 %, 총 13개 세부 평가 항목 등록 여부, 섹션별 달성도, 다음 작업 및 세부 자산 통계)을 조회합니다.
+     *     - 기본정보 완성 현황 API와 동일한 표준 포맷(`stage`, `next_task`, `remaining_tasks`, `sections`, `details`)으로 응답합니다.
+     *     - 평가 대상 3개 섹션 (총 13개 평가 항목):
+     *       1. **브랜드 대표 비주얼** (`visual_identity` - 3개): 브랜드 로고(필수), 브랜드 대표 이미지(필수), 브랜드 대표 영상
+     *       2. **대표 메뉴 비주얼** (`visual_menu` - 5개): 메뉴 이름(한국어, 필수), 메뉴 가격(필수), 메뉴 설명(필수), 메뉴 사진(필수), 메뉴 이름(영어)
+     *       3. **대표 매장 비주얼** (`visual_store` - 5개): 대표 매장 이름(한국어), 대표 매장 이름(영어), 매장 사진, 대표 매장 주소, 매장 영상
+     *     - **다음으로 해야 할 일(`next_task`)**: 우선순위가 가장 높은 미등록 비주얼 항목 1개와 안내 문구 반환 (모두 등록 완료 시 `null`)
+     *     - **남은 주요 항목(`remaining_tasks`)**: `next_task`를 제외한 다음 우선순위 미등록 항목 최대 3개 목록
+     *     - 요청자는 해당 워크스페이스에 소속된 **활성 멤버**여야 합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 브랜드 프로필 비주얼 관리 탭 진입 시 또는 비주얼 자산 등록 카드 영역 렌더링 시.
+     *        - 대시보드 상단 비주얼 완성도 프로그레스 바 및 '다음으로 해야 할 일' 카드 렌더링 시.
+     *     2. **응답 필드 활용**:
+     *        - `completion_rate`: 비주얼 전체 완성률 (0 ~ 100).
+     *        - `stage`: 정보완성 단계 및 안내 문구 (`step`: 시작/성장/준비/완성, `message`: 단계별 문구).
+     *          - **시작 (0~24%)**: "바이어가 브랜드를 시각적으로 이해할 수 있어요"
+     *          - **성장 (25~59%)**: "자산이 쌓이고 있어요.\n사진이 늘수록 소개자료가 눈에 들어와요"
+     *          - **준비 (60~89%)**: "영상을 만들 수 있을 정도로\n비주얼 자료들을 모았어요"
+     *          - **완성 (90~100%)**: "우리 브랜드를 소개하기에 충분한 자료를 모았습니다."
+     *        - `next_task`: 우선순위 1순위 미입력 비주얼 항목 (`title`, `description`, `section_key`, `field_key`, `is_required`, `priority`).
+     *        - `remaining_tasks`: 다음 미입력 항목 최대 3개 목록.
+     *        - `sections.[섹션키].completion_rate`: 각 섹션별 완성률.
+     *        - `sections.[섹션키].fields.[필드명]`: 해당 필드의 등록 완료 여부(boolean).
+     *        - `details`: 현재 등록된 로고 URL, 등록된 대표 이미지/영상 수, 메뉴 수, 매장 사진/영상 수.
+     */
+    get: operations["GetBrandCompletionVisualController_getBrandVisualCompletion"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/workspace/{workspace_uid}/brand/completion/contract": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * 🔥 [NEW 26.09.23] 브랜드(계약 및 정책) 정보 완성 현황 조회
+     * @description > 🆕 **신규 추가 API (26.09.23)**
+     *
+     *     ### 📌 상세 역할 및 개요
+     *     - 브랜드 워크스페이스의 계약 및 정책 정보 완성 현황(완성도 %, 총 17개 세부 평가 항목 입력 여부, 4개 섹션별 달성도, 다음 작업 및 남은 주요 항목)을 조회합니다.
+     *     - 기본정보 및 비주얼 완성 현황 API와 동일한 표준 포맷(`stage`, `next_task`, `remaining_tasks`, `sections`)으로 응답합니다.
+     *     - 평가 대상 4개 섹션 (총 17개 평가 항목 - 수수료 및 정산 정책 제외):
+     *       1. **진출 희망 조건** (`target_conditions` - 3개): 진출 목표 국가(필수), 선호 계약방식(필수), 허용 파트너 역할(필수)
+     *       2. **계약 담당자 정보** (`contract_manager` - 4개): 담당자 이름(한국어), 담당자 이름(영어), 담당자 직책, 담당자 이메일
+     *       3. **서명권자 정보** (`signature_manager` - 4개): 서명권자 이름(한국어), 서명권자 이름(영어), 서명권자 직책, 서명권자 이메일
+     *       4. **계약 및 운영 정책** (`policy_conditions` - 6개): 독점 허용 여부, 메뉴 현지화 허용 여부, 인테리어 조정 허용 여부, 식자재 대체 허용, 상표 및 브랜드 사용 기준, 운영 매뉴얼 준수 수준
+     *     - **다음으로 해야 할 일(`next_task`)**: 미입력 항목 중 우선순위가 가장 높은 1개 항목과 안내 문구 제공 (모두 완료 시 `null`)
+     *     - **남은 주요 항목(`remaining_tasks`)**: `next_task`를 제외하고 다음으로 채워야 할 미입력 항목 최대 3개 목록
+     *     - 요청자는 해당 워크스페이스에 소속된 **활성 멤버**여야 합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 브랜드 파트너십/계약 정책 관리 탭 진입 시 또는 계약 정책 정보 카드 렌더링 시.
+     *        - 대시보드 상단 계약 정책 완성도 프로그레스 바 및 '다음으로 해야 할 일' 카드 렌더링 시.
+     *     2. **응답 필드 활용**:
+     *        - `completion_rate`: 계약 및 정책 전체 완성률 (0 ~ 100).
+     *        - `stage`: 정보완성 단계 및 안내 문구 (`step`: 시작/성장/준비/완성, `message`: 단계별 문구).
+     *          - **시작 (0~24%)**: "우리 브랜드와 잘 맞는 바이어를 찾아볼 수 있어요"
+     *          - **성장 (25~59%)**: "조건이 정리되고 있어요.\n채울수록 바이어와 맞춰볼 항목이 늘어요"
+     *          - **준비 (60~89%)**: "바이어가 협업 가능성을\n구체적으로 검토할 수 있어요"
+     *          - **완성 (90~100%)**: "우리가 필요한 조건의 바이어를 바로 찾을 수 있어요"
+     *        - `next_task`: 우선순위 1순위 미입력 항목 (`title`, `description`, `section_key`, `field_key`, `is_required`, `priority`).
+     *        - `remaining_tasks`: 다음 미입력 항목 최대 3개 목록.
+     *        - `sections.[섹션키].completion_rate`: 각 섹션별 완성률.
+     *        - `sections.[섹션키].fields.[필드명]`: 해당 필드의 등록 완료 여부(boolean).
+     */
+    get: operations["GetBrandCompletionContractController_getBrandContractCompletion"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/workspace/{workspace_uid}/brand/completion/commercial": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * 🔥 [NEW 26.09.23] 브랜드(상권분석) 정보 완성 현황 조회
+     * @description > 🆕 **신규 추가 API (26.09.23)**
+     *
+     *     ### 📌 상세 역할 및 개요
+     *     - 브랜드 워크스페이스의 상권분석 및 입지/매장 기준 정보 완성 현황(완성도 %, 총 22개 세부 평가 항목 입력 여부, 3개 섹션별 달성도, 다음 작업 및 남은 주요 항목)을 조회합니다.
+     *     - 기본정보, 비주얼, 계약및정책 완성 현황 API와 동일한 표준 포맷(`stage`, `next_task`, `remaining_tasks`, `sections`)으로 응답합니다.
+     *     - 평가 대상 3개 섹션 (총 22개 평가 항목):
+     *       1. **입지 및 상권 기준** (`location_standard` - 13개): 1차 상호 상권(필수), 2차 상호 상권, 3차 상호 상권, 허용 월 임대료-최소, 허용 월 임대료-최대, 간판 노출 중요도, 매장 노출 중요도, 주차 필요 여부, 대기공간 필요 여부, 점심 매출 중요도, 심야 매출 중요도, 주중 매출 중요도, 주말 매출 중요도
+     *       2. **매장 규모 기준** (`size_criteria` - 4개): 권장 매장 평형(필수), 선호 매장 평형-최소, 선호 매장 평형-최대, 최소 전면 폭
+     *       3. **필수 설비 조건** (`facility_req` - 5개): 가스 시설, 급배수, 직화, 배기, 냉장/냉동 저장공간
+     *     - **다음으로 해야 할 일(`next_task`)**: 미입력 항목 중 우선순위가 가장 높은 1개 항목과 안내 문구 제공 (모두 완료 시 `null`)
+     *     - **남은 주요 항목(`remaining_tasks`)**: `next_task`를 제외하고 다음으로 채워야 할 미입력 항목 최대 3개 목록
+     *     - 요청자는 해당 워크스페이스에 소속된 **활성 멤버**여야 합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 브랜드 상권분석/입지 기준 관리 탭 진입 시 또는 상권 기준 카드 렌더링 시.
+     *        - 대시보드 상단 상권분석 완성도 프로그레스 바 및 '다음으로 해야 할 일' 카드 렌더링 시.
+     *     2. **응답 필드 활용**:
+     *        - `completion_rate`: 상권분석 전체 완성률 (0 ~ 100).
+     *        - `stage`: 정보완성 단계 및 안내 문구 (`step`: 시작/성장/준비/완성, `message`: 단계별 문구).
+     *          - **시작 (0~24%)**: "우리 브랜드와 잘 맞는 상가 매물을 찾아볼 수 있어요"
+     *          - **성장 (25~59%)**: "조금 더 우리 브랜드에 맞는 매물들을 찾을 수 있어요"
+     *          - **준비 (60~89%)**: "기준이 모이고 있어요.\n채울수록 더 정확히 골라드려요"
+     *          - **완성 (90~100%)**: "우리가 필요한 조건의 자리를 바로 찾을 수 있어요"
+     *        - `next_task`: 우선순위 1순위 미입력 항목 (`title`, `description`, `section_key`, `field_key`, `is_required`, `priority`).
+     *        - `remaining_tasks`: 다음 미입력 항목 최대 3개 목록.
+     *        - `sections.[섹션키].completion_rate`: 각 섹션별 완성률.
+     *        - `sections.[섹션키].fields.[필드명]`: 해당 필드의 등록 완료 여부(boolean).
+     */
+    get: operations["GetBrandCompletionCommercialController_getBrandCommercialCompletion"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/workspace/brand/autocomplete": {
     parameters: {
       query?: never;
@@ -1199,6 +1398,57 @@ export interface paths {
      *        - `404 Not Found`: 유효하지 않거나 삭제된 바이어 식별자이므로 안내 토스트 팝업 표시 후 드로어를 닫습니다.
      */
     get: operations["GetBuyerDetailController_execute"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/workspace/{workspace_uid}/buyer/completion": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * 🔥 [NEW 26.09.23] 바이어 정보 완성 현황 조회
+     * @description > 🆕 **신규 추가 API (26.09.23)**
+     *
+     *     ### 📌 상세 역할 및 개요
+     *     - 바이어 워크스페이스의 기업 정보 완성 현황(완성도 %, 총 28개 세부 평가 항목 입력 여부, 5개 섹션별 달성도, 다음 작업 및 남은 주요 항목)을 조회합니다.
+     *     - 브랜드 정보 완성 현황 API와 동일한 표준 포맷(`stage`, `next_task`, `remaining_tasks`, `sections`)으로 응답합니다.
+     *     - 평가 대상 5개 섹션 (총 28개 평가 항목):
+     *       1. **기업 기본 정보** (`buyer_basic` - 8개): 회사명(필수), 설립연도, 대표자 이름, 운영 국가, 운영 도시, 본사 홈페이지, 본사 대표 이메일, 본사 주소
+     *       2. **희망 파트너 조건 및 정책** (`buyer_contract_policy` - 10개): 도입 희망 업종(필수), 선호 계약 방식(필수), 희망 파트너 역할(필수), 초기 투자 가능 규모(필수), 선호 로열티 방식, 선호 가격대, 독점권 요구 수준, 메뉴 현지화 요구 수준, 인테리어 기준 선호, 자체 식자재 공급망
+     *       3. **기업 운영 현황** (`buyer_status` - 4개): 현재 운영 중인 업종, 운영 매장 수, 연매출 규모, 브랜드 운영 경험
+     *       4. **기업 소개 및 차별점** (`buyer_intro` - 2개): 회사 소개, 핵심 차별점
+     *       5. **담당자 연락처** (`buyer_contact` - 4개): 담당자 이름(필수), 담당자 이메일(필수), 담당자 직책, 가능 언어
+     *     - **다음으로 해야 할 일(`next_task`)**: 미입력 항목 중 우선순위가 가장 높은 1개 항목과 안내 문구 제공 (모두 완료 시 `null`)
+     *     - **남은 주요 항목(`remaining_tasks`)**: `next_task`를 제외하고 다음으로 채워야 할 미입력 항목 최대 3개 목록
+     *     - 요청자는 해당 워크스페이스에 소속된 **활성 멤버**여야 합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 바이어 프로필 관리/설정 페이지 진입 시 상단 완성도 프로그레스 바 렌더링.
+     *        - 각 섹션(기본정보, 파트너조건, 운영현황, 회사소개, 연락처) 탭 배지(Badge) 및 미입력 필드 안내 표시 시.
+     *        - 대시보드 상단 '다음으로 해야 할 일' 및 '남은 주요 항목' 카드 컴포넌트 렌더링 시.
+     *     2. **응답 필드 활용**:
+     *        - `completion_rate`: 바이어 기업 정보 전체 완성률 (0 ~ 100).
+     *        - `stage`: 정보완성 단계 및 안내 문구 (`step`: 시작/성장/완성, `message`: 단계별 문구).
+     *          - **시작 (0~24%)**: "우리 조건에 맞는 브랜드를 추천해드릴 수 있어요"
+     *          - **성장 (25~89%)**: "회사 정보를 정리 중이에요\n브랜드가 우리 회사를 확인하고 먼저 연락해올 수 있어요"
+     *          - **완성 (90~100%)**: "우리 회사와 꼭 맞는 브랜드를 찾아볼 수 있어요"
+     *        - `next_task`: 우선순위 1순위 미입력 항목 (`title`, `description`, `section_key`, `field_key`, `is_required`, `priority`).
+     *        - `remaining_tasks`: 다음 미입력 항목 최대 3개 목록.
+     *        - `sections.[섹션키].completion_rate`: 각 섹션별 완성률.
+     *        - `sections.[섹션키].fields.[필드명]`: 해당 필드의 등록 완료 여부(boolean).
+     */
+    get: operations["GetBuyerCompletionController_getBuyerCompletion"];
     put?: never;
     post?: never;
     delete?: never;
@@ -2809,6 +3059,1011 @@ export interface components {
        */
       updated_time: string;
     };
+    BrandCompletionStageDto: {
+      /**
+       * @description 정보완성 단계명 (시작: 0~24%, 성장: 25~59%, 준비: 60~89%, 완성: 90~100%)
+       * @example 준비
+       * @enum {string}
+       */
+      step: "시작" | "성장" | "준비" | "완성";
+      /**
+       * @description 단계별 안내 문구
+       * @example 거의 다 왔어요.
+       *     바이어가 확실히 우리 브랜드를 찾을 수 있어요.
+       */
+      message: string;
+    };
+    BrandCompletionTaskDto: {
+      /**
+       * @description 항목 우선순위 (1부터 시작)
+       * @example 1
+       */
+      priority: number;
+      /**
+       * @description 해당 항목의 섹션 키 (brand_basic | brand_intro | brand_status | brand_contact)
+       * @example brand_basic
+       */
+      section_key: string;
+      /**
+       * @description 해당 항목의 필드 키
+       * @example brand_name_ko
+       */
+      field_key: string;
+      /**
+       * @description 입력 항목명
+       * @example 브랜드 이름(한국어)
+       */
+      title: string;
+      /**
+       * @description 필수 입력 항목 여부
+       * @example true
+       */
+      is_required: boolean;
+      /**
+       * @description 항목 설명 및 가이드 문구
+       * @example 해외 바이어가 브랜드를 찾을 때 쓰는 이름이에요
+       */
+      description: string;
+    };
+    BrandBasicFieldsCompletionDto: {
+      /**
+       * @description 브랜드 이름(한국어)
+       * @example true
+       */
+      brand_name_ko: boolean;
+      /**
+       * @description 브랜드 이름(영어)
+       * @example true
+       */
+      brand_name_en: boolean;
+      /**
+       * @description 런칭 연도
+       * @example true
+       */
+      launch_year: boolean;
+      /**
+       * @description 대표자 이름(한국어)
+       * @example true
+       */
+      ceo_name_ko: boolean;
+      /**
+       * @description 대표자 이름(영어)
+       * @example true
+       */
+      ceo_name_en: boolean;
+      /**
+       * @description 본사 홈페이지
+       * @example true
+       */
+      homepage_url: boolean;
+      /**
+       * @description 본사 대표 이메일
+       * @example true
+       */
+      official_email: boolean;
+      /**
+       * @description 본사 주소
+       * @example true
+       */
+      official_address: boolean;
+    };
+    BrandBasicSectionDto: {
+      /**
+       * @description 섹션 제목
+       * @example 브랜드 기본 정보
+       */
+      title: string;
+      /**
+       * @description 해당 섹션 완성도(0~100%)
+       * @example 75
+       */
+      completion_rate: number;
+      /**
+       * @description 해당 섹션 총 필드 수
+       * @example 8
+       */
+      total_fields: number;
+      /**
+       * @description 해당 섹션 완료된 필드 수
+       * @example 6
+       */
+      completed_fields: number;
+      /** @description 브랜드 기본 정보 필드별 완료 여부 */
+      fields: components["schemas"]["BrandBasicFieldsCompletionDto"];
+    };
+    BrandIntroFieldsCompletionDto: {
+      /**
+       * @description 한줄 소개
+       * @example true
+       */
+      short_intro: boolean;
+      /**
+       * @description 상세소개
+       * @example true
+       */
+      detail_intro: boolean;
+      /**
+       * @description 업종분류
+       * @example true
+       */
+      category: boolean;
+      /**
+       * @description 가격 포지셔닝
+       * @example true
+       */
+      price_positioning: boolean;
+      /**
+       * @description 핵심차별점01
+       * @example true
+       */
+      key_point_01: boolean;
+      /**
+       * @description 핵심차별점02
+       * @example true
+       */
+      key_point_02: boolean;
+      /**
+       * @description 핵심차별점03
+       * @example true
+       */
+      key_point_03: boolean;
+    };
+    BrandIntroSectionDto: {
+      /**
+       * @description 섹션 제목
+       * @example 브랜드 기본 정보
+       */
+      title: string;
+      /**
+       * @description 해당 섹션 완성도(0~100%)
+       * @example 75
+       */
+      completion_rate: number;
+      /**
+       * @description 해당 섹션 총 필드 수
+       * @example 8
+       */
+      total_fields: number;
+      /**
+       * @description 해당 섹션 완료된 필드 수
+       * @example 6
+       */
+      completed_fields: number;
+      /** @description 브랜드 소개 필드별 완료 여부 */
+      fields: components["schemas"]["BrandIntroFieldsCompletionDto"];
+    };
+    BrandStatusFieldsCompletionDto: {
+      /**
+       * @description 국내전체매장수
+       * @example true
+       */
+      domestic_store_total_cnt: boolean;
+      /**
+       * @description 국내직영점수
+       * @example true
+       */
+      domestic_store_direct_cnt: boolean;
+      /**
+       * @description 해외전체매장수
+       * @example true
+       */
+      overseas_store_total_cnt: boolean;
+      /**
+       * @description 월평균 매출
+       * @example true
+       */
+      avg_monthly_sales: boolean;
+      /**
+       * @description 평균 객단가
+       * @example true
+       */
+      avg_cost_per_customer: boolean;
+      /**
+       * @description 평균 매장평형
+       * @example true
+       */
+      avg_store_area: boolean;
+      /**
+       * @description 평균 좌석 수
+       * @example true
+       */
+      avg_seat_cnt: boolean;
+      /**
+       * @description 주요 고객층
+       * @example true
+       */
+      target_audience: boolean;
+      /**
+       * @description 주 이용 상황
+       * @example true
+       */
+      usage_context: boolean;
+    };
+    BrandStatusSectionDto: {
+      /**
+       * @description 섹션 제목
+       * @example 브랜드 기본 정보
+       */
+      title: string;
+      /**
+       * @description 해당 섹션 완성도(0~100%)
+       * @example 75
+       */
+      completion_rate: number;
+      /**
+       * @description 해당 섹션 총 필드 수
+       * @example 8
+       */
+      total_fields: number;
+      /**
+       * @description 해당 섹션 완료된 필드 수
+       * @example 6
+       */
+      completed_fields: number;
+      /** @description 운영 현황 필드별 완료 여부 */
+      fields: components["schemas"]["BrandStatusFieldsCompletionDto"];
+    };
+    BrandContactFieldsCompletionDto: {
+      /**
+       * @description 담당자 이름(한국어)
+       * @example true
+       */
+      name_ko: boolean;
+      /**
+       * @description 담당자 이름(영어)
+       * @example true
+       */
+      name_en: boolean;
+      /**
+       * @description 직책
+       * @example true
+       */
+      position: boolean;
+      /**
+       * @description 담당자 이메일
+       * @example true
+       */
+      email: boolean;
+      /**
+       * @description 가능 언어
+       * @example true
+       */
+      languages: boolean;
+    };
+    BrandContactSectionDto: {
+      /**
+       * @description 섹션 제목
+       * @example 브랜드 기본 정보
+       */
+      title: string;
+      /**
+       * @description 해당 섹션 완성도(0~100%)
+       * @example 75
+       */
+      completion_rate: number;
+      /**
+       * @description 해당 섹션 총 필드 수
+       * @example 8
+       */
+      total_fields: number;
+      /**
+       * @description 해당 섹션 완료된 필드 수
+       * @example 6
+       */
+      completed_fields: number;
+      /** @description 연락처 필드별 완료 여부 */
+      fields: components["schemas"]["BrandContactFieldsCompletionDto"];
+    };
+    BrandCompletionSectionsDto: {
+      /** @description 브랜드 기본 정보 섹션 */
+      brand_basic: components["schemas"]["BrandBasicSectionDto"];
+      /** @description 브랜드 소개 섹션 */
+      brand_intro: components["schemas"]["BrandIntroSectionDto"];
+      /** @description 운영 현황 섹션 */
+      brand_status: components["schemas"]["BrandStatusSectionDto"];
+      /** @description 연락처 섹션 */
+      brand_contact: components["schemas"]["BrandContactSectionDto"];
+    };
+    GetBrandCompletionBasicResponseDto: {
+      /**
+       * @description 워크스페이스 UID
+       * @example 1
+       */
+      workspace_uid: number;
+      /**
+       * @description 전체 브랜드 정보 완성도(0~100%)
+       * @example 72
+       */
+      completion_rate: number;
+      /**
+       * @description 전체 평가 필드 총 수
+       * @example 29
+       */
+      total_fields: number;
+      /**
+       * @description 입력 완료된 필드 총 수
+       * @example 21
+       */
+      completed_fields: number;
+      /** @description 단계별 정보 완성 상태 및 안내 문구 */
+      stage: components["schemas"]["BrandCompletionStageDto"];
+      /** @description 다음으로 해야 할 일 (우선순위 가장 높은 미입력 항목 1개, 모두 완료 시 null) */
+      next_task: components["schemas"]["BrandCompletionTaskDto"] | null;
+      /** @description 남은 주요 항목 (다음으로 해야 할 일을 제외한 다음 미입력 항목 최대 3개) */
+      remaining_tasks: components["schemas"]["BrandCompletionTaskDto"][];
+      /** @description 섹션별 상세 완성 현황 */
+      sections: components["schemas"]["BrandCompletionSectionsDto"];
+    };
+    BrandVisualIdentityFieldsCompletionDto: {
+      /**
+       * @description 브랜드 대표 로고 등록 여부
+       * @example true
+       */
+      logo_image: boolean;
+      /**
+       * @description 브랜드 대표 이미지 등록 여부 (1개 이상 등록 시 true)
+       * @example true
+       */
+      featured_image_list: boolean;
+      /**
+       * @description 브랜드 대표 영상 등록 여부 (1개 이상 등록 시 true)
+       * @example false
+       */
+      featured_video_list: boolean;
+    };
+    VisualIdentitySectionDto: {
+      /**
+       * @description 섹션 제목
+       * @example 브랜드 비주얼 자산
+       */
+      title: string;
+      /**
+       * @description 해당 섹션 완성도(0~100%)
+       * @example 67
+       */
+      completion_rate: number;
+      /**
+       * @description 해당 섹션 총 필드 수
+       * @example 3
+       */
+      total_fields: number;
+      /**
+       * @description 해당 섹션 완료된 필드 수
+       * @example 2
+       */
+      completed_fields: number;
+      /** @description 브랜드 대표 비주얼 필드별 완료 여부 */
+      fields: components["schemas"]["BrandVisualIdentityFieldsCompletionDto"];
+    };
+    BrandVisualMenuFieldsCompletionDto: {
+      /**
+       * @description 메뉴 이름(한국어) 입력 여부
+       * @example true
+       */
+      name_ko: boolean;
+      /**
+       * @description 메뉴 이름(영어) 입력 여부
+       * @example true
+       */
+      name_en: boolean;
+      /**
+       * @description 메뉴 가격 입력 여부
+       * @example true
+       */
+      price: boolean;
+      /**
+       * @description 메뉴 설명 입력 여부
+       * @example true
+       */
+      explain: boolean;
+      /**
+       * @description 메뉴 사진 등록 여부 (1개 이상 등록 시 true)
+       * @example true
+       */
+      image_list: boolean;
+    };
+    VisualMenuSectionDto: {
+      /**
+       * @description 섹션 제목
+       * @example 브랜드 비주얼 자산
+       */
+      title: string;
+      /**
+       * @description 해당 섹션 완성도(0~100%)
+       * @example 67
+       */
+      completion_rate: number;
+      /**
+       * @description 해당 섹션 총 필드 수
+       * @example 3
+       */
+      total_fields: number;
+      /**
+       * @description 해당 섹션 완료된 필드 수
+       * @example 2
+       */
+      completed_fields: number;
+      /** @description 대표 메뉴 비주얼 필드별 완료 여부 */
+      fields: components["schemas"]["BrandVisualMenuFieldsCompletionDto"];
+    };
+    BrandVisualStoreFieldsCompletionDto: {
+      /**
+       * @description 대표 매장 이름(한국어) 입력 여부
+       * @example true
+       */
+      store_name_ko: boolean;
+      /**
+       * @description 대표 매장 이름(영어) 입력 여부
+       * @example false
+       */
+      store_name_en: boolean;
+      /**
+       * @description 매장 사진 등록 여부 (1개 이상 등록 시 true)
+       * @example true
+       */
+      store_image_list: boolean;
+      /**
+       * @description 대표 매장 주소 입력 여부
+       * @example true
+       */
+      store_address: boolean;
+      /**
+       * @description 매장 영상 등록 여부 (1개 이상 등록 시 true)
+       * @example false
+       */
+      store_video_list: boolean;
+    };
+    VisualStoreSectionDto: {
+      /**
+       * @description 섹션 제목
+       * @example 브랜드 비주얼 자산
+       */
+      title: string;
+      /**
+       * @description 해당 섹션 완성도(0~100%)
+       * @example 67
+       */
+      completion_rate: number;
+      /**
+       * @description 해당 섹션 총 필드 수
+       * @example 3
+       */
+      total_fields: number;
+      /**
+       * @description 해당 섹션 완료된 필드 수
+       * @example 2
+       */
+      completed_fields: number;
+      /** @description 대표 매장 비주얼 필드별 완료 여부 */
+      fields: components["schemas"]["BrandVisualStoreFieldsCompletionDto"];
+    };
+    BrandVisualCompletionSectionsDto: {
+      /** @description 브랜드 대표 비주얼 섹션 */
+      visual_identity: components["schemas"]["VisualIdentitySectionDto"];
+      /** @description 대표 메뉴 비주얼 섹션 */
+      visual_menu: components["schemas"]["VisualMenuSectionDto"];
+      /** @description 대표 매장 비주얼 섹션 */
+      visual_store: components["schemas"]["VisualStoreSectionDto"];
+    };
+    BrandVisualDetailsDto: {
+      /**
+       * @description 등록된 로고 이미지 URL (미등록 시 null)
+       * @example https://eatiqlink-s3-bucket.s3.ap-northeast-2.amazonaws.com/uploads/images/2026/09/logo-uuid.png
+       */
+      logo_image?: Record<string, never> | null;
+      /**
+       * @description 등록된 대표 이미지 수
+       * @example 3
+       */
+      featured_image_count: number;
+      /**
+       * @description 등록된 대표 영상 수
+       * @example 0
+       */
+      featured_video_count: number;
+      /**
+       * @description 등록된 메뉴 수
+       * @example 2
+       */
+      menu_count: number;
+      /**
+       * @description 등록된 매장 사진 수
+       * @example 1
+       */
+      store_image_count: number;
+      /**
+       * @description 등록된 매장 영상 수
+       * @example 0
+       */
+      store_video_count: number;
+    };
+    GetBrandCompletionVisualResponseDto: {
+      /**
+       * @description 워크스페이스 식별자(UID)
+       * @example 1
+       */
+      workspace_uid: number;
+      /**
+       * @description 전체 브랜드 비주얼 완성도 (0~100%)
+       * @example 62
+       */
+      completion_rate: number;
+      /**
+       * @description 비주얼 총 평가 항목 수
+       * @example 13
+       */
+      total_fields: number;
+      /**
+       * @description 등록 완료된 비주얼 항목 수
+       * @example 8
+       */
+      completed_fields: number;
+      /** @description 단계별 정보 완성 상태 및 안내 문구 */
+      stage: components["schemas"]["BrandCompletionStageDto"];
+      /** @description 다음으로 해야 할 일 (우선순위 가장 높은 미입력 항목 1개, 모두 완료 시 null) */
+      next_task: components["schemas"]["BrandCompletionTaskDto"] | null;
+      /** @description 남은 주요 항목 (다음으로 해야 할 일을 제외한 다음 미입력 항목 최대 3개) */
+      remaining_tasks: components["schemas"]["BrandCompletionTaskDto"][];
+      /** @description 섹션별 상세 완성 현황 */
+      sections: components["schemas"]["BrandVisualCompletionSectionsDto"];
+      /** @description 비주얼 상세 정보 및 자산 수량 */
+      details: components["schemas"]["BrandVisualDetailsDto"];
+    };
+    BrandTargetConditionsFieldsCompletionDto: {
+      /**
+       * @description 진출 목표 국가 등록 여부
+       * @example true
+       */
+      target_country: boolean;
+      /**
+       * @description 선호 계약 방식 등록 여부
+       * @example true
+       */
+      preferred_contract_type: boolean;
+      /**
+       * @description 허용 파트너 역할 등록 여부
+       * @example false
+       */
+      partner_roles: boolean;
+    };
+    TargetConditionsSectionDto: {
+      /**
+       * @description 섹션 제목
+       * @example 진출 희망 조건
+       */
+      title: string;
+      /**
+       * @description 해당 섹션 완성도(0~100%)
+       * @example 67
+       */
+      completion_rate: number;
+      /**
+       * @description 해당 섹션 총 필드 수
+       * @example 3
+       */
+      total_fields: number;
+      /**
+       * @description 해당 섹션 완료된 필드 수
+       * @example 2
+       */
+      completed_fields: number;
+      /** @description 진출 희망 조건 필드별 완료 여부 */
+      fields: components["schemas"]["BrandTargetConditionsFieldsCompletionDto"];
+    };
+    BrandContractManagerFieldsCompletionDto: {
+      /**
+       * @description 계약 담당자 이름(한국어) 등록 여부
+       * @example true
+       */
+      name_ko: boolean;
+      /**
+       * @description 계약 담당자 이름(영어) 등록 여부
+       * @example true
+       */
+      name_en: boolean;
+      /**
+       * @description 계약 담당자 직책 등록 여부
+       * @example true
+       */
+      position: boolean;
+      /**
+       * @description 계약 담당자 이메일 등록 여부
+       * @example true
+       */
+      email: boolean;
+    };
+    ContractManagerSectionDto: {
+      /**
+       * @description 섹션 제목
+       * @example 진출 희망 조건
+       */
+      title: string;
+      /**
+       * @description 해당 섹션 완성도(0~100%)
+       * @example 67
+       */
+      completion_rate: number;
+      /**
+       * @description 해당 섹션 총 필드 수
+       * @example 3
+       */
+      total_fields: number;
+      /**
+       * @description 해당 섹션 완료된 필드 수
+       * @example 2
+       */
+      completed_fields: number;
+      /** @description 계약 담당자 정보 필드별 완료 여부 */
+      fields: components["schemas"]["BrandContractManagerFieldsCompletionDto"];
+    };
+    BrandSignatureManagerFieldsCompletionDto: {
+      /**
+       * @description 서명권자 이름(한국어) 등록 여부
+       * @example true
+       */
+      name_ko: boolean;
+      /**
+       * @description 서명권자 이름(영어) 등록 여부
+       * @example true
+       */
+      name_en: boolean;
+      /**
+       * @description 서명권자 직책 등록 여부
+       * @example true
+       */
+      position: boolean;
+      /**
+       * @description 서명권자 이메일 등록 여부
+       * @example true
+       */
+      email: boolean;
+    };
+    SignatureManagerSectionDto: {
+      /**
+       * @description 섹션 제목
+       * @example 진출 희망 조건
+       */
+      title: string;
+      /**
+       * @description 해당 섹션 완성도(0~100%)
+       * @example 67
+       */
+      completion_rate: number;
+      /**
+       * @description 해당 섹션 총 필드 수
+       * @example 3
+       */
+      total_fields: number;
+      /**
+       * @description 해당 섹션 완료된 필드 수
+       * @example 2
+       */
+      completed_fields: number;
+      /** @description 서명권자 정보 필드별 완료 여부 */
+      fields: components["schemas"]["BrandSignatureManagerFieldsCompletionDto"];
+    };
+    BrandPolicyConditionsFieldsCompletionDto: {
+      /**
+       * @description 독점 허용 여부 등록 여부
+       * @example true
+       */
+      exclusivity_level: boolean;
+      /**
+       * @description 메뉴 현지화 허용 여부 등록 여부
+       * @example true
+       */
+      menu_localization_level: boolean;
+      /**
+       * @description 인테리어 조정 허용 여부 등록 여부
+       * @example true
+       */
+      interior_standard_policy: boolean;
+      /**
+       * @description 식자재 대체 허용 등록 여부
+       * @example true
+       */
+      supply_chain_policy: boolean;
+      /**
+       * @description 상표 및 브랜드 사용 기준 등록 여부
+       * @example true
+       */
+      trademark_compliance_level: boolean;
+      /**
+       * @description 운영 매뉴얼 준수 수준 등록 여부
+       * @example true
+       */
+      manual_compliance_level: boolean;
+    };
+    PolicyConditionsSectionDto: {
+      /**
+       * @description 섹션 제목
+       * @example 진출 희망 조건
+       */
+      title: string;
+      /**
+       * @description 해당 섹션 완성도(0~100%)
+       * @example 67
+       */
+      completion_rate: number;
+      /**
+       * @description 해당 섹션 총 필드 수
+       * @example 3
+       */
+      total_fields: number;
+      /**
+       * @description 해당 섹션 완료된 필드 수
+       * @example 2
+       */
+      completed_fields: number;
+      /** @description 계약 및 운영 정책 필드별 완료 여부 */
+      fields: components["schemas"]["BrandPolicyConditionsFieldsCompletionDto"];
+    };
+    BrandContractPolicyCompletionSectionsDto: {
+      /** @description 진출 희망 조건 섹션 */
+      target_conditions: components["schemas"]["TargetConditionsSectionDto"];
+      /** @description 계약 담당자 정보 섹션 */
+      contract_manager: components["schemas"]["ContractManagerSectionDto"];
+      /** @description 서명권자 정보 섹션 */
+      signature_manager: components["schemas"]["SignatureManagerSectionDto"];
+      /** @description 계약 및 운영 정책 섹션 */
+      policy_conditions: components["schemas"]["PolicyConditionsSectionDto"];
+    };
+    GetBrandCompletionContractResponseDto: {
+      /**
+       * @description 워크스페이스 식별자(UID)
+       * @example 1
+       */
+      workspace_uid: number;
+      /**
+       * @description 전체 브랜드 계약 및 정책 정보 완성도 (0~100%)
+       * @example 76
+       */
+      completion_rate: number;
+      /**
+       * @description 계약 및 정책 총 평가 항목 수
+       * @example 17
+       */
+      total_fields: number;
+      /**
+       * @description 입력/등록 완료된 항목 수
+       * @example 13
+       */
+      completed_fields: number;
+      /** @description 단계별 정보 완성 상태 및 안내 문구 */
+      stage: components["schemas"]["BrandCompletionStageDto"];
+      /** @description 다음으로 해야 할 일 (우선순위 가장 높은 미입력 항목 1개, 모두 완료 시 null) */
+      next_task: components["schemas"]["BrandCompletionTaskDto"] | null;
+      /** @description 남은 주요 항목 (다음으로 해야 할 일을 제외한 다음 미입력 항목 최대 3개) */
+      remaining_tasks: components["schemas"]["BrandCompletionTaskDto"][];
+      /** @description 섹션별 상세 완성 현황 */
+      sections: components["schemas"]["BrandContractPolicyCompletionSectionsDto"];
+    };
+    BrandLocationStandardFieldsCompletionDto: {
+      /**
+       * @description 1차 상호 상권 등록 여부
+       * @example true
+       */
+      district_01: boolean;
+      /**
+       * @description 2차 상호 상권 등록 여부
+       * @example true
+       */
+      district_02: boolean;
+      /**
+       * @description 3차 상호 상권 등록 여부
+       * @example false
+       */
+      district_03: boolean;
+      /**
+       * @description 허용 월 임대료 - 최소 등록 여부
+       * @example true
+       */
+      min_rent: boolean;
+      /**
+       * @description 허용 월 임대료 - 최대 등록 여부
+       * @example true
+       */
+      max_rent: boolean;
+      /**
+       * @description 간판 노출 중요도 등록 여부
+       * @example true
+       */
+      sign_imp: boolean;
+      /**
+       * @description 매장 노출 중요도 등록 여부
+       * @example true
+       */
+      store_imp: boolean;
+      /**
+       * @description 주차 필요 여부 등록 여부
+       * @example true
+       */
+      parking_req: boolean;
+      /**
+       * @description 대기공간 필요 여부 등록 여부
+       * @example true
+       */
+      waiting_req: boolean;
+      /**
+       * @description 점심 매출 중요도 등록 여부
+       * @example true
+       */
+      lunch_imp: boolean;
+      /**
+       * @description 심야 매출 중요도 등록 여부
+       * @example true
+       */
+      night_imp: boolean;
+      /**
+       * @description 주중 매출 중요도 등록 여부
+       * @example true
+       */
+      weekday_imp: boolean;
+      /**
+       * @description 주말 매출 중요도 등록 여부
+       * @example true
+       */
+      weekend_imp: boolean;
+    };
+    LocationStandardSectionDto: {
+      /**
+       * @description 섹션 제목
+       * @example 입지 및 상권 기준
+       */
+      title: string;
+      /**
+       * @description 해당 섹션 완성도(0~100%)
+       * @example 85
+       */
+      completion_rate: number;
+      /**
+       * @description 해당 섹션 총 필드 수
+       * @example 13
+       */
+      total_fields: number;
+      /**
+       * @description 해당 섹션 완료된 필드 수
+       * @example 11
+       */
+      completed_fields: number;
+      /** @description 입지 및 상권 기준 필드별 완료 여부 */
+      fields: components["schemas"]["BrandLocationStandardFieldsCompletionDto"];
+    };
+    BrandSizeCriteriaFieldsCompletionDto: {
+      /**
+       * @description 권장 매장 평형 등록 여부
+       * @example true
+       */
+      rec_area: boolean;
+      /**
+       * @description 선호 매장 평형 - 최소 등록 여부
+       * @example true
+       */
+      min_area: boolean;
+      /**
+       * @description 선호 매장 평형 - 최대 등록 여부
+       * @example true
+       */
+      max_area: boolean;
+      /**
+       * @description 최소 전면 폭 등록 여부
+       * @example true
+       */
+      min_front_w: boolean;
+    };
+    SizeCriteriaSectionDto: {
+      /**
+       * @description 섹션 제목
+       * @example 입지 및 상권 기준
+       */
+      title: string;
+      /**
+       * @description 해당 섹션 완성도(0~100%)
+       * @example 85
+       */
+      completion_rate: number;
+      /**
+       * @description 해당 섹션 총 필드 수
+       * @example 13
+       */
+      total_fields: number;
+      /**
+       * @description 해당 섹션 완료된 필드 수
+       * @example 11
+       */
+      completed_fields: number;
+      /** @description 매장 규모 기준 필드별 완료 여부 */
+      fields: components["schemas"]["BrandSizeCriteriaFieldsCompletionDto"];
+    };
+    BrandFacilityReqFieldsCompletionDto: {
+      /**
+       * @description 가스 시설 필요 여부 등록 여부
+       * @example true
+       */
+      gas_req: boolean;
+      /**
+       * @description 급배수 시설 필요 여부 등록 여부
+       * @example true
+       */
+      plumbing_req: boolean;
+      /**
+       * @description 직화 시설 필요 여부 등록 여부
+       * @example true
+       */
+      direct_fire_req: boolean;
+      /**
+       * @description 배기 시설 필요 여부 등록 여부
+       * @example true
+       */
+      vent_req: boolean;
+      /**
+       * @description 냉장/냉동 저장공간 필요 여부 등록 여부
+       * @example true
+       */
+      cold_storage_req: boolean;
+    };
+    FacilityReqSectionDto: {
+      /**
+       * @description 섹션 제목
+       * @example 입지 및 상권 기준
+       */
+      title: string;
+      /**
+       * @description 해당 섹션 완성도(0~100%)
+       * @example 85
+       */
+      completion_rate: number;
+      /**
+       * @description 해당 섹션 총 필드 수
+       * @example 13
+       */
+      total_fields: number;
+      /**
+       * @description 해당 섹션 완료된 필드 수
+       * @example 11
+       */
+      completed_fields: number;
+      /** @description 필수 설비 조건 필드별 완료 여부 */
+      fields: components["schemas"]["BrandFacilityReqFieldsCompletionDto"];
+    };
+    BrandCommercialSectionsDto: {
+      /** @description 입지 및 상권 기준 섹션 */
+      location_standard: components["schemas"]["LocationStandardSectionDto"];
+      /** @description 매장 규모 기준 섹션 */
+      size_criteria: components["schemas"]["SizeCriteriaSectionDto"];
+      /** @description 필수 설비 조건 섹션 */
+      facility_req: components["schemas"]["FacilityReqSectionDto"];
+    };
+    GetBrandCompletionCommercialResponseDto: {
+      /**
+       * @description 워크스페이스 식별자(UID)
+       * @example 1
+       */
+      workspace_uid: number;
+      /**
+       * @description 전체 브랜드 상권분석 정보 완성도 (0~100%)
+       * @example 82
+       */
+      completion_rate: number;
+      /**
+       * @description 상권분석 총 평가 항목 수
+       * @example 22
+       */
+      total_fields: number;
+      /**
+       * @description 입력 완료된 항목 수
+       * @example 18
+       */
+      completed_fields: number;
+      /** @description 단계별 정보 완성 상태 및 안내 문구 */
+      stage: components["schemas"]["BrandCompletionStageDto"];
+      /** @description 다음으로 해야 할 일 (우선순위 가장 높은 미입력 항목 1개, 모두 완료 시 null) */
+      next_task: components["schemas"]["BrandCompletionTaskDto"] | null;
+      /** @description 남은 주요 항목 (다음으로 해야 할 일을 제외한 다음 미입력 항목 최대 3개) */
+      remaining_tasks: components["schemas"]["BrandCompletionTaskDto"][];
+      /** @description 섹션별 상세 완성 현황 */
+      sections: components["schemas"]["BrandCommercialSectionsDto"];
+    };
     BrandAutocompleteItemDto: {
       /**
        * @description 브랜드 고유 식별자 (uid)
@@ -3367,13 +4622,7 @@ export interface components {
        * @enum {string}
        */
       preferred_contract_type?:
-        | "마스터 프랜차이즈"
-        | "지역 개발권"
-        | "직영"
-        | "합작법인"
-        | "라이선스"
-        | "유통"
-        | "미정";
+        "마스터 프랜차이즈" | "지역 개발권" | "직영" | "합작법인" | "라이선스" | "유통" | "미정";
       /**
        * @description 독점권 요구 수준 (선택지: 불가, 협의 필요, 가능)
        * @example 협의 필요
@@ -3424,13 +4673,7 @@ export interface components {
        * @enum {string}
        */
       preferred_contract_type?:
-        | "마스터 프랜차이즈"
-        | "지역 개발권"
-        | "직영"
-        | "합작법인"
-        | "라이선스"
-        | "유통"
-        | "미정";
+        "마스터 프랜차이즈" | "지역 개발권" | "직영" | "합작법인" | "라이선스" | "유통" | "미정";
       /**
        * @description 독점권 요구 수준 (선택지: 불가, 협의 필요, 가능)
        * @example 협의 필요
@@ -3485,13 +4728,7 @@ export interface components {
        * @enum {string}
        */
       preferred_contract_type?:
-        | "마스터 프랜차이즈"
-        | "지역 개발권"
-        | "직영"
-        | "합작법인"
-        | "라이선스"
-        | "유통"
-        | "미정";
+        "마스터 프랜차이즈" | "지역 개발권" | "직영" | "합작법인" | "라이선스" | "유통" | "미정";
       /**
        * @description 진출 목표 국가 컬럼 값
        * @example 일본
@@ -4333,6 +5570,364 @@ export interface components {
       /** @description 대표 연락처 및 담당자 정보 */
       contact: components["schemas"]["BuyerContactDetailDto"];
     };
+    BuyerCompletionStageDto: {
+      /**
+       * @description 정보완성 단계명 (시작: 0~24%, 성장: 25~89%, 완성: 90~100%)
+       * @example 성장
+       * @enum {string}
+       */
+      step: "시작" | "성장" | "완성";
+      /**
+       * @description 단계별 안내 문구
+       * @example 회사 정보를 정리 중이에요
+       *     브랜드가 우리 회사를 확인하고 먼저 연락해올 수 있어요
+       */
+      message: string;
+    };
+    BuyerCompletionTaskDto: {
+      /**
+       * @description 항목 우선순위 (1부터 시작)
+       * @example 1
+       */
+      priority: number;
+      /**
+       * @description 해당 항목의 섹션 키 (buyer_basic | buyer_contract_policy | buyer_status | buyer_intro | buyer_contact)
+       * @example buyer_basic
+       */
+      section_key: string;
+      /**
+       * @description 해당 항목의 필드 키
+       * @example company_name
+       */
+      field_key: string;
+      /**
+       * @description 입력 항목명
+       * @example 회사명
+       */
+      title: string;
+      /**
+       * @description 필수 입력 항목 여부
+       * @example true
+       */
+      is_required: boolean;
+      /**
+       * @description 항목 설명 및 가이드 문구
+       * @example 타사가 우리 회사를 찾을 때 사용하는 정보입니다
+       */
+      description: string;
+    };
+    BuyerBasicFieldsCompletionDto: {
+      /**
+       * @description 회사명
+       * @example true
+       */
+      company_name: boolean;
+      /**
+       * @description 설립연도
+       * @example true
+       */
+      founded_year: boolean;
+      /**
+       * @description 대표자 이름
+       * @example true
+       */
+      ceo_name: boolean;
+      /**
+       * @description 운영 국가
+       * @example true
+       */
+      country: boolean;
+      /**
+       * @description 운영 도시
+       * @example true
+       */
+      city: boolean;
+      /**
+       * @description 본사 홈페이지
+       * @example true
+       */
+      homepage_url: boolean;
+      /**
+       * @description 본사 대표 이메일
+       * @example true
+       */
+      official_email: boolean;
+      /**
+       * @description 본사 주소
+       * @example true
+       */
+      official_address: boolean;
+    };
+    BuyerBasicSectionDto: {
+      /**
+       * @description 섹션 제목
+       * @example 기업 기본 정보
+       */
+      title: string;
+      /**
+       * @description 해당 섹션 완성도(0~100%)
+       * @example 75
+       */
+      completion_rate: number;
+      /**
+       * @description 해당 섹션 총 필드 수
+       * @example 8
+       */
+      total_fields: number;
+      /**
+       * @description 해당 섹션 완료된 필드 수
+       * @example 6
+       */
+      completed_fields: number;
+      /** @description 기업 기본 정보 필드별 완료 여부 */
+      fields: components["schemas"]["BuyerBasicFieldsCompletionDto"];
+    };
+    BuyerContractPolicyFieldsCompletionDto: {
+      /**
+       * @description 도입 희망 업종
+       * @example true
+       */
+      target_industry: boolean;
+      /**
+       * @description 선호 계약 방식
+       * @example true
+       */
+      preferred_contract_type: boolean;
+      /**
+       * @description 희망 파트너 역할
+       * @example true
+       */
+      target_partner_role: boolean;
+      /**
+       * @description 초기 투자 가능 규모
+       * @example true
+       */
+      investment_budget_scale: boolean;
+      /**
+       * @description 선호 로열티 방식
+       * @example true
+       */
+      preferred_royalty_type: boolean;
+      /**
+       * @description 선호 가격대
+       * @example true
+       */
+      target_price_tier: boolean;
+      /**
+       * @description 독점권 요구 수준
+       * @example true
+       */
+      exclusivity_requirement: boolean;
+      /**
+       * @description 메뉴 현지화 요구 수준
+       * @example true
+       */
+      localization_requirement: boolean;
+      /**
+       * @description 인테리어 기준 선호
+       * @example true
+       */
+      interior_preference: boolean;
+      /**
+       * @description 자체 식자재 공급망
+       * @example true
+       */
+      has_supply_chain: boolean;
+    };
+    BuyerContractPolicySectionDto: {
+      /**
+       * @description 섹션 제목
+       * @example 기업 기본 정보
+       */
+      title: string;
+      /**
+       * @description 해당 섹션 완성도(0~100%)
+       * @example 75
+       */
+      completion_rate: number;
+      /**
+       * @description 해당 섹션 총 필드 수
+       * @example 8
+       */
+      total_fields: number;
+      /**
+       * @description 해당 섹션 완료된 필드 수
+       * @example 6
+       */
+      completed_fields: number;
+      /** @description 희망 파트너 조건 및 정책 필드별 완료 여부 */
+      fields: components["schemas"]["BuyerContractPolicyFieldsCompletionDto"];
+    };
+    BuyerStatusFieldsCompletionDto: {
+      /**
+       * @description 현재 운영 중인 업종
+       * @example true
+       */
+      current_industry: boolean;
+      /**
+       * @description 운영 매장 수
+       * @example true
+       */
+      store_cnt: boolean;
+      /**
+       * @description 연매출 규모
+       * @example true
+       */
+      annual_revenue_scale: boolean;
+      /**
+       * @description 브랜드 운영 경험
+       * @example true
+       */
+      brand_experience_types: boolean;
+    };
+    BuyerStatusSectionDto: {
+      /**
+       * @description 섹션 제목
+       * @example 기업 기본 정보
+       */
+      title: string;
+      /**
+       * @description 해당 섹션 완성도(0~100%)
+       * @example 75
+       */
+      completion_rate: number;
+      /**
+       * @description 해당 섹션 총 필드 수
+       * @example 8
+       */
+      total_fields: number;
+      /**
+       * @description 해당 섹션 완료된 필드 수
+       * @example 6
+       */
+      completed_fields: number;
+      /** @description 기업 운영 현황 필드별 완료 여부 */
+      fields: components["schemas"]["BuyerStatusFieldsCompletionDto"];
+    };
+    BuyerIntroFieldsCompletionDto: {
+      /**
+       * @description 회사 소개
+       * @example true
+       */
+      detail_intro: boolean;
+      /**
+       * @description 핵심 차별점
+       * @example true
+       */
+      key_point_01: boolean;
+    };
+    BuyerIntroSectionDto: {
+      /**
+       * @description 섹션 제목
+       * @example 기업 기본 정보
+       */
+      title: string;
+      /**
+       * @description 해당 섹션 완성도(0~100%)
+       * @example 75
+       */
+      completion_rate: number;
+      /**
+       * @description 해당 섹션 총 필드 수
+       * @example 8
+       */
+      total_fields: number;
+      /**
+       * @description 해당 섹션 완료된 필드 수
+       * @example 6
+       */
+      completed_fields: number;
+      /** @description 기업 소개 및 차별점 필드별 완료 여부 */
+      fields: components["schemas"]["BuyerIntroFieldsCompletionDto"];
+    };
+    BuyerContactFieldsCompletionDto: {
+      /**
+       * @description 담당자 이름
+       * @example true
+       */
+      contact_name: boolean;
+      /**
+       * @description 담당자 이메일
+       * @example true
+       */
+      contact_email: boolean;
+      /**
+       * @description 담당자 직책
+       * @example true
+       */
+      contact_position: boolean;
+      /**
+       * @description 가능 언어
+       * @example true
+       */
+      contact_languages: boolean;
+    };
+    BuyerContactSectionDto: {
+      /**
+       * @description 섹션 제목
+       * @example 기업 기본 정보
+       */
+      title: string;
+      /**
+       * @description 해당 섹션 완성도(0~100%)
+       * @example 75
+       */
+      completion_rate: number;
+      /**
+       * @description 해당 섹션 총 필드 수
+       * @example 8
+       */
+      total_fields: number;
+      /**
+       * @description 해당 섹션 완료된 필드 수
+       * @example 6
+       */
+      completed_fields: number;
+      /** @description 담당자 연락처 필드별 완료 여부 */
+      fields: components["schemas"]["BuyerContactFieldsCompletionDto"];
+    };
+    BuyerCompletionSectionsDto: {
+      /** @description 기업 기본 정보 섹션 */
+      buyer_basic: components["schemas"]["BuyerBasicSectionDto"];
+      /** @description 희망 파트너 조건 및 정책 섹션 */
+      buyer_contract_policy: components["schemas"]["BuyerContractPolicySectionDto"];
+      /** @description 기업 운영 현황 섹션 */
+      buyer_status: components["schemas"]["BuyerStatusSectionDto"];
+      /** @description 기업 소개 및 차별점 섹션 */
+      buyer_intro: components["schemas"]["BuyerIntroSectionDto"];
+      /** @description 담당자 연락처 섹션 */
+      buyer_contact: components["schemas"]["BuyerContactSectionDto"];
+    };
+    GetBuyerCompletionResponseDto: {
+      /**
+       * @description 워크스페이스 UID
+       * @example 1
+       */
+      workspace_uid: number;
+      /**
+       * @description 전체 바이어 정보 완성도 (0~100%)
+       * @example 71
+       */
+      completion_rate: number;
+      /**
+       * @description 전체 평가 필드 총 수
+       * @example 28
+       */
+      total_fields: number;
+      /**
+       * @description 입력 완료된 필드 총 수
+       * @example 20
+       */
+      completed_fields: number;
+      /** @description 단계별 정보 완성 상태 및 안내 문구 */
+      stage: components["schemas"]["BuyerCompletionStageDto"];
+      /** @description 다음으로 해야 할 일 (우선순위 가장 높은 미입력 항목 1개, 모두 완료 시 null) */
+      next_task: components["schemas"]["BuyerCompletionTaskDto"] | null;
+      /** @description 남은 주요 항목 (다음으로 해야 할 일을 제외한 다음 미입력 항목 최대 3개) */
+      remaining_tasks: components["schemas"]["BuyerCompletionTaskDto"][];
+      /** @description 섹션별 상세 완성 현황 */
+      sections: components["schemas"]["BuyerCompletionSectionsDto"];
+    };
     BuyerAutocompleteItemDto: {
       /**
        * @description 바이어 고유 식별자 (uid)
@@ -4504,15 +6099,7 @@ export interface components {
        * @enum {string}
        */
       current_industry:
-        | "양식"
-        | "한식"
-        | "일식"
-        | "중식"
-        | "카페/베이커리"
-        | "패스트푸드"
-        | "주점"
-        | "식음료 유통/도소매"
-        | "기타";
+        "양식" | "한식" | "일식" | "중식" | "카페/베이커리" | "패스트푸드" | "주점" | "식음료 유통/도소매" | "기타";
       /**
        * @description 운영 매장 수 (개)
        * @example 5
@@ -4557,15 +6144,7 @@ export interface components {
        * @enum {string}
        */
       current_industry:
-        | "양식"
-        | "한식"
-        | "일식"
-        | "중식"
-        | "카페/베이커리"
-        | "패스트푸드"
-        | "주점"
-        | "식음료 유통/도소매"
-        | "기타";
+        "양식" | "한식" | "일식" | "중식" | "카페/베이커리" | "패스트푸드" | "주점" | "식음료 유통/도소매" | "기타";
       /**
        * @description 운영 매장 수 (개)
        * @example 5
@@ -4682,28 +6261,14 @@ export interface components {
        * @enum {string}
        */
       target_industry:
-        | "양식"
-        | "한식"
-        | "일식"
-        | "중식"
-        | "카페/베이커리"
-        | "패스트푸드"
-        | "주점"
-        | "식음료 유통/도소매"
-        | "기타";
+        "양식" | "한식" | "일식" | "중식" | "카페/베이커리" | "패스트푸드" | "주점" | "식음료 유통/도소매" | "기타";
       /**
        * @description 선호 계약 방식 (선택지: 마스터 프랜차이즈, 지역 개발권, 직영, 합작법인, 라이선스, 유통, 미정)
        * @example 마스터 프랜차이즈
        * @enum {string}
        */
       preferred_contract_type?:
-        | "마스터 프랜차이즈"
-        | "지역 개발권"
-        | "직영"
-        | "합작법인"
-        | "라이선스"
-        | "유통"
-        | "미정";
+        "마스터 프랜차이즈" | "지역 개발권" | "직영" | "합작법인" | "라이선스" | "유통" | "미정";
       /**
        * @description 희망 파트너 역할 (선택지: 총판/마스터 파트너, 합작투자(JV) 파트너, 단일/복수 가맹점주, 유통/공급 대행)
        * @example 총판/마스터 파트너
@@ -4740,11 +6305,7 @@ export interface components {
        * @enum {string}
        */
       localization_requirement:
-        | "할랄 인증 필수"
-        | "비건/채식 메뉴 필수"
-        | "현지 입맛 조정 필수"
-        | "원작 유지 선호"
-        | "협의 가능";
+        "할랄 인증 필수" | "비건/채식 메뉴 필수" | "현지 입맛 조정 필수" | "원작 유지 선호" | "협의 가능";
       /**
        * @description 인테리어 기준 선호 (선택지: 본사 표준안 전면 적용, 현지 사정 맞춰 일부 수정, 자체 디자인 적용(협의), 협의 필요)
        * @example 본사 표준안 전면 적용
@@ -4765,28 +6326,14 @@ export interface components {
        * @enum {string}
        */
       target_industry:
-        | "양식"
-        | "한식"
-        | "일식"
-        | "중식"
-        | "카페/베이커리"
-        | "패스트푸드"
-        | "주점"
-        | "식음료 유통/도소매"
-        | "기타";
+        "양식" | "한식" | "일식" | "중식" | "카페/베이커리" | "패스트푸드" | "주점" | "식음료 유통/도소매" | "기타";
       /**
        * @description 선호 계약 방식 (선택지: 마스터 프랜차이즈, 지역 개발권, 직영, 합작법인, 라이선스, 유통, 미정)
        * @example 마스터 프랜차이즈
        * @enum {string}
        */
       preferred_contract_type?:
-        | "마스터 프랜차이즈"
-        | "지역 개발권"
-        | "직영"
-        | "합작법인"
-        | "라이선스"
-        | "유통"
-        | "미정";
+        "마스터 프랜차이즈" | "지역 개발권" | "직영" | "합작법인" | "라이선스" | "유통" | "미정";
       /**
        * @description 희망 파트너 역할
        * @example 총판/마스터 파트너
@@ -4823,11 +6370,7 @@ export interface components {
        * @enum {string}
        */
       localization_requirement:
-        | "할랄 인증 필수"
-        | "비건/채식 메뉴 필수"
-        | "현지 입맛 조정 필수"
-        | "원작 유지 선호"
-        | "협의 가능";
+        "할랄 인증 필수" | "비건/채식 메뉴 필수" | "현지 입맛 조정 필수" | "원작 유지 선호" | "협의 가능";
       /**
        * @description 인테리어 기준 선호
        * @example 본사 표준안 전면 적용
@@ -6472,6 +8015,98 @@ export interface operations {
       };
     };
   };
+  GetBrandCompletionBasicController_getBrandCompletion: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 조회할 워크스페이스 고유 식별자 (uid) */
+        workspace_uid: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 브랜드 정보 완성 현황 조회 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["GetBrandCompletionBasicResponseDto"];
+        };
+      };
+    };
+  };
+  GetBrandCompletionVisualController_getBrandVisualCompletion: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 조회할 워크스페이스 고유 식별자 (uid) */
+        workspace_uid: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 브랜드 비주얼 완성 현황 조회 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["GetBrandCompletionVisualResponseDto"];
+        };
+      };
+    };
+  };
+  GetBrandCompletionContractController_getBrandContractCompletion: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 조회할 워크스페이스 고유 식별자 (uid) */
+        workspace_uid: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 브랜드 계약 및 정책 정보 완성 현황 조회 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["GetBrandCompletionContractResponseDto"];
+        };
+      };
+    };
+  };
+  GetBrandCompletionCommercialController_getBrandCommercialCompletion: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 조회할 워크스페이스 고유 식별자 (uid) */
+        workspace_uid: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 브랜드 상권분석 정보 완성 현황 조회 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["GetBrandCompletionCommercialResponseDto"];
+        };
+      };
+    };
+  };
   AutocompleteBrandController_execute: {
     parameters: {
       query: {
@@ -7408,6 +9043,29 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+    };
+  };
+  GetBuyerCompletionController_getBuyerCompletion: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 조회할 워크스페이스 고유 식별자 (uid) */
+        workspace_uid: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 바이어 정보 완성 현황 조회 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["GetBuyerCompletionResponseDto"];
+        };
       };
     };
   };
