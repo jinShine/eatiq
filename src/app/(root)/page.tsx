@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 
 import { useMyWorkspaces } from "@services/api/workspace/workspace.query";
 
+import WorkspaceEmptyState from "./_components/WorkspaceEmptyState";
+
 export default function RootPage() {
   const router = useRouter();
   const { data: workspaces, isLoading } = useMyWorkspaces();
@@ -29,13 +31,7 @@ export default function RootPage() {
 
   // 워크스페이스가 하나도 없을 때 (온보딩 자리)
   if (!targetId) {
-    return (
-      <div className="flex h-dvh flex-col items-center justify-center gap-3">
-        <p className="text-text-secondary text-sm">아직 워크스페이스가 없어요.</p>
-        <p className="text-text-secondary text-sm font-bold">TODO: 워크스페이스 생성 플로우 필요!!!!!!!!</p>
-        {/* TODO: 워크스페이스 생성 페이지/모달로 연결 */}
-      </div>
-    );
+    return <WorkspaceEmptyState onCreated={workspaceId => router.replace(`/${workspaceId}/dashboard`)} />;
   }
 
   return null; // 리다이렉트 대기
