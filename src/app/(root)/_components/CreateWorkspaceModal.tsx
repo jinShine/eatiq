@@ -80,9 +80,11 @@ export default function CreateWorkspaceModal({
     createWorkspace(
       { name: values.name, type },
       {
+        // 이동 먼저, 닫기는 그 다음. 순서를 바꾸면 목적지가 그려지기 전에 모달이 걷혀
+        // 빈 화면이 한 프레임 비친다. 도착한 화면은 각 라우트의 loading.tsx가 받는다
         onSuccess: response => {
-          handleOpenChange(false);
           onCreated(String(response.workspace.uid));
+          handleOpenChange(false);
         },
         onError: () => Toast.error("워크스페이스 생성에 실패했어요. 다시 시도해주세요."),
       },
