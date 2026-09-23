@@ -25,7 +25,7 @@ export { default as Popover } from "./Popover";
 export { default as Paginator } from "./Paginator";
 export { default as PaginatorV2 } from "./PaginatorV2";
 export { default as NotiBadge } from "./NotiBadge";
-export { default as Skeleton } from "./Skeleton";
+export { default as Skeleton, SkeletonText } from "./Skeleton";
 export { default as Separator } from "./Separator";
 export { default as Switch } from "./Switch";
 export { default as Tooltip } from "./Tooltip";

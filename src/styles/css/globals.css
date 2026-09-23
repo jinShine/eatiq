@@ -118,6 +118,18 @@
       height: 0;
     }
   }
+
+  /* 스켈레톤 — 왼쪽에서 오른쪽으로 훑는 빛. 깜빡이는 pulse보다 "채워지는 중"으로 읽힌다 */
+  --animate-shimmer: shimmer 1.6s ease-in-out infinite;
+
+  @keyframes shimmer {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(100%);
+    }
+  }
 }
 
 /* ============================================================================
