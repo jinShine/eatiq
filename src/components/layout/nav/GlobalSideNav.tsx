@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 
 import { useParams, usePathname, useRouter } from "next/navigation";
 
@@ -26,6 +26,7 @@ import { useUserSettingsStore } from "@stores/useUserSettingsStore";
 
 import { cn } from "@utils/shadcn";
 
+import RouteProgressBar from "../RouteProgressBar";
 import SidebarNavItem from "./_components/SidebarNavItem";
 import SidebarUserProfile from "./_components/SidebarUserProfile";
 import WorkspaceSwitcher from "./_components/WorkspaceSwitcher";
@@ -59,6 +60,8 @@ export default function GlobalSideNav() {
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
+  const [isNavigating, startTransition] = useTransition();
+
   const router = useRouter();
   const pathname = usePathname();
   const { workspaceId } = useParams<{ workspaceId: string }>();
@@ -71,11 +74,11 @@ export default function GlobalSideNav() {
   const currentSection = pathname.split("/")[2] ?? "";
 
   const handleSwitchWorkspace = (id: string) => {
-    router.push(`/${id}/${currentSection}`);
+    startTransition(() => router.push(`/${id}/${currentSection}`));
   };
 
   const handleNavToSection = (section: string) => {
-    router.push(`/${workspaceId}/${section}`);
+    startTransition(() => router.push(`/${workspaceId}/${section}`));
   };
 
   return (
@@ -87,6 +90,8 @@ export default function GlobalSideNav() {
           collapsed ? "h-auto flex-col gap-2 py-2" : "h-16 gap-2 px-3",
         )}
       >
+        <RouteProgressBar isNavigating={isNavigating} />
+
         <WorkspaceSwitcher
           workspaces={workspaces ?? []}
           currentId={workspaceId}
