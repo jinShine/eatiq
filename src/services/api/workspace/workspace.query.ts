@@ -8,26 +8,35 @@ import {
   deleteWorkspace,
   getMyWorkspaces,
   getWorkspaceDetail,
+  getWorkspaceMembers,
   updateWorkspaceName,
 } from "./workspace.api";
-import { mockMyWorkspaces, mockWorkspaceDetail } from "./workspace.mock";
+import { mockMyWorkspaces, mockWorkspaceDetail, mockWorkspaceMembers } from "./workspace.mock";
 import {
   type CreateWorkspaceRequest,
   type MyWorkspaceItem,
   type UpdateWorkspaceNameRequest,
   type Workspace,
+  type WorkspaceMember,
+  type WorkspaceMemberItem,
 } from "./workspace.type";
 
 export const workspaceKeys = {
   all: ["workspaces"] as const,
   my: () => [...workspaceKeys.all, "my"] as const,
   detail: (workspaceId: string) => [...workspaceKeys.all, "detail", workspaceId] as const,
+  members: (workspaceId: string) => [...workspaceKeys.all, "members", workspaceId] as const,
 };
 
 /** API DTO → 앱 뷰모델. uid는 number라 라우팅에 쓰려면 문자열로 바꾼다 */
 const toWorkspace = (item: MyWorkspaceItem): Workspace => ({
   id: String(item.uid),
   name: item.name,
+  myMember: {
+    id: String(item.my_member_info.uid),
+    grade: item.my_member_info.grade,
+    status: item.my_member_info.status,
+  },
 });
 
 export function useMyWorkspaces() {
@@ -86,5 +95,30 @@ export function useDeleteWorkspaceMutation(workspaceId: string) {
   return useMutation({
     mutationFn: IS_MOCK ? () => mockResolve({ message: "삭제되었습니다." }) : () => deleteWorkspace(workspaceId),
     onSuccess: () => invalidateQueries.single(workspaceKeys.my()),
+  });
+}
+
+/** DTO → 뷰모델. snake_case와 number id를 화면 쪽 모양으로 바꾼다 */
+const toWorkspaceMember = (item: WorkspaceMemberItem): WorkspaceMember => ({
+  id: String(item.uid),
+  name: item.name,
+  email: item.email,
+  grade: item.grade,
+  status: item.status,
+  lastConnectedAt: item.last_connection_time,
+});
+
+/**
+ * 워크스페이스 멤버 목록.
+ *
+ * 변환은 select에서 한다. queryFn 안에서 map을 돌리면 캐시에 가공된 것이 남아
+ * total_count 같은 원본 정보가 필요해질 때 다시 요청해야 한다.
+ */
+export function useWorkspaceMembers(workspaceId: string) {
+  return useQuery({
+    queryKey: workspaceKeys.members(workspaceId),
+    queryFn: IS_MOCK ? () => mockResolve(mockWorkspaceMembers) : () => getWorkspaceMembers(workspaceId),
+    select: response => response.members.map(toWorkspaceMember),
+    enabled: Boolean(workspaceId),
   });
 }

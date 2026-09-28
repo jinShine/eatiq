@@ -17,6 +17,17 @@ export type CreateWorkspaceResponse = components["schemas"]["CreateWorkspaceResp
 export type Workspace = {
   id: string;
   name: string;
+  /**
+   * 이 워크스페이스에서의 내 멤버 정보.
+   *
+   * 권한 판단을 멤버 목록에서 이메일로 대조해 추론하지 않는다.
+   * 서버가 "너는 관리자다"라고 명시적으로 주는 값을 그대로 쓴다.
+   */
+  myMember: {
+    id: string;
+    grade: WorkspaceMemberGrade;
+    status: WorkspaceMemberStatus;
+  };
 };
 
 /** 워크스페이스 상세 */
@@ -32,3 +43,29 @@ export type WorkspaceDetailResponse = {
 export type UpdateWorkspaceNameRequest = { name: string };
 export type UpdateWorkspaceNameResponse = { message: string };
 export type DeleteWorkspaceResponse = { message: string };
+
+/** 워크스페이스 멤버 목록 */
+export type WorkspaceMembersResponse = components["schemas"]["GetWorkspaceMemberListResponseDto"];
+export type WorkspaceMemberItem = components["schemas"]["WorkspaceMemberItemDto"];
+
+/**
+ * 멤버 권한·상태는 스펙에서 뽑아 쓴다.
+ * 손으로 다시 적으면 백엔드가 값을 추가했을 때 두 곳이 어긋난다.
+ */
+export type WorkspaceMemberGrade = WorkspaceMemberItem["grade"];
+export type WorkspaceMemberStatus = WorkspaceMemberItem["status"];
+
+/**
+ * 화면에서 쓰는 멤버 뷰모델.
+ *
+ * uid는 number라 key·경로에 쓰려면 문자열이 낫고, snake_case는 화면까지
+ * 흘려보내지 않는다. 값 집합 자체는 서버와 같아야 하므로 스펙을 따른다.
+ */
+export type WorkspaceMember = {
+  id: string;
+  name: string | null;
+  email: string;
+  grade: WorkspaceMemberGrade;
+  status: WorkspaceMemberStatus;
+  lastConnectedAt: string | null;
+};

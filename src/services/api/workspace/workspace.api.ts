@@ -8,6 +8,7 @@ import {
   type UpdateWorkspaceNameRequest,
   type UpdateWorkspaceNameResponse,
   type WorkspaceDetailResponse,
+  type WorkspaceMembersResponse,
 } from "./workspace.type";
 
 const BASE_PATH = "/api/workspace";
@@ -18,6 +19,7 @@ const ENDPOINTS = {
   invited: `${BASE_PATH}/my/invited`,
   detail: (workspaceId: string) => `${BASE_PATH}/${workspaceId}`,
   name: (workspaceId: string) => `${BASE_PATH}/${workspaceId}/name`,
+  members: (workspaceId: string) => `${BASE_PATH}/${workspaceId}/members`,
 };
 
 /** 내가 속한 워크스페이스 목록 */
@@ -46,5 +48,11 @@ export async function updateWorkspaceName(
 
 export async function deleteWorkspace(workspaceId: string): Promise<DeleteWorkspaceResponse> {
   const res = await axiosClientInstance.delete<DeleteWorkspaceResponse>(ENDPOINTS.detail(workspaceId));
+  return res.data;
+}
+
+/** 워크스페이스 멤버 목록 */
+export async function getWorkspaceMembers(workspaceId: string): Promise<WorkspaceMembersResponse> {
+  const res = await axiosClientInstance.get<WorkspaceMembersResponse>(ENDPOINTS.members(workspaceId));
   return res.data;
 }
