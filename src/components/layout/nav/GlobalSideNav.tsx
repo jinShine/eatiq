@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import { useParams, usePathname, useRouter } from "next/navigation";
 
 import {
@@ -14,6 +16,8 @@ import {
   User,
   Users,
 } from "lucide-react";
+
+import { CreateWorkspaceModal } from "@components/custom/workspace";
 
 import { useAuthUser } from "@services/api/auth/auth.query";
 import { useMyWorkspaces } from "@services/api/workspace/workspace.query";
@@ -53,6 +57,8 @@ export default function GlobalSideNav() {
   const collapsed = useUserSettingsStore(state => state.sidebarCollapsed);
   const toggle = useUserSettingsStore(state => state.toggleSidebar);
 
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
   const router = useRouter();
   const pathname = usePathname();
   const { workspaceId } = useParams<{ workspaceId: string }>();
@@ -85,6 +91,7 @@ export default function GlobalSideNav() {
           workspaces={workspaces ?? []}
           currentId={workspaceId}
           onSwitch={handleSwitchWorkspace}
+          onCreate={() => setIsCreateModalOpen(true)}
           collapsed={collapsed}
           isLoading={isWorkspacesLoading}
         />
@@ -137,6 +144,12 @@ export default function GlobalSideNav() {
           isLoading={isMeLoading}
         />
       </div>
+
+      <CreateWorkspaceModal
+        isOpen={isCreateModalOpen}
+        onOpenChange={setIsCreateModalOpen}
+        onCreated={workspaceId => router.push(`/${workspaceId}/dashboard`)}
+      />
     </nav>
   );
 }

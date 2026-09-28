@@ -4,8 +4,12 @@ import { useState } from "react";
 
 import { motion, useReducedMotion } from "motion/react";
 
-import CreateWorkspaceModal from "./CreateWorkspaceModal";
-import WorkspaceTypeCard, { WORKSPACE_TYPE_OPTIONS, type WorkspaceType } from "./WorkspaceTypeCard";
+import {
+  CreateWorkspaceModal,
+  WORKSPACE_TYPE_OPTIONS,
+  type WorkspaceType,
+  WorkspaceTypeCard,
+} from "@components/custom/workspace";
 
 type WorkspaceEmptyStateProps = {
   onCreated: (workspaceId: string) => void;

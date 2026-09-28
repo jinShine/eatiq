@@ -1,6 +1,6 @@
-import { CheckIcon, ChevronDownIcon } from "lucide-react";
+import { CheckIcon, ChevronDownIcon, PlusIcon } from "lucide-react";
 
-import { DropdownMenu, DropdownMenuItem, Skeleton } from "@components/ui";
+import { DropdownMenu, DropdownMenuItem, DropdownMenuSeparator, Skeleton } from "@components/ui";
 
 import { getInitial } from "@utils/functions";
 import { cn } from "@utils/shadcn";
@@ -14,6 +14,8 @@ type WorkspaceSwitcherProps = {
   workspaces: Workspace[];
   currentId: string;
   onSwitch: (id: string) => void;
+  /** 목록 아래 "워크스페이스 추가" 항목을 눌렀을 때 */
+  onCreate: () => void;
   collapsed?: boolean;
   isLoading?: boolean;
 };
@@ -22,6 +24,7 @@ export default function WorkspaceSwitcher({
   workspaces,
   currentId,
   onSwitch,
+  onCreate,
   collapsed,
   isLoading,
 }: WorkspaceSwitcherProps) {
@@ -70,6 +73,16 @@ export default function WorkspaceSwitcher({
           {ws.id === currentId && <CheckIcon className="text-primary size-4 shrink-0" />}
         </DropdownMenuItem>
       ))}
+
+      {/* 목록과 구분선으로 떼어놓는다 — 전환과 생성은 성격이 다른 동작이라 나란히 두면 잘못 누른다 */}
+      <DropdownMenuSeparator />
+
+      <DropdownMenuItem onClick={onCreate} className="text-text-secondary gap-2">
+        <span className="border-border flex size-6 shrink-0 items-center justify-center rounded-md border border-dashed">
+          <PlusIcon className="size-3.5" />
+        </span>
+        <span className="flex-1 truncate">워크스페이스 추가</span>
+      </DropdownMenuItem>
     </DropdownMenu>
   );
 }
