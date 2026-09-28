@@ -106,14 +106,30 @@ export const mockWorkspaceMembers: WorkspaceMembersResponse = {
 };
 
 /**
- * 초대 결과 — 부분 성공을 담는다.
+ * 초대 결과 — 보낸 이메일에 따라 응답을 만든다.
  *
- * 전부 성공하는 목만 두면 실패 UI(칸별 사유 표시)를 검증할 수 없다.
+ * 고정 응답을 돌려주면 목에서만 나는 증상(화면에 없는 이메일이 실패로 오는 것)에
+ * 시간을 쓰게 된다. 이미 멤버인 주소만 실패로 처리해 실제 서버처럼 굴게 한다.
  */
-export const mockInviteResult: InviteMembersResponse = {
-  message: "워크스페이스 멤버 초대가 처리되었습니다.",
-  invited_count: 1,
-  failed_count: 1,
-  invited_members: [{ uid: 15, grade: "사용자", status: "초대중", last_connection_time: null }],
-  failed_items: [{ email: "jihwan.kim@eatiq.io", reason: "이미 해당 워크스페이스의 활성 멤버입니다." }],
+export const buildMockInviteResult = (emails: string[]): InviteMembersResponse => {
+  const existing = new Set(mockWorkspaceMembers.members.map(member => member.email.toLowerCase()));
+
+  const failed = emails.filter(email => existing.has(email.trim().toLowerCase()));
+  const invited = emails.filter(email => !existing.has(email.trim().toLowerCase()));
+
+  return {
+    message: "워크스페이스 멤버 초대가 처리되었습니다.",
+    invited_count: invited.length,
+    failed_count: failed.length,
+    invited_members: invited.map((_, index) => ({
+      uid: 100 + index,
+      grade: "사용자" as const,
+      status: "초대중" as const,
+      last_connection_time: null,
+    })),
+    failed_items: failed.map(email => ({
+      email,
+      reason: "이미 해당 워크스페이스의 활성 멤버입니다.",
+    })),
+  };
 };

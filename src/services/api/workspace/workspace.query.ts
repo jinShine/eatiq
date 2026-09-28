@@ -12,7 +12,7 @@ import {
   inviteMembers,
   updateWorkspaceName,
 } from "./workspace.api";
-import { mockInviteResult, mockMyWorkspaces, mockWorkspaceDetail, mockWorkspaceMembers } from "./workspace.mock";
+import { buildMockInviteResult, mockMyWorkspaces, mockWorkspaceDetail, mockWorkspaceMembers } from "./workspace.mock";
 import {
   type CreateWorkspaceRequest,
   type InviteMembersRequest,
@@ -136,7 +136,7 @@ export function useInviteMembersMutation(workspaceId: string) {
 
   return useMutation({
     mutationFn: IS_MOCK
-      ? (_body: InviteMembersRequest) => mockResolve(mockInviteResult)
+      ? (body: InviteMembersRequest) => mockResolve(buildMockInviteResult(body.emails))
       : (body: InviteMembersRequest) => inviteMembers(workspaceId, body),
     onSuccess: () => invalidateQueries.single(workspaceKeys.members(workspaceId)),
   });

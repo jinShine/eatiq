@@ -49,9 +49,11 @@ type InviteMemberModalProps = {
   isPending?: boolean;
   /**
    * 초대 실행. 일부만 실패할 수 있어 모달을 닫는 시점은 호출부가 정한다.
-   * 실패한 항목은 setEmailError로 해당 칸에 되돌려 붙인다.
+   *
+   * setEmailError는 해당 이메일이 적힌 칸을 찾아 사유를 붙이고, 찾았는지를 돌려준다.
+   * false면 화면에 그 이메일이 없다는 뜻이라 호출부가 다른 방법으로 알려야 한다.
    */
-  onSubmit: (emails: string[], helpers: { setEmailError: (email: string, message: string) => void }) => void;
+  onSubmit: (emails: string[], helpers: { setEmailError: (email: string, message: string) => boolean }) => void;
 };
 
 const normalize = (email: string) => email.trim().toLowerCase();
@@ -62,6 +64,7 @@ export default function InviteMemberModal({ isOpen, onOpenChange, isPending, onS
     register,
     handleSubmit,
     reset,
+    getValues,
     formState: { errors },
   } = useForm<InviteMemberForm>({
     resolver: zodResolver(inviteSchema),
@@ -92,7 +95,13 @@ export default function InviteMemberModal({ isOpen, onOpenChange, isPending, onS
   }, [isOpen, reset]);
 
   const setEmailError = (email: string, message: string) => {
-    setServerErrors(prev => ({ ...prev, [normalize(email)]: message }));
+    const key = normalize(email);
+    const isOnScreen = getValues("emails").some(field => normalize(field.value) === key);
+
+    if (isOnScreen) {
+      setServerErrors(prev => ({ ...prev, [key]: message }));
+    }
+    return isOnScreen;
   };
 
   const canAddMore = fields.length < MAX_INVITE_COUNT;
@@ -151,9 +160,9 @@ export default function InviteMemberModal({ isOpen, onOpenChange, isPending, onS
               type="button"
               disabled={!canAddMore}
               onClick={() => append({ value: "" })}
-              className="text-text-secondary hover:text-text-primary focus-visible:ring-ring flex items-center gap-1 rounded text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-40 focus-visible:ring-2 focus-visible:outline-none"
+              className="text-text-secondary hover:text-text-primary focus-visible:ring-ring flex items-center gap-1 rounded text-xs font-medium transition-colors disabled:pointer-events-none disabled:opacity-40 focus-visible:ring-2 focus-visible:outline-none"
             >
-              <Plus className="size-4" />
+              <Plus className="size-3" />
               보낼 사람 추가하기
             </button>
 

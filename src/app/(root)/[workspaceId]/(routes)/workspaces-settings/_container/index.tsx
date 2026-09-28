@@ -59,7 +59,13 @@ export default function WorkspacesSettingsContainer({ workspaceId }: { workspace
           // 실패한 항목은 모달에 남겨 그 칸에 사유를 붙인다.
           // 닫아버리면 무엇이 왜 실패했는지 알 수 없다
           if (response.failed_items.length > 0) {
-            response.failed_items.forEach(item => setEmailError(item.email, item.reason));
+            // 서버가 준 이메일이 입력 칸과 맞지 않을 수 있다(정규화·별칭 등).
+            // 어디에도 붙이지 못한 실패를 그냥 두면 이유 없이 막힌 화면이 된다
+            const unmatched = response.failed_items.filter(item => !setEmailError(item.email, item.reason));
+
+            if (unmatched.length > 0) {
+              Toast.error(unmatched.map(item => `${item.email}: ${item.reason}`).join("\n"));
+            }
 
             if (response.invited_count > 0) {
               Toast.success(`${response.invited_count}명을 초대했어요. 나머지는 확인이 필요해요.`);
