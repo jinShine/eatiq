@@ -38,6 +38,10 @@ export type UpdateWorkspaceNameRequest = components["schemas"]["UpdateWorkspaceN
 export type UpdateWorkspaceNameResponse = components["schemas"]["UpdateWorkspaceNameResponseDto"];
 export type DeleteWorkspaceResponse = components["schemas"]["DeleteWorkspaceResponseDto"];
 
+/** 멤버 초대 — 여러 명을 한 번에 보내고 성공·실패가 나뉘어 온다 */
+export type InviteMembersRequest = components["schemas"]["InviteWorkspaceMemberDto"];
+export type InviteMembersResponse = components["schemas"]["InviteWorkspaceMemberResponseDto"];
+
 /** 워크스페이스 멤버 목록 */
 export type WorkspaceMembersResponse = components["schemas"]["GetWorkspaceMemberListResponseDto"];
 export type WorkspaceMemberItem = components["schemas"]["WorkspaceMemberItemDto"];

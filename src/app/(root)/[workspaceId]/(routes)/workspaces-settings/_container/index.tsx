@@ -11,6 +11,7 @@ import { Toast } from "@components/ui";
 
 import {
   useDeleteWorkspaceMutation,
+  useInviteMembersMutation,
   useMyWorkspaces,
   useUpdateWorkspaceNameMutation,
   useWorkspaceDetail,
@@ -22,16 +23,20 @@ import ROUTES from "@constants/routes";
 
 import DeleteWorkspaceModal from "../_components/DeleteWorkspaceModal";
 import DeleteWorkspaceSection from "../_components/DeleteWorkspaceSection";
+import InviteMemberModal from "../_components/InviteMemberModal";
+import MemberRowMenu, { type MemberAction } from "../_components/MemberRowMenu";
 import MemberSection from "../_components/MemberSection";
 import WorkspaceNameSection, { type WorkspaceNameForm } from "../_components/WorkspaceNameSection";
 
 export default function WorkspacesSettingsContainer({ workspaceId }: { workspaceId: string }) {
   const router = useRouter();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
 
   const { data, isLoading } = useWorkspaceDetail(workspaceId);
   const { mutate: updateName, isPending: isUpdatingName } = useUpdateWorkspaceNameMutation(workspaceId);
   const { mutate: removeWorkspace, isPending: isDeleting } = useDeleteWorkspaceMutation(workspaceId);
+  const { mutate: invite, isPending: isInviting } = useInviteMembersMutation(workspaceId);
 
   // 사이드바가 이미 부르고 있어 같은 queryKey의 캐시를 받는다. 요청은 한 번만 나간다
   const { data: workspaces = [] } = useMyWorkspaces();
@@ -45,6 +50,35 @@ export default function WorkspacesSettingsContainer({ workspaceId }: { workspace
 
   // 관리자에게만 메뉴가 보이고, 자기 자신 행에는 보이지 않는다 (피그마 규칙)
   const canManageMember = (member: WorkspaceMember) => isAdmin && member.id !== myMember?.id;
+
+  const handleInvite: React.ComponentProps<typeof InviteMemberModal>["onSubmit"] = (emails, { setEmailError }) => {
+    invite(
+      { emails },
+      {
+        onSuccess: response => {
+          // 실패한 항목은 모달에 남겨 그 칸에 사유를 붙인다.
+          // 닫아버리면 무엇이 왜 실패했는지 알 수 없다
+          if (response.failed_items.length > 0) {
+            response.failed_items.forEach(item => setEmailError(item.email, item.reason));
+
+            if (response.invited_count > 0) {
+              Toast.success(`${response.invited_count}명을 초대했어요. 나머지는 확인이 필요해요.`);
+            }
+            return;
+          }
+
+          setIsInviteModalOpen(false);
+          Toast.success(`${response.invited_count}명을 초대했어요.`);
+        },
+        onError: () => Toast.error("초대에 실패했어요. 다시 시도해주세요."),
+      },
+    );
+  };
+
+  // TODO(3덩이-2·3): 초대 취소·목록 삭제·내보내기·등급 변경을 연결한다
+  const handleMemberAction = (action: MemberAction, member: WorkspaceMember) => {
+    Toast.info(`${member.email} · ${action} — 다음 단계에서 연결합니다.`);
+  };
 
   const handleUpdateName = (values: WorkspaceNameForm) => {
     updateName(values, {
@@ -76,19 +110,26 @@ export default function WorkspacesSettingsContainer({ workspaceId }: { workspace
             <div className="flex flex-col gap-5 px-6 py-6">
               <WorkspaceNameSection name={workspaceName} isPending={isUpdatingName} onSubmit={handleUpdateName} />
 
-              {/* TODO(3덩이): onInvite·onOpenMenu에 초대 모달과 행 메뉴를 연결한다 */}
               <MemberSection
                 members={members}
                 isLoading={isMembersLoading}
                 canInvite={isAdmin}
-                canManage={canManageMember}
-                onInvite={() => {}}
-                onOpenMenu={() => {}}
+                renderMenu={member =>
+                  canManageMember(member) ? <MemberRowMenu member={member} onSelect={handleMemberAction} /> : null
+                }
+                onInvite={() => setIsInviteModalOpen(true)}
               />
 
               <DeleteWorkspaceSection onRequestDelete={() => setIsDeleteModalOpen(true)} />
             </div>
           )}
+
+          <InviteMemberModal
+            isOpen={isInviteModalOpen}
+            onOpenChange={setIsInviteModalOpen}
+            isPending={isInviting}
+            onSubmit={handleInvite}
+          />
 
           <DeleteWorkspaceModal
             isOpen={isDeleteModalOpen}

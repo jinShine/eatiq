@@ -4,6 +4,8 @@ import {
   type CreateWorkspaceRequest,
   type CreateWorkspaceResponse,
   type DeleteWorkspaceResponse,
+  type InviteMembersRequest,
+  type InviteMembersResponse,
   type MyWorkspacesResponse,
   type UpdateWorkspaceNameRequest,
   type UpdateWorkspaceNameResponse,
@@ -20,6 +22,7 @@ const ENDPOINTS = {
   detail: (workspaceId: string) => `${BASE_PATH}/${workspaceId}`,
   name: (workspaceId: string) => `${BASE_PATH}/${workspaceId}/name`,
   members: (workspaceId: string) => `${BASE_PATH}/${workspaceId}/members`,
+  memberInvite: (workspaceId: string) => `${BASE_PATH}/${workspaceId}/member/invite`,
 };
 
 /** 내가 속한 워크스페이스 목록 */
@@ -54,5 +57,11 @@ export async function deleteWorkspace(workspaceId: string): Promise<DeleteWorksp
 /** 워크스페이스 멤버 목록 */
 export async function getWorkspaceMembers(workspaceId: string): Promise<WorkspaceMembersResponse> {
   const res = await axiosClientInstance.get<WorkspaceMembersResponse>(ENDPOINTS.members(workspaceId));
+  return res.data;
+}
+
+/** 여러 명 일괄 초대 — 일부만 실패할 수 있어 응답에 성공·실패가 나뉘어 온다 */
+export async function inviteMembers(workspaceId: string, body: InviteMembersRequest): Promise<InviteMembersResponse> {
+  const res = await axiosClientInstance.post<InviteMembersResponse>(ENDPOINTS.memberInvite(workspaceId), body);
   return res.data;
 }

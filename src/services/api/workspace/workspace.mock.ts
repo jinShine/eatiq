@@ -3,6 +3,7 @@
  * TODO(API): 실제 연동이 끝나면 mock.ts와 함께 삭제한다.
  */
 import {
+  type InviteMembersResponse,
   type MyWorkspacesResponse,
   type WorkspaceDetailResponse,
   type WorkspaceMembersResponse,
@@ -102,4 +103,17 @@ export const mockWorkspaceMembers: WorkspaceMembersResponse = {
       created_time: "2026-06-18T09:00:00.000Z",
     },
   ],
+};
+
+/**
+ * 초대 결과 — 부분 성공을 담는다.
+ *
+ * 전부 성공하는 목만 두면 실패 UI(칸별 사유 표시)를 검증할 수 없다.
+ */
+export const mockInviteResult: InviteMembersResponse = {
+  message: "워크스페이스 멤버 초대가 처리되었습니다.",
+  invited_count: 1,
+  failed_count: 1,
+  invited_members: [{ uid: 15, grade: "사용자", status: "초대중", last_connection_time: null }],
+  failed_items: [{ email: "jihwan.kim@eatiq.io", reason: "이미 해당 워크스페이스의 활성 멤버입니다." }],
 };

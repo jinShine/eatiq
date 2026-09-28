@@ -12,9 +12,9 @@ type MemberSectionProps = {
   isLoading?: boolean;
   /** 초대 버튼은 관리자에게만 보인다 */
   canInvite: boolean;
-  canManage: (member: WorkspaceMember) => boolean;
+  /** 행 끝 메뉴 — null이면 그 자리를 비운다 */
+  renderMenu: (member: WorkspaceMember) => React.ReactNode | null;
   onInvite: () => void;
-  onOpenMenu: (member: WorkspaceMember) => void;
 };
 
 /**
@@ -23,14 +23,7 @@ type MemberSectionProps = {
  * SettingsSection을 쓰지 않는다. 저장 폼이 아니라 목록이라
  * dirty·저장 푸터가 붙을 자리가 없다.
  */
-export default function MemberSection({
-  members,
-  isLoading,
-  canInvite,
-  canManage,
-  onInvite,
-  onOpenMenu,
-}: MemberSectionProps) {
+export default function MemberSection({ members, isLoading, canInvite, renderMenu, onInvite }: MemberSectionProps) {
   return (
     <section className="border-border overflow-hidden rounded-2xl border">
       <div className="border-border flex items-center justify-between gap-4 border-b px-6 py-4">
@@ -47,11 +40,7 @@ export default function MemberSection({
       </div>
 
       <div className="p-6">
-        {isLoading ? (
-          <MemberTableSkeleton />
-        ) : (
-          <MemberTable members={members} canManage={canManage} onOpenMenu={onOpenMenu} />
-        )}
+        {isLoading ? <MemberTableSkeleton /> : <MemberTable members={members} renderMenu={renderMenu} />}
       </div>
     </section>
   );

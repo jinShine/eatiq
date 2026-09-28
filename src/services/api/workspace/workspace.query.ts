@@ -9,11 +9,13 @@ import {
   getMyWorkspaces,
   getWorkspaceDetail,
   getWorkspaceMembers,
+  inviteMembers,
   updateWorkspaceName,
 } from "./workspace.api";
-import { mockMyWorkspaces, mockWorkspaceDetail, mockWorkspaceMembers } from "./workspace.mock";
+import { mockInviteResult, mockMyWorkspaces, mockWorkspaceDetail, mockWorkspaceMembers } from "./workspace.mock";
 import {
   type CreateWorkspaceRequest,
+  type InviteMembersRequest,
   type MyWorkspaceItem,
   type UpdateWorkspaceNameRequest,
   type Workspace,
@@ -120,5 +122,22 @@ export function useWorkspaceMembers(workspaceId: string) {
     queryFn: IS_MOCK ? () => mockResolve(mockWorkspaceMembers) : () => getWorkspaceMembers(workspaceId),
     select: response => response.members.map(toWorkspaceMember),
     enabled: Boolean(workspaceId),
+  });
+}
+
+/**
+ * 멤버 초대.
+ *
+ * 부분 실패여도 mutation은 성공이다(HTTP 201). 성공한 사람은 이미 서버에
+ * 들어갔으므로 목록을 갱신하고, 실패 여부는 호출부가 failed_items로 판단한다.
+ */
+export function useInviteMembersMutation(workspaceId: string) {
+  const invalidateQueries = useInvalidateQueries();
+
+  return useMutation({
+    mutationFn: IS_MOCK
+      ? (_body: InviteMembersRequest) => mockResolve(mockInviteResult)
+      : (body: InviteMembersRequest) => inviteMembers(workspaceId, body),
+    onSuccess: () => invalidateQueries.single(workspaceKeys.members(workspaceId)),
   });
 }
