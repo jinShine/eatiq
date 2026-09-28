@@ -1,5 +1,3 @@
-import { type WorkspaceType } from "@components/custom/workspace";
-
 import { type components } from "@services/openapi";
 
 /**
@@ -30,19 +28,15 @@ export type Workspace = {
   };
 };
 
-/** 워크스페이스 상세 */
-export type WorkspaceDetailResponse = {
-  message: string;
-  workspace: {
-    uid: number;
-    name: string;
-    type: WorkspaceType;
-  };
-};
+/**
+ * 워크스페이스 상세 — 응답이 평탄하다. uid·name·type이 최상위에 온다.
+ * 손으로 쓰면서 workspace로 한 겹 감쌌다가 런타임 에러를 냈다. 스펙에서 가져온다.
+ */
+export type WorkspaceDetailResponse = components["schemas"]["WorkspaceDetailResponseDto"];
 
-export type UpdateWorkspaceNameRequest = { name: string };
-export type UpdateWorkspaceNameResponse = { message: string };
-export type DeleteWorkspaceResponse = { message: string };
+export type UpdateWorkspaceNameRequest = components["schemas"]["UpdateWorkspaceNameDto"];
+export type UpdateWorkspaceNameResponse = components["schemas"]["UpdateWorkspaceNameResponseDto"];
+export type DeleteWorkspaceResponse = components["schemas"]["DeleteWorkspaceResponseDto"];
 
 /** 워크스페이스 멤버 목록 */
 export type WorkspaceMembersResponse = components["schemas"]["GetWorkspaceMemberListResponseDto"];

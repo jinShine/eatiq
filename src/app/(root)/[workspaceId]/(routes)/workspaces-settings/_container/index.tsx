@@ -37,7 +37,7 @@ export default function WorkspacesSettingsContainer({ workspaceId }: { workspace
   const { data: workspaces = [] } = useMyWorkspaces();
   const { data: members = [], isLoading: isMembersLoading } = useWorkspaceMembers(workspaceId);
 
-  const workspaceName = data?.workspace.name ?? "";
+  const workspaceName = data?.name ?? "";
 
   // 내 등급은 서버가 my_member_info로 직접 알려준다. 멤버 목록에서 이메일로 찾지 않는다
   const myMember = workspaces.find(workspace => workspace.id === workspaceId)?.myMember;

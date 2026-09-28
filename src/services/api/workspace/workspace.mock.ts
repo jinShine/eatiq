@@ -2,7 +2,11 @@
  * 백엔드 연동 전까지 UI 작업용 목 데이터.
  * TODO(API): 실제 연동이 끝나면 mock.ts와 함께 삭제한다.
  */
-import { type MyWorkspacesResponse, type WorkspaceMembersResponse } from "./workspace.type";
+import {
+  type MyWorkspacesResponse,
+  type WorkspaceDetailResponse,
+  type WorkspaceMembersResponse,
+} from "./workspace.type";
 
 /** 목 워크스페이스 id — URL의 [workspaceId]로 쓰인다 */
 export const MOCK_WORKSPACE_ID = "1";
@@ -28,9 +32,19 @@ export const mockMyWorkspaces: MyWorkspacesResponse = {
   ],
 };
 
-export const mockWorkspaceDetail = {
-  message: "조회에 성공했습니다.",
-  workspace: { uid: 1, name: "몽탄", type: "brand" as const },
+/** 응답은 평탄하다 — uid·name·type이 최상위에 온다 */
+export const mockWorkspaceDetail: WorkspaceDetailResponse = {
+  uid: 1,
+  name: "몽탄",
+  type: "brand",
+  my_member_info: {
+    uid: 11,
+    grade: "관리자",
+    status: "활성",
+    last_connection_time: "2026-06-24T10:00:00.000Z",
+  },
+  brand: null,
+  buyer: null,
 };
 
 /**

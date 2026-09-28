@@ -83,9 +83,18 @@ src/services/
   const buildPath = (brandId: string) => `${BASE_PATH}/${brandId}`;
   const ENDPOINTS = { list: BASE_PATH, settings: (id: string) => `${buildPath(id)}/settings` };
   ```
-- 백엔드 공통 응답: `{ success, data, message, errorCode }`. **저장 실패 시 `message`를 반드시 확인**(서버가 스펙에 없는 코드값 검증을 한다).
+- **요청·응답 타입은 반드시 `components["schemas"][...]`로 가져온다.** 손으로 쓰면 타입이 아니라 추측이 된다(실제로 `WorkspaceDetailResponse`를 `{ message, workspace }`로 잘못 적어 런타임 에러를 냈다 — 응답은 평탄했다). 스펙에 없으면 백엔드에 요청하지, 추측으로 채우지 않는다.
+  ```ts
+  // O
+  export type WorkspaceDetailResponse = components["schemas"]["WorkspaceDetailResponseDto"];
+  // X — 스펙에 있는데도 직접 정의
+  export type WorkspaceDetailResponse = { message: string; workspace: { ... } };
+  ```
+- 손으로 쓰는 타입은 **뷰모델뿐**이다(`Workspace`, `WorkspaceMember`, `*View`). 이건 DTO가 아니라 화면의 것이라 서버와 따로 변한다. 값 집합(등급·상태 등)은 `Dto["grade"]`처럼 스펙에서 파생시킨다.
+- 목 데이터는 **실제 응답 구조를 그대로** 흉내 낸다. null·빈 배열·0건도 담는다. 잘못된 타입에 맞춘 목은 검증 능력을 잃는다.
+- 백엔드 응답은 평탄하다. `{ success, data }` 래핑이 없고 대부분 `message` + 실제 필드가 최상위에 온다. **저장 실패 시 `message`를 반드시 확인**(서버가 스펙에 없는 코드값 검증을 한다).
 - 캐시 무효화는 `@hooks/commons`의 `useInvalidateQueries` 사용.
-- `PATCH`는 **전체 치환**이다. 한 필드가 검증 실패하면 요청 전체가 실패한다.
+- 브랜드 설정 13개 섹션은 **`PUT`**(전체 치환)이다. 한 필드가 검증 실패하면 요청 전체가 실패한다.
 
 ## 컴포넌트 계층
 
