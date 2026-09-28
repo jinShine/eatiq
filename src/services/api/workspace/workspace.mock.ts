@@ -15,13 +15,15 @@ export const mockMyWorkspaces: MyWorkspacesResponse = {
       uid: 1,
       name: "몽탄",
       type: "brand",
-      my_member_info: { uid: 11, grade: "owner", status: "active" },
+      created_time: "2026-06-01T09:00:00.000Z",
+      my_member_info: { uid: 11, grade: "관리자", status: "활성", last_connection_time: "2026-06-24T10:00:00.000Z" },
     },
     {
       uid: 2,
       name: "금돼지식당",
       type: "brand",
-      my_member_info: { uid: 12, grade: "member", status: "active" },
+      created_time: "2026-06-10T09:00:00.000Z",
+      my_member_info: { uid: 12, grade: "사용자", status: "활성", last_connection_time: null },
     },
   ],
 };

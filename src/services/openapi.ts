@@ -330,10 +330,11 @@ export interface paths {
      *        - 워크스페이스 설정 내 [멤버 관리] 페이지/모달 진입 시.
      *     2. **테이블/리스트 UI 구성 팁**:
      *        - `status === '초대중'`: '초대 취소' 액션 버튼 노출 (관리자만 클릭 가능).
+     *        - `status === '초대거절'`: '목록에서 제거' 액션 버튼 노출 (`DELETE /api/workspace/:workspace_uid/member/:member_uid/remove` 호출, 관리자 전용).
      *        - `status === '활성'`: 등급 변경(관리자/사용자 드롭다운) 및 '강제 탈퇴' 액션 버튼 노출.
      *        - 요청자 본인 행: 본인의 등급 변경/강제 탈퇴 버튼은 비활성화 처리.
      *     3. **권한별 UI 제어**:
-     *        - 접속 중인 사용자의 등급이 `관리자`일 때만 멤버 초대 버튼 및 상태/등급 변경 버튼 활성화.
+     *        - 접속 중인 사용자의 등급이 `관리자`일 때만 멤버 초대 버튼 및 상태/등급 변경/목록 제거 버튼 활성화.
      *        - `사용자` 등급인 경우 조회 전용 뷰로 제공.
      */
     get: operations["GetWorkspaceMemberListController_handle"];
@@ -393,7 +394,7 @@ export interface paths {
      * @description ### 📌 상세 역할 및 개요
      *     - 초대받은 사용자가 해당 워크스페이스 초대를 수락(`action: "수락"`)하거나 거절(`action: "거절"`)합니다.
      *     - **수락 시**: 멤버 상태가 `활성`으로 전환되며 계정(`account_uid`)이 연결되어 즉시 워크스페이스 이용이 가능해집니다.
-     *     - **거절 시**: 멤버 상태가 `초대 거절`로 전환됩니다.
+     *     - **거절 시**: 멤버 상태가 `초대거절`로 전환됩니다.
      *
      *     ---
      *
@@ -518,6 +519,92 @@ export interface paths {
      *        - `403 Forbidden`: 관리자 권한이 없는 경우 접근 제한.
      */
     patch: operations["UpdateWorkspaceMemberGradeController_updateGrade"];
+    trace?: never;
+  };
+  "/api/workspace/{workspace_uid}/member/{member_uid}/remove": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * 🆕 [NEW 26.09.28] 초대거절 멤버 목록에서 제거
+     * @description ### 📌 상세 역할 및 개요
+     *     - 워크스페이스 초대를 거절(`status = "초대거절"`)한 멤버를 관리자가 멤버 목록에서 제거(Soft Delete)합니다.
+     *     - 테이블의 `deleted_time` 컬럼을 현재 일시로 갱신하여 목록 조회(`GET /api/workspace/:workspace_uid/members`)에서 더 이상 노출되지 않도록 처리합니다.
+     *     - **요청 권한**: 해당 워크스페이스의 **'관리자'** 등급 멤버만 호출 가능합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 워크스페이스 설정 내 [멤버 관리] 목록에서 상태가 `초대거절`인 행의 [목록에서 제거] 또는 [삭제] 버튼 클릭 시.
+     *     2. **요청 파라미터**:
+     *        - `workspace_uid`: 워크스페이스 식별자
+     *        - `member_uid`: 제거할 멤버 레코드 식별자 (`etq_workspace_member.uid`)
+     *     3. **처리 후 화면 갱신**:
+     *        - 성공 시 멤버 목록 재조회(`GET /api/workspace/:workspace_uid/members`)를 호출하거나 로컬 상태에서 해당 행을 제거합니다.
+     */
+    delete: operations["RemoveWorkspaceRejectedMemberController_handle"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/workspace/{workspace_uid}/brand/dashboard": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * 🔄 [UPDATE 26.09.28] 브랜드 워크스페이스 대시보드 조회 (최근 Next Action 및 CRM 8단계 진행 현황 추가)
+     * @description ### 📌 상세 역할 및 개요
+     *     - 브랜드 워크스페이스 메인 대시보드 화면에 필요한 핵심 정보 완성도, 단계별 추천 항목, 최근 Next Action 목록, CRM 업무 진행 현황(8단계 카운트)을 종합 반환합니다.
+     *     - 향후 대시보드 지표 및 섹션 데이터가 점진적으로 확장 추가될 수 있는 표준 구조입니다.
+     *     - **종합 완성도 (`completion_rate`)**: 4대 탭(기본정보, 비주얼, 계약및정책, 상권분석)의 총 81개 필드 입력 여부를 합산하여 산출합니다.
+     *     - **단계별 상태 및 문구 (`stage`)**:
+     *       - **시작 (0~24%)**: "우리 브랜드와 잘 맞는 바이어를 찾아볼 수 있어요"
+     *       - **성장 (25~59%)**: "우리 브랜드의 정보가 정리되고 있습니다. 우리 브랜드에 더 잘 맞는 바이어를 찾을 수 있어요"
+     *       - **준비 (60~89%)**: "우리 브랜드를 더 많은 바이어에게, 더 정확하게 소개할 수 있습니다."
+     *       - **완성 (90~100%)**: "우리 브랜드를 소개하기 위해 필요한 모든 정보를 갖추었어요"
+     *     - **먼저 입력하면 좋은 권장 항목 (`recommended_tasks`)**:
+     *       - 브랜드 정보 입력 탭 우선순위를 기준으로 미입력된 최상위 권장 항목 3개를 제공합니다.
+     *     - **최근 Next Action (`next_actions`)**:
+     *       - 해당 브랜드 워크스페이스 CRM에 등록된 미완료 다음 액션 중 마감일이 임박한 순으로 최대 3개를 제공합니다 (업체명 `company_name`, 디데이 `d_day`, 설명 `description`, 제목 `title` 등 포함).
+     *     - **CRM 업무 진행 현황 (`crm_stages`)**:
+     *       - 관리 대상 바이어/파트너의 8대 진행 단계별 건수 및 총 건수를 직관적인 필드로 제공합니다 (`total_count`, `lead_count`, `review_count`, `contact_count`, `meeting_count`, `legal_review_count`, `negotiation_count`, `contract_completed_count`, `on_hold_count`).
+     *     - 요청자는 해당 워크스페이스에 소속된 **활성 멤버**여야 합니다.
+     *
+     *     ---
+     *
+     *     ### 📝 최근 업데이트 이력 (2026.09.28)
+     *     - **CRM 업무 진행 현황 8단계 카운트 플랫 필드화 (`crm_stages`)**: 프론트엔드 UI 카드에 손쉽게 1:1 매핑할 수 있도록 `items` 배열 대신 `lead_count`, `review_count`, `contact_count`, `meeting_count`, `legal_review_count`, `negotiation_count`, `contract_completed_count`, `on_hold_count` 필드로 제공합니다.
+     *     - **Next Action 3개 항목 추가 (`next_actions`)**: 브랜드 대시보드 상단/위젯에서 바로 확인할 수 있도록 최근 미완료 다음 액션 최대 3개 목록을 응답에 추가하였습니다. (업체명, d-day, 설명, 마감일 등 포함)
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 브랜드 워크스페이스 메인 홈/대시보드 페이지 진입 시.
+     *     2. **응답 데이터 활용**:
+     *        - 상단 완성도 게이지/프로그레스: `completion_rate`, `stage.step`, `stage.message`
+     *        - '먼저 입력하면 좋은 항목' 카드 목록: `recommended_tasks` (우선순위 상위 3개 노출)
+     *        - '최근 다음 액션' 목록 위젯: `next_actions` (업체명, D-day, 설명 등 최대 3개 카드 노출)
+     *        - '업무 진행 현황' 파이프라인 카드: `crm_stages` (예: `crm_stages.lead_count`, `crm_stages.contact_count` 등을 각 단계 카드 건수로 바로 바인딩)
+     */
+    get: operations["GetBrandDashboardController_execute"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
     trace?: never;
   };
   "/api/workspace/brand/list": {
@@ -1800,7 +1887,6 @@ export interface paths {
      *        - `country`, `category`, `contract_type`: '전체'일 경우 파라미터를 생략하거나 전달하지 않습니다.
      *     3. **UI 바인딩 팁**:
      *        - `items`: 테이블 또는 카드 리스트에 렌더링.
-     *        - `stage_class`: 각 진행 단계 뱃지의 CSS 클래스로 직접 활용 가능 (예: badge-blue, badge-yellow).
      *        - `filter_options`: 응답의 필터 옵션 배열을 셀렉트 박스나 필터 칩 목록에 직접 맵핑.
      *     4. **후속 액션 연계**:
      *        - 행(Row) 클릭 시 해당 항목의 `uid`를 경로 파라미터로 사용하여 **CRM 상세 조회 API(`GET /api/crm/{crm_uid}`)**로 이동.
@@ -1824,11 +1910,17 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * 진행 관리(CRM) 관리 대상(바이어/브랜드) 추가
+     * 🔄 [UPDATE 26.09.28] 진행 관리(CRM) 관리 대상(바이어/브랜드) 추가 (파라미터/가이드 보강)
      * @description ### 📌 상세 역할 및 개요
      *     - 진행 관리(CRM)에 신규 관리 대상(바이어 또는 브랜드)을 등록합니다.
      *     - 플랫폼 내 등록된 타 워크스페이스를 연동(`target_workspace_uid`)하거나, 수기 정보(`company_name` 등)로 등록할 수 있습니다.
      *     - 등록자의 워크스페이스 타입에 맞춰 대상 유형(`workspace_type`)이 자동으로 결정됩니다 (브랜드 워크스페이스는 바이어를 등록, 바이어 워크스페이스는 브랜드를 등록).
+     *
+     *     ---
+     *
+     *     ### 📝 최근 업데이트 이력 (2026.09.28)
+     *     - **입력 파라미터 최신화**: 실제 DTO 유효성 스키마에 맞춰 DTO에 없는 필드 제거 및 `contact_name`, `contact_email` 등 실제 지원 파라미터 목록으로 명확화.
+     *     - **연동 가이드 보강**: 성공 시 모달 닫기/목록 재조회/상세 이동 UX 처리 가이드 및 `400`, `403`, `404` 에러 핸들링 세부사항 추가.
      *
      *     ---
      *
@@ -1839,11 +1931,13 @@ export interface paths {
      *        - `source_workspace_uid`: 현재 로그인된 활성 워크스페이스 UID (필수).
      *        - `target_workspace_uid`: 플랫폼 내 워크스페이스 검색을 통해 선택한 경우 전달 (미선택 시 `null` 또는 생략).
      *        - `company_name`: 대상 기업명 (필수).
-     *        - `country`, `city`, `category`, `contract_type`, `manager_name`, `manager_email`, `manager_phone`, `memo`: 부가 프로필 및 담당자 정보.
+     *        - `country`, `city`, `contract_type`, `contact_name`, `contact_email`: 부가 프로필 및 담당자 정보 (선택).
      *     3. **성공 후 UX 처리**:
      *        - 모달 닫기 및 CRM 목록 재조회(`GET /api/crm/list`), 또는 생성된 `uid`를 바탕으로 상세 페이지(`GET /api/crm/{uid}`)로 이동.
      *     4. **에러 핸들링**:
      *        - `400 Bad Request`: 필수값 누락 또는 동일 타입 워크스페이스 등록 시도 시(예: 브랜드가 브랜드를 target으로 지정).
+     *        - `403 Forbidden`: source_workspace의 활성 멤버가 아닌 경우.
+     *        - `404 Not Found`: 워크스페이스를 찾을 수 없는 경우.
      */
     post: operations["CreateCrmController_execute"];
     delete?: never;
@@ -1878,7 +1972,7 @@ export interface paths {
      *        - 본 API 호출(`POST /api/crm/action`)하여 진행 기록 본문 및 다음 액션 항목들을 함께 전송.
      *     3. **요청 파라미터 핵심**:
      *        - `crm_uid`: 대상 CRM 레코드 UID (필수).
-     *        - `action_type`: '미팅', '이메일', '통화', '계약', '기타' 등 (필수).
+     *        - `action_type`: 허용 단계 8개 중 하나 (`리드`, `검토`, `접촉`, `미팅`, `법무검토`, `협상`, `계약완료`, `보류`) 또는 `지정안됨` (필수).
      *        - `title`, `action_time`: 필수.
      *        - `next_actions`: 등록과 동시에 추가할 다음 액션 배열 (선택, 각 항목의 `action_type`, `title`, `action_time` 포함).
      *     4. **성공 후 UX 처리**:
@@ -2058,7 +2152,7 @@ export interface paths {
      * 진행 관리(CRM) 현재 진행 단계(current_stage) 수정
      * @description ### 📌 상세 역할 및 개요
      *     - 진행 관리 대상의 현재 진행 단계(`current_stage`)를 직접 변경합니다.
-     *     - 허용 단계 값: `리드`, `연락중`, `미팅`, `계약협상`, `법리문서검토`, `계약완료`, `계약이탈`
+     *     - 허용 단계 값: `리드`, `검토`, `접촉`, `미팅`, `법무검토`, `협상`, `계약완료`, `보류`
      *
      *     ---
      *
@@ -2067,7 +2161,7 @@ export interface paths {
      *        - 상세 화면 상단의 단계 프로그레스 바 또는 상태 변경 드롭다운에서 다른 단계를 클릭/선택했을 때.
      *     2. **요청 파라미터**:
      *        - Path: `crm_uid` (대상 식별자)
-     *        - Body: `{ "current_stage": "계약협상" }` (허용된 7개 단계 중 하나)
+     *        - Body: `{ "current_stage": "협상" }` (허용된 8개 단계 중 하나)
      *     3. **UX 팁**:
      *        - UI에서 낙관적 업데이트(Optimistic Update)로 프로그레스 바 상태를 먼저 변경하고, 실패 시 이전 단계로 롤백 및 에러 토스트 노출.
      *     4. **에러 핸들링**:
@@ -2118,10 +2212,10 @@ export interface components {
        */
       email: string;
       /**
-       * @description 사용자 이름
+       * @description 사용자 이름 (미등록 시 null)
        * @example 홍길동
        */
-      name?: Record<string, never>;
+      name: string | null;
     };
     VerifyMagicLinkResponseDto: {
       /**
@@ -2202,20 +2296,23 @@ export interface components {
        */
       uid: number;
       /**
-       * @description 내 멤버 등급 (관리자, 사용자 등)
+       * @description 내 멤버 등급 (관리자, 사용자)
        * @example 관리자
+       * @enum {string}
        */
-      grade: string;
+      grade: "관리자" | "사용자";
       /**
-       * @description 내 멤버 상태 (활성, 초대중, 초대 거절 등)
+       * @description 내 멤버 상태 (활성, 초대중, 초대거절)
        * @example 활성
+       * @enum {string}
        */
-      status: string;
+      status: "활성" | "초대중" | "초대거절";
       /**
-       * @description 마지막 접속 시간
+       * Format: date-time
+       * @description 마지막 접속 시간 (접속 이력 없을 시 null)
        * @example 2026-06-24T10:00:00.000Z
        */
-      last_connection_time?: Record<string, never>;
+      last_connection_time: string | null;
     };
     MyWorkspaceItemDto: {
       /**
@@ -2231,15 +2328,17 @@ export interface components {
       /**
        * @description 워크스페이스 타입 (brand 또는 buyer)
        * @example brand
+       * @enum {string}
        */
-      type: string;
+      type: "brand" | "buyer";
       /** @description 로그인 사용자의 멤버십 정보 */
       my_member_info: components["schemas"]["WorkspaceMemberSummaryDto"];
       /**
+       * Format: date-time
        * @description 워크스페이스 생성 일시
        * @example 2026-01-01T00:00:00.000Z
        */
-      created_time?: Record<string, never>;
+      created_time: string | null;
     };
     GetMyWorkspacesResponseDto: {
       /**
@@ -2262,25 +2361,28 @@ export interface components {
        */
       uid: number;
       /**
-       * @description 초대된 권한 등급 (관리자, 사용자 등)
+       * @description 초대된 권한 등급 (관리자, 사용자)
        * @example 사용자
+       * @enum {string}
        */
-      grade: string;
+      grade: "관리자" | "사용자";
       /**
-       * @description 멤버 상태
+       * @description 멤버 상태 (활성, 초대중, 초대거절)
        * @example 초대중
+       * @enum {string}
        */
-      status: string;
+      status: "활성" | "초대중" | "초대거절";
       /**
        * @description 초대받은 이메일
        * @example user@example.com
        */
       email: string;
       /**
+       * Format: date-time
        * @description 초대 일시
        * @example 2026-06-24T10:00:00.000Z
        */
-      invited_time?: Record<string, never>;
+      invited_time: string | null;
     };
     InvitedWorkspaceItemDto: {
       /**
@@ -2296,15 +2398,17 @@ export interface components {
       /**
        * @description 워크스페이스 타입 (brand 또는 buyer)
        * @example brand
+       * @enum {string}
        */
-      type: string;
+      type: "brand" | "buyer";
       /** @description 나의 초대 상태 정보 */
       my_member_info: components["schemas"]["InvitedWorkspaceMemberSummaryDto"];
       /**
+       * Format: date-time
        * @description 워크스페이스 생성 일시
        * @example 2026-01-01T00:00:00.000Z
        */
-      created_time?: Record<string, never>;
+      created_time: string | null;
     };
     GetMyInvitedWorkspacesResponseDto: {
       /**
@@ -2398,17 +2502,17 @@ export interface components {
        * @description 업종/카테고리
        * @example 외식업
        */
-      category?: Record<string, never>;
+      category: string | null;
       /**
        * @description 선호 계약 형태
        * @example 프랜차이즈
        */
-      preferred_contract_type?: Record<string, never>;
+      preferred_contract_type: string | null;
       /**
        * @description 진출 목표 국가
        * @example 일본
        */
-      target_country?: Record<string, never>;
+      target_country: string | null;
       /**
        * @description 브랜드 기본 정보
        * @example {
@@ -2422,31 +2526,31 @@ export interface components {
        *       "official_address": "서울특별시 강남구 테헤란로 123, 4층"
        *     }
        */
-      brand_basic?: Record<string, never>;
+      brand_basic: Record<string, never> | null;
       /** @description 브랜드 소개 정보 */
-      brand_intro?: Record<string, never>;
+      brand_intro: Record<string, never> | null;
       /** @description 브랜드 현황 정보 */
-      brand_status?: Record<string, never>;
+      brand_status: Record<string, never> | null;
       /** @description 브랜드 담당자 연락처 */
-      brand_contact?: Record<string, never>;
+      brand_contact: Record<string, never> | null;
       /** @description 브랜드 계약 담당자 */
-      brand_contract?: Record<string, never>;
+      brand_contract: Record<string, never> | null;
       /** @description 브랜드 서명권자 */
-      brand_signature?: Record<string, never>;
+      brand_signature: Record<string, never> | null;
       /** @description 브랜드 비주얼(로고, 이미지 등) */
-      brand_visual?: Record<string, never>;
+      brand_visual: Record<string, never> | null;
       /** @description 브랜드 메뉴 정보 */
-      brand_menu?: Record<string, never>;
+      brand_menu: Record<string, never> | null;
       /** @description 브랜드 계약 정책 */
-      brand_contract_policy?: Record<string, never>;
+      brand_contract_policy: Record<string, never> | null;
       /** @description 브랜드 수수료 정책 */
-      brand_commission?: Record<string, never>;
+      brand_commission: Record<string, never> | null;
       /** @description 브랜드 입지 및 상권 기준 */
-      brand_location_standard?: Record<string, never>;
+      brand_location_standard: Record<string, never> | null;
       /** @description 브랜드 매장 크기 조건 */
-      brand_size_criteria?: Record<string, never>;
+      brand_size_criteria: Record<string, never> | null;
       /** @description 브랜드 매장 시설 필수 조건 */
-      brand_facility_req?: Record<string, never>;
+      brand_facility_req: Record<string, never> | null;
     };
     WorkspaceDetailBuyerDto: {
       /**
@@ -2463,34 +2567,34 @@ export interface components {
        * @description 업태/비즈니스 타입
        * @example 유통
        */
-      business_type?: Record<string, never>;
+      business_type: string | null;
       /**
        * @description 선호 계약 형태
        * @example 마스터 프랜차이즈
        */
-      preferred_contract_type?: Record<string, never>;
+      preferred_contract_type: string | null;
       /**
        * @description 국가
        * @example 대한민국
        */
-      country?: Record<string, never>;
+      country: string | null;
       /**
        * @description 도시
        * @example 서울
        */
-      city?: Record<string, never>;
+      city: string | null;
       /** @description 바이어 기본 정보 */
-      buyer_basic?: Record<string, never>;
+      buyer_basic: Record<string, never> | null;
       /** @description 바이어 소개 정보 */
-      buyer_intro?: Record<string, never>;
+      buyer_intro: Record<string, never> | null;
       /** @description 바이어 현황 정보 */
-      buyer_status?: Record<string, never>;
+      buyer_status: Record<string, never> | null;
       /** @description 바이어 계약 정책 */
-      buyer_contract_policy?: Record<string, never>;
+      buyer_contract_policy: Record<string, never> | null;
       /** @description 바이어 담당자 연락처 */
-      buyer_contact?: Record<string, never>;
+      buyer_contact: Record<string, never> | null;
       /** @description 바이어 내부 수집 브랜드 목록 */
-      buyer_collection?: Record<string, never>;
+      buyer_collection: Record<string, never>[] | null;
     };
     WorkspaceDetailResponseDto: {
       /**
@@ -2506,14 +2610,15 @@ export interface components {
       /**
        * @description 워크스페이스 타입 (brand 또는 buyer)
        * @example brand
+       * @enum {string}
        */
-      type: string;
+      type: "brand" | "buyer";
       /** @description 요청한 사용자의 워크스페이스 멤버 정보 */
       my_member_info: components["schemas"]["WorkspaceMemberSummaryDto"];
-      /** @description 브랜드 상세 정보 (type이 brand일 때 제공) */
-      brand?: components["schemas"]["WorkspaceDetailBrandDto"];
-      /** @description 바이어 상세 정보 (type이 buyer일 때 제공) */
-      buyer?: components["schemas"]["WorkspaceDetailBuyerDto"];
+      /** @description 브랜드 상세 정보 (type이 brand일 때 제공, 아니면 null) */
+      brand: components["schemas"]["WorkspaceDetailBrandDto"] | null;
+      /** @description 바이어 상세 정보 (type이 buyer일 때 제공, 아니면 null) */
+      buyer: components["schemas"]["WorkspaceDetailBuyerDto"] | null;
     };
     DeleteWorkspaceResponseDto: {
       /**
@@ -2547,37 +2652,41 @@ export interface components {
        * @description 가입된 계정 식별자 (account_uid, 미가입 시 null)
        * @example 10
        */
-      account_uid?: Record<string, never>;
+      account_uid: number | null;
       /**
        * @description 사용자 이름 (계정 등록된 이름, 없을 시 null)
        * @example 김지환
        */
-      name?: Record<string, never>;
+      name: string | null;
       /**
        * @description 멤버 이메일
        * @example jihwan.kim@eatiq.io
        */
       email: string;
       /**
-       * @description 멤버 권한 등급 (관리자, 사용자 등)
+       * @description 멤버 권한 등급 (관리자, 사용자)
        * @example 관리자
+       * @enum {string}
        */
-      grade: string;
+      grade: "관리자" | "사용자";
       /**
-       * @description 멤버 상태 (활성, 초대중, 초대 거절 등)
+       * @description 멤버 상태 (활성, 초대중, 초대거절)
        * @example 활성
+       * @enum {string}
        */
-      status: string;
+      status: "활성" | "초대중" | "초대거절";
       /**
+       * Format: date-time
        * @description 최근 접속 일시 (접속 이력 없을 시 null)
        * @example 2026-06-24T10:00:00.000Z
        */
-      last_connection_time?: Record<string, never>;
+      last_connection_time: string | null;
       /**
+       * Format: date-time
        * @description 초대/등록 일시
        * @example 2026-06-24T10:00:00.000Z
        */
-      created_time?: Record<string, never>;
+      created_time: string | null;
     };
     GetWorkspaceMemberListResponseDto: {
       /**
@@ -2666,7 +2775,7 @@ export interface components {
        */
       member_uid: number;
       /**
-       * @description 처리 후 멤버 상태 (활성 또는 초대 거절)
+       * @description 처리 후 멤버 상태 (활성 또는 초대거절)
        * @example 활성
        */
       status: string;
@@ -2788,6 +2897,209 @@ export interface components {
        */
       updated_time: string;
     };
+    RemoveWorkspaceRejectedMemberResponseDto: {
+      /**
+       * @description 처리 결과 메시지
+       * @example 초대거절된 멤버를 목록에서 성공적으로 제거했습니다.
+       */
+      message: string;
+      /**
+       * @description 워크스페이스 고유 식별자 (workspace_uid)
+       * @example 1
+       */
+      workspace_uid: number;
+      /**
+       * @description 제거된 멤버 레코드 고유 식별자 (etq_workspace_member.uid)
+       * @example 12
+       */
+      member_uid: number;
+      /**
+       * @description 제거된 멤버 이메일
+       * @example user@example.com
+       */
+      email: string;
+      /**
+       * Format: date-time
+       * @description 소프트 삭제(제거) 일시
+       * @example 2026-09-28T17:15:00.000Z
+       */
+      deleted_time: string;
+    };
+    BrandDashboardStageDto: {
+      /**
+       * @description 정보완성 단계명 (시작: 0~24%, 성장: 25~59%, 준비: 60~89%, 완성: 90~100%)
+       * @example 시작
+       * @enum {string}
+       */
+      step: "시작" | "성장" | "준비" | "완성";
+      /**
+       * @description 단계별 안내 문구
+       * @example 우리 브랜드와 잘 맞는 바이어를 찾아볼 수 있어요
+       */
+      message: string;
+    };
+    BrandDashboardTaskDto: {
+      /**
+       * @description 해당 탭/섹션 내 항목 우선순위 (1부터 시작)
+       * @example 1
+       */
+      priority: number;
+      /**
+       * @description 정보 탭 키 (basic | visual | contract | commercial)
+       * @example basic
+       * @enum {string}
+       */
+      tab_key: "basic" | "visual" | "contract" | "commercial";
+      /**
+       * @description 정보 탭 명칭
+       * @example 기본 정보
+       */
+      tab_title: string;
+      /**
+       * @description 하위 세부 섹션 키
+       * @example brand_basic
+       */
+      section_key: string;
+      /**
+       * @description 해당 항목의 필드 키
+       * @example brand_name_ko
+       */
+      field_key: string;
+      /**
+       * @description 입력 항목명
+       * @example 브랜드 이름(한국어)
+       */
+      title: string;
+      /**
+       * @description 필수 입력 항목 여부
+       * @example true
+       */
+      is_required: boolean;
+      /**
+       * @description 항목 가이드 문구
+       * @example 해외 바이어가 브랜드를 찾을 때 쓰는 이름이에요
+       */
+      description: string;
+    };
+    BrandDashboardNextActionDto: {
+      /**
+       * @description 액션 UID (`etq_crm_action.uid`)
+       * @example 12
+       */
+      uid: number;
+      /**
+       * @description 연결된 CRM 레코드 UID (`etq_crm.uid`)
+       * @example 1
+       */
+      crm_uid: number;
+      /**
+       * @description 업체명 (CRM 관리 대상 회사 이름)
+       * @example Antenna Retail
+       */
+      company_name: string;
+      /**
+       * @description 마감일 기준 D-day (예: "D-day", "D-3", "D+2", 마감일 없을 시 null)
+       * @example D-3
+       */
+      d_day: string | null;
+      /**
+       * @description D-day 숫자 일수 (오늘 기준 잔여 일수, 지난 경우 음수, 마감일 없을 시 null)
+       * @example 3
+       */
+      d_day_count: number | null;
+      /**
+       * @description 다음 액션 제목
+       * @example 로열티 조건 자료 요청
+       */
+      title: string;
+      /**
+       * @description 설명 또는 내용/메모 (내용 없을 시 제목 사용)
+       * @example 본사 승인 필요 조건 검토
+       */
+      description: string | null;
+      /**
+       * @description 마감일 (YYYY-MM-DD)
+       * @example 2026-07-10
+       */
+      action_date: string | null;
+    };
+    BrandDashboardCrmStageSummaryDto: {
+      /**
+       * @description 전체 CRM 관리 대상 총 건수
+       * @example 19
+       */
+      total_count: number;
+      /**
+       * @description 리드(Lead) 단계 건수
+       * @example 8
+       */
+      lead_count: number;
+      /**
+       * @description 검토(Review) 단계 건수
+       * @example 0
+       */
+      review_count: number;
+      /**
+       * @description 접촉(Contacting) 단계 건수
+       * @example 5
+       */
+      contact_count: number;
+      /**
+       * @description 미팅(Meeting) 단계 건수
+       * @example 3
+       */
+      meeting_count: number;
+      /**
+       * @description 법무검토(Legal Review) 단계 건수
+       * @example 2
+       */
+      legal_review_count: number;
+      /**
+       * @description 협상(Negotiating) 단계 건수
+       * @example 1
+       */
+      negotiation_count: number;
+      /**
+       * @description 계약완료(Contracted) 단계 건수
+       * @example 1
+       */
+      contract_completed_count: number;
+      /**
+       * @description 보류(On Hold) 단계 건수
+       * @example 0
+       */
+      on_hold_count: number;
+    };
+    GetBrandDashboardResponseDto: {
+      /**
+       * @description 워크스페이스 UID
+       * @example 1
+       */
+      workspace_uid: number;
+      /**
+       * @description 전체 브랜드 정보 종합 완성도 (0~100%)
+       * @example 45
+       */
+      completion_rate: number;
+      /**
+       * @description 전체 평가 필드 총 수 (기본정보 29 + 비주얼 13 + 계약 17 + 상권 22 = 81개)
+       * @example 81
+       */
+      total_fields: number;
+      /**
+       * @description 전체 입력 완료된 필드 총 수
+       * @example 36
+       */
+      completed_fields: number;
+      /** @description 종합 완성도 기준 단계 및 안내 문구 */
+      stage: components["schemas"]["BrandDashboardStageDto"];
+      /** @description 브랜드 정보 입력 탭 우선순위를 기준으로 미입력된 권장 항목 3개 */
+      recommended_tasks: components["schemas"]["BrandDashboardTaskDto"][];
+      /** @description 최근 미완료 다음 액션 목록 (최대 3개) */
+      next_actions: components["schemas"]["BrandDashboardNextActionDto"][];
+      /** @description CRM 업무 진행 현황 (8대 단계별 카운트) */
+      crm_stages: components["schemas"]["BrandDashboardCrmStageSummaryDto"];
+    };
     BrandListItemDto: {
       /**
        * @description 브랜드 고유 식별자 (uid)
@@ -2808,57 +3120,58 @@ export interface components {
        * @description 브랜드 이름 (영문)
        * @example Bonsuwon Galbi
        */
-      brand_name_en?: Record<string, never>;
+      brand_name_en: string | null;
       /**
        * @description 브랜드 로고 이미지 URL
        * @example https://eatiqlink.s3.ap-northeast-2.amazonaws.com/logo.png
        */
-      logo_image?: Record<string, never>;
+      logo_image: string | null;
       /**
        * @description 브랜드 대표 히어로 이미지 URL
        * @example https://images.unsplash.com/photo-1544025162-d76694265947
        */
-      featured_image?: Record<string, never>;
+      featured_image: string | null;
       /**
        * @description 카테고리 / 업종
        * @example 한식
        */
-      category?: Record<string, never>;
+      category: string | null;
       /**
        * @description 브랜드 한줄 소개 (카드 태그 문구)
        * @example 40년 전통의 수원 전통 숯불 소갈비 전문 프리미엄 다이닝
        */
-      short_intro?: Record<string, never>;
+      short_intro: string | null;
       /**
        * @description 카드 메타 정보 (론칭 연도 · 매장 수 · 가격 포지셔닝 요약)
        * @example 2015년 론칭 · 국내 18개 매장 · 고가 브랜드
        */
-      meta_text?: Record<string, never>;
+      meta_text: string | null;
       /**
        * @description 브랜드 론칭 연도
        * @example 2015
        */
-      launch_year?: Record<string, never>;
+      launch_year: number | null;
       /**
        * @description 국내 매장 수
        * @example 18
        */
-      domestic_store_total_cnt?: Record<string, never>;
+      domestic_store_total_cnt: number | null;
       /**
        * @description 가격 포지셔닝 (저가/중가/고가)
        * @example 고가
+       * @enum {string|null}
        */
-      price_positioning?: Record<string, never>;
+      price_positioning: "저가" | "중가" | "고가" | null;
       /**
        * @description 대표 시그니처 메뉴명
        * @example 양념 생갈비
        */
-      rep_menu_name_ko?: Record<string, never>;
+      rep_menu_name_ko: string | null;
       /**
        * @description 선호 계약 방식 (마스터 프랜차이즈, 지역 개발권 등)
        * @example 마스터 프랜차이즈
        */
-      preferred_contract_type?: Record<string, never>;
+      preferred_contract_type: string | null;
       /**
        * @description 진출 목표/희망 국가 목록
        * @example [
@@ -2866,7 +3179,7 @@ export interface components {
        *       "싱가포르"
        *     ]
        */
-      target_country?: string[];
+      target_country: string[] | null;
     };
     GetBrandListResponseDto: {
       /** @description 브랜드 목록 */
@@ -2897,59 +3210,59 @@ export interface components {
        * @description 선호 계약 방식
        * @example 마스터 프랜차이즈
        */
-      preferred_contract_type?: Record<string, never>;
+      preferred_contract_type: string | null;
       /**
        * @description 독점권 요구 수준 (필수/협의 필요/불가)
        * @example 필수
        */
-      exclusivity_level?: Record<string, never>;
+      exclusivity_level: string | null;
       /**
        * @description 메뉴 현지화 요구 수준 (불가/협의 필요/가능/일부 허용)
        * @example 일부 허용
        */
-      menu_localization?: Record<string, never>;
+      menu_localization: string | null;
       /**
        * @description 로열티 선호 조건 요약 (비율 또는 금액)
        * @example 5%
        */
-      royalty?: Record<string, never>;
+      royalty: string | null;
       /**
        * @description 식자재 공급망 (필수/협의 필요/불필요/자체 공급 가능)
        * @example 자체 공급 가능
        */
-      supply_chain?: Record<string, never>;
+      supply_chain: string | null;
       /**
        * @description 인테리어 기준 선호 (가능/협의 필요/불가)
        * @example 협의 필요
        */
-      interior_criteria?: Record<string, never>;
+      interior_criteria: string | null;
       /**
        * @description 상표 및 브랜드 사용 기준
        * @example 전면 준수 필수
        */
-      trademark_standard?: Record<string, never>;
+      trademark_standard: string | null;
       /**
        * @description 운영 매뉴얼 준수 수준
        * @example 전면 준수 필수
        */
-      manual_compliance?: Record<string, never>;
+      manual_compliance: string | null;
     };
     BrandDetailContactDto: {
       /**
        * @description 담당자 이름 (한국어)
        * @example 고상우
        */
-      name_ko?: Record<string, never>;
+      name_ko: string | null;
       /**
        * @description 담당자 이름 (영어)
        * @example Sangwoo Ko
        */
-      name_en?: Record<string, never>;
+      name_en: string | null;
       /**
        * @description 직책
        * @example 대표이사 / 글로벌 총괄
        */
-      position?: Record<string, never>;
+      position: string | null;
       /**
        * @description 가능 언어 목록
        * @example [
@@ -2958,7 +3271,7 @@ export interface components {
        *       "일본어"
        *     ]
        */
-      languages?: string[];
+      languages: string[] | null;
     };
     BrandDetailResponseDto: {
       /**
@@ -2980,62 +3293,63 @@ export interface components {
        * @description 브랜드명 (영어)
        * @example Sulbing
        */
-      brand_name_en?: Record<string, never>;
+      brand_name_en: string | null;
       /**
        * @description 브랜드 로고 이미지 URL
        * @example https://eatiqlink.s3.ap-northeast-2.amazonaws.com/logo.png
        */
-      logo_image?: Record<string, never>;
+      logo_image: string | null;
       /**
        * @description 브랜드 대표 히어로 이미지 URL
        * @example https://images.unsplash.com/photo-1544025162-d76694265947
        */
-      featured_image?: Record<string, never>;
+      featured_image: string | null;
       /**
        * @description 카테고리 / 업종
        * @example 디저트
        */
-      category?: Record<string, never>;
+      category: string | null;
       /**
        * @description 브랜드 런칭 연도
        * @example 2013
        */
-      launch_year?: Record<string, never>;
+      launch_year: number | null;
       /**
        * @description 국내 매장 수
        * @example 85
        */
-      domestic_store_total_cnt?: Record<string, never>;
+      domestic_store_total_cnt: number | null;
       /**
        * @description 해외 매장 수
        * @example 43
        */
-      overseas_store_total_cnt?: Record<string, never>;
+      overseas_store_total_cnt: number | null;
       /**
        * @description 가격 포지셔닝 (저가/중가/고가)
        * @example 중가
+       * @enum {string|null}
        */
-      price_positioning?: Record<string, never>;
+      price_positioning: "저가" | "중가" | "고가" | null;
       /**
        * @description 메타 텍스트 (론칭 연도 · 매장 수 · 가격 포지션 요약)
        * @example 2013년 론칭 · 국내 85개 매장 · 중가 브랜드
        */
-      meta_text?: Record<string, never>;
+      meta_text: string | null;
       /**
        * @description 공식 홈페이지 URL
        * @example https://sulbing.com
        */
-      homepage_url?: Record<string, never>;
+      homepage_url: string | null;
       /**
        * @description 브랜드 한줄 소개
        * @example 4계절 맛있는 대한민국 대표 디저트 팥빙수
        */
-      short_intro?: Record<string, never>;
+      short_intro: string | null;
       /**
        * @description 브랜드 상세 소개
        * @example 대한민국 대표 디저트 카페 설빙은 전통 디저트를 트렌디하게 재해석합니다.
        */
-      detail_intro?: Record<string, never>;
+      detail_intro: string | null;
       /**
        * @description 진출 희망 국가 목록
        * @example [
@@ -3043,11 +3357,11 @@ export interface components {
        *       "대만"
        *     ]
        */
-      target_country?: string[];
+      target_country: string[] | null;
       /** @description 파트너십 선호 조건 */
-      partnership_conditions?: components["schemas"]["BrandDetailPartnershipConditionsDto"];
+      partnership_conditions: components["schemas"]["BrandDetailPartnershipConditionsDto"] | null;
       /** @description 담당자 연락처 정보 */
-      contact?: components["schemas"]["BrandDetailContactDto"];
+      contact: components["schemas"]["BrandDetailContactDto"] | null;
       /**
        * @description 브랜드 데이터 생성 일시 (ISO-8601)
        * @example 2026-09-10T04:20:00.000Z
@@ -3550,7 +3864,7 @@ export interface components {
        * @description 등록된 로고 이미지 URL (미등록 시 null)
        * @example https://eatiqlink-s3-bucket.s3.ap-northeast-2.amazonaws.com/uploads/images/2026/09/logo-uuid.png
        */
-      logo_image?: Record<string, never> | null;
+      logo_image?: string | null;
       /**
        * @description 등록된 대표 이미지 수
        * @example 3
@@ -4079,32 +4393,32 @@ export interface components {
        * @description 브랜드 영문명
        * @example PlugFood
        */
-      brand_name_en?: Record<string, never>;
+      brand_name_en: string | null;
       /**
        * @description 업종/카테고리
        * @example 외식/식음료
        */
-      category?: Record<string, never>;
+      category: string | null;
       /**
        * @description 본사 위치/국가
        * @example 대한민국
        */
-      country?: Record<string, never>;
+      country: string | null;
       /**
        * @description 담당자 이름
        * @example 홍길동
        */
-      contact_name?: Record<string, never>;
+      contact_name: string | null;
       /**
        * @description 담당자 이메일
        * @example contact@plugfood.com
        */
-      contact_email?: Record<string, never>;
+      contact_email: string | null;
       /**
        * @description 브랜드 로고 이미지 URL
        * @example https://storage.eatiqlink.com/logos/plugfood.png
        */
-      logo_url?: Record<string, never>;
+      logo_url: string | null;
     };
     AutocompleteBrandResponseDto: {
       /** @description 자동완성 검색 결과 목록 */
@@ -4172,32 +4486,32 @@ export interface components {
        * @description 런칭 연도
        * @example 2021
        */
-      launch_year?: Record<string, never>;
+      launch_year: number | null;
       /**
        * @description 대표자 이름 (한국어)
        * @example 홍길동
        */
-      ceo_name_ko?: Record<string, never>;
+      ceo_name_ko: string | null;
       /**
        * @description 대표자 이름 (영어)
        * @example Gildong Hong
        */
-      ceo_name_en?: Record<string, never>;
+      ceo_name_en: string | null;
       /**
        * @description 본사 홈페이지
        * @example https://www.plugfood.com
        */
-      homepage_url?: Record<string, never>;
+      homepage_url: string | null;
       /**
        * @description 본사 대표 이메일
        * @example contact@plugfood.com
        */
-      official_email?: Record<string, never>;
+      official_email: string | null;
       /**
        * @description 본사 주소
        * @example 서울특별시 강남구 테헤란로 123, 4층
        */
-      official_address?: Record<string, never>;
+      official_address: string | null;
     };
     UpdateBrandBasicResponseDto: {
       /**
@@ -4309,7 +4623,7 @@ export interface components {
        *       "30대"
        *     ]
        */
-      target_audience?: string[];
+      target_audience?: string[] | null;
       /**
        * @description 주 이용 상황
        * @example [
@@ -4317,7 +4631,7 @@ export interface components {
        *       "데이트"
        *     ]
        */
-      usage_context?: string[];
+      usage_context?: string[] | null;
     };
     UpdateBrandStatusResponseDto: {
       /**
@@ -4380,15 +4694,15 @@ export interface components {
       /**
        * @description 업종 분류 (양식, 한식, 일식, 중식)
        * @example 양식
-       * @enum {string}
+       * @enum {string|null}
        */
-      category?: "양식" | "한식" | "일식" | "중식";
+      category?: "양식" | "한식" | "일식" | "중식" | null;
       /**
        * @description 가격 포지셔닝 (저가, 중가, 고가)
        * @example 중가
-       * @enum {string}
+       * @enum {string|null}
        */
-      price_positioning?: "저가" | "중가" | "고가";
+      price_positioning?: "저가" | "중가" | "고가" | null;
       /**
        * @description 핵심 차별점 (최대 3개)
        * @example [
@@ -4413,9 +4727,9 @@ export interface components {
       /**
        * @description 업종 분류 컬럼 값
        * @example 양식
-       * @enum {string}
+       * @enum {string|null}
        */
-      category?: "양식" | "한식" | "일식" | "중식";
+      category?: "양식" | "한식" | "일식" | "중식" | null;
       /** @description 업데이트된 브랜드 소개 정보 (brand_intro) */
       brand_intro: components["schemas"]["BrandIntroDataDto"];
     };
@@ -4477,7 +4791,7 @@ export interface components {
        *       "영어"
        *     ]
        */
-      languages?: string[];
+      languages?: string[] | null;
     };
     UpdateBrandContactResponseDto: {
       /**
@@ -4664,16 +4978,16 @@ export interface components {
       /**
        * @description 진출 목표 국가 (선택지: 일본, 홍콩, 싱가포르, 태국)
        * @example 일본
-       * @enum {string}
+       * @enum {string|null}
        */
-      target_country?: "일본" | "홍콩" | "싱가포르" | "태국";
+      target_country?: "일본" | "홍콩" | "싱가포르" | "태국" | null;
       /**
        * @description 선호 계약 방식 (선택지: 마스터 프랜차이즈, 지역 개발권, 직영, 합작법인, 라이선스, 유통, 미정)
        * @example 마스터 프랜차이즈
-       * @enum {string}
+       * @enum {string|null}
        */
       preferred_contract_type?:
-        "마스터 프랜차이즈" | "지역 개발권" | "직영" | "합작법인" | "라이선스" | "유통" | "미정";
+        "마스터 프랜차이즈" | "지역 개발권" | "직영" | "합작법인" | "라이선스" | "유통" | "미정" | null;
       /**
        * @description 독점권 요구 수준 (선택지: 불가, 협의 필요, 가능)
        * @example 협의 필요
@@ -4725,16 +5039,16 @@ export interface components {
       /**
        * @description 선호 계약 방식 컬럼 값
        * @example 마스터 프랜차이즈
-       * @enum {string}
+       * @enum {string|null}
        */
       preferred_contract_type?:
-        "마스터 프랜차이즈" | "지역 개발권" | "직영" | "합작법인" | "라이선스" | "유통" | "미정";
+        "마스터 프랜차이즈" | "지역 개발권" | "직영" | "합작법인" | "라이선스" | "유통" | "미정" | null;
       /**
        * @description 진출 목표 국가 컬럼 값
        * @example 일본
-       * @enum {string}
+       * @enum {string|null}
        */
-      target_country?: "일본" | "홍콩" | "싱가포르" | "태국";
+      target_country?: "일본" | "홍콩" | "싱가포르" | "태국" | null;
       /** @description 업데이트된 브랜드 계약 정책 정보 (brand_contract_policy) */
       brand_contract_policy: components["schemas"]["BrandContractPolicyDataDto"];
     };
@@ -4906,7 +5220,7 @@ export interface components {
        * @description 3차 선호 상권
        * @example 대학가
        */
-      district_03?: Record<string, never>;
+      district_03: string | null;
       /**
        * @description 허용 월 임대료 - 최소 (원)
        * @example 3000000
@@ -5127,14 +5441,14 @@ export interface components {
        * @description 브랜드 대표 로고 이미지 URL (/api/upload/image 로 업로드 후 반환된 S3 URL). null 또는 빈 문자열 전달 시 기존 로고 제거
        * @example https://eatiqlink-s3-bucket.s3.ap-northeast-2.amazonaws.com/uploads/images/2026/09/logo-uuid.png
        */
-      logo_image?: Record<string, never> | null;
+      logo_image?: string | null;
     };
     BrandVisualDataDto: {
       /**
        * @description 브랜드 대표 로고 이미지 URL
        * @example https://eatiqlink-s3-bucket.s3.ap-northeast-2.amazonaws.com/uploads/images/2026/09/logo-uuid.png
        */
-      logo_image?: Record<string, never>;
+      logo_image?: string | null;
       /**
        * @description 브랜드 대표 이미지 URL 배열
        * @example [
@@ -5309,52 +5623,52 @@ export interface components {
        * @description 국가
        * @example 일본
        */
-      country?: Record<string, never>;
+      country: string | null;
       /**
        * @description 도시 / 세부 지역
        * @example 도쿄도 오타구
        */
-      city?: Record<string, never>;
+      city: string | null;
       /**
        * @description 사업 유형
        * @example 외식 프랜차이즈 그룹
        */
-      business_type?: Record<string, never>;
+      business_type: string | null;
       /**
        * @description 선호 계약 조건/방식
        * @example 마스터 프랜차이즈
        */
-      preferred_contract_type?: Record<string, never>;
+      preferred_contract_type: string | null;
       /**
        * @description 바이어 공식 홈페이지 URL
        * @example https://www.watami.co.jp/
        */
-      homepage_url?: Record<string, never>;
+      homepage_url: string | null;
       /**
        * @description 바이어 상세 소개 (buyer_intro => detail_intro)
        * @example Subway Japan을 인수하고 bb.q 치킨을 운영하는 상장 외식 운영사
        */
-      detail_intro?: Record<string, never>;
+      detail_intro: string | null;
       /**
        * @description 대표 운영 브랜드 요약 문구
        * @example 운영 브랜드 : Subway Japan · bb.q Japan
        */
-      brand_summary?: Record<string, never>;
+      brand_summary: string | null;
       /**
        * @description 프로토타입 카드 메타 요약 정보 (브랜드 개수 · 매장 수 범위)
        * @example 브랜드 8개 · 매장 100~500개
        */
-      meta_text?: Record<string, never>;
+      meta_text: string | null;
       /**
        * @description 보유 매장 수
        * @example 400
        */
-      store_cnt?: Record<string, never>;
+      store_cnt: number | null;
       /**
        * @description 보유 브랜드 개수
        * @example 8
        */
-      brand_count?: Record<string, never>;
+      brand_count: number | null;
       /**
        * @description 브랜드 경험 유형 목록
        * @example [
@@ -5363,12 +5677,12 @@ export interface components {
        *       "프랜차이즈 가맹점 운영"
        *     ]
        */
-      brand_experience_types?: string[];
+      brand_experience_types: string[] | null;
       /**
        * @description 한국 브랜드 운영 경험 여부
        * @example true
        */
-      korean_brand_experience?: Record<string, never>;
+      korean_brand_experience: boolean | null;
     };
     GetBuyerListResponseDto: {
       /** @description 바이어 카드 목록 */
@@ -5404,123 +5718,123 @@ export interface components {
        * @description 운영 방식 / 계약 형태
        * @example 마스터 프랜차이즈
        */
-      contract_type?: Record<string, never>;
+      contract_type: string | null;
       /**
        * @description 운영 매장 수
        * @example 12
        */
-      store_count?: Record<string, never>;
+      store_count: number | null;
       /**
        * @description 운영 시작 연도
        * @example 2016
        */
-      started_year?: Record<string, never>;
+      started_year: number | null;
       /**
        * @description 정보 출처 (공개 자료, 공시, 바이어 제공 등)
        * @example 공개 자료에서 확인
        */
-      source?: Record<string, never>;
+      source: string | null;
       /**
        * @description 출처 URL
        * @example https://www.watami.co.jp/
        */
-      source_url?: Record<string, never>;
+      source_url: string | null;
     };
     BuyerContractPolicyDetailDto: {
       /**
        * @description 희망 계약 방식
        * @example 마스터 프랜차이즈
        */
-      preferred_contract_type?: Record<string, never>;
+      preferred_contract_type: string | null;
       /**
        * @description 선호 브랜드 가격대
        * @example 중가 (1~3만원) 이상
        */
-      target_price_tier?: Record<string, never>;
+      target_price_tier: string | null;
       /**
        * @description 독점권 요구 수준
        * @example 국가 독점
        */
-      exclusivity_requirement?: Record<string, never>;
+      exclusivity_requirement: string | null;
       /**
        * @description 메뉴 현지화 요구 수준
        * @example 일부 허용
        */
-      localization_requirement?: Record<string, never>;
+      localization_requirement: string | null;
       /**
        * @description 선호 로열티 방식
        * @example 총매출 기준 비율
        */
-      preferred_royalty_type?: Record<string, never>;
+      preferred_royalty_type: string | null;
       /**
        * @description 식자재 공급망 보유/공급 방식
        * @example 자체 공급 가능
        */
-      has_supply_chain?: Record<string, never>;
+      has_supply_chain: string | null;
       /**
        * @description 인테리어 기준 선호
        * @example 본사 표준안 전면 적용
        */
-      interior_preference?: Record<string, never>;
+      interior_preference: string | null;
     };
     BuyerBasicDetailDto: {
       /**
        * @description 회사 상세 소개글
        * @example Watami CO.는 2008년 설립된 일본의 다브랜드 외식 운영사입니다. 일본 전역에서 마스터 프랜차이즈 방식으로 외식 브랜드를 운영하며 현재 4개 브랜드, 38개 매장을 운영하고 있습니다.
        */
-      detail_intro?: Record<string, never>;
+      detail_intro: string | null;
       /**
        * @description 사업 유형
        * @example 마스터 프랜차이즈 운영사
        */
-      business_type?: Record<string, never>;
+      business_type: string | null;
       /**
        * @description 설립 연도
        * @example 2008
        */
-      founded_year?: Record<string, never>;
+      founded_year: number | null;
       /**
        * @description 본사 위치 / 도시
        * @example 일본 도쿄
        */
-      headquarter_location?: Record<string, never>;
+      headquarter_location: string | null;
       /**
        * @description 주요 운영 국가
        * @example 일본
        */
-      country?: Record<string, never>;
+      country: string | null;
       /**
        * @description 주요 운영 업종
        * @example 외식 F&B
        */
-      target_industry?: Record<string, never>;
+      target_industry: string | null;
       /**
        * @description 정보 확인/검증 일자
        * @example 2026. 08. 12
        */
-      verified_at?: Record<string, never>;
+      verified_at: string | null;
     };
     BuyerContactDetailDto: {
       /**
        * @description 대표 이메일 주소
        * @example contact@watami.co.jp
        */
-      official_email?: Record<string, never>;
+      official_email: string | null;
       /**
        * @description 담당자명
        * @example 야마다 타로
        */
-      contact_name?: Record<string, never>;
+      contact_name: string | null;
       /**
        * @description 직책
        * @example 해외사업개발팀 총괄
        */
-      contact_position?: Record<string, never>;
+      contact_position: string | null;
       /**
        * @description 담당자 이메일
        * @example yamada@watami.co.jp
        */
-      contact_email?: Record<string, never>;
+      contact_email: string | null;
       /**
        * @description 가능 언어 목록
        * @example [
@@ -5528,7 +5842,7 @@ export interface components {
        *       "영어"
        *     ]
        */
-      contact_languages?: string[];
+      contact_languages: string[] | null;
     };
     GetBuyerDetailResponseDto: {
       /**
@@ -5555,12 +5869,12 @@ export interface components {
        * @description 바이어 공식 홈페이지 URL
        * @example https://www.watami.co.jp/
        */
-      homepage_url?: Record<string, never>;
+      homepage_url: string | null;
       /**
        * @description 대표 운영 브랜드 요약 문구
        * @example 운영 브랜드 : Subway Japan · bb.q Japan
        */
-      brand_summary?: Record<string, never>;
+      brand_summary: string | null;
       /** @description 주요 운영 브랜드 목록 */
       brands: components["schemas"]["OperatingBrandDto"][];
       /** @description 파트너십 선호 조건 정보 */
@@ -5943,22 +6257,22 @@ export interface components {
        * @description 국가
        * @example 일본
        */
-      country?: Record<string, never>;
+      country: string | null;
       /**
        * @description 도시
        * @example 도쿄도 미나토구
        */
-      city?: Record<string, never>;
+      city: string | null;
       /**
        * @description 연락처 담당자 이름
        * @example 홍길동
        */
-      contact_name?: Record<string, never>;
+      contact_name: string | null;
       /**
        * @description 연락처 담당자 메일
        * @example contact@wdi.co.jp
        */
-      contact_email?: Record<string, never>;
+      contact_email: string | null;
     };
     AutocompleteBuyerResponseDto: {
       /** @description 자동완성 검색 결과 목록 */
@@ -6026,42 +6340,42 @@ export interface components {
        * @description 설립 연도
        * @example 2018
        */
-      founded_year?: Record<string, never>;
+      founded_year: number | null;
       /**
        * @description 사업유형
        * @example 식음료 유통 및 도소매
        */
-      business_type?: Record<string, never>;
+      business_type: string | null;
       /**
        * @description 대표자 이름
        * @example 김대표
        */
-      ceo_name?: Record<string, never>;
+      ceo_name: string | null;
       /**
        * @description 운영 국가
        * @example 대한민국
        */
-      country?: Record<string, never>;
+      country: string | null;
       /**
        * @description 운영 도시
        * @example 서울
        */
-      city?: Record<string, never>;
+      city: string | null;
       /**
        * @description 본사 홈페이지 URL
        * @example https://www.globalfood.com
        */
-      homepage_url?: Record<string, never>;
+      homepage_url: string | null;
       /**
        * @description 본사 대표 이메일
        * @example contact@globalfood.com
        */
-      official_email?: Record<string, never>;
+      official_email: string | null;
       /**
        * @description 본사 주소
        * @example 서울특별시 강남구 테헤란로 456, 10층
        */
-      official_address?: Record<string, never>;
+      official_address: string | null;
     };
     UpdateBuyerBasicResponseDto: {
       /**
@@ -6078,17 +6392,17 @@ export interface components {
        * @description 사업유형 컬럼 값
        * @example 식음료 유통 및 도소매
        */
-      business_type?: Record<string, never>;
+      business_type: string | null;
       /**
        * @description 운영 국가 컬럼 값
        * @example 대한민국
        */
-      country?: Record<string, never>;
+      country: string | null;
       /**
        * @description 운영 도시 컬럼 값
        * @example 서울
        */
-      city?: Record<string, never>;
+      city: string | null;
       /** @description 업데이트된 바이어 회사 기본 정보 (buyer_basic) */
       buyer_basic: components["schemas"]["BuyerBasicDataDto"];
     };
@@ -6180,7 +6494,7 @@ export interface components {
        * @description 보유 브랜드 개수
        * @example 8
        */
-      brand_count?: Record<string, never>;
+      brand_count?: number | null;
     };
     UpdateBuyerStatusResponseDto: {
       /**
@@ -6228,17 +6542,17 @@ export interface components {
        * @description 핵심 차별점 01
        * @example 수도권 및 주요 광역시 핵심 상권 직영·가맹 50여 개 운영 노하우
        */
-      key_point_01?: Record<string, never>;
+      key_point_01?: string | null;
       /**
        * @description 핵심 차별점 02
        * @example 자체 콜드체인 물류망 및 전국 식자재 일일 배송 시스템 완비
        */
-      key_point_02?: Record<string, never>;
+      key_point_02?: string | null;
       /**
        * @description 핵심 차별점 03
        * @example 현지 로컬라이징 R&D 전담 연구소 및 전문 마케팅 조직 보유
        */
-      key_point_03?: Record<string, never>;
+      key_point_03?: string | null;
     };
     UpdateBuyerIntroResponseDto: {
       /**
@@ -6330,10 +6644,10 @@ export interface components {
       /**
        * @description 선호 계약 방식 (선택지: 마스터 프랜차이즈, 지역 개발권, 직영, 합작법인, 라이선스, 유통, 미정)
        * @example 마스터 프랜차이즈
-       * @enum {string}
+       * @enum {string|null}
        */
       preferred_contract_type?:
-        "마스터 프랜차이즈" | "지역 개발권" | "직영" | "합작법인" | "라이선스" | "유통" | "미정";
+        "마스터 프랜차이즈" | "지역 개발권" | "직영" | "합작법인" | "라이선스" | "유통" | "미정" | null;
       /**
        * @description 희망 파트너 역할
        * @example 총판/마스터 파트너
@@ -6448,7 +6762,7 @@ export interface components {
        *       "일본어"
        *     ]
        */
-      contact_languages?: string[];
+      contact_languages?: string[] | null;
     };
     UpdateBuyerContactResponseDto: {
       /**
@@ -6547,7 +6861,7 @@ export interface components {
        * @description 대상 워크스페이스 UID (`target_workspace_uid`, 수기 등록 시 null)
        * @example 2
        */
-      target_workspace_uid?: Record<string, never>;
+      target_workspace_uid: number | null;
       /**
        * @description 대상 워크스페이스 타입 (`buyer` 또는 `brand`)
        * @example buyer
@@ -6562,12 +6876,12 @@ export interface components {
        * @description 국가
        * @example 일본
        */
-      country?: Record<string, never>;
+      country: string | null;
       /**
        * @description 도시
        * @example 도쿄
        */
-      city?: Record<string, never>;
+      city: string | null;
       /**
        * @description 국가 및 도시 표기 (프로토타입 k2 컬럼)
        * @example 일본 · 도쿄
@@ -6577,47 +6891,43 @@ export interface components {
        * @description 카테고리 / 사업유형
        * @example 외식
        */
-      category?: Record<string, never>;
+      category: string | null;
       /**
        * @description 계약 방식 (프로토타입 k3 컬럼)
        * @example 마스터 프랜차이즈
        */
-      contract_type?: Record<string, never>;
+      contract_type: string | null;
       /**
        * @description 현재 단계 (가장 최근 완료된 진행 기록 기준, 없을 시 "리드")
        * @example 미팅
+       * @enum {string}
        */
-      current_stage: string;
-      /**
-       * @description 단계 배지 CSS 클래스 (`lead`, `contact`, `meet`, `nego`, `legal`, `won`, `lost`)
-       * @example meet
-       */
-      stage_class: string;
+      current_stage: "리드" | "검토" | "접촉" | "미팅" | "법무검토" | "협상" | "계약완료" | "보류";
       /**
        * @description 최근 접점일 (YYYY.MM.DD 또는 YYYY-MM-DD, 기록 없을 시 null)
        * @example 2026.06.24
        */
-      recent_contact_date?: Record<string, never>;
+      recent_contact_date: string | null;
       /**
        * @description 다음 액션 제목 (미완료 액션 중 가장 빠른 마감일 액션, 없을 시 null)
        * @example 소개서 발송
        */
-      next_action_title?: Record<string, never>;
+      next_action_title: string | null;
       /**
        * @description 다음 액션 기한일 (YYYY.MM.DD 또는 YYYY-MM-DD, 없을 시 null)
        * @example 2026.07.14
        */
-      next_action_due_date?: Record<string, never>;
+      next_action_due_date: string | null;
       /**
        * @description 담당자 이름
        * @example 홍길동
        */
-      contact_name?: Record<string, never>;
+      contact_name: string | null;
       /**
        * @description 담당자 이메일
        * @example contact@partner.com
        */
-      contact_email?: Record<string, never>;
+      contact_email: string | null;
       /**
        * @description 생성 일시
        * @example 2026-09-15T04:00:00.000Z
@@ -6707,7 +7017,7 @@ export interface components {
        * @description 관리 대상 워크스페이스 고유 식별자 (target_workspace_uid).<br/>• source가 브랜드일 때: 바이어 워크스페이스 uid (`etq_workspace.uid`)<br/>• source가 바이어일 때: 브랜드 워크스페이스 uid (`etq_workspace.uid`)<br/>• 수기 직접 입력 시: null 또는 생략 가능
        * @example 2
        */
-      target_workspace_uid?: Record<string, never>;
+      target_workspace_uid?: number | null;
       /**
        * @description 기업명 (회사 이름)
        * @example Antenna Retail
@@ -6717,27 +7027,27 @@ export interface components {
        * @description 국가
        * @example 일본
        */
-      country?: Record<string, never>;
+      country?: string | null;
       /**
        * @description 도시
        * @example 도쿄
        */
-      city?: Record<string, never>;
+      city?: string | null;
       /**
        * @description 계약 방식 (예: 마스터 프랜차이즈, 합작법인, 라이선스, 유통, 직영 등)
        * @example 마스터 프랜차이즈
        */
-      contract_type?: Record<string, never>;
+      contract_type?: string | null;
       /**
        * @description 담당자 이름
        * @example 홍길동
        */
-      contact_name?: Record<string, never>;
+      contact_name?: string | null;
       /**
        * @description 담당자 메일 (이메일)
        * @example contact@antennaretail.jp
        */
-      contact_email?: Record<string, never>;
+      contact_email?: string | null;
     };
     CrmItemDto: {
       /**
@@ -6754,7 +7064,7 @@ export interface components {
        * @description 관리 대상 워크스페이스 UID (target_workspace_uid, 수기 등록 시 null)
        * @example 2
        */
-      target_workspace_uid?: Record<string, never>;
+      target_workspace_uid: number | null;
       /**
        * @description 워크스페이스 타입.<br/>• target_workspace_uid가 있을 경우: target 워크스페이스의 타입<br/>• target_workspace_uid가 null일 경우: source_workspace_uid의 반대 타입 (source가 brand면 buyer, source가 buyer면 brand)
        * @example buyer
@@ -6769,27 +7079,27 @@ export interface components {
        * @description 국가
        * @example 일본
        */
-      country?: Record<string, never>;
+      country: string | null;
       /**
        * @description 도시
        * @example 도쿄
        */
-      city?: Record<string, never>;
+      city: string | null;
       /**
        * @description 계약 방식
        * @example 마스터 프랜차이즈
        */
-      contract_type?: Record<string, never>;
+      contract_type: string | null;
       /**
        * @description 담당자 이름
        * @example 홍길동
        */
-      contact_name?: Record<string, never>;
+      contact_name: string | null;
       /**
        * @description 담당자 메일
        * @example contact@antennaretail.jp
        */
-      contact_email?: Record<string, never>;
+      contact_email: string | null;
       /**
        * @description 등록 일시
        * @example 2026-09-15T04:00:00.000Z
@@ -6799,7 +7109,7 @@ export interface components {
        * @description 수정 일시
        * @example 2026-09-15T04:00:00.000Z
        */
-      updated_time?: Record<string, never>;
+      updated_time: string | null;
     };
     CreateCrmResponseDto: {
       /**
@@ -6861,11 +7171,11 @@ export interface components {
        */
       crm_uid: number;
       /**
-       * @description 진행 타입:<br/>• 지정안됨<br/>• 리드<br/>• 연락중<br/>• 미팅<br/>• 계약협상<br/>• 법리문서검토<br/>• 계약완료<br/>• 계약이탈
+       * @description 진행 타입:<br/>• 지정안됨<br/>• 리드<br/>• 검토<br/>• 접촉<br/>• 미팅<br/>• 법무검토<br/>• 협상<br/>• 계약완료<br/>• 보류
        * @example 미팅
        * @enum {string}
        */
-      action_type: "지정안됨" | "리드" | "연락중" | "미팅" | "계약협상" | "법리문서검토" | "계약완료" | "계약이탈";
+      action_type: "지정안됨" | "리드" | "검토" | "접촉" | "미팅" | "법무검토" | "협상" | "계약완료" | "보류";
       /**
        * @description 진행 기록 제목
        * @example 1차 조건 협의 미팅
@@ -6921,17 +7231,17 @@ export interface components {
        * @description 진행 날짜 또는 마감일
        * @example 2026-07-02
        */
-      action_time?: Record<string, never>;
+      action_time: string | null;
       /**
        * @description 상대 / 담당자
        * @example Antenna Retail Yuki Tanaka
        */
-      partner_name?: Record<string, never>;
+      partner_name: string | null;
       /**
        * @description 내용 또는 메모
        * @example 신주쿠 지점 미팅 내용
        */
-      content?: Record<string, never>;
+      content: string | null;
       /**
        * @description 첨부 파일 목록 (진행 기록에만 존재)
        * @example [
@@ -6941,7 +7251,7 @@ export interface components {
        *       }
        *     ]
        */
-      file_list?: Record<string, never>;
+      file_list: Record<string, never>[] | null;
       /**
        * Format: date-time
        * @description 생성 일시
@@ -6971,11 +7281,11 @@ export interface components {
     };
     UpdateCrmActionDto: {
       /**
-       * @description 진행 타입:<br/>• 지정안됨<br/>• 리드<br/>• 연락중<br/>• 미팅<br/>• 계약협상<br/>• 법리문서검토<br/>• 계약완료<br/>• 계약이탈
+       * @description 진행 타입:<br/>• 지정안됨<br/>• 리드<br/>• 검토<br/>• 접촉<br/>• 미팅<br/>• 법무검토<br/>• 협상<br/>• 계약완료<br/>• 보류
        * @example 미팅
        * @enum {string}
        */
-      action_type?: "지정안됨" | "리드" | "연락중" | "미팅" | "계약협상" | "법리문서검토" | "계약완료" | "계약이탈";
+      action_type?: "지정안됨" | "리드" | "검토" | "접촉" | "미팅" | "법무검토" | "협상" | "계약완료" | "보류";
       /**
        * @description 진행 기록 제목
        * @example 1차 조건 협의 미팅 (수정)
@@ -7138,17 +7448,17 @@ export interface components {
        * @description 마감일 (YYYY-MM-DD)
        * @example 2026-07-02
        */
-      action_time?: Record<string, never>;
+      action_time: string | null;
       /**
        * @description 담당자
        * @example Yuki Tanaka
        */
-      partner_name?: Record<string, never>;
+      partner_name: string | null;
       /**
        * @description 내용 / 메모
        * @example 본사 승인 필요 조건 검토
        */
-      content?: Record<string, never>;
+      content: string | null;
       /**
        * @description 완료 여부 (Y 또는 N)
        * @example N
@@ -7190,11 +7500,11 @@ export interface components {
     };
     UpdateCrmStageDto: {
       /**
-       * @description 변경할 CRM 현재 단계 (current_stage).<br/>• 허용값: `리드`, `연락중`, `미팅`, `계약협상`, `법리문서검토`, `계약완료`, `계약이탈`
+       * @description 변경할 CRM 현재 단계 (current_stage).<br/>• 허용값: `리드`, `검토`, `접촉`, `미팅`, `법무검토`, `협상`, `계약완료`, `보류`
        * @example 미팅
        * @enum {string}
        */
-      current_stage: "리드" | "연락중" | "미팅" | "계약협상" | "법리문서검토" | "계약완료" | "계약이탈";
+      current_stage: "리드" | "검토" | "접촉" | "미팅" | "법무검토" | "협상" | "계약완료" | "보류";
     };
     UpdateCrmStageDataDto: {
       /**
@@ -7207,7 +7517,7 @@ export interface components {
        * @example 미팅
        * @enum {string}
        */
-      current_stage: "리드" | "연락중" | "미팅" | "계약협상" | "법리문서검토" | "계약완료" | "계약이탈";
+      current_stage: "리드" | "검토" | "접촉" | "미팅" | "법무검토" | "협상" | "계약완료" | "보류";
       /**
        * @description 수정 일시
        * @example 2026-09-16T01:25:00.000Z
@@ -7930,6 +8240,110 @@ export interface operations {
         content?: never;
       };
       /** @description 워크스페이스 또는 대상 멤버를 찾을 수 없음 */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  RemoveWorkspaceRejectedMemberController_handle: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 워크스페이스 고유 식별자 (uid) */
+        workspace_uid: number;
+        /** @description 제거할 멤버 레코드 고유 식별자 (etq_workspace_member.uid) */
+        member_uid: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 초대거절 멤버 목록 제거 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RemoveWorkspaceRejectedMemberResponseDto"];
+        };
+      };
+      /** @description 초대거절 상태가 아닌 멤버를 제거하려고 시도한 경우 */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 AccessToken) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 권한 없음 (관리자가 아니거나 워크스페이스 비활성 멤버인 경우) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 워크스페이스 또는 대상 멤버를 찾을 수 없는 경우 */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  GetBrandDashboardController_execute: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 브랜드 워크스페이스 UID */
+        workspace_uid: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 브랜드 대시보드 조회 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["GetBrandDashboardResponseDto"];
+        };
+      };
+      /** @description 브랜드 타입의 워크스페이스가 아닌 경우 */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 인증되지 않은 사용자 (JWT 토큰 누락 또는 유효하지 않음) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 해당 워크스페이스에 접근 권한이 없거나 활성 멤버가 아닌 경우 */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 워크스페이스를 찾을 수 없는 경우 */
       404: {
         headers: {
           [name: string]: unknown;
