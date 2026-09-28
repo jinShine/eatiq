@@ -13,6 +13,7 @@ import { ALL_VALUE } from "../../progress/_components/progressOptions";
 import BuyerDetailSheet from "../_components/BuyerDetailSheet";
 import BuyerFilterBar, { type BuyerFilters, EMPTY_BUYER_FILTERS } from "../_components/BuyerFilterBar";
 import BuyerList from "../_components/BuyerList";
+import BuyerListSkeleton from "../_components/BuyerListSkeleton";
 import { type BuyerRow } from "../_components/buyerMock";
 import { useBuyerDetail } from "../_hooks/useBuyerDetail";
 import { useBuyerList } from "../_hooks/useBuyerList";
@@ -43,10 +44,10 @@ export default function BuyerContainer({ workspaceId }: BuyerContainerProps) {
   const [filters, setFilters] = useState<BuyerFilters>(EMPTY_BUYER_FILTERS);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
-  const buyers = useBuyerList(workspaceId);
+  const { buyers, isLoading } = useBuyerList(workspaceId);
   const filtered = useMemo(() => filterBuyers(buyers, filters), [buyers, filters]);
   const visible = filtered.slice(0, visibleCount);
-  const hasNoResult = filtered.length === 0;
+  const hasNoResult = !isLoading && filtered.length === 0;
 
   // 필터가 바뀌면 다시 처음부터 보여준다
   const handleChangeFilters = (next: BuyerFilters) => {
@@ -73,7 +74,9 @@ export default function BuyerContainer({ workspaceId }: BuyerContainerProps) {
         <BaseContentLayout>
           <BuyerFilterBar filters={filters} onChange={handleChangeFilters} onReset={handleReset} />
 
-          {hasNoResult ? (
+          {isLoading ? (
+            <BuyerListSkeleton />
+          ) : hasNoResult ? (
             <div className="flex flex-1 items-center justify-center p-8">
               <div className="border-border flex flex-col items-center rounded-2xl border border-dashed bg-white px-6 py-20 text-center">
                 <div className="bg-secondary-background text-text-disabled flex size-12 items-center justify-center rounded-2xl">
