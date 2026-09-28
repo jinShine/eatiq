@@ -19,7 +19,7 @@ import {
 
 import { CreateWorkspaceModal } from "@components/custom/workspace";
 
-import { useAuthUser } from "@services/api/auth/auth.query";
+import { useAuthUser, useLogoutMutation } from "@services/api/auth/auth.query";
 import { useMyWorkspaces } from "@services/api/workspace/workspace.query";
 
 import { useUserSettingsStore } from "@stores/useUserSettingsStore";
@@ -66,6 +66,7 @@ export default function GlobalSideNav() {
   const pathname = usePathname();
   const { workspaceId } = useParams<{ workspaceId: string }>();
 
+  const { mutate: logoutUser, isPending: isLoggingOut } = useLogoutMutation();
   const { data: workspaces, isLoading: isWorkspacesLoading } = useMyWorkspaces();
   const me = useAuthUser();
   const isMeLoading = me === null;
@@ -147,6 +148,8 @@ export default function GlobalSideNav() {
           }}
           collapsed={collapsed}
           isLoading={isMeLoading}
+          onLogout={() => logoutUser()}
+          isLoggingOut={isLoggingOut}
         />
       </div>
 

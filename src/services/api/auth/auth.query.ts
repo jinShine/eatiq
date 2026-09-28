@@ -1,11 +1,15 @@
 import { useEffect, useState } from "react";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { tokenStorage } from "@services/token-storage";
 
+import ROUTES from "@constants/routes";
+
 import { IS_MOCK, mockResolve } from "../mock";
-import { register, sendMagicLink, verifyMagicLink } from "./auth.api";
+import { logout, register, sendMagicLink, verifyMagicLink } from "./auth.api";
 import { MOCK_ACCESS_TOKEN, mockAuthUser, mockVerifyResponse } from "./auth.mock";
 import { type AuthUser } from "./auth.type";
 
@@ -74,4 +78,20 @@ export function useAuthUser(): AuthUser | null {
   }, []);
 
   return user;
+}
+
+export function useLogoutMutation() {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: IS_MOCK ? () => mockResolve({ message: "로그아웃되었습니다." }) : logout,
+    // 서버 요청이 실패해도 로컬은 비운다. "눌렀는데 그대로"가 가장 나쁘고,
+    // 토큰이 서버에 남아도 클라이언트에 없으면 쓸 수 없다
+    onSettled: () => {
+      tokenStorage.clear();
+      queryClient.clear();
+      router.replace(ROUTES.AUTH.SIGN_IN);
+    },
+  });
 }
