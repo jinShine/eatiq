@@ -5,12 +5,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
 
+import { SettingsSection } from "@components/custom/settings";
 import { Input, Toast } from "@components/ui";
 
 import { useBrandSettings, useUpdateBrandContract } from "@services/api/brand/brand.query";
 import { type BrandContractView } from "@services/api/brand/brand.view";
-
-import SettingsSection from "../SettingsSection";
 
 // PATCH /api/brands/{brandId}/contract — 전체 치환 (ContractSection과 같은 엔드포인트)
 // 계약 담당자 필드(contractContact*)는 ContractSection이 담당하며, 저장 시 서로의 값을 병합 전송한다

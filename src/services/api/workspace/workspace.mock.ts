@@ -25,3 +25,8 @@ export const mockMyWorkspaces: MyWorkspacesResponse = {
     },
   ],
 };
+
+export const mockWorkspaceDetail = {
+  message: "조회에 성공했습니다.",
+  workspace: { uid: 1, name: "몽탄", type: "brand" as const },
+};

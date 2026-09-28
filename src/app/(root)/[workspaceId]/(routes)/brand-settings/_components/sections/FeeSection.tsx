@@ -6,13 +6,13 @@ import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
 
+import { SettingsSection } from "@components/custom/settings";
 import { Input, Toast } from "@components/ui";
 
 import { useBrandSettings, useUpdateBrandFee } from "@services/api/brand/brand.query";
 import { type BrandFeeView } from "@services/api/brand/brand.view";
 
 import FormSelect from "../FormSelect";
-import SettingsSection from "../SettingsSection";
 import { PAYMENT_CYCLE_OPTIONS, ROYALTY_BASE_OPTIONS } from "./policyOptions";
 
 const numberField = z.string().refine(v => !v || /^\d+(\.\d+)?$/.test(v), { message: "숫자만 입력해주세요" });

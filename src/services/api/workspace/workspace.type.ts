@@ -1,3 +1,5 @@
+import { type WorkspaceType } from "@components/custom/workspace";
+
 import { type components } from "@services/openapi";
 
 /**
@@ -16,3 +18,17 @@ export type Workspace = {
   id: string;
   name: string;
 };
+
+/** 워크스페이스 상세 */
+export type WorkspaceDetailResponse = {
+  message: string;
+  workspace: {
+    uid: number;
+    name: string;
+    type: WorkspaceType;
+  };
+};
+
+export type UpdateWorkspaceNameRequest = { name: string };
+export type UpdateWorkspaceNameResponse = { message: string };
+export type DeleteWorkspaceResponse = { message: string };

@@ -3,12 +3,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
 
+import { SettingsSection } from "@components/custom/settings";
 import { Input, Toast } from "@components/ui";
 
 import { useBrandSettings, useUpdateBrandBasic } from "@services/api/brand/brand.query";
 import { type BrandBasicView } from "@services/api/brand/brand.view";
-
-import SettingsSection from "../SettingsSection";
 
 // PATCH /api/brands/{brandId}/basic — 전체 치환
 const basicInfoSchema = z.object({

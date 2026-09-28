@@ -3,13 +3,13 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
 
+import { SettingsSection } from "@components/custom/settings";
 import { Input, Toast } from "@components/ui";
 
 import { useBrandSettings, useUpdateBrandOperation } from "@services/api/brand/brand.query";
 import { type BrandOperationView } from "@services/api/brand/brand.view";
 
 import FormMultiSelect from "../FormMultiSelect";
-import SettingsSection from "../SettingsSection";
 import { TARGET_CUSTOMER_OPTIONS, USAGE_OCCASION_OPTIONS } from "./IntroOptions";
 
 // 숫자 입력은 문자열로 다루고 제출 시 변환 — 빈칸/0 구분을 위해

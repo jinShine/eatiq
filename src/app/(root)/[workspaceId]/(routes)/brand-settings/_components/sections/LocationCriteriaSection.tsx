@@ -5,13 +5,13 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
 
+import { SettingsSection } from "@components/custom/settings";
 import { Input, Toast } from "@components/ui";
 
 import { useBrandSettings, useUpdateBrandAreaCriteria } from "@services/api/brand/brand.query";
 import { type BrandAreaCriteriaView } from "@services/api/brand/brand.view";
 
 import FormSelect from "../FormSelect";
-import SettingsSection from "../SettingsSection";
 import { mergeAreaCriteria, toNumber, toText } from "./areaCriteriaShared";
 import { AREA_TYPE_OPTIONS, FLOOR_OPTIONS, IMPORTANCE_OPTIONS } from "./policyOptions";
 

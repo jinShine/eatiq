@@ -5,12 +5,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
 
+import { SettingsSection } from "@components/custom/settings";
 import { Input, Toast } from "@components/ui";
 
 import { useBrandSettings, useUpdateBrandContract } from "@services/api/brand/brand.query";
 import { type BrandContractView } from "@services/api/brand/brand.view";
-
-import SettingsSection from "../SettingsSection";
 
 // PATCH /api/brands/{brandId}/contract — 전체 치환
 // 서명권자 필드(signatory*)는 SignatorySection이 담당하며, 저장 시 서로의 값을 병합 전송한다

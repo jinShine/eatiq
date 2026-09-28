@@ -3,12 +3,12 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
 
+import { SettingsSection } from "@components/custom/settings";
 import { Input, Select, SelectItem, Textarea, Toast } from "@components/ui";
 
 import { useBrandSettings, useUpdateBrandIntro } from "@services/api/brand/brand.query";
 import { type BrandIntroView } from "@services/api/brand/brand.view";
 
-import SettingsSection from "../SettingsSection";
 import { CATEGORY_OPTIONS, PRICE_POSITIONING_OPTIONS } from "./IntroOptions";
 
 // PATCH /api/brands/{brandId}/intro — 전체 치환

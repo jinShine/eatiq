@@ -5,12 +5,12 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
 
+import { SettingsSection } from "@components/custom/settings";
 import { Input, Toast } from "@components/ui";
 
 import { useBrandSettings, useUpdateBrandAreaCriteria } from "@services/api/brand/brand.query";
 import { type BrandAreaCriteriaView } from "@services/api/brand/brand.view";
 
-import SettingsSection from "../SettingsSection";
 import { mergeAreaCriteria, toNumber, toText } from "./areaCriteriaShared";
 
 const numberField = z.string().refine(v => !v || /^\d+$/.test(v), { message: "숫자만 입력해주세요" });
