@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
+
 import { useRouter } from "next/navigation";
 
-import { CircleAlert, LogIn, MailCheck, UserRoundCheck } from "lucide-react";
+import { CircleAlert, LogIn, MailCheck, MailX, UserRoundCheck } from "lucide-react";
 
 import { Button, SpinLoader, Toast } from "@components/ui";
 
@@ -36,6 +38,9 @@ export default function InviteContainer({ workspaceId, email }: InviteContainerP
 
   const invited = data?.workspaces.find(workspace => String(workspace.uid) === workspaceId);
 
+  /** 거절을 마친 뒤 보여줄 워크스페이스 이름. 거절하면 목록에서 빠져 invited로는 알 수 없다 */
+  const [declinedName, setDeclinedName] = useState<string | null>(null);
+
   const handleGoLogin = () => {
     // 로그인 메일은 대개 새 탭에서 열린다. 돌아올 곳을 남겨두지 않으면 초대가 끊긴다
     inviteReturnStorage.set(
@@ -57,9 +62,10 @@ export default function InviteContainer({ workspaceId, email }: InviteContainerP
       { action },
       {
         onSuccess: response => {
+          // 거절했다고 곧바로 "워크스페이스를 만드세요" 화면으로 보내면 급작스럽다.
+          // 무엇이 끝났는지 알리고 다음 행동은 사용자가 고르게 한다
           if (action === "거절") {
-            Toast.success("초대를 거절했어요.");
-            router.replace(ROUTES.ROOT);
+            setDeclinedName(response.workspace_name);
             return;
           }
 
@@ -71,6 +77,24 @@ export default function InviteContainer({ workspaceId, email }: InviteContainerP
       },
     );
   };
+
+  if (declinedName !== null) {
+    return (
+      <InviteCard
+        icon={MailX}
+        title="초대를 거절했어요"
+        description={
+          <>
+            <span className="text-text-primary font-semibold">{declinedName}</span> 워크스페이스에 참여하지 않습니다.
+            <br />
+            마음이 바뀌면 관리자에게 다시 초대를 요청해주세요.
+          </>
+        }
+      >
+        <Button onClick={() => router.replace(ROUTES.ROOT)}>확인</Button>
+      </InviteCard>
+    );
+  }
 
   if (!workspaceId || !email) {
     return (
