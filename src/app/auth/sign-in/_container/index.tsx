@@ -25,7 +25,12 @@ type EmailForm = z.infer<typeof emailSchema>;
  *   2. 발송 성공 → "메일을 확인해주세요" 안내로 전환
  *   3. 실제 인증은 메일 링크가 여는 /auth/verify 에서 끝난다
  */
-export default function SignInContainer() {
+type SignInContainerProps = {
+  /** 초대 링크로 들어온 경우 그 이메일을 채워둔다. 다른 주소로 가입하면 초대를 수락할 수 없다 */
+  defaultEmail?: string;
+};
+
+export default function SignInContainer({ defaultEmail = "" }: SignInContainerProps) {
   const [sentEmail, setSentEmail] = useState<string | null>(null);
 
   const {
@@ -34,6 +39,7 @@ export default function SignInContainer() {
     formState: { errors },
   } = useForm<EmailForm>({
     resolver: zodResolver(emailSchema),
+    defaultValues: { email: defaultEmail },
   });
 
   const { mutate: sendMagicLink, isPending } = useSendMagicLinkMutation();

@@ -6,7 +6,10 @@ import {
   type DeleteWorkspaceResponse,
   type InviteMembersRequest,
   type InviteMembersResponse,
+  type InvitedWorkspacesResponse,
   type MyWorkspacesResponse,
+  type RespondInviteRequest,
+  type RespondInviteResponse,
   type UpdateWorkspaceNameRequest,
   type UpdateWorkspaceNameResponse,
   type WorkspaceDetailResponse,
@@ -19,6 +22,7 @@ const ENDPOINTS = {
   create: BASE_PATH,
   my: `${BASE_PATH}/my`,
   invited: `${BASE_PATH}/my/invited`,
+  inviteRespond: (workspaceId: string) => `${BASE_PATH}/${workspaceId}/invite/respond`,
   detail: (workspaceId: string) => `${BASE_PATH}/${workspaceId}`,
   name: (workspaceId: string) => `${BASE_PATH}/${workspaceId}/name`,
   members: (workspaceId: string) => `${BASE_PATH}/${workspaceId}/members`,
@@ -63,5 +67,19 @@ export async function getWorkspaceMembers(workspaceId: string): Promise<Workspac
 /** 여러 명 일괄 초대 — 일부만 실패할 수 있어 응답에 성공·실패가 나뉘어 온다 */
 export async function inviteMembers(workspaceId: string, body: InviteMembersRequest): Promise<InviteMembersResponse> {
   const res = await axiosClientInstance.post<InviteMembersResponse>(ENDPOINTS.memberInvite(workspaceId), body);
+  return res.data;
+}
+
+/** 내가 초대받은 워크스페이스 목록 */
+export async function getInvitedWorkspaces(): Promise<InvitedWorkspacesResponse> {
+  const res = await axiosClientInstance.get<InvitedWorkspacesResponse>(ENDPOINTS.invited);
+  return res.data;
+}
+
+export async function respondWorkspaceInvite(
+  workspaceId: string,
+  body: RespondInviteRequest,
+): Promise<RespondInviteResponse> {
+  const res = await axiosClientInstance.post<RespondInviteResponse>(ENDPOINTS.inviteRespond(workspaceId), body);
   return res.data;
 }

@@ -6,10 +6,12 @@ import { IS_MOCK, mockResolve } from "../mock";
 import {
   createWorkspace,
   deleteWorkspace,
+  getInvitedWorkspaces,
   getMyWorkspaces,
   getWorkspaceDetail,
   getWorkspaceMembers,
   inviteMembers,
+  respondWorkspaceInvite,
   updateWorkspaceName,
 } from "./workspace.api";
 import { buildMockInviteResult, mockMyWorkspaces, mockWorkspaceDetail, mockWorkspaceMembers } from "./workspace.mock";
@@ -17,6 +19,7 @@ import {
   type CreateWorkspaceRequest,
   type InviteMembersRequest,
   type MyWorkspaceItem,
+  type RespondInviteRequest,
   type UpdateWorkspaceNameRequest,
   type Workspace,
   type WorkspaceMember,
@@ -28,6 +31,7 @@ export const workspaceKeys = {
   my: () => [...workspaceKeys.all, "my"] as const,
   detail: (workspaceId: string) => [...workspaceKeys.all, "detail", workspaceId] as const,
   members: (workspaceId: string) => [...workspaceKeys.all, "members", workspaceId] as const,
+  invited: () => [...workspaceKeys.all, "invited"] as const,
 };
 
 /** API DTO → 앱 뷰모델. uid는 number라 라우팅에 쓰려면 문자열로 바꾼다 */
@@ -139,5 +143,26 @@ export function useInviteMembersMutation(workspaceId: string) {
       ? (body: InviteMembersRequest) => mockResolve(buildMockInviteResult(body.emails))
       : (body: InviteMembersRequest) => inviteMembers(workspaceId, body),
     onSuccess: () => invalidateQueries.single(workspaceKeys.members(workspaceId)),
+  });
+}
+
+export function useInvitedWorkspaces(enabled = true) {
+  return useQuery({
+    queryKey: workspaceKeys.invited(),
+    queryFn: getInvitedWorkspaces,
+    enabled,
+  });
+}
+
+export function useRespondInviteMutation(workspaceId: string) {
+  const invalidateQueries = useInvalidateQueries();
+
+  return useMutation({
+    mutationFn: (body: RespondInviteRequest) => respondWorkspaceInvite(workspaceId, body),
+    // 수락하면 내 워크스페이스가 늘고, 어느 쪽이든 초대 목록에서는 빠진다
+    onSuccess: () => {
+      invalidateQueries.single(workspaceKeys.my());
+      invalidateQueries.single(workspaceKeys.invited());
+    },
   });
 }

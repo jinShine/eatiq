@@ -67,3 +67,10 @@ export type WorkspaceMember = {
   status: WorkspaceMemberStatus;
   lastConnectedAt: string | null;
 };
+
+/** 초대받은 워크스페이스 목록 */
+export type InvitedWorkspacesResponse = components["schemas"]["GetMyInvitedWorkspacesResponseDto"];
+
+/** 초대 수락·거절 */
+export type RespondInviteRequest = components["schemas"]["RespondWorkspaceInviteDto"];
+export type RespondInviteResponse = components["schemas"]["RespondWorkspaceInviteResponseDto"];

@@ -7,6 +7,10 @@ const ROUTES = {
     SIGN_UP: "/auth/sign-up",
   },
 
+  WORKSPACE: {
+    INVITE: "/workspace/invite",
+  },
+
   CUSTOM404: "/404",
 } as const;
 
