@@ -99,7 +99,7 @@ export default function WorkspacesSettingsContainer({ workspaceId }: { workspace
 
   const handleMemberAction = (action: MemberAction, member: WorkspaceMember) => {
     // 되돌리기 어려운 둘만 확인을 받는다. 나머지는 눌렀을 때 바로 처리한다
-    if (action === "changeGrade" || action === "remove") {
+    if (action === "promote" || action === "demote" || action === "remove") {
       setConfirm({ kind: action, member });
       return;
     }
@@ -146,14 +146,17 @@ export default function WorkspacesSettingsContainer({ workspaceId }: { workspace
 
     const { kind, member } = confirm;
 
-    if (kind === "changeGrade") {
+    if (kind === "promote" || kind === "demote") {
+      const grade = kind === "promote" ? "관리자" : "사용자";
+
       updateGrade(
-        { memberId: member.id, grade: "관리자" },
+        { memberId: member.id, grade },
         {
           onSuccess: () => {
             setConfirm(null);
-            Toast.success(`${member.name ?? member.email}님을 관리자로 전환했어요.`);
+            Toast.success(`${member.name ?? member.email}님을 ${grade}로 변경했어요.`);
           },
+          // 마지막 관리자를 강등하면 서버가 400을 준다. 그 문구를 그대로 보여준다
           onError: error => toastError(error, "권한 변경에 실패했어요."),
         },
       );

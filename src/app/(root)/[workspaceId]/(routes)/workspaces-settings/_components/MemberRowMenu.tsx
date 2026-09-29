@@ -6,7 +6,7 @@ import { DropdownMenu, DropdownMenuItem } from "@components/ui";
 
 import { type WorkspaceMember } from "@services/api/workspace/workspace.type";
 
-export type MemberAction = "changeGrade" | "remove" | "resendInvite" | "cancelInvite" | "deleteFromList";
+export type MemberAction = "promote" | "demote" | "remove" | "resendInvite" | "cancelInvite" | "deleteFromList";
 
 type MenuItem = { action: MemberAction; label: string; isDestructive?: boolean };
 
@@ -18,10 +18,6 @@ type MenuItem = { action: MemberAction; label: string; isDestructive?: boolean }
  * variant는 되돌리기 어려운 쪽만 destructive로 둔다.
  */
 const MENU_ITEMS: Partial<Record<string, MenuItem[]>> = {
-  활성: [
-    { action: "changeGrade", label: "관리자로 전환" },
-    { action: "remove", label: "사용자 내보내기", isDestructive: true },
-  ],
   초대중: [
     { action: "resendInvite", label: "다시 초대" },
     { action: "cancelInvite", label: "초대 취소", isDestructive: true },
@@ -45,8 +41,28 @@ type MemberRowMenuProps = {
   onSelect: (action: MemberAction, member: WorkspaceMember) => void;
 };
 
+/**
+ * 활성 멤버는 등급에 따라 항목이 갈린다.
+ *
+ * 피그마는 관리자 1명을 전제로 "관리자로 전환"만 그렸지만, 서버는 관리자
+ * 여러 명을 허용하고 기존 관리자를 강등하지 않는다(실측). 이미 관리자인 사람에게
+ * "관리자로 전환"을 띄우면 동일 등급 변경으로 400이 나고, 되돌릴 길도 없어진다.
+ */
+const getItems = (member: WorkspaceMember): MenuItem[] | undefined => {
+  if (member.status !== "활성") {
+    return MENU_ITEMS[member.status];
+  }
+
+  const gradeItem: MenuItem =
+    member.grade === "관리자"
+      ? { action: "demote", label: "사용자로 변경" }
+      : { action: "promote", label: "관리자로 전환" };
+
+  return [gradeItem, { action: "remove", label: "사용자 내보내기", isDestructive: true }];
+};
+
 export default function MemberRowMenu({ member, disabled, onSelect }: MemberRowMenuProps) {
-  const items = MENU_ITEMS[member.status];
+  const items = getItems(member);
 
   // 처음 보는 상태에는 무엇을 할 수 있는지 알 수 없다. 빈 메뉴를 띄우느니 그리지 않는다
   if (!items) {
