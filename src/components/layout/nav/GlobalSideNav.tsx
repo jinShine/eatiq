@@ -17,10 +17,10 @@ import {
   Users,
 } from "lucide-react";
 
-import { CreateWorkspaceModal } from "@components/custom/workspace";
+import { CreateWorkspaceModal, ReceivedInvitesModal } from "@components/custom/workspace";
 
 import { useAuthUser, useLogoutMutation } from "@services/api/auth/auth.query";
-import { useMyWorkspaces } from "@services/api/workspace/workspace.query";
+import { useInvitedWorkspaces, useMyWorkspaces } from "@services/api/workspace/workspace.query";
 
 import { useUserSettingsStore } from "@stores/useUserSettingsStore";
 
@@ -59,6 +59,7 @@ export default function GlobalSideNav() {
   const toggle = useUserSettingsStore(state => state.toggleSidebar);
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isInvitesModalOpen, setIsInvitesModalOpen] = useState(false);
 
   const [isNavigating, startTransition] = useTransition();
 
@@ -68,6 +69,7 @@ export default function GlobalSideNav() {
 
   const { mutate: logoutUser, isPending: isLoggingOut } = useLogoutMutation();
   const { data: workspaces, isLoading: isWorkspacesLoading } = useMyWorkspaces();
+  const { data: invites = [] } = useInvitedWorkspaces();
   const me = useAuthUser();
   const isMeLoading = me === null;
 
@@ -98,6 +100,8 @@ export default function GlobalSideNav() {
           currentId={workspaceId}
           onSwitch={handleSwitchWorkspace}
           onCreate={() => setIsCreateModalOpen(true)}
+          inviteCount={invites.length}
+          onOpenInvites={() => setIsInvitesModalOpen(true)}
           collapsed={collapsed}
           isLoading={isWorkspacesLoading}
         />
@@ -152,6 +156,16 @@ export default function GlobalSideNav() {
           isLoggingOut={isLoggingOut}
         />
       </div>
+
+      <ReceivedInvitesModal
+        isOpen={isInvitesModalOpen}
+        onOpenChange={setIsInvitesModalOpen}
+        invites={invites}
+        onAccepted={id => {
+          setIsInvitesModalOpen(false);
+          router.push(`/${id}/dashboard`);
+        }}
+      />
 
       <CreateWorkspaceModal
         isOpen={isCreateModalOpen}

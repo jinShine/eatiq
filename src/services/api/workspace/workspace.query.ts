@@ -17,10 +17,18 @@ import {
   updateMemberStatus,
   updateWorkspaceName,
 } from "./workspace.api";
-import { buildMockInviteResult, mockMyWorkspaces, mockWorkspaceDetail, mockWorkspaceMembers } from "./workspace.mock";
+import {
+  buildMockInviteResult,
+  mockInvitedWorkspaces,
+  mockMyWorkspaces,
+  mockWorkspaceDetail,
+  mockWorkspaceMembers,
+} from "./workspace.mock";
 import {
   type CreateWorkspaceRequest,
   type InviteMembersRequest,
+  type InvitedWorkspace,
+  type InvitedWorkspaceItem,
   type MyWorkspaceItem,
   type RespondInviteRequest,
   type UpdateMemberGradeRequest,
@@ -151,19 +159,45 @@ export function useInviteMembersMutation(workspaceId: string) {
   });
 }
 
+const toInvitedWorkspace = (item: InvitedWorkspaceItem): InvitedWorkspace => ({
+  id: String(item.uid),
+  name: item.name,
+  type: item.type,
+  invitedAt: item.my_member_info.invited_time,
+});
+
+/** 내가 받은 초대 — 초대 수락 화면, 워크스페이스 없는 빈 화면, 사이드바가 같은 캐시를 쓴다 */
 export function useInvitedWorkspaces(enabled = true) {
   return useQuery({
     queryKey: workspaceKeys.invited(),
-    queryFn: getInvitedWorkspaces,
+    queryFn: IS_MOCK ? () => mockResolve(mockInvitedWorkspaces) : getInvitedWorkspaces,
+    select: response => response.workspaces.map(toInvitedWorkspace),
     enabled,
   });
 }
 
-export function useRespondInviteMutation(workspaceId: string) {
+/**
+ * 초대 수락·거절.
+ *
+ * 대상 워크스페이스를 요청할 때 받는다. 받은 초대 목록에서는 한 화면에서
+ * 여러 워크스페이스에 응답하므로 훅을 만들 때 하나로 고정할 수 없다.
+ */
+export function useRespondInviteMutation() {
   const invalidateQueries = useInvalidateQueries();
 
   return useMutation({
-    mutationFn: (body: RespondInviteRequest) => respondWorkspaceInvite(workspaceId, body),
+    mutationFn: IS_MOCK
+      ? ({ workspaceId, action }: RespondInviteRequest & { workspaceId: string }) =>
+          mockResolve({
+            message: action === "수락" ? "워크스페이스 초대를 수락했습니다." : "워크스페이스 초대를 거절했습니다.",
+            workspace_uid: Number(workspaceId),
+            workspace_name: "버즈 브랜드 3",
+            member_uid: 31,
+            status: action === "수락" ? "활성" : "초대거절",
+            grade: "사용자",
+          })
+      : ({ workspaceId, ...body }: RespondInviteRequest & { workspaceId: string }) =>
+          respondWorkspaceInvite(workspaceId, body),
     // 수락하면 내 워크스페이스가 늘고, 어느 쪽이든 초대 목록에서는 빠진다
     onSuccess: () => {
       invalidateQueries.single(workspaceKeys.my());

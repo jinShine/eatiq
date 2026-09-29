@@ -70,6 +70,16 @@ export type WorkspaceMember = {
 
 /** 초대받은 워크스페이스 목록 */
 export type InvitedWorkspacesResponse = components["schemas"]["GetMyInvitedWorkspacesResponseDto"];
+export type InvitedWorkspaceItem = components["schemas"]["InvitedWorkspaceItemDto"];
+
+/** 화면에서 쓰는 받은 초대 뷰모델 */
+export type InvitedWorkspace = {
+  id: string;
+  name: string;
+  type: InvitedWorkspaceItem["type"];
+  /** 초대받은 시각 — 워크스페이스 생성 시각(created_time)과 다르다 */
+  invitedAt: string | null;
+};
 
 /** 초대 수락·거절 */
 export type RespondInviteRequest = components["schemas"]["RespondWorkspaceInviteDto"];

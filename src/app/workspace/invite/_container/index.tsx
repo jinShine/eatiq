@@ -34,9 +34,9 @@ export default function InviteContainer({ workspaceId, email }: InviteContainerP
   // 초대가 아직 유효한지 서버에 물어본다. 목록에 없으면 이미 처리됐거나 취소된 것이다.
   // 로그인 전에는 부를 수 없으므로 그때는 이름 없이 안내만 한다
   const { data, isLoading, isError } = useInvitedWorkspaces(isSameAccount);
-  const { mutate: respond, isPending } = useRespondInviteMutation(workspaceId);
+  const { mutate: respond, isPending } = useRespondInviteMutation();
 
-  const invited = data?.workspaces.find(workspace => String(workspace.uid) === workspaceId);
+  const invited = data?.find(workspace => workspace.id === workspaceId);
 
   /** 거절을 마친 뒤 보여줄 워크스페이스 이름. 거절하면 목록에서 빠져 invited로는 알 수 없다 */
   const [declinedName, setDeclinedName] = useState<string | null>(null);
@@ -59,7 +59,7 @@ export default function InviteContainer({ workspaceId, email }: InviteContainerP
 
   const handleRespond = (action: "수락" | "거절") => {
     respond(
-      { action },
+      { workspaceId, action },
       {
         onSuccess: response => {
           // 거절했다고 곧바로 "워크스페이스를 만드세요" 화면으로 보내면 급작스럽다.

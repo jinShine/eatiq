@@ -4,6 +4,7 @@
  */
 import {
   type InviteMembersResponse,
+  type InvitedWorkspacesResponse,
   type MyWorkspacesResponse,
   type WorkspaceDetailResponse,
   type WorkspaceMembersResponse,
@@ -132,4 +133,25 @@ export const buildMockInviteResult = (emails: string[]): InviteMembersResponse =
       reason: "이미 해당 워크스페이스의 활성 멤버입니다.",
     })),
   };
+};
+
+/** 받은 초대 — 빈 화면과 사이드바의 받은 초대 목록을 확인하기 위한 한 건 */
+export const mockInvitedWorkspaces: InvitedWorkspacesResponse = {
+  message: "초대 대기 중인 워크스페이스 목록을 성공적으로 조회했습니다.",
+  total_count: 1,
+  workspaces: [
+    {
+      uid: 3,
+      name: "버즈 브랜드 3",
+      type: "brand",
+      created_time: "2026-09-01T09:00:00.000Z",
+      my_member_info: {
+        uid: 31,
+        grade: "사용자",
+        status: "초대중",
+        email: "dev_front@eatiq.io",
+        invited_time: "2026-09-29T09:00:00.000Z",
+      },
+    },
+  ],
 };
