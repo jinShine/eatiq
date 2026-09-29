@@ -49,9 +49,10 @@ export default function SidebarUserProfile({
         <button
           aria-label="계정 메뉴"
           className={cn(
-            "flex w-[250px]! items-center gap-2 rounded-lg px-1.5 py-1.5 text-left hover:bg-white/10",
+            "flex w-full items-center gap-2 rounded-lg px-1.5 py-1.5 text-left hover:bg-white/10",
             collapsed && "w-fit! justify-center px-2",
           )}
+          style={{ width: 250 }}
         >
           <div className="bg-primary text-primary-foreground flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold">
             {getInitial(user.name)}

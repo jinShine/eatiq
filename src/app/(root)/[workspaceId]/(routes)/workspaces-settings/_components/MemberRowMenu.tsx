@@ -8,7 +8,7 @@ import { type WorkspaceMember } from "@services/api/workspace/workspace.type";
 
 export type MemberAction = "promote" | "demote" | "remove" | "resendInvite" | "cancelInvite" | "deleteFromList";
 
-type MenuItem = { action: MemberAction; label: string; isDestructive?: boolean };
+type MenuItem = { action: MemberAction; label: string; isDestructive?: boolean; isDisabled?: boolean };
 
 /**
  * 상태별 메뉴 항목 (피그마 node 693:3330~3332).
@@ -42,23 +42,26 @@ type MemberRowMenuProps = {
 };
 
 /**
- * 활성 멤버는 등급에 따라 항목이 갈린다.
+ * 활성 멤버는 등급 항목 둘을 항상 보이고, 현재 등급 쪽만 비활성화한다.
  *
  * 피그마는 관리자 1명을 전제로 "관리자로 전환"만 그렸지만, 서버는 관리자
- * 여러 명을 허용하고 기존 관리자를 강등하지 않는다(실측). 이미 관리자인 사람에게
- * "관리자로 전환"을 띄우면 동일 등급 변경으로 400이 나고, 되돌릴 길도 없어진다.
+ * 여러 명을 허용하고 기존 관리자를 강등하지 않는다(실측).
+ * 항목을 바꿔 끼우지 않고 비활성화하는 이유 — 행마다 메뉴 모양이 달라지면
+ * 같은 자리를 눌렀는데 다른 동작이 된다. 스펙도 "이미 동일한 등급이면
+ * Disabled 처리"를 권장한다.
  */
 const getItems = (member: WorkspaceMember): MenuItem[] | undefined => {
   if (member.status !== "활성") {
     return MENU_ITEMS[member.status];
   }
 
-  const gradeItem: MenuItem =
-    member.grade === "관리자"
-      ? { action: "demote", label: "사용자로 변경" }
-      : { action: "promote", label: "관리자로 전환" };
+  const isAdmin = member.grade === "관리자";
 
-  return [gradeItem, { action: "remove", label: "사용자 내보내기", isDestructive: true }];
+  return [
+    { action: "promote", label: "관리자로 전환", isDisabled: isAdmin },
+    { action: "demote", label: "사용자로 변경", isDisabled: !isAdmin },
+    { action: "remove", label: "사용자 내보내기", isDestructive: true },
+  ];
 };
 
 export default function MemberRowMenu({ member, disabled, onSelect }: MemberRowMenuProps) {
@@ -88,6 +91,7 @@ export default function MemberRowMenu({ member, disabled, onSelect }: MemberRowM
         <DropdownMenuItem
           key={item.action}
           variant={item.isDestructive ? "destructive" : "default"}
+          disabled={item.isDisabled}
           onClick={() => onSelect(item.action, member)}
         >
           {item.label}
