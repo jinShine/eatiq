@@ -11,7 +11,10 @@ import {
   getWorkspaceDetail,
   getWorkspaceMembers,
   inviteMembers,
+  removeRejectedMember,
   respondWorkspaceInvite,
+  updateMemberGrade,
+  updateMemberStatus,
   updateWorkspaceName,
 } from "./workspace.api";
 import { buildMockInviteResult, mockMyWorkspaces, mockWorkspaceDetail, mockWorkspaceMembers } from "./workspace.mock";
@@ -20,6 +23,8 @@ import {
   type InviteMembersRequest,
   type MyWorkspaceItem,
   type RespondInviteRequest,
+  type UpdateMemberGradeRequest,
+  type UpdateMemberStatusRequest,
   type UpdateWorkspaceNameRequest,
   type Workspace,
   type WorkspaceMember,
@@ -164,5 +169,43 @@ export function useRespondInviteMutation(workspaceId: string) {
       invalidateQueries.single(workspaceKeys.my());
       invalidateQueries.single(workspaceKeys.invited());
     },
+  });
+}
+
+/**
+ * 멤버 액션 — 등급 변경 / 상태 변경 / 목록에서 제거.
+ *
+ * 셋 다 끝나면 멤버 목록을 다시 받는다. 등급 변경은 내 권한이 바뀔 수도 있어
+ * (관리자 양도) 워크스페이스 목록의 my_member_info까지 무효화한다.
+ */
+export function useUpdateMemberGradeMutation(workspaceId: string) {
+  const invalidateQueries = useInvalidateQueries();
+
+  return useMutation({
+    mutationFn: ({ memberId, ...body }: UpdateMemberGradeRequest & { memberId: string }) =>
+      updateMemberGrade(workspaceId, memberId, body),
+    onSuccess: () => {
+      invalidateQueries.single(workspaceKeys.members(workspaceId));
+      invalidateQueries.single(workspaceKeys.my());
+    },
+  });
+}
+
+export function useUpdateMemberStatusMutation(workspaceId: string) {
+  const invalidateQueries = useInvalidateQueries();
+
+  return useMutation({
+    mutationFn: ({ memberId, ...body }: UpdateMemberStatusRequest & { memberId: string }) =>
+      updateMemberStatus(workspaceId, memberId, body),
+    onSuccess: () => invalidateQueries.single(workspaceKeys.members(workspaceId)),
+  });
+}
+
+export function useRemoveRejectedMemberMutation(workspaceId: string) {
+  const invalidateQueries = useInvalidateQueries();
+
+  return useMutation({
+    mutationFn: (memberId: string) => removeRejectedMember(workspaceId, memberId),
+    onSuccess: () => invalidateQueries.single(workspaceKeys.members(workspaceId)),
   });
 }

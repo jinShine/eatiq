@@ -8,8 +8,13 @@ import {
   type InviteMembersResponse,
   type InvitedWorkspacesResponse,
   type MyWorkspacesResponse,
+  type RemoveRejectedMemberResponse,
   type RespondInviteRequest,
   type RespondInviteResponse,
+  type UpdateMemberGradeRequest,
+  type UpdateMemberGradeResponse,
+  type UpdateMemberStatusRequest,
+  type UpdateMemberStatusResponse,
   type UpdateWorkspaceNameRequest,
   type UpdateWorkspaceNameResponse,
   type WorkspaceDetailResponse,
@@ -27,6 +32,9 @@ const ENDPOINTS = {
   name: (workspaceId: string) => `${BASE_PATH}/${workspaceId}/name`,
   members: (workspaceId: string) => `${BASE_PATH}/${workspaceId}/members`,
   memberInvite: (workspaceId: string) => `${BASE_PATH}/${workspaceId}/member/invite`,
+  memberGrade: (workspaceId: string, memberId: string) => `${BASE_PATH}/${workspaceId}/member/${memberId}/grade`,
+  memberStatus: (workspaceId: string, memberId: string) => `${BASE_PATH}/${workspaceId}/member/${memberId}/status`,
+  memberRemove: (workspaceId: string, memberId: string) => `${BASE_PATH}/${workspaceId}/member/${memberId}/remove`,
 };
 
 /** 내가 속한 워크스페이스 목록 */
@@ -81,5 +89,42 @@ export async function respondWorkspaceInvite(
   body: RespondInviteRequest,
 ): Promise<RespondInviteResponse> {
   const res = await axiosClientInstance.post<RespondInviteResponse>(ENDPOINTS.inviteRespond(workspaceId), body);
+  return res.data;
+}
+
+/** 멤버 등급 변경 */
+export async function updateMemberGrade(
+  workspaceId: string,
+  memberId: string,
+  body: UpdateMemberGradeRequest,
+): Promise<UpdateMemberGradeResponse> {
+  const res = await axiosClientInstance.patch<UpdateMemberGradeResponse>(
+    ENDPOINTS.memberGrade(workspaceId, memberId),
+    body,
+  );
+  return res.data;
+}
+
+/** 멤버 상태 변경 — 초대 취소 / 강제 탈퇴 */
+export async function updateMemberStatus(
+  workspaceId: string,
+  memberId: string,
+  body: UpdateMemberStatusRequest,
+): Promise<UpdateMemberStatusResponse> {
+  const res = await axiosClientInstance.patch<UpdateMemberStatusResponse>(
+    ENDPOINTS.memberStatus(workspaceId, memberId),
+    body,
+  );
+  return res.data;
+}
+
+/** 초대거절 멤버를 목록에서 제거 */
+export async function removeRejectedMember(
+  workspaceId: string,
+  memberId: string,
+): Promise<RemoveRejectedMemberResponse> {
+  const res = await axiosClientInstance.delete<RemoveRejectedMemberResponse>(
+    ENDPOINTS.memberRemove(workspaceId, memberId),
+  );
   return res.data;
 }

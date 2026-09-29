@@ -74,3 +74,14 @@ export type InvitedWorkspacesResponse = components["schemas"]["GetMyInvitedWorks
 /** 초대 수락·거절 */
 export type RespondInviteRequest = components["schemas"]["RespondWorkspaceInviteDto"];
 export type RespondInviteResponse = components["schemas"]["RespondWorkspaceInviteResponseDto"];
+
+/** 멤버 등급 변경 — "관리자" | "사용자" */
+export type UpdateMemberGradeRequest = components["schemas"]["UpdateWorkspaceMemberGradeDto"];
+export type UpdateMemberGradeResponse = components["schemas"]["UpdateWorkspaceMemberGradeResponseDto"];
+
+/** 멤버 상태 변경 — "초대취소"(초대중만) | "강제탈퇴"(활성만). 조회 status와 값 집합이 다르다 */
+export type UpdateMemberStatusRequest = components["schemas"]["UpdateWorkspaceMemberStatusDto"];
+export type UpdateMemberStatusResponse = components["schemas"]["UpdateWorkspaceMemberStatusResponseDto"];
+
+/** 초대거절 멤버를 목록에서 제거 (소프트 삭제) */
+export type RemoveRejectedMemberResponse = components["schemas"]["RemoveWorkspaceRejectedMemberResponseDto"];
