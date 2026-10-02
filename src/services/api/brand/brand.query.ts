@@ -3,17 +3,20 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useInvalidateQueries } from "@hooks/commons";
 
 import { IS_MOCK, mockMutation, mockResolve } from "../mock";
-import { getBrandCompletion } from "./brand.api";
+import { getWorkspaceDetail } from "../workspace/workspace.api";
+import { mockWorkspaceDetail } from "../workspace/workspace.mock";
+import { workspaceKeys } from "../workspace/workspace.query";
+import { getBrandCompletion, updateBrandBasic } from "./brand.api";
 import { mergeMockSettings, mockBrandCompletion, mockBrandSettings } from "./brand.mock";
 import {
   type BrandCompletion,
   type BrandCompletionResponse,
   type BrandCompletionScope,
   type BrandCompletionTask,
+  type UpdateBrandBasicRequest,
 } from "./brand.type";
 import {
   type BrandAreaCriteriaView,
-  type BrandBasicView,
   type BrandContactView,
   type BrandContractView,
   type BrandFeeView,
@@ -95,6 +98,57 @@ export function useBrandCompletion(workspaceId: string, tab: BrandSettingsTab) {
 }
 
 /**
+ * 읽기 응답의 섹션 → 저장 DTO 짝.
+ *
+ * 읽기 응답(WorkspaceDetailBrandDto)의 13개 섹션이 Record<string, never>로 선언돼 있다.
+ * 저장 DTO와 같은 모양이라는 가정으로 여기서만 단언한다.
+ * TODO(백엔드): 섹션 타입 선언 요청함 — 반영되면 이 맵과 아래 단언을 지운다.
+ */
+type BrandSectionMap = {
+  brand_basic: UpdateBrandBasicRequest;
+};
+
+export type BrandSectionKey = keyof BrandSectionMap;
+
+/**
+ * 섹션의 현재 저장값.
+ *
+ * 워크스페이스 상세와 같은 queryKey를 쓴다. 설정 화면 헤더·사이드바가 이미 같은 요청을 하고 있어
+ * 섹션이 몇 개든 요청은 한 번만 나간다.
+ */
+export function useBrandSection<K extends BrandSectionKey>(workspaceId: string, key: K) {
+  return useQuery({
+    queryKey: workspaceKeys.detail(workspaceId),
+    queryFn: IS_MOCK ? () => mockResolve(mockWorkspaceDetail) : () => getWorkspaceDetail(workspaceId),
+    select: detail => (detail.brand?.[key] ?? null) as BrandSectionMap[K] | null,
+    enabled: Boolean(workspaceId),
+  });
+}
+
+/**
+ * 섹션 저장 — 실제 API.
+ *
+ * 저장이 끝나면 두 가지를 다시 받는다. 섹션 값(워크스페이스 상세)은 폼이 서버 정규화 결과로
+ * 다시 맞춰지게 하려고, 완성도는 저니 패널 비율을 갱신하려고. 완성도는 탭 구분 없이 무효화한다 —
+ * 한 섹션이 다른 탭 완성도에 들어가는지 화면은 모른다.
+ */
+function createBrandSectionMutation<TBody>(save: (workspaceId: string, body: TBody) => Promise<unknown>) {
+  return (workspaceId: string) => {
+    const invalidateQueries = useInvalidateQueries();
+
+    return useMutation({
+      mutationFn: IS_MOCK ? (_body: TBody) => mockResolve({}) : (body: TBody) => save(workspaceId, body),
+      onSuccess: () => {
+        invalidateQueries.single(workspaceKeys.detail(workspaceId));
+        invalidateQueries.single(brandKeys.completionAll(workspaceId));
+      },
+    });
+  };
+}
+
+export const useUpdateBrandBasic = createBrandSectionMutation(updateBrandBasic);
+
+/**
  * 섹션 저장 훅 공통 팩토리.
  *
  * 화면은 아직 기존 뷰 타입으로 값을 만든다. 새 백엔드는 필드명(snake_case)과
@@ -121,7 +175,6 @@ function createSectionMutation<TView>(section: Parameters<typeof mergeMockSettin
   };
 }
 
-export const useUpdateBrandBasic = createSectionMutation<BrandBasicView>("brand");
 export const useUpdateBrandIntro = createSectionMutation<BrandIntroView>("brandIntro");
 export const useUpdateBrandOperation = createSectionMutation<BrandOperationView>("brandOperation");
 export const useUpdateBrandContact = createSectionMutation<BrandContactView>("brandContact");

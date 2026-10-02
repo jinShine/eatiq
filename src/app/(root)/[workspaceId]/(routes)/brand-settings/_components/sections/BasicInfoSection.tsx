@@ -6,58 +6,83 @@ import z from "zod";
 import { SettingsSection } from "@components/custom/settings";
 import { Input, Toast } from "@components/ui";
 
-import { useBrandSettings, useUpdateBrandBasic } from "@services/api/brand/brand.query";
-import { type BrandBasicView } from "@services/api/brand/brand.view";
+import { useBrandSection, useUpdateBrandBasic } from "@services/api/brand/brand.query";
+import { type UpdateBrandBasicRequest } from "@services/api/brand/brand.type";
 
-// PATCH /api/brands/{brandId}/basic — 전체 치환
+/**
+ * 폼 필드 이름은 저장 DTO(UpdateBrandBasicDto)와 같다.
+ *
+ * PUT이 전체 치환이라 폼 값이 곧 요청 본문이다. 이름을 바꾸는 변환을 두면 한 필드를
+ * 빠뜨렸을 때 그 값이 서버에서 지워진다. 또 완성도 API의 field_key가 이 이름을 가리켜
+ * 저니 패널에서 입력칸으로 바로 포커스할 수 있다.
+ *
+ * 입력칸은 전부 문자열로 받는다. 연도만 저장할 때 숫자로 바꾼다.
+ */
 const basicInfoSchema = z.object({
-  nameKo: z.string().min(1, "브랜드 이름(한국어)을 입력해주세요"), // 브랜드 이름(국문) · 필수
-  nameEn: z.string().min(1, "브랜드 이름(영어)을 입력해주세요"), // 브랜드 이름(영문) · 필수
-  launchYear: z.string().refine(v => !v || /^\d{4}$/.test(v), { message: "연도 4자리를 입력해주세요" }), // 설립 연도 · 4자리
-  ceoNameKo: z.string(), // 대표자 이름(국문)
-  ceoNameEn: z.string(), // 대표자 이름(영문)
-  hqWebsite: z.string(), // 본사 홈페이지
-  hqEmail: z.union([z.string().email("올바른 이메일 형식이 아니에요"), z.literal("")]), // 본사 대표 이메일 · 빈 값 허용
-  hqAddress: z.string(), // 본사 주소
+  brand_name_ko: z.string().trim().min(1, "브랜드 이름(한국어)을 입력해주세요"),
+  brand_name_en: z.string().trim().min(1, "브랜드 이름(영어)을 입력해주세요"),
+  // 서버 검증 범위(1900~2100)와 맞춘다. 스펙에는 범위가 적혀 있지 않아 400 응답으로 확인했다
+  launch_year: z.string().refine(v => !v || (/^\d{4}$/.test(v) && Number(v) >= 1900 && Number(v) <= 2100), {
+    message: "1900~2100 사이 연도를 입력해주세요",
+  }),
+  ceo_name_ko: z.string(),
+  ceo_name_en: z.string(),
+  homepage_url: z.string(),
+  official_email: z.union([z.string().email("올바른 이메일 형식이 아니에요"), z.literal("")]),
+  official_address: z.string(),
 });
 
 type BasicInfoFormValues = z.infer<typeof basicInfoSchema>;
 
 const EMPTY_VALUES: BasicInfoFormValues = {
-  nameKo: "",
-  nameEn: "",
-  launchYear: "",
-  ceoNameKo: "",
-  ceoNameEn: "",
-  hqWebsite: "",
-  hqEmail: "",
-  hqAddress: "",
+  brand_name_ko: "",
+  brand_name_en: "",
+  launch_year: "",
+  ceo_name_ko: "",
+  ceo_name_en: "",
+  homepage_url: "",
+  official_email: "",
+  official_address: "",
 };
 
-// 서버 DTO → 폼 값
-const toFormValues = (brand: BrandBasicView): BasicInfoFormValues => ({
-  nameKo: brand.nameKo ?? "",
-  nameEn: brand.nameEn ?? "",
-  launchYear: brand.launchYear ? String(brand.launchYear) : "",
-  ceoNameKo: brand.ceoNameKo ?? "",
-  ceoNameEn: brand.ceoNameEn ?? "",
-  hqWebsite: brand.hqWebsite ?? "",
-  hqEmail: brand.hqEmail ?? "",
-  hqAddress: brand.hqAddress ?? "",
+/** 저장값 → 폼. 서버의 null·undefined는 빈 입력칸으로 */
+const toFormValues = (saved: UpdateBrandBasicRequest): BasicInfoFormValues => ({
+  brand_name_ko: saved.brand_name_ko ?? "",
+  brand_name_en: saved.brand_name_en ?? "",
+  launch_year: saved.launch_year ? String(saved.launch_year) : "",
+  ceo_name_ko: saved.ceo_name_ko ?? "",
+  ceo_name_en: saved.ceo_name_en ?? "",
+  homepage_url: saved.homepage_url ?? "",
+  official_email: saved.official_email ?? "",
+  official_address: saved.official_address ?? "",
 });
 
-const toRequest = (values: BasicInfoFormValues): BrandBasicView => ({
-  ...values,
-  launchYear: values.launchYear ? Number(values.launchYear) : undefined,
-});
+/**
+ * 폼 → 요청. 빈 선택 항목은 보내지 않는다.
+ * 빈 문자열을 보내면 서버의 형식 검증(이메일·URL 등)에 걸린다. PUT이 전체 치환이라 빠진 필드는 비워진다.
+ */
+const toRequest = (values: BasicInfoFormValues): UpdateBrandBasicRequest => {
+  const optional = (value: string) => value.trim() || undefined;
+
+  return {
+    brand_name_ko: values.brand_name_ko.trim(),
+    brand_name_en: values.brand_name_en.trim(),
+    launch_year: values.launch_year ? Number(values.launch_year) : undefined,
+    ceo_name_ko: optional(values.ceo_name_ko),
+    ceo_name_en: optional(values.ceo_name_en),
+    homepage_url: optional(values.homepage_url),
+    official_email: optional(values.official_email),
+    official_address: optional(values.official_address),
+  };
+};
 
 type BasicInfoSectionProps = {
   workspaceId: string;
 };
 
 export default function BasicInfoSection({ workspaceId }: BasicInfoSectionProps) {
-  const { data: settings } = useBrandSettings(workspaceId);
-  const { mutate: updateBrandBasic, isPending } = useUpdateBrandBasic(workspaceId);
+  const { data: saved } = useBrandSection(workspaceId, "brand_basic");
+  const { mutate: updateBrandBasic, isPending, error } = useUpdateBrandBasic(workspaceId);
 
   const {
     register,
@@ -66,13 +91,12 @@ export default function BasicInfoSection({ workspaceId }: BasicInfoSectionProps)
   } = useForm<BasicInfoFormValues>({
     resolver: zodResolver(basicInfoSchema),
     defaultValues: EMPTY_VALUES,
-    values: settings?.brand ? toFormValues(settings.brand) : undefined,
+    values: saved ? toFormValues(saved) : undefined,
   });
 
   const onSubmit = (values: BasicInfoFormValues) => {
     updateBrandBasic(toRequest(values), {
       onSuccess: () => Toast.success("브랜드 기본 정보를 저장했어요."),
-      onError: () => Toast.error("저장에 실패했어요. 다시 시도해주세요."),
     });
   };
 
@@ -82,92 +106,95 @@ export default function BasicInfoSection({ workspaceId }: BasicInfoSectionProps)
       description="이름, 런칭 연도, 본사 연락처를 입력해주세요"
       isDirty={isDirty}
       isPending={isPending}
+      errorMessage={error?.message}
       onSubmit={handleSubmit(onSubmit)}
     >
       {/* row1 */}
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         <Input
-          id="nameKo"
+          id="brand_name_ko"
           size="md"
           labelClassName="text-xs"
           label="브랜드 이름 (한국어)"
+          required
           placeholder="예: 롤링 파스타"
-          error={Boolean(errors.nameKo)}
-          errorText={errors.nameKo?.message}
-          {...register("nameKo")}
+          error={Boolean(errors.brand_name_ko)}
+          errorText={errors.brand_name_ko?.message}
+          {...register("brand_name_ko")}
         />
         <Input
-          id="nameEn"
+          id="brand_name_en"
           size="md"
           labelClassName="text-xs"
           label="브랜드 이름 (영어)"
+          required
           placeholder="예: Rolling Pasta"
-          error={Boolean(errors.nameEn)}
-          errorText={errors.nameEn?.message}
-          {...register("nameEn")}
+          error={Boolean(errors.brand_name_en)}
+          errorText={errors.brand_name_en?.message}
+          {...register("brand_name_en")}
         />
         <Input
-          id="launchYear"
+          id="launch_year"
           size="md"
           labelClassName="text-xs"
           label="설립 연도"
           placeholder="예: 2018"
           inputMode="numeric"
-          error={Boolean(errors.launchYear)}
-          errorText={errors.launchYear?.message}
-          {...register("launchYear")}
+          error={Boolean(errors.launch_year)}
+          errorText={errors.launch_year?.message}
+          {...register("launch_year")}
         />
       </div>
 
       {/* row2 */}
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         <Input
-          id="ceoNameKo"
+          id="ceo_name_ko"
           size="md"
           labelClassName="text-xs"
           label="대표자 이름 (한국어)"
           placeholder="예: 김도경"
-          {...register("ceoNameKo")}
+          {...register("ceo_name_ko")}
         />
         <Input
-          id="ceoNameEn"
+          id="ceo_name_en"
           size="md"
           labelClassName="text-xs"
           label="대표자 이름 (영어)"
           placeholder="예: Dokyoung Kim"
-          {...register("ceoNameEn")}
+          {...register("ceo_name_en")}
         />
       </div>
       {/* row3 */}
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         <Input
-          id="hqWebsite"
+          id="homepage_url"
           size="md"
           labelClassName="text-xs"
           label="본사 홈페이지"
           placeholder="예: rollingpasta.ai"
-          {...register("hqWebsite")}
+          {...register("homepage_url")}
         />
         <Input
-          id="hqEmail"
+          id="official_email"
           size="md"
           labelClassName="text-xs"
           label="본사 대표 이메일"
           placeholder="예: hq@rollingpasta.com"
-          error={Boolean(errors.hqEmail)}
-          errorText={errors.hqEmail?.message}
-          {...register("hqEmail")}
+          error={Boolean(errors.official_email)}
+          errorText={errors.official_email?.message}
+          {...register("official_email")}
         />
       </div>
 
       {/* row4 — 전체폭 */}
       <Input
-        id="hqAddress"
+        id="official_address"
         size="md"
         labelClassName="text-xs"
         label="본사 주소"
         placeholder="예: 서울시 강남구 테헤란로 123, 4층"
-        {...register("hqAddress")}
+        {...register("official_address")}
       />
     </SettingsSection>
   );

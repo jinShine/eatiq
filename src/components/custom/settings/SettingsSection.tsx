@@ -5,6 +5,11 @@ type SettingsSectionProps = {
   description?: string;
   isDirty?: boolean;
   isPending?: boolean;
+  /**
+   * 저장 실패 사유. 푸터의 저장 버튼 옆에 남긴다.
+   * 토스트는 몇 초 뒤 사라져, 필드가 많은 섹션에서 무엇이 틀렸는지 읽기엔 짧다.
+   */
+  errorMessage?: string | null;
   onSubmit: React.FormEventHandler<HTMLFormElement>;
   children: React.ReactNode; // 필드들 (3열 그리드의 자식)
 };
@@ -15,6 +20,7 @@ export default function SettingsSection({
   description,
   isDirty = false,
   isPending = false,
+  errorMessage,
   onSubmit,
   children,
 }: SettingsSectionProps) {
@@ -30,13 +36,20 @@ export default function SettingsSection({
       <div className="space-y-3 p-6">{children}</div>
 
       {/* 푸터 — 저장되지 않은 변경사항 + 저장 */}
-      <div className="border-border bg-secondary-background flex items-center justify-between border-t px-7 py-4">
-        <div className="flex items-center gap-2">
-          {isDirty && (
-            <>
-              <span className="bg-primary size-2.5 shrink-0 rounded-full" />
-              <span className="text-text-secondary text-sm">저장되지 않은 변경사항</span>
-            </>
+      <div className="border-border bg-secondary-background flex items-center justify-between gap-4 border-t px-7 py-4">
+        <div className="flex min-w-0 items-center gap-2">
+          {/* 실패 사유가 있으면 그게 더 급하다. dirty 표시보다 먼저 보인다 */}
+          {errorMessage ? (
+            <p role="alert" className="text-destructive text-sm whitespace-pre-line">
+              {errorMessage}
+            </p>
+          ) : (
+            isDirty && (
+              <>
+                <span className="bg-primary size-2.5 shrink-0 rounded-full" />
+                <span className="text-text-secondary text-sm">저장되지 않은 변경사항</span>
+              </>
+            )
           )}
         </div>
         <Button type="submit" size="sm" isLoading={isPending} disabled={!isDirty}>
