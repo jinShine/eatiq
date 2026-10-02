@@ -77,13 +77,14 @@ export default function CompletionStatusCard({ workspaceId, tab, tabLabel }: Com
 
       <div className="bg-border mt-4 h-px w-full" />
 
-      {/* 3열 본문 — 수직 구분선으로 분할, 높이 고정 */}
+      {/* 3열 본문 — 수직 구분선으로 분할, 높이 고정.
+          사이드바를 뺀 폭이 1000px 정도는 돼야 세 열이 줄바꿈 없이 들어간다. 그보다 좁으면 세로로 쌓는다 */}
       <div
-        className="divide-border mt-4 grid grid-cols-1 gap-6 md:grid-cols-3 md:gap-0 md:divide-x"
+        className="divide-border mt-4 grid grid-cols-1 gap-6 xl:grid-cols-3 xl:gap-0 xl:divide-x"
         style={{ minHeight: BODY_HEIGHT }}
       >
         {/* 열1 — 진행률 */}
-        <div className="flex flex-col justify-between gap-4 md:pr-6">
+        <div className="flex flex-col justify-between gap-4 xl:pr-6">
           <div className="flex items-center gap-4">
             <CircularProgress rate={rate} label={`${tabLabel} 완성률`} />
             <div className="min-w-0 space-y-1">
@@ -103,7 +104,7 @@ export default function CompletionStatusCard({ workspaceId, tab, tabLabel }: Com
 
         {/* 열2 — 다음으로 해야 할 일 */}
         {nextTask && (
-          <div className="flex flex-col gap-3 md:px-6">
+          <div className="flex flex-col gap-3 xl:px-6">
             <p className="text-text-tertiary text-xs">다음으로 해야 할 일</p>
             <div className="flex-1 space-y-1">
               <p className="text-text-primary text-base font-bold">{nextTask.title}</p>
@@ -121,7 +122,7 @@ export default function CompletionStatusCard({ workspaceId, tab, tabLabel }: Com
         )}
 
         {/* 열3 — 남은 주요 항목 (총 개수 노출 + 내부 스크롤) */}
-        <div className="flex min-w-0 flex-col gap-2 md:pl-6">
+        <div className="flex min-w-0 flex-col gap-2 xl:pl-6">
           <p className="text-text-tertiary text-xs">남은 주요 항목</p>
 
           {remainingTasks.length === 0 ? (
