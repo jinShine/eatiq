@@ -27,7 +27,16 @@ axiosClientInstance.interceptors.request.use(config => {
 // 여기서 리다이렉트를 걸면 화면이 직접 띄우려던 안내(만료·재발송)를 덮어버린다.
 axiosClientInstance.interceptors.response.use(
   response => response,
-  async (error: AxiosError) => {
+  async (error: AxiosError<{ message?: string | string[] }>) => {
+    // 서버 문구를 error.message로 올린다. 그러지 않으면 화면에는 axios 기본 문구
+    // ("Request failed with status code 400")가 뜬다. 검증 실패면 서버가 배열로 준다
+    const serverMessage = error.response?.data?.message;
+    if (serverMessage) {
+      // 새 에러로 감싸면 화면 쪽의 error.response·isAxiosError 판정이 깨진다. 원본의 문구만 바꾼다
+      // eslint-disable-next-line no-param-reassign
+      error.message = Array.isArray(serverMessage) ? serverMessage.join("\n") : serverMessage;
+    }
+
     if (error.response?.status === 401) {
       tokenStorage.clear();
       if (typeof window !== "undefined" && !window.location.pathname.startsWith(ROUTES.AUTH.ROOT)) {
