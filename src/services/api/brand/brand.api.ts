@@ -1,6 +1,8 @@
 import axiosClientInstance from "@services/axios.client";
 
 import {
+  type BrandCompletionResponse,
+  type BrandCompletionScope,
   type BrandDetail,
   type BrandListResponse,
   type UpdateBrandBasicRequest,
@@ -45,6 +47,8 @@ const ENDPOINTS = {
   locationStandard: (workspaceId: string) => `${buildBrandPath(workspaceId)}/location-standard`,
   sizeCriteria: (workspaceId: string) => `${buildBrandPath(workspaceId)}/size-criteria`,
   facilityReq: (workspaceId: string) => `${buildBrandPath(workspaceId)}/facility-req`,
+  completion: (workspaceId: string, scope: BrandCompletionScope) =>
+    `${buildBrandPath(workspaceId)}/completion/${scope}`,
 };
 
 /************************************
@@ -116,5 +120,16 @@ export async function updateBrandSizeCriteria(workspaceId: string, body: UpdateB
 
 export async function updateBrandFacilityReq(workspaceId: string, body: UpdateBrandFacilityReqRequest) {
   const res = await axiosClientInstance.put<UpdateBrandFacilityReqResponse>(ENDPOINTS.facilityReq(workspaceId), body);
+  return res.data;
+}
+
+/************************************
+ * 정보 완성 현황
+ ************************************/
+export async function getBrandCompletion(
+  workspaceId: string,
+  scope: BrandCompletionScope,
+): Promise<BrandCompletionResponse> {
+  const res = await axiosClientInstance.get<BrandCompletionResponse>(ENDPOINTS.completion(workspaceId, scope));
   return res.data;
 }

@@ -72,3 +72,42 @@ export type UpdateBrandFeaturedImagesRequest = components["schemas"]["UpdateBran
 export type UpdateBrandFeaturedImagesResponse = components["schemas"]["UpdateBrandFeaturedImagesResponseDto"];
 export type UpdateBrandFeaturedVideosRequest = components["schemas"]["UpdateBrandFeaturedVideosDto"];
 export type UpdateBrandFeaturedVideosResponse = components["schemas"]["UpdateBrandFeaturedVideosResponseDto"];
+
+/************************************
+ * 정보 완성 현황 (저니 패널)
+ *
+ * 탭마다 별도 엔드포인트지만 패널이 쓰는 최상위 필드는 넷 다 같다.
+ * 섹션별 세부(sections)만 탭마다 모양이 다르다.
+ ************************************/
+export type BrandCompletionScope = "basic" | "visual" | "contract" | "commercial";
+
+export type BrandCompletionResponse =
+  | components["schemas"]["GetBrandCompletionBasicResponseDto"]
+  | components["schemas"]["GetBrandCompletionVisualResponseDto"]
+  | components["schemas"]["GetBrandCompletionContractResponseDto"]
+  | components["schemas"]["GetBrandCompletionCommercialResponseDto"];
+
+export type BrandCompletionStep = components["schemas"]["BrandCompletionStageDto"]["step"];
+
+/** 다음 할 일·남은 항목 한 칸 */
+export type BrandCompletionTask = {
+  title: string;
+  description: string;
+  isRequired: boolean;
+  /** 이동할 섹션 — 저장 DTO의 섹션 키(brand_basic 등)와 같다 */
+  sectionKey: string;
+  /** 포커스할 필드 — 폼 필드 이름(DTO 필드명)과 같다 */
+  fieldKey: string;
+};
+
+/** 저니 패널 뷰모델 */
+export type BrandCompletion = {
+  rate: number;
+  totalFields: number;
+  completedFields: number;
+  step: BrandCompletionStep;
+  /** 단계별 안내 문구 — 서버가 준다 */
+  stepMessage: string;
+  nextTask: BrandCompletionTask | null;
+  remainingTasks: BrandCompletionTask[];
+};

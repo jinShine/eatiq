@@ -1,17 +1,16 @@
 "use client";
 
-import Link from "next/link";
-
 import { ArrowRightIcon } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 
 import { ScrollArea, Skeleton } from "@components/ui";
 
-import { type BrandSettingsTab, useBrandJourney } from "@services/api/brand/brand.query";
+import { type BrandSettingsTab, useBrandCompletion } from "@services/api/brand/brand.query";
+import { type BrandCompletionTask } from "@services/api/brand/brand.type";
 
 import CircularProgress from "./CircularProgress";
 import JourneyStepper from "./JourneyStepper";
-import { EMPTY_STAGE_LABEL, JOURNEY_STAGES, resolveStageIndex } from "./journeyStages";
+import { JOURNEY_STAGES, countToNextStage, toStageIndex } from "./journeyStages";
 
 // 피그마 기준 본문 높이 — 남은 항목이 늘어도 카드 높이를 고정하고 내부 스크롤
 const BODY_HEIGHT = 146;
@@ -21,6 +20,21 @@ const MISSING_ITEM_HEIGHT = 56;
 const MISSING_ITEM_GAP = 8;
 const SCROLL_HEIGHT = MISSING_ITEM_HEIGHT * 2 + MISSING_ITEM_GAP * 2 + Math.round(MISSING_ITEM_HEIGHT * 0.4);
 
+/**
+ * 남은 항목의 「입력」을 누르면 그 섹션으로 내려가 해당 입력칸에 바로 포커스한다.
+ *
+ * 서버가 주는 field_key가 폼 필드 이름(저장 DTO 필드명)과 같아 name으로 찾을 수 있다.
+ * 섹션은 section_key를 id로 갖는다. 아직 연결 안 된 섹션이면 스크롤만 되고 포커스는 건너뛴다.
+ */
+const goToField = (task: BrandCompletionTask) => {
+  const section = document.getElementById(task.sectionKey);
+  if (!section) {
+    return;
+  }
+  section.scrollIntoView({ behavior: "smooth", block: "start" });
+  section.querySelector<HTMLElement>(`[name="${task.fieldKey}"]`)?.focus({ preventScroll: true });
+};
+
 type CompletionStatusCardProps = {
   workspaceId: string;
   tab: BrandSettingsTab;
@@ -29,7 +43,7 @@ type CompletionStatusCardProps = {
 
 export default function CompletionStatusCard({ workspaceId, tab, tabLabel }: CompletionStatusCardProps) {
   const shouldReduceMotion = useReducedMotion();
-  const { data: journey, isLoading } = useBrandJourney(workspaceId, tab);
+  const { data: completion, isLoading } = useBrandCompletion(workspaceId, tab);
 
   if (isLoading) {
     return (
@@ -38,24 +52,13 @@ export default function CompletionStatusCard({ workspaceId, tab, tabLabel }: Com
       </div>
     );
   }
-  if (!journey) {
+  if (!completion) {
     return null;
   }
 
-  const rate = journey.completionRate ?? 0;
-  const stageIndex = resolveStageIndex(journey.journeyStage, rate);
-  const { nextAction } = journey;
-
-  // 다음 액션에 해당하는 혜택 문구 (targetAnchor ↔ itemKey 매칭)
-  const nextBenefit = journey.benefits?.find(b => b.itemKey === nextAction?.targetAnchor)?.benefitText;
-
-  // 필수 먼저 + sortOrder 순 (전체 노출 — 넘치면 내부 스크롤)
-  const missingItems = [...(journey.missingItems ?? [])].sort(
-    (a, b) => Number(b.isRequired) - Number(a.isRequired) || (a.sortOrder ?? 0) - (b.sortOrder ?? 0),
-  );
-
-  const buildHref = (targetTab?: string, targetAnchor?: string) =>
-    `/${workspaceId}/brand-settings?tab=${targetTab ?? tab}${targetAnchor ? `#${targetAnchor}` : ""}`;
+  const { rate, nextTask, remainingTasks } = completion;
+  const stageIndex = toStageIndex(completion.step);
+  const toNextStage = countToNextStage(stageIndex, completion.totalFields, completion.completedFields);
 
   const focusRing =
     "focus-visible:ring-primary focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none";
@@ -85,45 +88,43 @@ export default function CompletionStatusCard({ workspaceId, tab, tabLabel }: Com
             <CircularProgress rate={rate} label={`${tabLabel} 완성률`} />
             <div className="min-w-0 space-y-1">
               <p className="text-sm font-bold">
-                <span className="text-primary">{JOURNEY_STAGES[stageIndex]?.label ?? EMPTY_STAGE_LABEL}</span>
-                {stageIndex >= 0 && <span className="text-text-primary"> 단계</span>}
+                <span className="text-primary">{JOURNEY_STAGES[stageIndex]?.step ?? completion.step}</span>
+                <span className="text-text-primary"> 단계</span>
               </p>
-              {nextBenefit && <p className="text-text-secondary text-xs leading-relaxed">{nextBenefit}</p>}
+              <p className="text-text-secondary text-xs leading-relaxed">{completion.stepMessage}</p>
             </div>
           </div>
-          {Boolean(journey.nextStageRemaining) && (
+          {toNextStage && (
             <p className="text-text-secondary text-xs">
-              🎁 다음 단계까지 <span className="text-primary font-bold">{journey.nextStageRemaining}개</span> 남았어요
+              🎁 다음 단계까지 <span className="text-primary font-bold">{toNextStage}개</span> 남았어요
             </p>
           )}
         </div>
 
         {/* 열2 — 다음으로 해야 할 일 */}
-        {nextAction && (
+        {nextTask && (
           <div className="flex flex-col gap-3 md:px-6">
             <p className="text-text-tertiary text-xs">다음으로 해야 할 일</p>
             <div className="flex-1 space-y-1">
-              <p className="text-text-primary text-base font-bold">{nextAction.label}</p>
-              {nextBenefit && <p className="text-text-tertiary text-xs leading-relaxed">{nextBenefit}</p>}
+              <p className="text-text-primary text-base font-bold">{nextTask.title}</p>
+              <p className="text-text-tertiary text-xs leading-relaxed">{nextTask.description}</p>
             </div>
-            <Link
-              href={buildHref(nextAction.targetTab, nextAction.targetAnchor)}
+            <button
+              type="button"
+              onClick={() => goToField(nextTask)}
               className={`bg-primary text-primary-foreground hover:bg-primary-emphasis group inline-flex w-fit items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${focusRing}`}
             >
               등록하기
               <ArrowRightIcon className="size-4 transition-transform group-hover:translate-x-0.5" />
-            </Link>
+            </button>
           </div>
         )}
 
         {/* 열3 — 남은 주요 항목 (총 개수 노출 + 내부 스크롤) */}
         <div className="flex min-w-0 flex-col gap-2 md:pl-6">
-          <p className="text-text-tertiary text-xs">
-            남은 주요 항목
-            {missingItems.length > 0 && <span className="text-text-secondary font-bold"> {missingItems.length}</span>}
-          </p>
+          <p className="text-text-tertiary text-xs">남은 주요 항목</p>
 
-          {missingItems.length === 0 ? (
+          {remainingTasks.length === 0 ? (
             <div className="flex flex-1 items-center justify-center">
               <p className="text-text-secondary text-sm font-semibold">모두 입력했어요 🎉</p>
             </div>
@@ -135,9 +136,9 @@ export default function CompletionStatusCard({ workspaceId, tab, tabLabel }: Com
             >
               <ul className="space-y-2">
                 <AnimatePresence initial={false}>
-                  {missingItems.map((item, index) => (
+                  {remainingTasks.map((item, index) => (
                     <motion.li
-                      key={item.key}
+                      key={`${item.sectionKey}.${item.fieldKey}`}
                       layout
                       initial={shouldReduceMotion ? false : { opacity: 0, y: 6 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -145,17 +146,18 @@ export default function CompletionStatusCard({ workspaceId, tab, tabLabel }: Com
                       transition={{ delay: shouldReduceMotion ? 0 : Math.min(index, 6) * 0.05, duration: 0.28 }}
                       className="border-border flex items-center justify-between gap-3 overflow-hidden rounded-xl border px-4 py-3"
                     >
-                      <span className="text-text-primary min-w-0 truncate text-sm font-semibold" title={item.label}>
-                        {item.label}
+                      <span className="text-text-primary min-w-0 truncate text-sm font-semibold" title={item.title}>
+                        {item.title}
                       </span>
-                      <Link
-                        href={buildHref(item.targetTab, item.targetAnchor)}
-                        aria-label={`${item.label} 입력하기`}
+                      <button
+                        type="button"
+                        onClick={() => goToField(item)}
+                        aria-label={`${item.title} 입력하기`}
                         className={`border-primary text-primary hover:bg-primary-background group inline-flex shrink-0 items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-colors ${focusRing}`}
                       >
                         입력
                         <ArrowRightIcon className="size-3.5 transition-transform group-hover:translate-x-0.5" />
-                      </Link>
+                      </button>
                     </motion.li>
                   ))}
                 </AnimatePresence>

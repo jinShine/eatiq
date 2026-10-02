@@ -8,7 +8,7 @@ import { cn } from "@utils/shadcn";
 import { JOURNEY_STAGES } from "./journeyStages";
 
 type JourneyStepperProps = {
-  currentIndex: number; // resolveStageIndex 결과
+  currentIndex: number; // toStageIndex 결과
 };
 
 export default function JourneyStepper({ currentIndex }: JourneyStepperProps) {
@@ -21,7 +21,7 @@ export default function JourneyStepper({ currentIndex }: JourneyStepperProps) {
         const isLast = index === JOURNEY_STAGES.length - 1;
 
         return (
-          <li key={stage.label} className={cn("flex items-center", isLast ? "shrink-0" : "flex-1")}>
+          <li key={stage.step} className={cn("flex items-center", isLast ? "shrink-0" : "flex-1")}>
             <motion.div
               initial={shouldReduceMotion ? false : { scale: 0.6, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -48,7 +48,7 @@ export default function JourneyStepper({ currentIndex }: JourneyStepperProps) {
                   index === Math.max(currentIndex, 0) ? "inline" : "hidden sm:inline",
                 )}
               >
-                {stage.label}
+                {stage.step}
               </span>
             </motion.div>
 

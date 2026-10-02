@@ -1,39 +1,31 @@
-// v0.7 규약 기준. 스테퍼 배지는 4개(S1~S4)이고, EMPTY는 "아직 어떤 단계도 달성 못 함"으로 표현한다.
-export const JOURNEY_STAGES = [
-  { key: "S1", label: "시작" },
-  { key: "S2", label: "성장" },
-  { key: "S3", label: "준비" },
-  { key: "S4", label: "완성" },
-] as const;
-
-// EMPTY 상태에서 배지 위에 띄울 라벨
-export const EMPTY_STAGE_LABEL = "입력 필요";
+import { type BrandCompletionStep } from "@services/api/brand/brand.type";
 
 /**
- * 서버 stage → 완료된 배지 인덱스.
- * EMPTY(또는 미확인 + rate 15% 미만)는 -1 = 어떤 배지도 완료되지 않음.
- * 서버가 stage를 안 주면 rate 구간(15/35/55/80)으로 추정한다.
+ * 저니 단계 (피그마 769:3807 · 769:4398).
+ *
+ * 시작 0% → 성장 25% → 준비 60% → 완성 90%. 완성은 비율에 더해 필수 항목이 모두 채워져야 한다.
+ * 단계 판정은 서버가 한다(stage.step). 여기 비율은 "다음 단계까지 N개"를 셀 때만 쓴다.
  */
-export const resolveStageIndex = (stage: string | undefined, rate: number) => {
-  const matched = JOURNEY_STAGES.findIndex(s => s.key === stage);
-  if (matched >= 0) {
-    return matched;
+export const JOURNEY_STAGES = [
+  { step: "시작", threshold: 0 },
+  { step: "성장", threshold: 25 },
+  { step: "준비", threshold: 60 },
+  { step: "완성", threshold: 90 },
+] as const satisfies readonly { step: BrandCompletionStep; threshold: number }[];
+
+export const toStageIndex = (step: BrandCompletionStep) => JOURNEY_STAGES.findIndex(stage => stage.step === step);
+
+/**
+ * 다음 단계 비율에 닿으려면 몇 개를 더 채워야 하는지.
+ *
+ * API가 주지 않아 피그마의 단계 비율로 계산한다. 비율 = 채운 필드 / 전체 필드라고 가정했다.
+ * 완성은 필수 항목 조건이 따로 있어 개수만으로는 말할 수 없으므로 준비 → 완성 구간은 세지 않는다.
+ */
+export const countToNextStage = (stageIndex: number, totalFields: number, completedFields: number) => {
+  const next = JOURNEY_STAGES[stageIndex + 1];
+  if (!next || next.step === "완성") {
+    return null;
   }
-  if (stage === "EMPTY") {
-    return -1;
-  }
-  // 폴백: v0.7 진척률 기준
-  if (rate < 15) {
-    return -1;
-  }
-  if (rate < 35) {
-    return 0;
-  }
-  if (rate < 55) {
-    return 1;
-  }
-  if (rate < 80) {
-    return 2;
-  }
-  return 3;
+  const needed = Math.ceil((next.threshold / 100) * totalFields) - completedFields;
+  return needed > 0 ? needed : null;
 };

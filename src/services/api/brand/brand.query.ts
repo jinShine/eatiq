@@ -2,8 +2,15 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 
 import { useInvalidateQueries } from "@hooks/commons";
 
-import { mockMutation, mockResolve } from "../mock";
-import { mergeMockSettings, mockBrandSettings } from "./brand.mock";
+import { IS_MOCK, mockMutation, mockResolve } from "../mock";
+import { getBrandCompletion } from "./brand.api";
+import { mergeMockSettings, mockBrandCompletion, mockBrandSettings } from "./brand.mock";
+import {
+  type BrandCompletion,
+  type BrandCompletionResponse,
+  type BrandCompletionScope,
+  type BrandCompletionTask,
+} from "./brand.type";
 import {
   type BrandAreaCriteriaView,
   type BrandBasicView,
@@ -15,19 +22,24 @@ import {
   type BrandPolicyView,
 } from "./brand.view";
 
-const JOURNEY_KEY_BY_TAB = {
-  basic: "basicInfo",
-  visual: "brandVisual",
-  policy: "contractPolicy",
-  area: "tradeAreaCriteria",
-} as const;
+/** 화면 탭 → 완성도 API 범위. 탭 이름(policy·area)과 API 이름(contract·commercial)이 다르다 */
+const COMPLETION_SCOPE_BY_TAB = {
+  basic: "basic",
+  visual: "visual",
+  policy: "contract",
+  area: "commercial",
+} as const satisfies Record<string, BrandCompletionScope>;
 
-export type BrandSettingsTab = keyof typeof JOURNEY_KEY_BY_TAB;
+export type BrandSettingsTab = keyof typeof COMPLETION_SCOPE_BY_TAB;
 
 export const brandKeys = {
   all: ["brands"] as const,
   list: () => [...brandKeys.all, "list"] as const,
   settings: (workspaceId: string) => [...brandKeys.all, "settings", workspaceId] as const,
+  /** 탭별 완성도의 상위 키 — 섹션을 저장하면 탭 구분 없이 한 번에 무효화한다 */
+  completionAll: (workspaceId: string) => [...brandKeys.all, "completion", workspaceId] as const,
+  completion: (workspaceId: string, scope: BrandCompletionScope) =>
+    [...brandKeys.completionAll(workspaceId), scope] as const,
 };
 
 /************************************
@@ -50,13 +62,35 @@ export function useBrandSettings(workspaceId: string) {
   });
 }
 
-export function useBrandJourney(workspaceId: string, tab: BrandSettingsTab) {
+type CompletionTaskDto = NonNullable<BrandCompletionResponse["next_task"]>;
+
+const toCompletionTask = (task: CompletionTaskDto): BrandCompletionTask => ({
+  title: task.title,
+  description: task.description,
+  isRequired: task.is_required,
+  sectionKey: task.section_key,
+  fieldKey: task.field_key,
+});
+
+const toCompletion = (response: BrandCompletionResponse): BrandCompletion => ({
+  rate: response.completion_rate,
+  totalFields: response.total_fields,
+  completedFields: response.completed_fields,
+  step: response.stage.step,
+  stepMessage: response.stage.message,
+  nextTask: response.next_task ? toCompletionTask(response.next_task) : null,
+  remainingTasks: response.remaining_tasks.map(toCompletionTask),
+});
+
+/** 탭별 정보 완성 현황 (저니 패널) */
+export function useBrandCompletion(workspaceId: string, tab: BrandSettingsTab) {
+  const scope = COMPLETION_SCOPE_BY_TAB[tab];
+
   return useQuery({
-    queryKey: brandKeys.settings(workspaceId),
-    // TODO(API): 완성 현황은 백엔드 미개발 항목이다. 논의 후 연결한다.
-    queryFn: () => mockResolve(mockBrandSettings),
+    queryKey: brandKeys.completion(workspaceId, scope),
+    queryFn: IS_MOCK ? () => mockResolve(mockBrandCompletion) : () => getBrandCompletion(workspaceId, scope),
+    select: toCompletion,
     enabled: Boolean(workspaceId),
-    select: settings => settings.journeys?.[JOURNEY_KEY_BY_TAB[tab]] ?? null,
   });
 }
 
