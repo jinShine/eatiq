@@ -563,9 +563,9 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * 🔄 [UPDATE 26.09.28] 브랜드 워크스페이스 대시보드 조회 (최근 Next Action 및 CRM 8단계 진행 현황 추가)
+     * 🆕 [NEW 26.10.02] 브랜드 워크스페이스 대시보드 조회
      * @description ### 📌 상세 역할 및 개요
-     *     - 브랜드 워크스페이스 메인 대시보드 화면에 필요한 핵심 정보 완성도, 단계별 추천 항목, 최근 Next Action 목록, CRM 업무 진행 현황(8단계 카운트)을 종합 반환합니다.
+     *     - 브랜드 워크스페이스 메인 대시보드 화면에 필요한 핵심 정보 완성도, 단계별 추천 항목, 최근 Next Action 목록, CRM 업무 진행 현황(8단계 카운트), 최근 활동 로그(최대 10개)를 종합 반환합니다.
      *     - 향후 대시보드 지표 및 섹션 데이터가 점진적으로 확장 추가될 수 있는 표준 구조입니다.
      *     - **종합 완성도 (`completion_rate`)**: 4대 탭(기본정보, 비주얼, 계약및정책, 상권분석)의 총 81개 필드 입력 여부를 합산하여 산출합니다.
      *     - **단계별 상태 및 문구 (`stage`)**:
@@ -579,13 +579,9 @@ export interface paths {
      *       - 해당 브랜드 워크스페이스 CRM에 등록된 미완료 다음 액션 중 마감일이 임박한 순으로 최대 3개를 제공합니다 (업체명 `company_name`, 디데이 `d_day`, 설명 `description`, 제목 `title` 등 포함).
      *     - **CRM 업무 진행 현황 (`crm_stages`)**:
      *       - 관리 대상 바이어/파트너의 8대 진행 단계별 건수 및 총 건수를 직관적인 필드로 제공합니다 (`total_count`, `lead_count`, `review_count`, `contact_count`, `meeting_count`, `legal_review_count`, `negotiation_count`, `contract_completed_count`, `on_hold_count`).
+     *     - **최근 활동 로그 (`recent_activities`)**:
+     *       - 워크스페이스 내에서 발생한 최근 활동 기록 최대 10개를 최신순으로 제공합니다 (`title`, `message`, `payload`, 상대 시간 `time` [예: 오늘 14:23, 어제 17:45, 이틀 전 16:20], `created_time`).
      *     - 요청자는 해당 워크스페이스에 소속된 **활성 멤버**여야 합니다.
-     *
-     *     ---
-     *
-     *     ### 📝 최근 업데이트 이력 (2026.09.28)
-     *     - **CRM 업무 진행 현황 8단계 카운트 플랫 필드화 (`crm_stages`)**: 프론트엔드 UI 카드에 손쉽게 1:1 매핑할 수 있도록 `items` 배열 대신 `lead_count`, `review_count`, `contact_count`, `meeting_count`, `legal_review_count`, `negotiation_count`, `contract_completed_count`, `on_hold_count` 필드로 제공합니다.
-     *     - **Next Action 3개 항목 추가 (`next_actions`)**: 브랜드 대시보드 상단/위젯에서 바로 확인할 수 있도록 최근 미완료 다음 액션 최대 3개 목록을 응답에 추가하였습니다. (업체명, d-day, 설명, 마감일 등 포함)
      *
      *     ---
      *
@@ -597,6 +593,7 @@ export interface paths {
      *        - '먼저 입력하면 좋은 항목' 카드 목록: `recommended_tasks` (우선순위 상위 3개 노출)
      *        - '최근 다음 액션' 목록 위젯: `next_actions` (업체명, D-day, 설명 등 최대 3개 카드 노출)
      *        - '업무 진행 현황' 파이프라인 카드: `crm_stages` (예: `crm_stages.lead_count`, `crm_stages.contact_count` 등을 각 단계 카드 건수로 바로 바인딩)
+     *        - '최근 활동' 타임라인/리스트 위젯: `recent_activities` (최대 10개, `title`, `message`, `time`, `payload` 바인딩)
      */
     get: operations["GetBrandDashboardController_execute"];
     put?: never;
@@ -1408,6 +1405,54 @@ export interface paths {
      *          - `image_list` (string[]): 메뉴 사진 S3 URL 목록
      */
     put: operations["UpdateBrandMenuController_handle"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/workspace/{workspace_uid}/buyer/dashboard": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * 🆕 [NEW 26.10.02] 바이어 워크스페이스 대시보드 조회
+     * @description ### 📌 상세 역할 및 개요
+     *     - 바이어 워크스페이스 메인 대시보드 화면에 필요한 핵심 정보 완성도, 단계별 추천 항목, 최근 Next Action 목록, CRM 업무 진행 현황(8단계 카운트), 최근 활동 로그(최대 10개)를 종합 반환합니다.
+     *     - 향후 대시보드 지표 및 섹션 데이터가 점진적으로 확장 추가될 수 있는 표준 구조입니다.
+     *     - **종합 완성도 (`completion_rate`)**: 5대 섹션(기본정보, 계약및정책, 현황, 소개, 담당자)의 총 28개 필드 입력 여부를 합산하여 산출합니다.
+     *     - **단계별 상태 및 문구 (`stage`)**:
+     *       - **시작 (0~24%)**: "우리 회사와 잘 맞는 브랜드를 찾아볼 수 있어요"
+     *       - **성장 (25~89%)**: "회사 정보를 정리 중이에요\n브랜드가 우리 회사를 확인하고 먼저 연락해올 수 있어요"
+     *       - **완성 (90~100%)**: "브랜드와 파트너십을 시작하기 위해 필요한 모든 정보를 갖추었어요"
+     *     - **먼저 입력하면 좋은 권장 항목 (`recommended_tasks`)**:
+     *       - 바이어 정보 입력 우선순위를 기준으로 미입력된 최상위 권장 항목 최대 3개를 제공합니다.
+     *     - **최근 Next Action (`next_actions`)**:
+     *       - 해당 바이어 워크스페이스 CRM에 등록된 미완료 다음 액션 중 마감일이 임박한 순으로 최대 3개를 제공합니다 (업체명 `company_name`, 디데이 `d_day`, 설명 `description`, 제목 `title` 등 포함).
+     *     - **CRM 업무 진행 현황 (`crm_stages`)**:
+     *       - 관리 대상 브랜드/파트너의 8대 진행 단계별 건수 및 총 건수를 직관적인 필드로 제공합니다 (`total_count`, `lead_count`, `review_count`, `contact_count`, `meeting_count`, `legal_review_count`, `negotiation_count`, `contract_completed_count`, `on_hold_count`).
+     *     - **최근 활동 로그 (`recent_activities`)**:
+     *       - 워크스페이스 내에서 발생한 최근 활동 기록 최대 10개를 최신순으로 제공합니다 (`title`, `message`, `payload`, 상대 시간 `time` [예: 오늘 14:23, 어제 17:45, 이틀 전 16:20], `created_time`).
+     *     - 요청자는 해당 워크스페이스에 소속된 **활성 멤버**여야 합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 바이어 워크스페이스 메인 홈/대시보드 페이지 진입 시.
+     *     2. **응답 데이터 활용**:
+     *        - 상단 완성도 게이지/프로그레스: `completion_rate`, `stage.step`, `stage.message`
+     *        - '먼저 입력하면 좋은 항목' 카드 목록: `recommended_tasks` (우선순위 상위 3개 노출)
+     *        - '최근 다음 액션' 목록 위젯: `next_actions` (업체명, D-day, 설명 등 최대 3개 카드 노출)
+     *        - '업무 진행 현황' 파이프라인 카드: `crm_stages` (예: `crm_stages.lead_count`, `crm_stages.contact_count` 등을 각 단계 카드 건수로 바로 바인딩)
+     *        - '최근 활동' 타임라인/리스트 위젯: `recent_activities` (최대 10개, `title`, `message`, `time`, `payload` 바인딩)
+     */
+    get: operations["GetBuyerDashboardController_execute"];
+    put?: never;
     post?: never;
     delete?: never;
     options?: never;
@@ -3070,6 +3115,41 @@ export interface components {
        */
       on_hold_count: number;
     };
+    BrandDashboardActivityDto: {
+      /**
+       * @description 활동 로그 UID (`etq_activity_log.uid`)
+       * @example 1
+       */
+      uid: number;
+      /**
+       * @description 활동 타이틀 (CRM 기록 추가, 다음 액션 완료, 구성원 초대, 메일 발송 등)
+       * @example CRM 기록 추가
+       */
+      title: string;
+      /**
+       * @description 활동 내용 / 메시지
+       * @example 홍길동님이 Antenna Retail 진행 건에 기록을 남겼어요
+       */
+      message: string;
+      /**
+       * @description 활동 세부 payload 데이터
+       * @example {
+       *       "crm_uid": 1,
+       *       "crm_action_uid": 10
+       *     }
+       */
+      payload: Record<string, never> | null;
+      /**
+       * @description 사용자 친화적 시간 표기 (예: 오늘 14:23, 어제 17:45, 이틀 전 16:20, 3일 전, 2026-09-15)
+       * @example 오늘 14:23
+       */
+      time: string;
+      /**
+       * @description 활동 생성 일시 (ISO 8601 문자열)
+       * @example 2026-09-30T05:23:00.000Z
+       */
+      created_time: string;
+    };
     GetBrandDashboardResponseDto: {
       /**
        * @description 워크스페이스 UID
@@ -3099,6 +3179,8 @@ export interface components {
       next_actions: components["schemas"]["BrandDashboardNextActionDto"][];
       /** @description CRM 업무 진행 현황 (8대 단계별 카운트) */
       crm_stages: components["schemas"]["BrandDashboardCrmStageSummaryDto"];
+      /** @description 최근 활동 로그 목록 (최대 10개, 최신순) */
+      recent_activities: components["schemas"]["BrandDashboardActivityDto"][];
     };
     BrandListItemDto: {
       /**
@@ -5602,6 +5684,214 @@ export interface components {
       workspace_uid: number;
       /** @description 업데이트된 브랜드 메뉴 목록 (brand_menu) */
       brand_menu: components["schemas"]["MenuItemResponseDto"][];
+    };
+    BuyerDashboardStageDto: {
+      /**
+       * @description 정보완성 단계명 (시작: 0~24%, 성장: 25~89%, 완성: 90~100%)
+       * @example 성장
+       * @enum {string}
+       */
+      step: "시작" | "성장" | "완성";
+      /**
+       * @description 단계별 안내 문구
+       * @example 회사 정보를 정리 중이에요
+       *     브랜드가 우리 회사를 확인하고 먼저 연락해올 수 있어요
+       */
+      message: string;
+    };
+    BuyerDashboardTaskDto: {
+      /**
+       * @description 항목 우선순위 (1부터 시작)
+       * @example 1
+       */
+      priority: number;
+      /**
+       * @description 해당 항목의 섹션 키 (buyer_basic | buyer_contract_policy | buyer_status | buyer_intro | buyer_contact)
+       * @example buyer_basic
+       * @enum {string}
+       */
+      section_key: "buyer_basic" | "buyer_contract_policy" | "buyer_status" | "buyer_intro" | "buyer_contact";
+      /**
+       * @description 해당 항목의 필드 키
+       * @example company_name
+       */
+      field_key: string;
+      /**
+       * @description 입력 항목명
+       * @example 회사명
+       */
+      title: string;
+      /**
+       * @description 필수 입력 항목 여부
+       * @example true
+       */
+      is_required: boolean;
+      /**
+       * @description 항목 가이드 문구
+       * @example 타사가 우리 회사를 찾을 때 사용하는 정보입니다
+       */
+      description: string;
+    };
+    BuyerDashboardNextActionDto: {
+      /**
+       * @description 액션 UID (`etq_crm_action.uid`)
+       * @example 12
+       */
+      uid: number;
+      /**
+       * @description 연결된 CRM 레코드 UID (`etq_crm.uid`)
+       * @example 1
+       */
+      crm_uid: number;
+      /**
+       * @description 업체명 (CRM 관리 대상 회사 또는 브랜드 이름)
+       * @example 메가MGC커피
+       */
+      company_name: string;
+      /**
+       * @description 마감일 기준 D-day (예: "D-day", "D-3", "D+2", 마감일 없을 시 null)
+       * @example D-3
+       */
+      d_day: string | null;
+      /**
+       * @description D-day 숫자 일수 (오늘 기준 잔여 일수, 지난 경우 음수, 마감일 없을 시 null)
+       * @example 3
+       */
+      d_day_count: number | null;
+      /**
+       * @description 마감일 (`YYYY-MM-DD`, 마감일 없을 시 null)
+       * @example 2026-10-05
+       */
+      due_date: string | null;
+      /**
+       * @description 액션 제목
+       * @example 계약 조건 검토 미팅
+       */
+      title: string;
+      /**
+       * @description 액션 상세 내용
+       * @example 미팅 준비 및 세부 조율
+       */
+      description: string;
+      /**
+       * @description 액션 유형 (메모, 미팅, 메일, 전화, 제안서, 계약서, 법무검토, 기타, 지정안됨)
+       * @example 미팅
+       */
+      action_type: string;
+    };
+    BuyerDashboardCrmStageSummaryDto: {
+      /**
+       * @description 관리 대상 전체 파트너/브랜드 건수
+       * @example 12
+       */
+      total_count: number;
+      /**
+       * @description 리드(Lead) 단계 건수
+       * @example 3
+       */
+      lead_count: number;
+      /**
+       * @description 검토(Review) 단계 건수
+       * @example 2
+       */
+      review_count: number;
+      /**
+       * @description 접촉(Contact) 단계 건수
+       * @example 4
+       */
+      contact_count: number;
+      /**
+       * @description 미팅(Meeting) 단계 건수
+       * @example 1
+       */
+      meeting_count: number;
+      /**
+       * @description 법무검토(Legal Review) 단계 건수
+       * @example 1
+       */
+      legal_review_count: number;
+      /**
+       * @description 협상(Negotiation) 단계 건수
+       * @example 1
+       */
+      negotiation_count: number;
+      /**
+       * @description 계약완료(Contract Completed) 단계 건수
+       * @example 0
+       */
+      contract_completed_count: number;
+      /**
+       * @description 보류(On Hold) 단계 건수
+       * @example 0
+       */
+      on_hold_count: number;
+    };
+    BuyerDashboardActivityDto: {
+      /**
+       * @description 활동 로그 UID (`etq_activity_log.uid`)
+       * @example 1
+       */
+      uid: number;
+      /**
+       * @description 활동 타이틀 (CRM 기록 추가, 다음 액션 완료, 구성원 초대, 메일 발송 등)
+       * @example CRM 기록 추가
+       */
+      title: string;
+      /**
+       * @description 활동 내용 / 메시지
+       * @example 홍길동님이 메가MGC커피 진행 건에 기록을 남겼어요
+       */
+      message: string;
+      /**
+       * @description 활동 세부 payload 데이터
+       * @example {
+       *       "crm_uid": 1,
+       *       "crm_action_uid": 10
+       *     }
+       */
+      payload: Record<string, never> | null;
+      /**
+       * @description 사용자 친화적 시간 표기 (예: 오늘 14:23, 어제 17:45, 이틀 전 16:20, 3일 전, 2026-09-15)
+       * @example 오늘 14:23
+       */
+      time: string;
+      /**
+       * @description 활동 생성 일시 (ISO 8601 문자열)
+       * @example 2026-10-02T05:23:00.000Z
+       */
+      created_time: string;
+    };
+    GetBuyerDashboardResponseDto: {
+      /**
+       * @description 워크스페이스 UID
+       * @example 1
+       */
+      workspace_uid: number;
+      /**
+       * @description 전체 바이어 정보 종합 완성도 (0~100%)
+       * @example 71
+       */
+      completion_rate: number;
+      /**
+       * @description 전체 평가 필드 총 수 (5대 섹션 총 28개)
+       * @example 28
+       */
+      total_fields: number;
+      /**
+       * @description 전체 입력 완료된 필드 총 수
+       * @example 20
+       */
+      completed_fields: number;
+      /** @description 종합 완성도 기준 단계 및 안내 문구 */
+      stage: components["schemas"]["BuyerDashboardStageDto"];
+      /** @description 바이어 정보 입력 우선순위를 기준으로 미입력된 권장 항목 최대 3개 */
+      recommended_tasks: components["schemas"]["BuyerDashboardTaskDto"][];
+      /** @description 최근 미완료 다음 액션 목록 (최대 3개) */
+      next_actions: components["schemas"]["BuyerDashboardNextActionDto"][];
+      /** @description CRM 업무 진행 현황 (8대 단계별 카운트) */
+      crm_stages: components["schemas"]["BuyerDashboardCrmStageSummaryDto"];
+      /** @description 최근 활동 로그 목록 (최대 10개, 최신순) */
+      recent_activities: components["schemas"]["BuyerDashboardActivityDto"][];
     };
     BuyerListItemDto: {
       /**
@@ -9375,6 +9665,57 @@ export interface operations {
         content?: never;
       };
       /** @description 워크스페이스를 찾을 수 없음 */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  GetBuyerDashboardController_execute: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 바이어 워크스페이스 UID */
+        workspace_uid: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 바이어 대시보드 조회 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["GetBuyerDashboardResponseDto"];
+        };
+      };
+      /** @description 바이어 타입의 워크스페이스가 아닌 경우 */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 인증되지 않은 사용자 (JWT 토큰 누락 또는 유효하지 않음) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 해당 워크스페이스에 접근 권한이 없거나 활성 멤버가 아닌 경우 */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 워크스페이스를 찾을 수 없는 경우 */
       404: {
         headers: {
           [name: string]: unknown;
