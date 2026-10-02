@@ -6,53 +6,69 @@ import z from "zod";
 import { SettingsSection } from "@components/custom/settings";
 import { Input, Select, SelectItem, Textarea, Toast } from "@components/ui";
 
-import { useBrandSettings, useUpdateBrandIntro } from "@services/api/brand/brand.query";
-import { type BrandIntroView } from "@services/api/brand/brand.view";
+import { useBrandSection, useUpdateBrandIntro } from "@services/api/brand/brand.query";
+import { type BrandIntroData, type UpdateBrandIntroRequest } from "@services/api/brand/brand.type";
 
-import { CATEGORY_OPTIONS, PRICE_POSITIONING_OPTIONS } from "./IntroOptions";
+import { CATEGORY_VALUES, PRICE_POSITIONING_VALUES } from "./IntroOptions";
 
-// PATCH /api/brands/{brandId}/intro — 전체 치환
+/**
+ * 폼 필드 이름은 저장 DTO(UpdateBrandIntroDto)와 같다. → BasicInfoSection 주석 참고
+ *
+ * 예외는 핵심 차별점이다. 저장은 배열(key_point) 하나지만 입력칸은 세 개고,
+ * 완성도 API가 key_point_01~03으로 가리켜서 입력칸 이름도 그렇게 둔다.
+ */
 const introSchema = z.object({
-  oneLiner: z.string().max(100, "100자 이내로 입력해주세요"), // 한줄 소개
-  description: z.string().max(500, "500자 이내로 입력해주세요"), // 상세 소개 · Textarea
-  category: z.string(), // 업종 분류 · 코드값(CATEGORY_OPTIONS)
-  pricePositioning: z.string(), // 가격 포지셔닝 · 코드값(PRICE_POSITIONING_OPTIONS)
-  differentiator1: z.string(), // 핵심 차별점 1
-  differentiator2: z.string(), // 핵심 차별점 2
-  differentiator3: z.string(), // 핵심 차별점 3
+  short_intro: z.string().trim().min(1, "한줄 소개를 입력해주세요").max(100, "100자 이내로 입력해주세요"),
+  detail_intro: z.string().trim().min(1, "상세 소개를 입력해주세요").max(500, "500자 이내로 입력해주세요"),
+  category: z.union([z.enum(CATEGORY_VALUES), z.literal("")]),
+  price_positioning: z.union([z.enum(PRICE_POSITIONING_VALUES), z.literal("")]),
+  key_point_01: z.string(),
+  key_point_02: z.string(),
+  key_point_03: z.string(),
 });
 
 type IntroFormValues = z.infer<typeof introSchema>;
 
 const EMPTY_VALUES: IntroFormValues = {
-  oneLiner: "",
-  description: "",
+  short_intro: "",
+  detail_intro: "",
   category: "",
-  pricePositioning: "",
-  differentiator1: "",
-  differentiator2: "",
-  differentiator3: "",
+  price_positioning: "",
+  key_point_01: "",
+  key_point_02: "",
+  key_point_03: "",
 };
 
-const toFormValues = (intro: BrandIntroView): IntroFormValues => ({
-  oneLiner: intro.oneLiner ?? "",
-  description: intro.description ?? "",
-  category: intro.category ?? "",
-  pricePositioning: intro.pricePositioning ?? "",
-  differentiator1: intro.differentiator1 ?? "",
-  differentiator2: intro.differentiator2 ?? "",
-  differentiator3: intro.differentiator3 ?? "",
+/** 저장값 → 폼. 차별점 배열은 앞에서부터 세 칸에 채운다 */
+const toFormValues = (saved: BrandIntroData): IntroFormValues => ({
+  short_intro: saved.short_intro ?? "",
+  detail_intro: saved.detail_intro ?? "",
+  category: saved.category ?? "",
+  price_positioning: saved.price_positioning ?? "",
+  key_point_01: saved.key_point?.[0] ?? "",
+  key_point_02: saved.key_point?.[1] ?? "",
+  key_point_03: saved.key_point?.[2] ?? "",
 });
 
-const toRequest = (values: IntroFormValues): BrandIntroView => ({ ...values });
+/**
+ * 폼 → 요청. 빈 차별점은 뺀다 — 서버가 빈 문자열 항목을 거부한다(빈 배열은 받는다).
+ * 선택하지 않은 업종·가격은 보내지 않는다.
+ */
+const toRequest = (values: IntroFormValues): UpdateBrandIntroRequest => ({
+  short_intro: values.short_intro.trim(),
+  detail_intro: values.detail_intro.trim(),
+  category: values.category || undefined,
+  price_positioning: values.price_positioning || undefined,
+  key_point: [values.key_point_01, values.key_point_02, values.key_point_03].map(point => point.trim()).filter(Boolean),
+});
 
 type IntroSectionProps = {
   workspaceId: string;
 };
 
 export default function IntroSection({ workspaceId }: IntroSectionProps) {
-  const { data: settings } = useBrandSettings(workspaceId);
-  const { mutate: updateBrandIntro, isPending } = useUpdateBrandIntro(workspaceId);
+  const { data: saved } = useBrandSection(workspaceId, "brand_intro");
+  const { mutate: updateBrandIntro, isPending, error } = useUpdateBrandIntro(workspaceId);
 
   const {
     register,
@@ -62,13 +78,12 @@ export default function IntroSection({ workspaceId }: IntroSectionProps) {
   } = useForm<IntroFormValues>({
     resolver: zodResolver(introSchema),
     defaultValues: EMPTY_VALUES,
-    values: settings?.brandIntro ? toFormValues(settings.brandIntro) : undefined,
+    values: saved ? toFormValues(saved) : undefined,
   });
 
   const onSubmit = (values: IntroFormValues) => {
     updateBrandIntro(toRequest(values), {
       onSuccess: () => Toast.success("브랜드 소개를 저장했어요."),
-      onError: () => Toast.error("저장에 실패했어요. 다시 시도해주세요."),
     });
   };
 
@@ -78,47 +93,49 @@ export default function IntroSection({ workspaceId }: IntroSectionProps) {
       description="브랜드를 소개할 수 있는 내용들을 입력해주세요"
       isDirty={isDirty}
       isPending={isPending}
+      errorMessage={error?.message}
       onSubmit={handleSubmit(onSubmit)}
     >
       {/* row1 — 한줄 소개 (전체폭) */}
       <Input
-        id="oneLiner"
+        id="short_intro"
         size="md"
         labelClassName="text-xs"
         label="한줄 소개 (100자 이내)"
+        required
         placeholder="예: 롤링 파스타"
-        error={Boolean(errors.oneLiner)}
-        errorText={errors.oneLiner?.message}
-        {...register("oneLiner")}
+        error={Boolean(errors.short_intro)}
+        errorText={errors.short_intro?.message}
+        {...register("short_intro")}
       />
 
       {/* row2 — 상세 소개 (Textarea → Controller) */}
       <Controller
-        name="description"
+        name="detail_intro"
         control={control}
         render={({ field }) => (
           <Textarea
-            id="description"
+            id="detail_intro"
             labelClassName="text-xs"
             label="상세 소개 (500자 이내)"
+            required
             placeholder="브랜드의 스토리와 특징을 소개해주세요"
             rows={3}
-            error={Boolean(errors.description)}
-            errorText={errors.description?.message}
-            value={field.value}
-            onChange={field.onChange}
-            onBlur={field.onBlur}
+            error={Boolean(errors.detail_intro)}
+            errorText={errors.detail_intro?.message}
+            {...field}
           />
         )}
       />
 
-      {/* row3 — 2열 Select */}
+      {/* row3 — 2열 Select. name은 저니 패널 포커스용(트리거 버튼에 붙는다) */}
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <Controller
           name="category"
           control={control}
           render={({ field }) => (
             <Select
+              name={field.name}
               size="md"
               labelClassName="text-xs"
               label="업종 분류"
@@ -126,19 +143,20 @@ export default function IntroSection({ workspaceId }: IntroSectionProps) {
               value={field.value}
               onValueChange={field.onChange}
             >
-              {CATEGORY_OPTIONS.map(option => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
+              {CATEGORY_VALUES.map(value => (
+                <SelectItem key={value} value={value}>
+                  {value}
                 </SelectItem>
               ))}
             </Select>
           )}
         />
         <Controller
-          name="pricePositioning"
+          name="price_positioning"
           control={control}
           render={({ field }) => (
             <Select
+              name={field.name}
               size="md"
               labelClassName="text-xs"
               label="가격 포지셔닝"
@@ -146,9 +164,9 @@ export default function IntroSection({ workspaceId }: IntroSectionProps) {
               value={field.value}
               onValueChange={field.onChange}
             >
-              {PRICE_POSITIONING_OPTIONS.map(option => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
+              {PRICE_POSITIONING_VALUES.map(value => (
+                <SelectItem key={value} value={value}>
+                  {value}
                 </SelectItem>
               ))}
             </Select>
@@ -159,28 +177,28 @@ export default function IntroSection({ workspaceId }: IntroSectionProps) {
       {/* row4 — 3열 차별점 */}
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         <Input
-          id="differentiator1"
+          id="key_point_01"
           size="md"
           labelClassName="text-xs"
           label="핵심 차별점 01"
           placeholder="예: 건강한 국내산 재료"
-          {...register("differentiator1")}
+          {...register("key_point_01")}
         />
         <Input
-          id="differentiator2"
+          id="key_point_02"
           size="md"
           labelClassName="text-xs"
           label="핵심 차별점 02"
           placeholder="예: 5분 이내 빠른 서비스"
-          {...register("differentiator2")}
+          {...register("key_point_02")}
         />
         <Input
-          id="differentiator3"
+          id="key_point_03"
           size="md"
           labelClassName="text-xs"
           label="핵심 차별점 03"
           placeholder="예: 합리적인 가격"
-          {...register("differentiator3")}
+          {...register("key_point_03")}
         />
       </div>
     </SettingsSection>

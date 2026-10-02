@@ -15,7 +15,17 @@ export type BrandListResponse = components["schemas"]["GetBrandListResponseDto"]
  *  commission / location-standard / size-criteria / facility-req / menu / signature / visual)
  ************************************/
 
-/** 기본 정보 — 브랜드명·설립연도·대표자·본사 연락처 */
+/************************************
+ * 브랜드 정보 설정 — 섹션별 저장값 (읽기)
+ *
+ * 워크스페이스 상세의 brand.* 섹션은 스펙에 아직 Record<string, never>로 나온다.
+ * 저장 응답에 붙는 *DataDto가 실제 저장값과 같은 모양이라 읽기에도 이걸 쓴다
+ * (brand_basic은 실제 응답과 대조해 확인 — 빈 칸은 null로 온다).
+ ************************************/
+export type BrandBasicData = components["schemas"]["BrandBasicDataDto"];
+export type BrandIntroData = components["schemas"]["BrandIntroDataDto"];
+
+/** 기본 정보 — 브랜드명·런칭 연도·대표자·본사 연락처 */
 export type UpdateBrandBasicRequest = components["schemas"]["UpdateBrandBasicDto"];
 export type UpdateBrandBasicResponse = components["schemas"]["UpdateBrandBasicResponseDto"];
 

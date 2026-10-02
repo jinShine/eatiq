@@ -6,21 +6,21 @@ import { IS_MOCK, mockMutation, mockResolve } from "../mock";
 import { getWorkspaceDetail } from "../workspace/workspace.api";
 import { mockWorkspaceDetail } from "../workspace/workspace.mock";
 import { workspaceKeys } from "../workspace/workspace.query";
-import { getBrandCompletion, updateBrandBasic } from "./brand.api";
+import { getBrandCompletion, updateBrandBasic, updateBrandIntro } from "./brand.api";
 import { mergeMockSettings, mockBrandCompletion, mockBrandSettings } from "./brand.mock";
 import {
+  type BrandBasicData,
   type BrandCompletion,
   type BrandCompletionResponse,
   type BrandCompletionScope,
   type BrandCompletionTask,
-  type UpdateBrandBasicRequest,
+  type BrandIntroData,
 } from "./brand.type";
 import {
   type BrandAreaCriteriaView,
   type BrandContactView,
   type BrandContractView,
   type BrandFeeView,
-  type BrandIntroView,
   type BrandOperationView,
   type BrandPolicyView,
 } from "./brand.view";
@@ -98,14 +98,15 @@ export function useBrandCompletion(workspaceId: string, tab: BrandSettingsTab) {
 }
 
 /**
- * 읽기 응답의 섹션 → 저장 DTO 짝.
+ * 읽기 응답의 섹션 → 저장값 타입(*DataDto) 짝.
  *
  * 읽기 응답(WorkspaceDetailBrandDto)의 13개 섹션이 Record<string, never>로 선언돼 있다.
- * 저장 DTO와 같은 모양이라는 가정으로 여기서만 단언한다.
+ * 저장 응답의 *DataDto와 같은 모양이라 여기서만 단언한다.
  * TODO(백엔드): 섹션 타입 선언 요청함 — 반영되면 이 맵과 아래 단언을 지운다.
  */
 type BrandSectionMap = {
-  brand_basic: UpdateBrandBasicRequest;
+  brand_basic: BrandBasicData;
+  brand_intro: BrandIntroData;
 };
 
 export type BrandSectionKey = keyof BrandSectionMap;
@@ -147,6 +148,7 @@ function createBrandSectionMutation<TBody>(save: (workspaceId: string, body: TBo
 }
 
 export const useUpdateBrandBasic = createBrandSectionMutation(updateBrandBasic);
+export const useUpdateBrandIntro = createBrandSectionMutation(updateBrandIntro);
 
 /**
  * 섹션 저장 훅 공통 팩토리.
@@ -175,7 +177,6 @@ function createSectionMutation<TView>(section: Parameters<typeof mergeMockSettin
   };
 }
 
-export const useUpdateBrandIntro = createSectionMutation<BrandIntroView>("brandIntro");
 export const useUpdateBrandOperation = createSectionMutation<BrandOperationView>("brandOperation");
 export const useUpdateBrandContact = createSectionMutation<BrandContactView>("brandContact");
 

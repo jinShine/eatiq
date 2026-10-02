@@ -7,7 +7,7 @@ import { SettingsSection } from "@components/custom/settings";
 import { Input, Toast } from "@components/ui";
 
 import { useBrandSection, useUpdateBrandBasic } from "@services/api/brand/brand.query";
-import { type UpdateBrandBasicRequest } from "@services/api/brand/brand.type";
+import { type BrandBasicData, type UpdateBrandBasicRequest } from "@services/api/brand/brand.type";
 
 /**
  * 폼 필드 이름은 저장 DTO(UpdateBrandBasicDto)와 같다.
@@ -46,7 +46,7 @@ const EMPTY_VALUES: BasicInfoFormValues = {
 };
 
 /** 저장값 → 폼. 서버의 null·undefined는 빈 입력칸으로 */
-const toFormValues = (saved: UpdateBrandBasicRequest): BasicInfoFormValues => ({
+const toFormValues = (saved: BrandBasicData): BasicInfoFormValues => ({
   brand_name_ko: saved.brand_name_ko ?? "",
   brand_name_en: saved.brand_name_en ?? "",
   launch_year: saved.launch_year ? String(saved.launch_year) : "",
