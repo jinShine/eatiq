@@ -137,7 +137,7 @@ export default function BasicInfoSection({ workspaceId }: BasicInfoSectionProps)
           id="launch_year"
           size="md"
           labelClassName="text-xs"
-          label="설립 연도"
+          label="런칭 연도"
           placeholder="예: 2018"
           inputMode="numeric"
           error={Boolean(errors.launch_year)}
