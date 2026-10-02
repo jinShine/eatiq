@@ -3001,10 +3001,25 @@ export interface components {
        */
       tab_title: string;
       /**
-       * @description 하위 세부 섹션 키
+       * @description 하위 세부 섹션 키 (brand_basic, brand_intro, brand_status, brand_contact, visual_identity, visual_menu, visual_store, target_conditions, contract_manager, signature_manager, policy_conditions, location_standard, size_criteria, facility_req)
        * @example brand_basic
+       * @enum {string}
        */
-      section_key: string;
+      section_key:
+        | "brand_basic"
+        | "brand_intro"
+        | "brand_status"
+        | "brand_contact"
+        | "visual_identity"
+        | "visual_menu"
+        | "visual_store"
+        | "target_conditions"
+        | "contract_manager"
+        | "signature_manager"
+        | "policy_conditions"
+        | "location_standard"
+        | "size_criteria"
+        | "facility_req";
       /**
        * @description 해당 항목의 필드 키
        * @example brand_name_ko
@@ -5776,8 +5791,9 @@ export interface components {
       /**
        * @description 액션 유형 (메모, 미팅, 메일, 전화, 제안서, 계약서, 법무검토, 기타, 지정안됨)
        * @example 미팅
+       * @enum {string}
        */
-      action_type: string;
+      action_type: "메모" | "미팅" | "메일" | "전화" | "제안서" | "계약서" | "법무검토" | "기타" | "지정안됨";
     };
     BuyerDashboardCrmStageSummaryDto: {
       /**

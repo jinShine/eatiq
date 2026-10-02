@@ -94,8 +94,11 @@ export type BrandCompletionTask = {
   title: string;
   description: string;
   isRequired: boolean;
-  /** 이동할 섹션 — 저장 DTO의 섹션 키(brand_basic 등)와 같다 */
-  sectionKey: string;
+  /**
+   * 이동할 섹션. 화면 섹션의 id로 쓴다.
+   * 기본 정보 탭은 저장 DTO 이름과 같지만(brand_basic) 다른 탭은 다르다(contract_manager 등)
+   */
+  sectionKey: components["schemas"]["BrandCompletionTaskDto"]["section_key"];
   /** 포커스할 필드 — 폼 필드 이름(DTO 필드명)과 같다 */
   fieldKey: string;
 };
