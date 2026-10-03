@@ -125,9 +125,13 @@ export default function CompletionStatusCard({ workspaceId, tab, tabLabel }: Com
         <div className="flex min-w-0 flex-col gap-2 xl:pl-6">
           <p className="text-text-tertiary text-xs">남은 주요 항목</p>
 
+          {/* remaining_tasks는 next_task를 뺀 목록이다. 비어 있어도 next_task가 남아 있을 수 있어
+              완료 문구는 둘 다 비었을 때만 보인다 */}
           {remainingTasks.length === 0 ? (
             <div className="flex flex-1 items-center justify-center">
-              <p className="text-text-secondary text-sm font-semibold">모두 입력했어요 🎉</p>
+              <p className="text-text-secondary text-sm font-semibold">
+                {nextTask ? "다음으로 해야 할 일만 남았어요" : "모두 입력했어요 🎉"}
+              </p>
             </div>
           ) : (
             <ScrollArea
