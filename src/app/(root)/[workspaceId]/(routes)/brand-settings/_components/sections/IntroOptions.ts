@@ -47,13 +47,8 @@ export const USAGE_CONTEXT_VALUES = [
   "기타",
 ];
 
-/** 연락처 — 담당자 사용 언어 */
-export const CONTACT_LANGUAGE_OPTIONS = [
-  { value: "ko", label: "한국어" },
-  { value: "en", label: "영어" },
-  { value: "ja", label: "일본어" },
-  { value: "zh_hant", label: "중국어 번체" },
-  { value: "zh_hans", label: "중국어 간체" },
-  { value: "th", label: "태국어" },
-  { value: "vi", label: "베트남어" },
-] as const;
+/** 연락처 — 담당자 가능 언어. 운영 현황과 같은 이유로 한국어 라벨을 그대로 저장한다 */
+export const CONTACT_LANGUAGE_VALUES = ["한국어", "영어", "일본어", "중국어 번체", "중국어 간체", "태국어", "베트남어"];
+
+/** 라벨이 곧 값인 목록 → FormMultiSelect 옵션 */
+export const toOptions = (values: readonly string[]) => values.map(value => ({ value, label: value }));

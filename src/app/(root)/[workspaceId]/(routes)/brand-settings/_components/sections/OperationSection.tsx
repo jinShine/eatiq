@@ -9,8 +9,8 @@ import { CommaNumberInput, Input, Toast } from "@components/ui";
 import { useBrandSection, useUpdateBrandStatus } from "@services/api/brand/brand.query";
 import { type BrandStatusData, type UpdateBrandStatusRequest } from "@services/api/brand/brand.type";
 
-import FormMultiSelect from "../FormMultiSelect";
-import { TARGET_AUDIENCE_VALUES, USAGE_CONTEXT_VALUES } from "./IntroOptions";
+import FormMultiSelect, { toTags } from "../FormMultiSelect";
+import { TARGET_AUDIENCE_VALUES, USAGE_CONTEXT_VALUES, toOptions } from "./IntroOptions";
 
 /**
  * 폼 필드 이름은 저장 DTO(UpdateBrandStatusDto)와 같다. → BasicInfoSection 주석 참고
@@ -61,9 +61,6 @@ const EMPTY_VALUES: StatusFormValues = {
 
 const toText = (value?: number | null) => (value === null || value === undefined ? "" : String(value));
 
-/** 빈 문자열 항목은 버린다. 서버가 받아주지만 선택지에 없어 화면에 안 보인 채 다시 저장된다 */
-const toTags = (values?: string[] | null) => (values ?? []).filter(value => value.trim());
-
 const toFormValues = (saved: BrandStatusData): StatusFormValues => ({
   domestic_store_total_cnt: toText(saved.domestic_store_total_cnt),
   domestic_store_direct_cnt: toText(saved.domestic_store_direct_cnt),
@@ -87,8 +84,6 @@ const toRequest = (values: StatusFormValues): UpdateBrandStatusRequest => ({
   target_audience: values.target_audience,
   usage_context: values.usage_context,
 });
-
-const toOptions = (values: readonly string[]) => values.map(value => ({ value, label: value }));
 
 // 단위 표시 (input 우측)
 const Unit = ({ children }: { children: string }) => <span className="text-text-tertiary text-sm">{children}</span>;
