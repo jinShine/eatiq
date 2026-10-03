@@ -27,7 +27,7 @@ export default function FormMultiSelect<T extends FieldValues>({
     <Controller
       name={name}
       control={control}
-      render={({ field }) => (
+      render={({ field, fieldState }) => (
         <div className="flex w-full flex-col">
           <Text className="mb-[6px] text-xs font-semibold">{label}</Text>
           <MultiSelect
@@ -35,9 +35,11 @@ export default function FormMultiSelect<T extends FieldValues>({
             options={[...options]}
             placeholder={placeholder}
             maxCount={maxCount}
+            name={field.name} // 저니 패널이 [name=...]으로 포커스한다
             value={field.value ?? []}
             onValueChange={field.onChange}
           />
+          {fieldState.error && <Text className="text-error mt-[4px] text-xs">{fieldState.error.message}</Text>}
         </div>
       )}
     />

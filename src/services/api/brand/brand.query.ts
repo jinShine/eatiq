@@ -6,7 +6,7 @@ import { IS_MOCK, mockMutation, mockResolve } from "../mock";
 import { getWorkspaceDetail } from "../workspace/workspace.api";
 import { mockWorkspaceDetail } from "../workspace/workspace.mock";
 import { workspaceKeys } from "../workspace/workspace.query";
-import { getBrandCompletion, updateBrandBasic, updateBrandIntro } from "./brand.api";
+import { getBrandCompletion, updateBrandBasic, updateBrandIntro, updateBrandStatus } from "./brand.api";
 import { mergeMockSettings, mockBrandCompletion, mockBrandSettings } from "./brand.mock";
 import {
   type BrandBasicData,
@@ -15,13 +15,13 @@ import {
   type BrandCompletionScope,
   type BrandCompletionTask,
   type BrandIntroData,
+  type BrandStatusData,
 } from "./brand.type";
 import {
   type BrandAreaCriteriaView,
   type BrandContactView,
   type BrandContractView,
   type BrandFeeView,
-  type BrandOperationView,
   type BrandPolicyView,
 } from "./brand.view";
 
@@ -107,6 +107,7 @@ export function useBrandCompletion(workspaceId: string, tab: BrandSettingsTab) {
 type BrandSectionMap = {
   brand_basic: BrandBasicData;
   brand_intro: BrandIntroData;
+  brand_status: BrandStatusData;
 };
 
 export type BrandSectionKey = keyof BrandSectionMap;
@@ -149,6 +150,7 @@ function createBrandSectionMutation<TBody>(save: (workspaceId: string, body: TBo
 
 export const useUpdateBrandBasic = createBrandSectionMutation(updateBrandBasic);
 export const useUpdateBrandIntro = createBrandSectionMutation(updateBrandIntro);
+export const useUpdateBrandStatus = createBrandSectionMutation(updateBrandStatus);
 
 /**
  * 섹션 저장 훅 공통 팩토리.
@@ -177,7 +179,6 @@ function createSectionMutation<TView>(section: Parameters<typeof mergeMockSettin
   };
 }
 
-export const useUpdateBrandOperation = createSectionMutation<BrandOperationView>("brandOperation");
 export const useUpdateBrandContact = createSectionMutation<BrandContactView>("brandContact");
 
 /************************************

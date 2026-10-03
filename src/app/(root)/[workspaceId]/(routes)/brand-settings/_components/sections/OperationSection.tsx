@@ -6,70 +6,92 @@ import z from "zod";
 import { SettingsSection } from "@components/custom/settings";
 import { Input, Toast } from "@components/ui";
 
-import { useBrandSettings, useUpdateBrandOperation } from "@services/api/brand/brand.query";
-import { type BrandOperationView } from "@services/api/brand/brand.view";
+import { useBrandSection, useUpdateBrandStatus } from "@services/api/brand/brand.query";
+import { type BrandStatusData, type UpdateBrandStatusRequest } from "@services/api/brand/brand.type";
 
 import FormMultiSelect from "../FormMultiSelect";
-import { TARGET_CUSTOMER_OPTIONS, USAGE_OCCASION_OPTIONS } from "./IntroOptions";
+import { TARGET_AUDIENCE_VALUES, USAGE_CONTEXT_VALUES } from "./IntroOptions";
 
-// 숫자 입력은 문자열로 다루고 제출 시 변환 — 빈칸/0 구분을 위해
-const numberField = z.string().refine(v => !v || /^\d+$/.test(v), { message: "숫자만 입력해주세요" });
+/**
+ * 폼 필드 이름은 저장 DTO(UpdateBrandStatusDto)와 같다. → BasicInfoSection 주석 참고
+ *
+ * 숫자 7개는 모두 서버 필수(0 이상)다. 입력은 문자열로 받아 저장할 때 숫자로 바꾼다.
+ * 매장 수·좌석 수는 서버가 정수만 받고, 매출·객단가·평형은 소수도 받는다.
+ */
+const REQUIRED = "입력해주세요";
+const integerField = z.string().min(1, REQUIRED).regex(/^\d+$/, "0 이상의 정수를 입력해주세요");
+const decimalField = z
+  .string()
+  .min(1, REQUIRED)
+  .regex(/^\d+(\.\d+)?$/, "0 이상의 숫자를 입력해주세요");
 
-// PATCH /api/brands/{brandId}/operation — 전체 치환
-const operationSchema = z.object({
-  storeCountTotalDomestic: numberField, // 국내 전체 매장 수 (개)
-  storeCountDirect: numberField, // 국내 직영점 수 (개)
-  storeCountOverseas: numberField, // 해외 전체 매장 수 (개)
-  monthlyRevenueAvg: numberField, // 월평균 매출 (만원) · TODO(백엔드) 단위 확인
-  avgSpendPerPerson: numberField, // 평균 객단가 (원)
-  avgStoreSizePy: numberField, // 평균 매장 평형 (평)
-  avgSeatCount: numberField, // 평균 좌석 수 (석)
-  targetCustomers: z.array(z.string()).max(10, "최대 10개까지 선택할 수 있어요"), // 주요 고객층 · 다중, 코드값 배열
-  usageOccasions: z.array(z.string()).max(10, "최대 10개까지 선택할 수 있어요"), // 주 이용 상황 · 다중, 코드값 배열
-});
+const statusSchema = z
+  .object({
+    domestic_store_total_cnt: integerField,
+    domestic_store_direct_cnt: integerField,
+    overseas_store_total_cnt: integerField,
+    avg_monthly_sales: decimalField, // 화면은 만원, 저장은 원 — toRequest·toFormValues에서 변환
+    avg_cost_per_customer: integerField, // 원
+    avg_store_area: decimalField, // 평
+    avg_seat_cnt: integerField,
+    // 10개 제한은 시안 기준이다. 서버는 개수를 제한하지 않는다
+    target_audience: z.array(z.string()).max(10, "최대 10개까지 선택할 수 있어요"),
+    usage_context: z.array(z.string()).max(10, "최대 10개까지 선택할 수 있어요"),
+  })
+  // 서버는 검사하지 않지만 직영점이 전체보다 많을 수는 없다
+  .refine(v => Number(v.domestic_store_direct_cnt) <= Number(v.domestic_store_total_cnt), {
+    path: ["domestic_store_direct_cnt"],
+    message: "국내 전체 매장 수보다 많을 수 없어요",
+  });
 
-type OperationFormValues = z.infer<typeof operationSchema>;
+type StatusFormValues = z.infer<typeof statusSchema>;
 
-const EMPTY_VALUES: OperationFormValues = {
-  storeCountTotalDomestic: "",
-  storeCountDirect: "",
-  storeCountOverseas: "",
-  monthlyRevenueAvg: "",
-  avgSpendPerPerson: "",
-  avgStoreSizePy: "",
-  avgSeatCount: "",
-  targetCustomers: [],
-  usageOccasions: [],
+const EMPTY_VALUES: StatusFormValues = {
+  domestic_store_total_cnt: "",
+  domestic_store_direct_cnt: "",
+  overseas_store_total_cnt: "",
+  avg_monthly_sales: "",
+  avg_cost_per_customer: "",
+  avg_store_area: "",
+  avg_seat_cnt: "",
+  target_audience: [],
+  usage_context: [],
 };
 
-const toText = (v?: number | null) => (v === null || v === undefined ? "" : String(v));
+/** 월평균 매출: 화면 만원 ↔ 저장 원 (시안이 만원 입력, API가 원) */
+const WON_PER_MANWON = 10_000;
 
-const toFormValues = (operation: BrandOperationView): OperationFormValues => ({
-  storeCountTotalDomestic: toText(operation.storeCountTotalDomestic),
-  storeCountDirect: toText(operation.storeCountDirect),
-  storeCountOverseas: toText(operation.storeCountOverseas),
-  monthlyRevenueAvg: toText(operation.monthlyRevenueAvg),
-  avgSpendPerPerson: toText(operation.avgSpendPerPerson),
-  avgStoreSizePy: toText(operation.avgStoreSizePy),
-  avgSeatCount: toText(operation.avgSeatCount),
-  targetCustomers: operation.targetCustomers ?? [],
-  usageOccasions: operation.usageOccasions ?? [],
+const toText = (value?: number | null) => (value === null || value === undefined ? "" : String(value));
+
+/** 빈 문자열 항목은 버린다. 서버가 받아주지만 선택지에 없어 화면에 안 보인 채 다시 저장된다 */
+const toTags = (values?: string[] | null) => (values ?? []).filter(value => value.trim());
+
+const toFormValues = (saved: BrandStatusData): StatusFormValues => ({
+  domestic_store_total_cnt: toText(saved.domestic_store_total_cnt),
+  domestic_store_direct_cnt: toText(saved.domestic_store_direct_cnt),
+  overseas_store_total_cnt: toText(saved.overseas_store_total_cnt),
+  avg_monthly_sales: toText(saved.avg_monthly_sales / WON_PER_MANWON),
+  avg_cost_per_customer: toText(saved.avg_cost_per_customer),
+  avg_store_area: toText(saved.avg_store_area),
+  avg_seat_cnt: toText(saved.avg_seat_cnt),
+  target_audience: toTags(saved.target_audience),
+  usage_context: toTags(saved.usage_context),
 });
 
-const toNumber = (v: string) => (v ? Number(v) : undefined);
-
-// TODO(백엔드): monthlyRevenueAvg 단위 확인 필요 (화면은 만원 기준)
-const toRequest = (values: OperationFormValues): BrandOperationView => ({
-  storeCountTotalDomestic: toNumber(values.storeCountTotalDomestic),
-  storeCountDirect: toNumber(values.storeCountDirect),
-  storeCountOverseas: toNumber(values.storeCountOverseas),
-  monthlyRevenueAvg: toNumber(values.monthlyRevenueAvg),
-  avgSpendPerPerson: toNumber(values.avgSpendPerPerson),
-  avgStoreSizePy: toNumber(values.avgStoreSizePy),
-  avgSeatCount: toNumber(values.avgSeatCount),
-  targetCustomers: values.targetCustomers,
-  usageOccasions: values.usageOccasions,
+const toRequest = (values: StatusFormValues): UpdateBrandStatusRequest => ({
+  domestic_store_total_cnt: Number(values.domestic_store_total_cnt),
+  domestic_store_direct_cnt: Number(values.domestic_store_direct_cnt),
+  overseas_store_total_cnt: Number(values.overseas_store_total_cnt),
+  // 4200.5만원 × 10000이 부동소수 오차로 42005000.000001이 되지 않게 반올림
+  avg_monthly_sales: Math.round(Number(values.avg_monthly_sales) * WON_PER_MANWON),
+  avg_cost_per_customer: Number(values.avg_cost_per_customer),
+  avg_store_area: Number(values.avg_store_area),
+  avg_seat_cnt: Number(values.avg_seat_cnt),
+  target_audience: values.target_audience,
+  usage_context: values.usage_context,
 });
+
+const toOptions = (values: readonly string[]) => values.map(value => ({ value, label: value }));
 
 // 단위 표시 (input 우측)
 const Unit = ({ children }: { children: string }) => <span className="text-text-tertiary text-sm">{children}</span>;
@@ -79,24 +101,23 @@ type OperationSectionProps = {
 };
 
 export default function OperationSection({ workspaceId }: OperationSectionProps) {
-  const { data: settings } = useBrandSettings(workspaceId);
-  const { mutate: updateBrandOperation, isPending } = useUpdateBrandOperation(workspaceId);
+  const { data: saved } = useBrandSection(workspaceId, "brand_status");
+  const { mutate: updateBrandStatus, isPending, error } = useUpdateBrandStatus(workspaceId);
 
   const {
     register,
     control,
     handleSubmit,
     formState: { errors, isDirty },
-  } = useForm<OperationFormValues>({
-    resolver: zodResolver(operationSchema),
+  } = useForm<StatusFormValues>({
+    resolver: zodResolver(statusSchema),
     defaultValues: EMPTY_VALUES,
-    values: settings?.brandOperation ? toFormValues(settings.brandOperation) : undefined,
+    values: saved ? toFormValues(saved) : undefined,
   });
 
-  const onSubmit = (values: OperationFormValues) => {
-    updateBrandOperation(toRequest(values), {
+  const onSubmit = (values: StatusFormValues) => {
+    updateBrandStatus(toRequest(values), {
       onSuccess: () => Toast.success("운영 현황을 저장했어요."),
-      onError: () => Toast.error("저장에 실패했어요. 다시 시도해주세요."),
     });
   };
 
@@ -106,104 +127,112 @@ export default function OperationSection({ workspaceId }: OperationSectionProps)
       description="브랜드의 매장, 매출 현황을 입력해주세요"
       isDirty={isDirty}
       isPending={isPending}
+      errorMessage={error?.message}
       onSubmit={handleSubmit(onSubmit)}
     >
       {/* row1 — 매장 수 3열 */}
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         <Input
-          id="storeCountTotalDomestic"
+          id="domestic_store_total_cnt"
           size="md"
           labelClassName="text-xs"
           label="국내 전체 매장 수"
+          required
           placeholder="예: 187"
           inputMode="numeric"
           className="pr-10"
           endAdornment={<Unit>개</Unit>}
-          error={Boolean(errors.storeCountTotalDomestic)}
-          errorText={errors.storeCountTotalDomestic?.message}
-          {...register("storeCountTotalDomestic")}
+          error={Boolean(errors.domestic_store_total_cnt)}
+          errorText={errors.domestic_store_total_cnt?.message}
+          {...register("domestic_store_total_cnt")}
         />
         <Input
-          id="storeCountDirect"
+          id="domestic_store_direct_cnt"
           size="md"
           labelClassName="text-xs"
           label="국내 직영점 수"
+          required
           placeholder="예: 12"
           inputMode="numeric"
           className="pr-10"
           endAdornment={<Unit>개</Unit>}
-          error={Boolean(errors.storeCountDirect)}
-          errorText={errors.storeCountDirect?.message}
-          {...register("storeCountDirect")}
+          error={Boolean(errors.domestic_store_direct_cnt)}
+          errorText={errors.domestic_store_direct_cnt?.message}
+          {...register("domestic_store_direct_cnt")}
         />
         <Input
-          id="storeCountOverseas"
+          id="overseas_store_total_cnt"
           size="md"
           labelClassName="text-xs"
           label="해외 전체 매장 수"
+          required
           placeholder="예: 3"
           inputMode="numeric"
           className="pr-10"
           endAdornment={<Unit>개</Unit>}
-          error={Boolean(errors.storeCountOverseas)}
-          errorText={errors.storeCountOverseas?.message}
-          {...register("storeCountOverseas")}
+          error={Boolean(errors.overseas_store_total_cnt)}
+          errorText={errors.overseas_store_total_cnt?.message}
+          {...register("overseas_store_total_cnt")}
         />
       </div>
 
       {/* row2 — 매출·규모 4열 */}
       <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
         <Input
-          id="monthlyRevenueAvg"
+          id="avg_monthly_sales"
           size="md"
           labelClassName="text-xs"
           label="월평균 매출"
+          required
           placeholder="예: 4200"
-          inputMode="numeric"
+          inputMode="decimal"
           className="pr-14"
           endAdornment={<Unit>만원</Unit>}
-          error={Boolean(errors.monthlyRevenueAvg)}
-          errorText={errors.monthlyRevenueAvg?.message}
-          {...register("monthlyRevenueAvg")}
+          error={Boolean(errors.avg_monthly_sales)}
+          errorText={errors.avg_monthly_sales?.message}
+          {...register("avg_monthly_sales")}
         />
         <Input
-          id="avgSpendPerPerson"
+          id="avg_cost_per_customer"
           size="md"
           labelClassName="text-xs"
           label="평균 객단가"
+          required
           placeholder="예: 13500"
           inputMode="numeric"
           className="pr-10"
           endAdornment={<Unit>원</Unit>}
-          error={Boolean(errors.avgSpendPerPerson)}
-          errorText={errors.avgSpendPerPerson?.message}
-          {...register("avgSpendPerPerson")}
+          error={Boolean(errors.avg_cost_per_customer)}
+          errorText={errors.avg_cost_per_customer?.message}
+          {...register("avg_cost_per_customer")}
         />
         <Input
-          id="avgStoreSizePy"
+          id="avg_store_area"
           size="md"
           labelClassName="text-xs"
           label="평균 매장 평형"
+          required
           placeholder="예: 28"
-          inputMode="numeric"
+          inputMode="decimal"
           className="pr-10"
           endAdornment={<Unit>평</Unit>}
-          error={Boolean(errors.avgStoreSizePy)}
-          errorText={errors.avgStoreSizePy?.message}
-          {...register("avgStoreSizePy")}
+          error={Boolean(errors.avg_store_area)}
+          errorText={errors.avg_store_area?.message}
+          {...register("avg_store_area")}
         />
         <Input
-          id="avgSeatCount"
+          id="avg_seat_cnt"
           size="md"
           labelClassName="text-xs"
           label="평균 좌석 수"
+          required
           placeholder="예: 42"
           inputMode="numeric"
           className="pr-10"
           endAdornment={<Unit>석</Unit>}
-          error={Boolean(errors.avgSeatCount)}
-          errorText={errors.avgSeatCount?.message}
-          {...register("avgSeatCount")}
+          error={Boolean(errors.avg_seat_cnt)}
+          errorText={errors.avg_seat_cnt?.message}
+          {...register("avg_seat_cnt")}
         />
       </div>
 
@@ -211,17 +240,17 @@ export default function OperationSection({ workspaceId }: OperationSectionProps)
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <FormMultiSelect
           control={control}
-          name="targetCustomers"
+          name="target_audience"
           label="주요 고객층"
           placeholder="고객층을 선택해주세요"
-          options={TARGET_CUSTOMER_OPTIONS}
+          options={toOptions(TARGET_AUDIENCE_VALUES)}
         />
         <FormMultiSelect
           control={control}
-          name="usageOccasions"
+          name="usage_context"
           label="주 이용 상황"
           placeholder="이용 상황을 선택해주세요"
-          options={USAGE_OCCASION_OPTIONS}
+          options={toOptions(USAGE_CONTEXT_VALUES)}
         />
       </div>
     </SettingsSection>
