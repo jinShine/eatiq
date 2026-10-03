@@ -40,6 +40,42 @@ const multiSelectVariants = cva("m-1", {
 });
 
 /**
+ * 트리거 버튼 안의 아이콘 클릭 영역.
+ *
+ * SVG는 칠해진 획 위만 클릭을 받는다. X처럼 가는 아이콘은 획 사이를 누르면 클릭이
+ * 감싼 요소로 빠져 트리거까지 올라가고, 지우기 대신 드롭다운이 열린다. 사각 영역으로 감싸 막는다.
+ * 트리거가 <button>이라 안에 <button>을 둘 수 없어 span + role="button"으로 둔다.
+ */
+function IconHitArea({
+  label,
+  className,
+  onClick,
+  children,
+}: {
+  label: string;
+  className?: string;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <span
+      role="button"
+      aria-label={label}
+      className={cn(
+        "text-muted-foreground hover:bg-secondary-background flex shrink-0 cursor-pointer items-center justify-center rounded-sm",
+        className,
+      )}
+      onClick={event => {
+        event.stopPropagation();
+        onClick();
+      }}
+    >
+      {children}
+    </span>
+  );
+}
+
+/**
  * Props for MultiSelect component
  */
 interface MultiSelectProps
@@ -234,24 +270,16 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
                       )}
                     >
                       {`+ ${selectedValues.length - maxCount} more`}
-                      <XCircle
-                        className="ml-1 h-4 w-4 cursor-pointer"
-                        onClick={event => {
-                          event.stopPropagation();
-                          clearExtraOptions();
-                        }}
-                      />
+                      <IconHitArea label="추가 선택 지우기" className="ml-0.5 size-5" onClick={clearExtraOptions}>
+                        <XCircle className="size-4" />
+                      </IconHitArea>
                     </Badge>
                   )}
                 </div>
                 <div className="flex items-center justify-between">
-                  <XIcon
-                    className="h-4 mx-2 cursor-pointer text-muted-foreground"
-                    onClick={event => {
-                      event.stopPropagation();
-                      handleClear();
-                    }}
-                  />
+                  <IconHitArea label="선택 모두 지우기" className="mx-0.5 size-7" onClick={handleClear}>
+                    <XIcon className="size-4" />
+                  </IconHitArea>
                   <Separator orientation="vertical" className="flex min-h-6 h-full" />
                   <ChevronDown className="h-4 mx-2 cursor-pointer text-muted-foreground" />
                 </div>
