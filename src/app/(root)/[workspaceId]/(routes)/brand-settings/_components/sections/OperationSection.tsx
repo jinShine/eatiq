@@ -1,10 +1,10 @@
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
 
 import { SettingsSection } from "@components/custom/settings";
-import { Input, Toast } from "@components/ui";
+import { CommaNumberInput, Input, Toast } from "@components/ui";
 
 import { useBrandSection, useUpdateBrandStatus } from "@services/api/brand/brand.query";
 import { type BrandStatusData, type UpdateBrandStatusRequest } from "@services/api/brand/brand.type";
@@ -16,7 +16,8 @@ import { TARGET_AUDIENCE_VALUES, USAGE_CONTEXT_VALUES } from "./IntroOptions";
  * 폼 필드 이름은 저장 DTO(UpdateBrandStatusDto)와 같다. → BasicInfoSection 주석 참고
  *
  * 숫자 7개는 모두 서버 필수(0 이상)다. 입력은 문자열로 받아 저장할 때 숫자로 바꾼다.
- * 매장 수·좌석 수는 서버가 정수만 받고, 매출·객단가·평형은 소수도 받는다.
+ * 매장 수·좌석 수는 서버가 정수만 받는다. 매출·객단가는 원 단위 정수로 받는다(서버는 소수도 받지만 원 미만은 없다).
+ * 평형만 소수를 허용한다.
  */
 const REQUIRED = "입력해주세요";
 const integerField = z.string().min(1, REQUIRED).regex(/^\d+$/, "0 이상의 정수를 입력해주세요");
@@ -30,7 +31,7 @@ const statusSchema = z
     domestic_store_total_cnt: integerField,
     domestic_store_direct_cnt: integerField,
     overseas_store_total_cnt: integerField,
-    avg_monthly_sales: decimalField, // 화면은 만원, 저장은 원 — toRequest·toFormValues에서 변환
+    avg_monthly_sales: integerField, // 원
     avg_cost_per_customer: integerField, // 원
     avg_store_area: decimalField, // 평
     avg_seat_cnt: integerField,
@@ -58,9 +59,6 @@ const EMPTY_VALUES: StatusFormValues = {
   usage_context: [],
 };
 
-/** 월평균 매출: 화면 만원 ↔ 저장 원 (시안이 만원 입력, API가 원) */
-const WON_PER_MANWON = 10_000;
-
 const toText = (value?: number | null) => (value === null || value === undefined ? "" : String(value));
 
 /** 빈 문자열 항목은 버린다. 서버가 받아주지만 선택지에 없어 화면에 안 보인 채 다시 저장된다 */
@@ -70,7 +68,7 @@ const toFormValues = (saved: BrandStatusData): StatusFormValues => ({
   domestic_store_total_cnt: toText(saved.domestic_store_total_cnt),
   domestic_store_direct_cnt: toText(saved.domestic_store_direct_cnt),
   overseas_store_total_cnt: toText(saved.overseas_store_total_cnt),
-  avg_monthly_sales: toText(saved.avg_monthly_sales / WON_PER_MANWON),
+  avg_monthly_sales: toText(saved.avg_monthly_sales),
   avg_cost_per_customer: toText(saved.avg_cost_per_customer),
   avg_store_area: toText(saved.avg_store_area),
   avg_seat_cnt: toText(saved.avg_seat_cnt),
@@ -82,8 +80,7 @@ const toRequest = (values: StatusFormValues): UpdateBrandStatusRequest => ({
   domestic_store_total_cnt: Number(values.domestic_store_total_cnt),
   domestic_store_direct_cnt: Number(values.domestic_store_direct_cnt),
   overseas_store_total_cnt: Number(values.overseas_store_total_cnt),
-  // 4200.5만원 × 10000이 부동소수 오차로 42005000.000001이 되지 않게 반올림
-  avg_monthly_sales: Math.round(Number(values.avg_monthly_sales) * WON_PER_MANWON),
+  avg_monthly_sales: Number(values.avg_monthly_sales),
   avg_cost_per_customer: Number(values.avg_cost_per_customer),
   avg_store_area: Number(values.avg_store_area),
   avg_seat_cnt: Number(values.avg_seat_cnt),
@@ -178,33 +175,44 @@ export default function OperationSection({ workspaceId }: OperationSectionProps)
 
       {/* row2 — 매출·규모 4열 */}
       <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
-        <Input
-          id="avg_monthly_sales"
-          size="md"
-          labelClassName="text-xs"
-          label="월평균 매출"
-          required
-          placeholder="예: 4200"
-          inputMode="decimal"
-          className="pr-14"
-          endAdornment={<Unit>만원</Unit>}
-          error={Boolean(errors.avg_monthly_sales)}
-          errorText={errors.avg_monthly_sales?.message}
-          {...register("avg_monthly_sales")}
+        {/* 금액은 원 단위. 포커스가 없을 때 쉼표로 끊어 보여준다 */}
+        <Controller
+          name="avg_monthly_sales"
+          control={control}
+          render={({ field }) => (
+            <CommaNumberInput
+              id="avg_monthly_sales"
+              size="md"
+              labelClassName="text-xs"
+              label="월평균 매출"
+              required
+              placeholder="예: 42,000,000"
+              className="pr-10"
+              endAdornment={<Unit>원</Unit>}
+              error={Boolean(errors.avg_monthly_sales)}
+              errorText={errors.avg_monthly_sales?.message}
+              {...field}
+            />
+          )}
         />
-        <Input
-          id="avg_cost_per_customer"
-          size="md"
-          labelClassName="text-xs"
-          label="평균 객단가"
-          required
-          placeholder="예: 13500"
-          inputMode="numeric"
-          className="pr-10"
-          endAdornment={<Unit>원</Unit>}
-          error={Boolean(errors.avg_cost_per_customer)}
-          errorText={errors.avg_cost_per_customer?.message}
-          {...register("avg_cost_per_customer")}
+        <Controller
+          name="avg_cost_per_customer"
+          control={control}
+          render={({ field }) => (
+            <CommaNumberInput
+              id="avg_cost_per_customer"
+              size="md"
+              labelClassName="text-xs"
+              label="평균 객단가"
+              required
+              placeholder="예: 13,500"
+              className="pr-10"
+              endAdornment={<Unit>원</Unit>}
+              error={Boolean(errors.avg_cost_per_customer)}
+              errorText={errors.avg_cost_per_customer?.message}
+              {...field}
+            />
+          )}
         />
         <Input
           id="avg_store_area"
