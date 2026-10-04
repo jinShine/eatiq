@@ -1,5 +1,6 @@
 "use client";
 
+import { useId } from "react";
 import { type Control, Controller, type FieldValues, type Path } from "react-hook-form";
 
 import { MultiSelect } from "@components/ui";
@@ -29,23 +30,36 @@ export default function FormMultiSelect<T extends FieldValues>({
   options,
   maxCount = 3,
 }: FormMultiSelectProps<T>) {
+  // 접근성 — 라벨을 트리거 버튼에, 검증 문구를 aria-describedby로 연결한다
+  const triggerId = useId();
+  const errorId = `${triggerId}-error`;
+
   return (
     <Controller
       name={name}
       control={control}
       render={({ field, fieldState }) => (
         <div className="flex w-full flex-col">
-          <Text className="mb-[6px] text-xs font-semibold">{label}</Text>
+          <Text as="label" htmlFor={triggerId} className="mb-[6px] text-xs font-semibold">
+            {label}
+          </Text>
           <MultiSelect
             size="md"
             options={[...options]}
             placeholder={placeholder}
             maxCount={maxCount}
+            id={triggerId}
             name={field.name} // 저니 패널이 [name=...]으로 포커스한다
+            aria-invalid={Boolean(fieldState.error) || undefined}
+            aria-describedby={fieldState.error ? errorId : undefined}
             value={field.value ?? []}
             onValueChange={field.onChange}
           />
-          {fieldState.error && <Text className="text-error mt-[4px] text-xs">{fieldState.error.message}</Text>}
+          {fieldState.error && (
+            <Text id={errorId} className="text-error mt-[4px] text-xs">
+              {fieldState.error.message}
+            </Text>
+          )}
         </div>
       )}
     />

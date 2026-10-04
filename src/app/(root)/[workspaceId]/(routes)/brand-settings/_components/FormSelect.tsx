@@ -1,5 +1,6 @@
 "use client";
 
+import { useId } from "react";
 import { type Control, Controller, type FieldValues, type Path } from "react-hook-form";
 
 import { Select, SelectItem } from "@components/ui";
@@ -26,6 +27,9 @@ export default function FormSelect<T extends FieldValues>({
   disabled,
   onValueChange,
 }: FormSelectProps<T>) {
+  // 검증 문구를 aria-describedby로 트리거에 연결한다. 같은 필드 이름이 한 화면에 둘 있어도 겹치지 않게 자동 id
+  const errorId = useId();
+
   return (
     <Controller
       name={name}
@@ -44,6 +48,7 @@ export default function FormSelect<T extends FieldValues>({
             name={field.name}
             ref={field.ref}
             aria-invalid={Boolean(fieldState.error)}
+            aria-describedby={fieldState.error ? errorId : undefined}
             value={field.value}
             onValueChange={value => {
               field.onChange(value);
@@ -56,7 +61,11 @@ export default function FormSelect<T extends FieldValues>({
               </SelectItem>
             ))}
           </Select>
-          {fieldState.error && <p className="text-error text-xs">{fieldState.error.message}</p>}
+          {fieldState.error && (
+            <p id={errorId} className="text-error text-xs">
+              {fieldState.error.message}
+            </p>
+          )}
         </div>
       )}
     />

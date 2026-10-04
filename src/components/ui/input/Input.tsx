@@ -1,4 +1,4 @@
-import { forwardRef } from "react";
+import { forwardRef, useId } from "react";
 
 import { Input as ShadcnInput } from "@/components/shadcn/input";
 
@@ -56,14 +56,31 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     const inputHeight = InputSize[size];
     const labelTextSize = size === "sm" ? "text-xs" : "text-sm";
 
+    // 접근성 — 라벨(<label htmlFor>)과 오류·도움말 문구(aria-describedby)를 입력칸에 연결한다.
+    // id를 안 넘긴 곳은 자동 id를 쓴다
+    const generatedId = useId();
+    const inputId = props.id ?? generatedId;
+    const errorId = `${inputId}-error`;
+    const helperId = `${inputId}-helper`;
+    const describedBy = error && errorText ? errorId : helperText ? helperId : undefined;
+
     return (
       <VStack className="w-auto flex-1 justify-start">
         {label && (
           <HStack className="mb-[6px] items-center h-fit">
             {typeof label === "string" ? (
-              <Text variant="sm" className={cn("font-medium", labelTextSize, labelClassName)}>
+              <Text
+                as="label"
+                htmlFor={inputId}
+                variant="sm"
+                className={cn("font-medium", labelTextSize, labelClassName)}
+              >
                 {label}
-                {required && <span className="ml-1 text-error">*</span>}
+                {required && (
+                  <span aria-hidden="true" className="ml-1 text-error">
+                    *
+                  </span>
+                )}
               </Text>
             ) : (
               label
@@ -90,7 +107,11 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
               className,
             )}
             autoComplete="off"
+            aria-invalid={error || undefined}
+            aria-required={required || undefined}
+            aria-describedby={describedBy}
             {...props}
+            id={inputId}
           />
           {endAdornment && (
             <div className="absolute right-3 top-1/2 transform -translate-y-1/2 z-10 flex items-center">
@@ -101,17 +122,23 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         </HStack>
         {error ? (
           typeof errorText === "string" ? (
-            <Text className={cn("text-xs text-error font-normal mt-[4px]", errorTextClassName)}>{errorText}</Text>
+            <Text id={errorId} className={cn("text-xs text-error font-normal mt-[4px]", errorTextClassName)}>
+              {errorText}
+            </Text>
           ) : (
-            <div className={cn("mt-[4px]", errorTextClassName)}>{errorText}</div>
+            <div id={errorId} className={cn("mt-[4px]", errorTextClassName)}>
+              {errorText}
+            </div>
           )
         ) : helperText ? (
           typeof helperText === "string" ? (
-            <Text className={cn("text-xs text-text-tertiary font-normal mt-[4px]", helperTextClassName)}>
+            <Text id={helperId} className={cn("text-xs text-text-tertiary font-normal mt-[4px]", helperTextClassName)}>
               {helperText}
             </Text>
           ) : (
-            <div className={cn("mt-[4px]", helperTextClassName)}>{helperText}</div>
+            <div id={helperId} className={cn("mt-[4px]", helperTextClassName)}>
+              {helperText}
+            </div>
           )
         ) : null}
       </VStack>

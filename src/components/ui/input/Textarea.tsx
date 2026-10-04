@@ -1,3 +1,5 @@
+import { useId } from "react";
+
 import { Textarea as ShadcnTextarea } from "@components/shadcn/textarea";
 
 import { cn } from "@utils/shadcn";
@@ -32,12 +34,23 @@ export default function Textarea({
   errorTextClassName,
   ...props
 }: TextareaProps) {
+  // 접근성 — Input과 같은 방식으로 라벨·오류·도움말 문구를 연결한다
+  const generatedId = useId();
+  const textareaId = props.id ?? generatedId;
+  const errorId = `${textareaId}-error`;
+  const helperId = `${textareaId}-helper`;
+  const describedBy = error && errorText ? errorId : helperText ? helperId : undefined;
+
   return (
     <VStack>
       {label && (
-        <Text className={cn("text-sm font-semibold mb-[6px]", labelClassName)}>
+        <Text as="label" htmlFor={textareaId} className={cn("text-sm font-semibold mb-[6px]", labelClassName)}>
           {label}
-          {required && <span className="ml-1 text-error">*</span>}
+          {required && (
+            <span aria-hidden="true" className="ml-1 text-error">
+              *
+            </span>
+          )}
         </Text>
       )}
       <ShadcnTextarea
@@ -45,14 +58,21 @@ export default function Textarea({
           error && "border-destructive focus-visible:border-destructive focus-visible:ring-destructive/20",
           props.className,
         )}
+        aria-invalid={error || undefined}
+        aria-required={required || undefined}
+        aria-describedby={describedBy}
         {...props}
+        id={textareaId}
       />
       {error ? (
-        <Text className={cn("text-xs text-error font-normal mt-[4px] line-clamp-2", errorTextClassName)}>
+        <Text id={errorId} className={cn("text-xs text-error font-normal mt-[4px] line-clamp-2", errorTextClassName)}>
           {errorText}
         </Text>
       ) : helperText ? (
-        <Text className={cn("text-xs text-text-tertiary font-normal mt-[4px] line-clamp-2", helperTextClassName)}>
+        <Text
+          id={helperId}
+          className={cn("text-xs text-text-tertiary font-normal mt-[4px] line-clamp-2", helperTextClassName)}
+        >
           {helperText}
         </Text>
       ) : null}

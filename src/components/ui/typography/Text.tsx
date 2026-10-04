@@ -66,6 +66,10 @@ export interface TextProps {
   children: React.ReactNode;
   /** 추가 CSS 클래스 */
   className?: string;
+  /** 렌더 태그를 바꾼다. 입력칸 라벨은 "label"로 렌더해 htmlFor로 입력칸과 연결한다 */
+  as?: React.ElementType;
+  id?: string;
+  htmlFor?: string;
 }
 
 /**Tailwind 표준 */
@@ -124,10 +128,14 @@ const getDefaultElement = (variant: TextVariant): keyof React.JSX.IntrinsicEleme
  * <Text variant="md" color="secondary">본문 텍스트</Text>
  * ```
  */
-export const Text = ({ variant = "md", color = "primary", children, className }: TextProps) => {
-  const Component = getDefaultElement(variant);
+export const Text = ({ variant = "md", color = "primary", children, className, as, id, htmlFor }: TextProps) => {
+  const Component = as ?? getDefaultElement(variant);
 
-  return <Component className={cn(textVariants[variant], textColors[color], className)}>{children}</Component>;
+  return (
+    <Component id={id} htmlFor={htmlFor} className={cn(textVariants[variant], textColors[color], className)}>
+      {children}
+    </Component>
+  );
 };
 
 Text.displayName = "Text";

@@ -1,3 +1,5 @@
+import { useId } from "react";
+
 import {
   SelectContent,
   type SelectGroupProps,
@@ -41,15 +43,22 @@ export function Select({
   ...props
 }: SelectProps) {
   const selectTriggerHeight = InputSize[size];
+  // 접근성 — 라벨을 트리거 버튼에 연결한다(라벨이 버튼의 이름이 된다)
+  const generatedId = useId();
+  const triggerId = props.id ?? generatedId;
 
   return (
     <VStack className="w-auto flex-1 justify-start">
       {label && (
         <HStack className="mb-[6px] items-center h-fit">
           {typeof label === "string" ? (
-            <Text className={cn("text-sm font-semibold", labelClassName)}>
+            <Text as="label" htmlFor={triggerId} className={cn("text-sm font-semibold", labelClassName)}>
               {label}
-              {required && <span className="ml-1 text-error">*</span>}
+              {required && (
+                <span aria-hidden="true" className="ml-1 text-error">
+                  *
+                </span>
+              )}
             </Text>
           ) : (
             label
@@ -59,7 +68,9 @@ export function Select({
 
       <ShadcnSelect value={value} onValueChange={onValueChange}>
         <SelectTrigger
+          aria-required={required || undefined}
           {...props}
+          id={triggerId}
           className={cn(
             "w-full",
             props.disabled && "pointer-events-none bg-secondary-background",
