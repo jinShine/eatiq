@@ -39,7 +39,11 @@ const basicInfoSchema = z.object({
     .trim()
     .max(255, maxLength(255))
     .refine(value => !value || isUrl(value), "올바른 URL 형식이 아니에요"),
-  official_email: z.union([z.string().email("올바른 이메일 형식이 아니에요"), z.literal("")]),
+  // 공백을 먼저 지운 뒤 검사한다(붙여넣기로 끝에 공백이 붙는 경우). 비어 있으면 통과 — 선택 항목
+  official_email: z
+    .string()
+    .trim()
+    .refine(value => !value || z.string().email().safeParse(value).success, "올바른 이메일 형식이 아니에요"),
   official_address: z.string().trim().max(255, maxLength(255)),
 });
 
