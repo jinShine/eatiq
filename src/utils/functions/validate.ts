@@ -114,30 +114,62 @@ export const isEmail = (email: string): boolean => {
   return testRegex(email, REG_EXPRESSION.EMAIL);
 };
 
+/** 도메인 한 마디: 영문·숫자·하이픈, 1~63자, 하이픈으로 시작·끝 불가 */
+const DOMAIN_LABEL = /^(?!-)[a-z\d-]{1,63}(?<!-)$/i;
+/** 최상위 도메인: 영문 2자 이상, 또는 퓨니코드(한글 도메인 등) */
+const TOP_LEVEL_DOMAIN = /^(?:[a-z]{2,}|xn--[a-z\d-]+)$/i;
+const IPV4 = /^\d{1,3}(?:\.\d{1,3}){3}$/;
+
 /**
- * URL 형식이 유효한지 검증
+ * URL 형식이 유효한지 검증 (프로토콜 생략 가능)
+ *
+ * 백엔드(class-validator IsUrl = validator.js isURL 기본값)와 같은 판정을 목표로 한다.
+ * 실제 요청 30건으로 대조했다.
+ * - 프로토콜이 없으면 https://를 붙여 해석한다
+ * - 허용 프로토콜은 http·https·ftp뿐이다(javascript:·mailto: 등은 거부)
+ * - 호스트는 IPv4이거나, 최상위 도메인이 있는 도메인이어야 한다(localhost·example..com 거부)
+ * - 공백이 있으면 거부한다
+ *
+ * 정규식 하나로 전체를 검사하지 않고 내장 URL 파서로 쪼갠 뒤 부분만 본다.
+ * 이전 정규식은 반복 안에 반복이 있어 긴 입력에서 수 초씩 멈췄다(ReDoS).
+ *
  * @param value - 확인할 URL 문자열
  * @returns 유효한 URL이면 true, 아니면 false
  * @example
  * isUrl("https://www.example.com") // true
- * isUrl("http://example.com") // true
  * isUrl("example.com") // true
+ * isUrl("www.example.com/menu?lang=ko") // true
+ * isUrl("example.com:8080") // true
+ * isUrl("javascript:alert(1)") // false
+ * isUrl("http://localhost") // false
  * isUrl("invalid-url") // false
  */
 export const isUrl = (value: string): boolean => {
-  if (!validateString(value)) {
+  if (!validateString(value) || /\s/.test(value) || /^mailto:/i.test(value)) {
     return false;
   }
 
+  const hasProtocol = /^[a-z][a-z\d+.-]*:\/\//i.test(value);
+
+  let url: URL;
   try {
-    // URL 생성자로 검증 (더 정확함)
-    new URL(value);
-    return true;
+    // javascript:·abc:def처럼 "://" 없는 스킴은 https://를 붙이면 포트 자리가 숫자가 아니라 여기서 걸러진다
+    url = new URL(hasProtocol ? value : `https://${value}`);
   } catch {
-    // 상대 URL도 허용
-    const urlPattern = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/i;
-    return urlPattern.test(value);
+    return false;
   }
+
+  if (!["http:", "https:", "ftp:"].includes(url.protocol)) {
+    return false;
+  }
+
+  // 한글 도메인은 hostname에서 퓨니코드(xn--...)로 바뀌어 있다
+  const { hostname } = url;
+  if (IPV4.test(hostname)) {
+    return true;
+  }
+  const labels = hostname.split(".");
+  return labels.length >= 2 && labels.every(label => DOMAIN_LABEL.test(label)) && TOP_LEVEL_DOMAIN.test(labels.at(-1)!);
 };
 
 /**

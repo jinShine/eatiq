@@ -9,6 +9,8 @@ import { Input, Toast } from "@components/ui";
 import { useBrandSection, useUpdateBrandBasic } from "@services/api/brand/brand.query";
 import { type BrandBasicData, type UpdateBrandBasicRequest } from "@services/api/brand/brand.type";
 
+import { isUrl } from "@utils/functions";
+
 import useClearOnFormChange from "../../_hooks/useClearOnFormChange";
 
 /**
@@ -32,7 +34,11 @@ const basicInfoSchema = z.object({
   }),
   ceo_name_ko: z.string().trim().max(50, maxLength(50)),
   ceo_name_en: z.string().trim().max(100, maxLength(100)),
-  homepage_url: z.string().trim().max(255, maxLength(255)),
+  homepage_url: z
+    .string()
+    .trim()
+    .max(255, maxLength(255))
+    .refine(value => !value || isUrl(value), "올바른 URL 형식이 아니에요"),
   official_email: z.union([z.string().email("올바른 이메일 형식이 아니에요"), z.literal("")]),
   official_address: z.string().trim().max(255, maxLength(255)),
 });
