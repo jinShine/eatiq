@@ -20,6 +20,36 @@ axiosClientInstance.interceptors.request.use(config => {
   return config;
 });
 
+/** 사용자에게 보여줄 수 없는 오류 대신 쓰는 문구 */
+const FALLBACK_MESSAGE = {
+  network: "네트워크 연결을 확인해주세요.",
+  server: "서버에 문제가 생겼어요. 잠시 후 다시 시도해주세요.",
+  unknown: "요청을 처리할 수 없어요. 잠시 후 다시 시도해주세요.",
+} as const;
+
+// NestJS가 경로를 못 찾을 때 주는 기본 문구("Cannot PUT /api/...") — 사용자용이 아니다
+const ROUTE_NOT_FOUND = /^Cannot (GET|POST|PUT|PATCH|DELETE) /;
+
+/**
+ * 화면에 띄울 문구를 고른다.
+ * 서버가 보낸 4xx 문구(검증 실패 등)는 사람이 읽을 문구라 그대로 쓰고,
+ * 응답 없음·5xx·경로 없음·문구 없음은 기술 문구라 안내 문구로 바꾼다.
+ */
+const toUserMessage = (error: AxiosError<{ message?: string | string[] }>) => {
+  if (!error.response) {
+    return FALLBACK_MESSAGE.network;
+  }
+  if (error.response.status >= 500) {
+    return FALLBACK_MESSAGE.server;
+  }
+  const serverMessage = error.response.data?.message;
+  const text = Array.isArray(serverMessage) ? serverMessage.join("\n") : serverMessage;
+  if (!text || ROUTE_NOT_FOUND.test(text)) {
+    return FALLBACK_MESSAGE.unknown;
+  }
+  return text;
+};
+
 // [응답] 401이면 토큰을 비우고 로그인 화면으로 보낸다.
 // 매직링크 방식이라 refresh 토큰으로 재발급하는 흐름이 없다.
 //
@@ -28,13 +58,20 @@ axiosClientInstance.interceptors.request.use(config => {
 axiosClientInstance.interceptors.response.use(
   response => response,
   async (error: AxiosError<{ message?: string | string[] }>) => {
-    // 서버 문구를 error.message로 올린다. 그러지 않으면 화면에는 axios 기본 문구
-    // ("Request failed with status code 400")가 뜬다. 검증 실패면 서버가 배열로 준다
-    const serverMessage = error.response?.data?.message;
-    if (serverMessage) {
+    // 화면에 띄울 문구를 error.message로 올린다. 그대로 두면 axios 기본 문구
+    // ("Request failed with status code 400")가 뜬다. 요청 취소는 화면에 띄우지 않으니 건드리지 않는다
+    if (!axios.isCancel(error)) {
+      const originalMessage = error.message;
       // 새 에러로 감싸면 화면 쪽의 error.response·isAxiosError 판정이 깨진다. 원본의 문구만 바꾼다
       // eslint-disable-next-line no-param-reassign
-      error.message = Array.isArray(serverMessage) ? serverMessage.join("\n") : serverMessage;
+      error.message = toUserMessage(error);
+      if (process.env.NODE_ENV !== "production" && error.message !== originalMessage) {
+        // 바꾸기 전 기술 문구는 디버깅용으로 콘솔에 남긴다
+        console.warn("[api]", error.config?.method?.toUpperCase(), error.config?.url, error.response?.status, {
+          original: originalMessage,
+          server: error.response?.data?.message,
+        });
+      }
     }
 
     if (error.response?.status === 401) {
