@@ -40,11 +40,17 @@ const statusSchema = z
     target_audience: z.array(z.string()).max(10, "최대 10개까지 선택할 수 있어요"),
     usage_context: z.array(z.string()).max(10, "최대 10개까지 선택할 수 있어요"),
   })
-  // 서버는 검사하지 않지만 직영점이 전체보다 많을 수는 없다
-  .refine(v => Number(v.domestic_store_direct_cnt) <= Number(v.domestic_store_total_cnt), {
-    path: ["domestic_store_direct_cnt"],
-    message: "국내 전체 매장 수보다 많을 수 없어요",
-  });
+  // 서버는 검사하지 않지만 직영점이 전체보다 많을 수는 없다.
+  // 두 칸이 모두 숫자일 때만 비교한다 — zod 3은 다른 칸이 실패해도 refine을 돌려서,
+  // 전체가 빈칸이면 0으로 계산돼 엉뚱하게 이 문구까지 뜬다
+  .refine(
+    ({ domestic_store_direct_cnt: direct, domestic_store_total_cnt: total }) =>
+      !/^\d+$/.test(direct) || !/^\d+$/.test(total) || Number(direct) <= Number(total),
+    {
+      path: ["domestic_store_direct_cnt"],
+      message: "국내 전체 매장 수보다 많을 수 없어요",
+    },
+  );
 
 type StatusFormValues = z.infer<typeof statusSchema>;
 
@@ -150,7 +156,8 @@ export default function OperationSection({ workspaceId }: OperationSectionProps)
           endAdornment={<Unit>개</Unit>}
           error={Boolean(errors.domestic_store_total_cnt)}
           errorText={errors.domestic_store_total_cnt?.message}
-          {...register("domestic_store_total_cnt")}
+          // 전체가 바뀌면 직영점 칸의 "많을 수 없어요"도 다시 검사한다(오류는 직영점 칸에 붙어 있다)
+          {...register("domestic_store_total_cnt", { deps: ["domestic_store_direct_cnt"] })}
         />
         <Input
           id="domestic_store_direct_cnt"
