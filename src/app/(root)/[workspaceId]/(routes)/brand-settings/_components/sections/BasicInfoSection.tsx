@@ -9,6 +9,8 @@ import { Input, Toast } from "@components/ui";
 import { useBrandSection, useUpdateBrandBasic } from "@services/api/brand/brand.query";
 import { type BrandBasicData, type UpdateBrandBasicRequest } from "@services/api/brand/brand.type";
 
+import useClearOnFormChange from "../../_hooks/useClearOnFormChange";
+
 /**
  * 폼 필드 이름은 저장 DTO(UpdateBrandBasicDto)와 같다.
  *
@@ -86,11 +88,12 @@ export default function BasicInfoSection({ workspaceId }: BasicInfoSectionProps)
   "use no memo";
 
   const { data: saved } = useBrandSection(workspaceId, "brand_basic");
-  const { mutate: updateBrandBasic, isPending, error } = useUpdateBrandBasic(workspaceId);
+  const { mutate: updateBrandBasic, isPending, error, reset: clearSaveError } = useUpdateBrandBasic(workspaceId);
 
   const {
     register,
     reset,
+    watch,
     handleSubmit,
     formState: { errors, isDirty },
   } = useForm<BasicInfoFormValues>({
@@ -98,6 +101,8 @@ export default function BasicInfoSection({ workspaceId }: BasicInfoSectionProps)
     defaultValues: EMPTY_VALUES,
     values: saved ? toFormValues(saved) : undefined,
   });
+
+  useClearOnFormChange(watch, clearSaveError);
 
   const onSubmit = (values: BasicInfoFormValues) => {
     updateBrandBasic(toRequest(values), {

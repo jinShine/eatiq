@@ -9,6 +9,7 @@ import { Input, Toast } from "@components/ui";
 import { useBrandSection, useUpdateBrandContact } from "@services/api/brand/brand.query";
 import { type BrandContactData, type UpdateBrandContactRequest } from "@services/api/brand/brand.type";
 
+import useClearOnFormChange from "../../_hooks/useClearOnFormChange";
 import FormMultiSelect, { toTags } from "../FormMultiSelect";
 import { CONTACT_LANGUAGE_VALUES, toOptions } from "./IntroOptions";
 
@@ -60,11 +61,12 @@ export default function ContactSection({ workspaceId }: ContactSectionProps) {
   "use no memo";
 
   const { data: saved } = useBrandSection(workspaceId, "brand_contact");
-  const { mutate: updateBrandContact, isPending, error } = useUpdateBrandContact(workspaceId);
+  const { mutate: updateBrandContact, isPending, error, reset: clearSaveError } = useUpdateBrandContact(workspaceId);
 
   const {
     register,
     reset,
+    watch,
     control,
     handleSubmit,
     formState: { errors, isDirty },
@@ -73,6 +75,8 @@ export default function ContactSection({ workspaceId }: ContactSectionProps) {
     defaultValues: EMPTY_VALUES,
     values: saved ? toFormValues(saved) : undefined,
   });
+
+  useClearOnFormChange(watch, clearSaveError);
 
   const onSubmit = (values: ContactFormValues) => {
     updateBrandContact(toRequest(values), {

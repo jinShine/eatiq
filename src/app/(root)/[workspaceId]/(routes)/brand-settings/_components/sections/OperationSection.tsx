@@ -9,6 +9,7 @@ import { CommaNumberInput, Input, Toast } from "@components/ui";
 import { useBrandSection, useUpdateBrandStatus } from "@services/api/brand/brand.query";
 import { type BrandStatusData, type UpdateBrandStatusRequest } from "@services/api/brand/brand.type";
 
+import useClearOnFormChange from "../../_hooks/useClearOnFormChange";
 import FormMultiSelect, { toTags } from "../FormMultiSelect";
 import { TARGET_AUDIENCE_VALUES, USAGE_CONTEXT_VALUES, toOptions } from "./IntroOptions";
 
@@ -98,11 +99,12 @@ export default function OperationSection({ workspaceId }: OperationSectionProps)
   "use no memo";
 
   const { data: saved } = useBrandSection(workspaceId, "brand_status");
-  const { mutate: updateBrandStatus, isPending, error } = useUpdateBrandStatus(workspaceId);
+  const { mutate: updateBrandStatus, isPending, error, reset: clearSaveError } = useUpdateBrandStatus(workspaceId);
 
   const {
     register,
     reset,
+    watch,
     control,
     handleSubmit,
     formState: { errors, isDirty },
@@ -111,6 +113,8 @@ export default function OperationSection({ workspaceId }: OperationSectionProps)
     defaultValues: EMPTY_VALUES,
     values: saved ? toFormValues(saved) : undefined,
   });
+
+  useClearOnFormChange(watch, clearSaveError);
 
   const onSubmit = (values: StatusFormValues) => {
     updateBrandStatus(toRequest(values), {

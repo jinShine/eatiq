@@ -9,6 +9,7 @@ import { Input, Select, SelectItem, Textarea, Toast } from "@components/ui";
 import { useBrandSection, useUpdateBrandIntro } from "@services/api/brand/brand.query";
 import { type BrandIntroData, type UpdateBrandIntroRequest } from "@services/api/brand/brand.type";
 
+import useClearOnFormChange from "../../_hooks/useClearOnFormChange";
 import { CATEGORY_VALUES, PRICE_POSITIONING_VALUES } from "./IntroOptions";
 
 /**
@@ -72,11 +73,12 @@ export default function IntroSection({ workspaceId }: IntroSectionProps) {
   "use no memo";
 
   const { data: saved } = useBrandSection(workspaceId, "brand_intro");
-  const { mutate: updateBrandIntro, isPending, error } = useUpdateBrandIntro(workspaceId);
+  const { mutate: updateBrandIntro, isPending, error, reset: clearSaveError } = useUpdateBrandIntro(workspaceId);
 
   const {
     register,
     reset,
+    watch,
     handleSubmit,
     control,
     formState: { errors, isDirty },
@@ -85,6 +87,8 @@ export default function IntroSection({ workspaceId }: IntroSectionProps) {
     defaultValues: EMPTY_VALUES,
     values: saved ? toFormValues(saved) : undefined,
   });
+
+  useClearOnFormChange(watch, clearSaveError);
 
   const onSubmit = (values: IntroFormValues) => {
     updateBrandIntro(toRequest(values), {
