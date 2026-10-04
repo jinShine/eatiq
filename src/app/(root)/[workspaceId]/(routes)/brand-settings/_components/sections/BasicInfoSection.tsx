@@ -20,18 +20,21 @@ import useClearOnFormChange from "../../_hooks/useClearOnFormChange";
  *
  * 입력칸은 전부 문자열로 받는다. 연도만 저장할 때 숫자로 바꾼다.
  */
+// 글자 수 제한은 서버 검증과 같다(스펙에 없어 400 응답으로 확인)
+const maxLength = (max: number) => `${max}자 이내로 입력해주세요`;
+
 const basicInfoSchema = z.object({
-  brand_name_ko: z.string().trim().min(1, "브랜드 이름(한국어)을 입력해주세요"),
-  brand_name_en: z.string().trim().min(1, "브랜드 이름(영어)을 입력해주세요"),
+  brand_name_ko: z.string().trim().min(1, "브랜드 이름(한국어)을 입력해주세요").max(100, maxLength(100)),
+  brand_name_en: z.string().trim().min(1, "브랜드 이름(영어)을 입력해주세요").max(100, maxLength(100)),
   // 서버 검증 범위(1900~2100)와 맞춘다. 스펙에는 범위가 적혀 있지 않아 400 응답으로 확인했다
   launch_year: z.string().refine(v => !v || (/^\d{4}$/.test(v) && Number(v) >= 1900 && Number(v) <= 2100), {
     message: "1900~2100 사이 연도를 입력해주세요",
   }),
-  ceo_name_ko: z.string(),
-  ceo_name_en: z.string(),
-  homepage_url: z.string(),
+  ceo_name_ko: z.string().trim().max(50, maxLength(50)),
+  ceo_name_en: z.string().trim().max(100, maxLength(100)),
+  homepage_url: z.string().trim().max(255, maxLength(255)),
   official_email: z.union([z.string().email("올바른 이메일 형식이 아니에요"), z.literal("")]),
-  official_address: z.string(),
+  official_address: z.string().trim().max(255, maxLength(255)),
 });
 
 type BasicInfoFormValues = z.infer<typeof basicInfoSchema>;
@@ -169,6 +172,8 @@ export default function BasicInfoSection({ workspaceId }: BasicInfoSectionProps)
           labelClassName="text-xs"
           label="대표자 이름 (한국어)"
           placeholder="예: 김도경"
+          error={Boolean(errors.ceo_name_ko)}
+          errorText={errors.ceo_name_ko?.message}
           {...register("ceo_name_ko")}
         />
         <Input
@@ -177,6 +182,8 @@ export default function BasicInfoSection({ workspaceId }: BasicInfoSectionProps)
           labelClassName="text-xs"
           label="대표자 이름 (영어)"
           placeholder="예: Dokyoung Kim"
+          error={Boolean(errors.ceo_name_en)}
+          errorText={errors.ceo_name_en?.message}
           {...register("ceo_name_en")}
         />
       </div>
@@ -188,6 +195,8 @@ export default function BasicInfoSection({ workspaceId }: BasicInfoSectionProps)
           labelClassName="text-xs"
           label="본사 홈페이지"
           placeholder="예: rollingpasta.ai"
+          error={Boolean(errors.homepage_url)}
+          errorText={errors.homepage_url?.message}
           {...register("homepage_url")}
         />
         <Input
@@ -209,6 +218,8 @@ export default function BasicInfoSection({ workspaceId }: BasicInfoSectionProps)
         labelClassName="text-xs"
         label="본사 주소"
         placeholder="예: 서울시 강남구 테헤란로 123, 4층"
+        error={Boolean(errors.official_address)}
+        errorText={errors.official_address?.message}
         {...register("official_address")}
       />
     </SettingsSection>
