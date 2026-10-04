@@ -67,11 +67,16 @@ type IntroSectionProps = {
 };
 
 export default function IntroSection({ workspaceId }: IntroSectionProps) {
+  // React Compiler 제외. RHF는 렌더마다 register()가 다시 불려 "화면에 있는 필드" 목록을 채우는 걸 전제한다.
+  // 컴파일러가 register() 결과를 메모하면 reset 뒤 그 목록이 빈 채로 남아, 다음 reset이 입력칸을 갱신하지 못한다
+  "use no memo";
+
   const { data: saved } = useBrandSection(workspaceId, "brand_intro");
   const { mutate: updateBrandIntro, isPending, error } = useUpdateBrandIntro(workspaceId);
 
   const {
     register,
+    reset,
     handleSubmit,
     control,
     formState: { errors, isDirty },
@@ -83,7 +88,12 @@ export default function IntroSection({ workspaceId }: IntroSectionProps) {
 
   const onSubmit = (values: IntroFormValues) => {
     updateBrandIntro(toRequest(values), {
-      onSuccess: () => Toast.success("브랜드 소개를 저장했어요."),
+      onSuccess: response => {
+        // 서버가 저장한 모양으로 폼을 맞춘다(목 모드는 보낸 값). 이걸 해야 dirty가 풀린다.
+        // keepFieldsRef: 필드 ref를 유지한 채 입력칸 값을 직접 바꾼다(values prop 경로와 같은 방식)
+        reset(response ? toFormValues(response.brand_intro) : values, { keepFieldsRef: true });
+        Toast.success("브랜드 소개를 저장했어요.");
+      },
     });
   };
 

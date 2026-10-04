@@ -137,16 +137,21 @@ export function useBrandSection<K extends BrandSectionKey>(workspaceId: string, 
 /**
  * 섹션 저장 — 실제 API.
  *
- * 저장이 끝나면 두 가지를 다시 받는다. 섹션 값(워크스페이스 상세)은 폼이 서버 정규화 결과로
- * 다시 맞춰지게 하려고, 완성도는 저니 패널 비율을 갱신하려고. 완성도는 탭 구분 없이 무효화한다 —
+ * 저장이 끝나면 두 가지를 다시 받는다. 섹션 값(워크스페이스 상세)은 다른 화면과 맞추려고,
+ * 완성도는 저니 패널 비율을 갱신하려고. 폼 자체는 섹션 쪽 onSuccess에서 저장 응답으로 reset한다 —
+ * RHF의 values는 이전 값과 달라졌을 때만 reset하므로, 저장 결과가 이전과 같으면(0187 → 187)
+ * 다시 받아도 폼이 dirty로 남는다. 완성도는 탭 구분 없이 무효화한다 —
  * 한 섹션이 다른 탭 완성도에 들어가는지 화면은 모른다.
  */
-function createBrandSectionMutation<TBody>(save: (workspaceId: string, body: TBody) => Promise<unknown>) {
+function createBrandSectionMutation<TBody, TResponse>(save: (workspaceId: string, body: TBody) => Promise<TResponse>) {
   return (workspaceId: string) => {
     const invalidateQueries = useInvalidateQueries();
 
     return useMutation({
-      mutationFn: IS_MOCK ? (_body: TBody) => mockResolve({}) : (body: TBody) => save(workspaceId, body),
+      // 저장 응답에는 서버가 저장한 섹션 값이 담겨 온다. 목 모드는 응답이 없어 undefined
+      mutationFn: IS_MOCK
+        ? (_body: TBody) => mockResolve<TResponse | undefined>(undefined)
+        : (body: TBody): Promise<TResponse | undefined> => save(workspaceId, body),
       onSuccess: () => {
         invalidateQueries.single(workspaceKeys.detail(workspaceId));
         invalidateQueries.single(brandKeys.completionAll(workspaceId));
