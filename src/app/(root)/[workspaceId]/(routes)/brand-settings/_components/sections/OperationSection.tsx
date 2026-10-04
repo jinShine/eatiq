@@ -96,7 +96,12 @@ const EMPTY_VALUES: StatusFormValues = {
   usage_context: [],
 };
 
-const toText = (value?: number | null) => (value === null || value === undefined ? "" : String(value));
+// String()은 10^21 이상을 지수 표기("1e+38")로 바꾼다. 그러면 쉼표도 안 붙고 상한 대신
+// "정수를 입력해주세요"가 떠서, 지수 없이 펼친다(상한 이전에 저장된 큰 값 대비)
+const toText = (value?: number | null) =>
+  value === null || value === undefined
+    ? ""
+    : value.toLocaleString("en-US", { useGrouping: false, maximumFractionDigits: 20 });
 
 const toFormValues = (saved: BrandStatusData): StatusFormValues => ({
   domestic_store_total_cnt: toText(saved.domestic_store_total_cnt),
