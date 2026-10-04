@@ -21,21 +21,51 @@ import { TARGET_AUDIENCE_VALUES, USAGE_CONTEXT_VALUES, toOptions } from "./Intro
  * 평형만 소수를 허용한다.
  */
 const REQUIRED = "입력해주세요";
-const integerField = z.string().min(1, REQUIRED).regex(/^\d+$/, "0 이상의 정수를 입력해주세요");
-const decimalField = z
-  .string()
-  .min(1, REQUIRED)
-  .regex(/^\d+(\.\d+)?$/, "0 이상의 숫자를 입력해주세요");
+
+/**
+ * 입력 상한. 서버에는 상한이 없어(20자리 숫자도 정밀도를 잃은 채 저장된다) 화면에서 막는다.
+ * 값은 2026-10-04 확정. 모두 자바스크립트가 정확히 다루는 정수(약 9,007조) 안이다.
+ * TODO(백엔드): 서버 상한이 정해지면 이 값만 맞춘다.
+ */
+const MAX = {
+  storeCount: { value: 100_000, label: "10만 개" },
+  monthlySales: { value: 10_000_000_000_000, label: "10조 원" },
+  costPerCustomer: { value: 100_000_000, label: "1억 원" },
+  storeArea: { value: 10_000, label: "1만 평" },
+  seatCount: { value: 10_000, label: "1만 석" },
+} as const;
+
+type Limit = (typeof MAX)[keyof typeof MAX];
+
+// 형식 검사가 실패한 값은 상한 검사를 건너뛴다(zod 3은 앞 검사가 실패해도 refine을 돌린다)
+const withinLimit = (pattern: RegExp, { value, label }: Limit) =>
+  [(input: string) => !pattern.test(input) || Number(input) <= value, `${label} 이하로 입력해주세요`] as const;
+
+const INTEGER = /^\d+$/;
+const DECIMAL = /^\d+(\.\d+)?$/;
+
+const integerField = (limit: Limit) =>
+  z
+    .string()
+    .min(1, REQUIRED)
+    .regex(INTEGER, "0 이상의 정수를 입력해주세요")
+    .refine(...withinLimit(INTEGER, limit));
+const decimalField = (limit: Limit) =>
+  z
+    .string()
+    .min(1, REQUIRED)
+    .regex(DECIMAL, "0 이상의 숫자를 입력해주세요")
+    .refine(...withinLimit(DECIMAL, limit));
 
 const statusSchema = z
   .object({
-    domestic_store_total_cnt: integerField,
-    domestic_store_direct_cnt: integerField,
-    overseas_store_total_cnt: integerField,
-    avg_monthly_sales: integerField, // 원
-    avg_cost_per_customer: integerField, // 원
-    avg_store_area: decimalField, // 평
-    avg_seat_cnt: integerField,
+    domestic_store_total_cnt: integerField(MAX.storeCount),
+    domestic_store_direct_cnt: integerField(MAX.storeCount),
+    overseas_store_total_cnt: integerField(MAX.storeCount),
+    avg_monthly_sales: integerField(MAX.monthlySales), // 원
+    avg_cost_per_customer: integerField(MAX.costPerCustomer), // 원
+    avg_store_area: decimalField(MAX.storeArea), // 평
+    avg_seat_cnt: integerField(MAX.seatCount),
     // 10개 제한은 시안 기준이다. 서버는 개수를 제한하지 않는다
     target_audience: z.array(z.string()).max(10, "최대 10개까지 선택할 수 있어요"),
     usage_context: z.array(z.string()).max(10, "최대 10개까지 선택할 수 있어요"),
