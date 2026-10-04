@@ -1,13 +1,16 @@
 "use client";
 
+import Link from "next/link";
+
 import { ArrowRightIcon } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 
 import { ScrollArea, Skeleton } from "@components/ui";
 
-import { type BrandSettingsTab, useBrandCompletion } from "@services/api/brand/brand.query";
+import { type BrandSettingsTab, useBrandCompletion, useBrandCompletions } from "@services/api/brand/brand.query";
 import { type BrandCompletionTask } from "@services/api/brand/brand.type";
 
+import { SETTINGS_TABS } from "../SettingsTabNav";
 import CircularProgress from "./CircularProgress";
 import JourneyStepper from "./JourneyStepper";
 import { JOURNEY_STAGES, countToNextStage, toStageIndex } from "./journeyStages";
@@ -44,6 +47,18 @@ type CompletionStatusCardProps = {
 export default function CompletionStatusCard({ workspaceId, tab, tabLabel }: CompletionStatusCardProps) {
   const shouldReduceMotion = useReducedMotion();
   const { data: completion, isLoading } = useBrandCompletion(workspaceId, tab);
+
+  // 이 탭을 다 채우면 다음으로 채울 탭을 안내한다. 현재 탭 다음부터 한 바퀴 돌며 덜 채운 첫 탭
+  const isTabDone = completion ? !completion.nextTask : false;
+  const tabIndex = SETTINGS_TABS.findIndex(settingsTab => settingsTab.key === tab);
+  const otherTabs = [...SETTINGS_TABS.slice(tabIndex + 1), ...SETTINGS_TABS.slice(0, tabIndex)];
+  const otherCompletions = useBrandCompletions(
+    workspaceId,
+    otherTabs.map(settingsTab => settingsTab.key),
+    isTabDone,
+  );
+  const nextTab = otherTabs.find((_, index) => otherCompletions[index]?.data?.nextTask);
+  const isAllTabsDone = otherCompletions.every(query => query.data && !query.data.nextTask);
 
   if (isLoading) {
     return (
@@ -118,6 +133,32 @@ export default function CompletionStatusCard({ workspaceId, tab, tabLabel }: Com
               등록하기
               <ArrowRightIcon className="size-4 transition-transform group-hover:translate-x-0.5" />
             </button>
+          </div>
+        )}
+
+        {/* 열2 (이 탭 완료) — 열을 비우면 남은 주요 항목이 가운데로 밀려 오른쪽 1/3이 빈다. 다음 탭으로 안내 */}
+        {!nextTask && (
+          <div className="flex flex-col gap-3 xl:px-6">
+            <p className="text-text-tertiary text-xs">다음으로 해야 할 일</p>
+            <div className="flex-1 space-y-1">
+              <p className="text-text-primary text-base font-bold">{tabLabel} 입력을 마쳤어요</p>
+              <p className="text-text-tertiary text-xs leading-relaxed">
+                {nextTab
+                  ? `${nextTab.label} 탭도 이어서 채워 보세요`
+                  : isAllTabsDone
+                    ? "모든 탭의 정보를 채웠어요"
+                    : "다른 탭의 진행 상황을 확인하고 있어요"}
+              </p>
+            </div>
+            {nextTab && (
+              <Link
+                href={`/${workspaceId}/brand-settings?tab=${nextTab.key}`}
+                className={`bg-primary text-primary-foreground hover:bg-primary-emphasis group inline-flex w-fit items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${focusRing}`}
+              >
+                {nextTab.label} 바로가기
+                <ArrowRightIcon className="size-4 transition-transform group-hover:translate-x-0.5" />
+              </Link>
+            )}
           </div>
         )}
 

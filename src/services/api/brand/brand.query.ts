@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQueries, useQuery } from "@tanstack/react-query";
 
 import { useInvalidateQueries } from "@hooks/commons";
 
@@ -100,6 +100,26 @@ export function useBrandCompletion(workspaceId: string, tab: BrandSettingsTab) {
     queryFn: IS_MOCK ? () => mockResolve(mockBrandCompletion) : () => getBrandCompletion(workspaceId, scope),
     select: toCompletion,
     enabled: Boolean(workspaceId),
+  });
+}
+
+/**
+ * 여러 탭의 완성도를 한 번에 조회한다. 저니 패널이 "다음으로 채울 탭"을 고를 때 쓴다.
+ *
+ * 탭별 queryKey를 useBrandCompletion과 똑같이 써서 캐시를 나눠 쓴다 — 그 탭에 들어가면 다시 요청하지 않는다.
+ * 필요할 때만(현재 탭을 다 채웠을 때) enabled로 켜서 평소에는 요청이 늘지 않게 한다.
+ */
+export function useBrandCompletions(workspaceId: string, tabs: readonly BrandSettingsTab[], enabled: boolean) {
+  return useQueries({
+    queries: tabs.map(tab => {
+      const scope = COMPLETION_SCOPE_BY_TAB[tab];
+      return {
+        queryKey: brandKeys.completion(workspaceId, scope),
+        queryFn: IS_MOCK ? () => mockResolve(mockBrandCompletion) : () => getBrandCompletion(workspaceId, scope),
+        select: toCompletion,
+        enabled: enabled && Boolean(workspaceId),
+      };
+    }),
   });
 }
 
