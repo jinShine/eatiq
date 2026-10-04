@@ -4,13 +4,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
 
 import { SettingsSection } from "@components/custom/settings";
-import { Input, Select, SelectItem, Textarea, Toast } from "@components/ui";
+import { Input, Textarea, Toast } from "@components/ui";
 
 import { useBrandSection, useUpdateBrandIntro } from "@services/api/brand/brand.query";
 import { type BrandIntroData, type UpdateBrandIntroRequest } from "@services/api/brand/brand.type";
 
 import useClearOnFormChange from "../../_hooks/useClearOnFormChange";
-import { CATEGORY_VALUES, PRICE_POSITIONING_VALUES } from "./IntroOptions";
+import FormSelect from "../FormSelect";
+import { CATEGORY_VALUES, PRICE_POSITIONING_VALUES, pickOption, toOptions } from "./IntroOptions";
 
 /**
  * 폼 필드 이름은 저장 DTO(UpdateBrandIntroDto)와 같다. → BasicInfoSection 주석 참고
@@ -21,8 +22,12 @@ import { CATEGORY_VALUES, PRICE_POSITIONING_VALUES } from "./IntroOptions";
 const introSchema = z.object({
   short_intro: z.string().trim().min(1, "한줄 소개를 입력해주세요").max(100, "100자 이내로 입력해주세요"),
   detail_intro: z.string().trim().min(1, "상세 소개를 입력해주세요").max(500, "500자 이내로 입력해주세요"),
-  category: z.union([z.enum(CATEGORY_VALUES), z.literal("")]),
-  price_positioning: z.union([z.enum(PRICE_POSITIONING_VALUES), z.literal("")]),
+  category: z.union([z.enum(CATEGORY_VALUES), z.literal("")], {
+    errorMap: () => ({ message: "목록에서 다시 선택해주세요" }),
+  }),
+  price_positioning: z.union([z.enum(PRICE_POSITIONING_VALUES), z.literal("")], {
+    errorMap: () => ({ message: "목록에서 다시 선택해주세요" }),
+  }),
   key_point_01: z.string(),
   key_point_02: z.string(),
   key_point_03: z.string(),
@@ -44,8 +49,8 @@ const EMPTY_VALUES: IntroFormValues = {
 const toFormValues = (saved: BrandIntroData): IntroFormValues => ({
   short_intro: saved.short_intro ?? "",
   detail_intro: saved.detail_intro ?? "",
-  category: saved.category ?? "",
-  price_positioning: saved.price_positioning ?? "",
+  category: pickOption(CATEGORY_VALUES, saved.category),
+  price_positioning: pickOption(PRICE_POSITIONING_VALUES, saved.price_positioning),
   key_point_01: saved.key_point?.[0] ?? "",
   key_point_02: saved.key_point?.[1] ?? "",
   key_point_03: saved.key_point?.[2] ?? "",
@@ -142,49 +147,21 @@ export default function IntroSection({ workspaceId }: IntroSectionProps) {
         )}
       />
 
-      {/* row3 — 2열 Select. name은 저니 패널 포커스용(트리거 버튼에 붙는다) */}
+      {/* row3 — 2열 Select */}
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-        <Controller
+        <FormSelect
+          control={control}
           name="category"
-          control={control}
-          render={({ field }) => (
-            <Select
-              name={field.name}
-              size="md"
-              labelClassName="text-xs"
-              label="업종 분류"
-              placeholder="업종을 선택해주세요"
-              value={field.value}
-              onValueChange={field.onChange}
-            >
-              {CATEGORY_VALUES.map(value => (
-                <SelectItem key={value} value={value}>
-                  {value}
-                </SelectItem>
-              ))}
-            </Select>
-          )}
+          label="업종 분류"
+          placeholder="업종을 선택해주세요"
+          options={toOptions(CATEGORY_VALUES)}
         />
-        <Controller
-          name="price_positioning"
+        <FormSelect
           control={control}
-          render={({ field }) => (
-            <Select
-              name={field.name}
-              size="md"
-              labelClassName="text-xs"
-              label="가격 포지셔닝"
-              placeholder="가격대를 선택해주세요"
-              value={field.value}
-              onValueChange={field.onChange}
-            >
-              {PRICE_POSITIONING_VALUES.map(value => (
-                <SelectItem key={value} value={value}>
-                  {value}
-                </SelectItem>
-              ))}
-            </Select>
-          )}
+          name="price_positioning"
+          label="가격 포지셔닝"
+          placeholder="가격대를 선택해주세요"
+          options={toOptions(PRICE_POSITIONING_VALUES)}
         />
       </div>
 

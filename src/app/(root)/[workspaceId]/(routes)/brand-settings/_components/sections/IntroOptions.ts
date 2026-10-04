@@ -8,6 +8,14 @@ export const CATEGORY_VALUES = ["양식", "한식", "일식", "중식"] as const
   UpdateBrandIntroRequest["category"]
 >[];
 
+/**
+ * 저장값이 선택지에 있으면 그대로, 없으면 ""(선택 안 함).
+ * 폐기된 옛 코드값(beef_bbq 등)이 남아 있으면 선택 박스는 빈칸으로 보이는데 폼에는 그 값이 남아,
+ * 검증에서 막혀 저장이 안 된다. 불러올 때 걸러낸다.
+ */
+export const pickOption = <T extends string>(allowed: readonly T[], value?: string | null): T | "" =>
+  allowed.find(option => option === value) ?? "";
+
 export const PRICE_POSITIONING_VALUES = ["저가", "중가", "고가"] as const satisfies readonly NonNullable<
   UpdateBrandIntroRequest["price_positioning"]
 >[];

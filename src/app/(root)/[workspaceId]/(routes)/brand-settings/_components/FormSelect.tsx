@@ -39,6 +39,11 @@ export default function FormSelect<T extends FieldValues>({
             label={label}
             placeholder={placeholder}
             disabled={disabled}
+            // 트리거 버튼에 붙는다 — name은 저니 패널 포커스, ref는 제출 실패 시 첫 오류로 포커스,
+            // aria-invalid는 shadcn 트리거의 빨간 테두리 스타일
+            name={field.name}
+            ref={field.ref}
+            aria-invalid={Boolean(fieldState.error)}
             value={field.value}
             onValueChange={value => {
               field.onChange(value);
