@@ -62,12 +62,14 @@ export default function AiAskButton() {
       type="button"
       initial="rest"
       whileHover="hover"
-      className="border-border hover:bg-accent flex shrink-0 items-center gap-2 rounded-full border py-2 pr-4 pl-3 text-sm transition-colors"
+      // 모바일은 아이콘만 있는 동그란 버튼 — 글자 버튼이 헤더 폭의 절반을 차지해 화면 설명이 잘렸다
+      className="border-border hover:bg-accent flex size-10 shrink-0 items-center justify-center gap-2 rounded-full border text-sm transition-colors md:size-auto md:py-2 md:pr-4 md:pl-3"
     >
       <motion.span className="flex size-4 shrink-0 items-center justify-center" variants={SPARKLE_ICON_VARIANTS}>
         <SparklesIcon className="text-primary size-4" />
       </motion.span>
-      <span className="text-text-secondary shrink-0 font-medium">AI에게 물어보세요</span>
+      {/* 모바일에서는 화면에 숨기되 화면 낭독기에는 버튼 이름으로 남긴다 */}
+      <span className="text-text-secondary sr-only shrink-0 font-medium md:not-sr-only">AI에게 물어보세요</span>
 
       {/* 예시 문구가 아래→위로 슬라이드되며 순환 (데스크톱만) */}
       <span className="text-text-tertiary relative hidden h-5 w-[220px] overflow-hidden text-left md:block">
