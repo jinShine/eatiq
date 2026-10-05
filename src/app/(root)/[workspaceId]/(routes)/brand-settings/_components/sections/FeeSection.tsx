@@ -14,6 +14,7 @@ import { type BrandCommissionData, type UpdateBrandCommissionRequest } from "@se
 import useClearOnFormChange from "../../_hooks/useClearOnFormChange";
 import FormSelect from "../FormSelect";
 import { pickOption, toOptions } from "./IntroOptions";
+import { REQUIRED, chosen, requiredChoice, wonField } from "./formFields";
 import { toNumberText } from "./numberText";
 import { ROYALTY_CALC_BASE_VALUES, ROYALTY_PAYMENT_CYCLE_VALUES } from "./policyOptions";
 
@@ -24,36 +25,18 @@ import { ROYALTY_CALC_BASE_VALUES, ROYALTY_PAYMENT_CYCLE_VALUES } from "./policy
  * 산정 기준(총매출·순매출)은 로열티 비율을 어느 매출에 곱할지이고, 비율과 고정 금액은 둘 다 받는다.
  * (예전 API는 산정 기준이 "비율/정액" 중 하나를 골라 한쪽 칸만 썼다 — 그 처리는 없앴다)
  */
-const REQUIRED = "입력해주세요";
-const SELECT_REQUIRED = "선택해주세요";
-
-// 금액 상한 — 서버에 상한이 없다. 운영 현황 매출과 같은 기준(10조 원). TODO(백엔드): 서버 상한이 정해지면 맞춘다
-const MAX_WON = { value: 10_000_000_000_000, label: "10조 원" };
-
-const INTEGER = /^\d+$/;
 const PERCENT = /^\d+(\.\d{1,2})?$/;
 
-const wonField = z
-  .string()
-  .min(1, REQUIRED)
-  .regex(INTEGER, "0 이상의 정수를 입력해주세요")
-  .refine(value => !INTEGER.test(value) || Number(value) <= MAX_WON.value, `${MAX_WON.label} 이하로 입력해주세요`);
-
-const choice = <T extends readonly [string, ...string[]]>(values: T) =>
-  z
-    .union([z.enum(values), z.literal("")], { errorMap: () => ({ message: "목록에서 다시 선택해주세요" }) })
-    .refine(value => value !== "", SELECT_REQUIRED);
-
 const commissionSchema = z.object({
-  franchise_fee: wonField,
-  royalty_calc_base: choice(ROYALTY_CALC_BASE_VALUES),
+  franchise_fee: wonField(),
+  royalty_calc_base: requiredChoice(ROYALTY_CALC_BASE_VALUES),
   royalty_rate: z
     .string()
     .min(1, REQUIRED)
     .regex(PERCENT, "소수 둘째 자리까지 숫자로 입력해주세요")
     .refine(value => !PERCENT.test(value) || Number(value) <= 100, "100% 이하로 입력해주세요"),
-  fixed_royalty: wonField,
-  royalty_payment_cycle: choice(ROYALTY_PAYMENT_CYCLE_VALUES),
+  fixed_royalty: wonField(),
+  royalty_payment_cycle: requiredChoice(ROYALTY_PAYMENT_CYCLE_VALUES),
 });
 
 type CommissionFormValues = z.infer<typeof commissionSchema>;
@@ -73,9 +56,6 @@ const toFormValues = (saved: BrandCommissionData): CommissionFormValues => ({
   fixed_royalty: toNumberText(saved.fixed_royalty),
   royalty_payment_cycle: pickOption(ROYALTY_PAYMENT_CYCLE_VALUES, saved.royalty_payment_cycle),
 });
-
-/** 필수 선택은 검증을 통과했으면 빈 값이 아니다 */
-const chosen = <T extends string>(value: T | "") => value as T;
 
 const toRequest = (values: CommissionFormValues): UpdateBrandCommissionRequest => ({
   franchise_fee: Number(values.franchise_fee),

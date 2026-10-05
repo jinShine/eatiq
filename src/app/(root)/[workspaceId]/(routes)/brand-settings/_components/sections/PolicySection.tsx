@@ -14,6 +14,7 @@ import { type BrandContractPolicyData, type UpdateBrandContractPolicyRequest } f
 import useClearOnFormChange from "../../_hooks/useClearOnFormChange";
 import FormSelect from "../FormSelect";
 import { pickOption, toOptions } from "./IntroOptions";
+import { chosen, optionalChoice, requiredChoice } from "./formFields";
 import {
   CONTRACT_TYPE_VALUES,
   EXCLUSIVITY_VALUES,
@@ -32,13 +33,6 @@ import {
  * 완성도 API는 필수(진출 희망 조건)로 센다 — 저장은 막지 않고 저니 패널이 안내한다.
  * 진출 목표 국가는 시안에 없지만 저장 API·완성도에 있어 추가했다(디자인 확인 요청).
  */
-const SELECT_REQUIRED = "선택해주세요";
-
-const optionalChoice = <T extends readonly [string, ...string[]]>(values: T) =>
-  z.union([z.enum(values), z.literal("")], { errorMap: () => ({ message: "목록에서 다시 선택해주세요" }) });
-const requiredChoice = <T extends readonly [string, ...string[]]>(values: T) =>
-  optionalChoice(values).refine(value => value !== "", SELECT_REQUIRED);
-
 const policySchema = z.object({
   target_country: optionalChoice(TARGET_COUNTRY_VALUES),
   preferred_contract_type: optionalChoice(CONTRACT_TYPE_VALUES),
@@ -74,9 +68,6 @@ const toFormValues = (saved: BrandContractPolicyData): PolicyFormValues => ({
   trademark_compliance_level: pickOption(TRADEMARK_COMPLIANCE_VALUES, saved.trademark_compliance_level),
   manual_compliance_level: pickOption(MANUAL_COMPLIANCE_VALUES, saved.manual_compliance_level),
 });
-
-/** 필수 선택은 검증을 통과했으면 빈 값이 아니다(requiredChoice) */
-const chosen = <T extends string>(value: T | "") => value as T;
 
 const toRequest = (values: PolicyFormValues): UpdateBrandContractPolicyRequest => ({
   target_country: values.target_country || undefined,
