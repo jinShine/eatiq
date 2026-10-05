@@ -8,38 +8,51 @@ import z from "zod";
 import { SettingsSection } from "@components/custom/settings";
 import { Toast } from "@components/ui";
 
-import { useBrandSettings, useUpdateBrandAreaCriteria } from "@services/api/brand/brand.query";
-import { type BrandAreaCriteriaView } from "@services/api/brand/brand.view";
+import { useBrandSection, useUpdateBrandFacilityReq } from "@services/api/brand/brand.query";
+import { type BrandFacilityReqData, type UpdateBrandFacilityReqRequest } from "@services/api/brand/brand.type";
 
+import useClearOnFormChange from "../../_hooks/useClearOnFormChange";
 import FormSelect from "../FormSelect";
-import { mergeAreaCriteria } from "./areaCriteriaShared";
-import { IMPORTANCE_OPTIONS } from "./policyOptions";
+import { pickOption, toOptions } from "./IntroOptions";
+import { chosen, requiredChoice } from "./formFields";
+import { REQUIREMENT_VALUES } from "./policyOptions";
 
-// PATCH /api/brands/{brandId}/area-criteria — 전체 치환 (LocationCriteria·StoreSize와 엔드포인트 공유)
+/**
+ * 매장 시설 필수 조건 — PUT /facility-req. 폼 필드 이름은 저장 DTO와 같다. → BasicInfoSection 주석 참고
+ * 서버 규칙: 5개 모두 필수(필수·선호·불필요).
+ */
 const facilitySchema = z.object({
-  gasImportance: z.string(), // 가스 시설 · importance_level
-  waterImportance: z.string(), // 급배수 · importance_level
-  openFlameImportance: z.string(), // 직화(화기) 시설 · importance_level
-  ventilationImportance: z.string(), // 배기·환기 시설 · importance_level
-  refrigerationImportance: z.string(), // 냉장·냉동 저장공간 · importance_level
+  gas_req: requiredChoice(REQUIREMENT_VALUES),
+  plumbing_req: requiredChoice(REQUIREMENT_VALUES),
+  direct_fire_req: requiredChoice(REQUIREMENT_VALUES),
+  vent_req: requiredChoice(REQUIREMENT_VALUES),
+  cold_storage_req: requiredChoice(REQUIREMENT_VALUES),
 });
 
 type FacilityFormValues = z.infer<typeof facilitySchema>;
 
 const EMPTY_VALUES: FacilityFormValues = {
-  gasImportance: "",
-  waterImportance: "",
-  openFlameImportance: "",
-  ventilationImportance: "",
-  refrigerationImportance: "",
+  gas_req: "",
+  plumbing_req: "",
+  direct_fire_req: "",
+  vent_req: "",
+  cold_storage_req: "",
 };
 
-const toFormValues = (criteria: BrandAreaCriteriaView): FacilityFormValues => ({
-  gasImportance: criteria.gasImportance ?? "",
-  waterImportance: criteria.waterImportance ?? "",
-  openFlameImportance: criteria.openFlameImportance ?? "",
-  ventilationImportance: criteria.ventilationImportance ?? "",
-  refrigerationImportance: criteria.refrigerationImportance ?? "",
+const toFormValues = (saved: BrandFacilityReqData): FacilityFormValues => ({
+  gas_req: pickOption(REQUIREMENT_VALUES, saved.gas_req),
+  plumbing_req: pickOption(REQUIREMENT_VALUES, saved.plumbing_req),
+  direct_fire_req: pickOption(REQUIREMENT_VALUES, saved.direct_fire_req),
+  vent_req: pickOption(REQUIREMENT_VALUES, saved.vent_req),
+  cold_storage_req: pickOption(REQUIREMENT_VALUES, saved.cold_storage_req),
+});
+
+const toRequest = (values: FacilityFormValues): UpdateBrandFacilityReqRequest => ({
+  gas_req: chosen(values.gas_req),
+  plumbing_req: chosen(values.plumbing_req),
+  direct_fire_req: chosen(values.direct_fire_req),
+  vent_req: chosen(values.vent_req),
+  cold_storage_req: chosen(values.cold_storage_req),
 });
 
 type FacilitySectionProps = {
@@ -47,50 +60,55 @@ type FacilitySectionProps = {
 };
 
 export default function FacilitySection({ workspaceId }: FacilitySectionProps) {
-  const { data: settings } = useBrandSettings(workspaceId);
-  const { mutate: updateAreaCriteria, isPending } = useUpdateBrandAreaCriteria(workspaceId);
+  // React Compiler 제외 — reset 뒤 필드 갱신 문제. → OperationSection 주석 참고
+  "use no memo";
+
+  const { data: saved } = useBrandSection(workspaceId, "brand_facility_req");
+  const { mutate: save, isPending, error, reset: clearSaveError } = useUpdateBrandFacilityReq(workspaceId);
 
   const {
     control,
+    reset,
+    watch,
     handleSubmit,
     formState: { isDirty },
   } = useForm<FacilityFormValues>({
     resolver: zodResolver(facilitySchema),
     defaultValues: EMPTY_VALUES,
-    values: settings?.brandAreaCriteria ? toFormValues(settings.brandAreaCriteria) : undefined,
+    values: saved ? toFormValues(saved) : undefined,
   });
 
-  const onSubmit = (values: FacilityFormValues) => {
-    const body = mergeAreaCriteria(settings?.brandAreaCriteria, values);
+  useClearOnFormChange(watch, clearSaveError);
 
-    updateAreaCriteria(body, {
-      onSuccess: () => Toast.success("매장 시설 필수 조건을 저장했어요."),
-      onError: () => Toast.error("저장에 실패했어요. 다시 시도해주세요."),
+  const onSubmit = (values: FacilityFormValues) => {
+    save(toRequest(values), {
+      onSuccess: response => {
+        reset(response ? toFormValues(response.brand_facility_req) : values, { keepFieldsRef: true });
+        Toast.success("매장 시설 필수 조건을 저장했어요.");
+      },
     });
   };
 
+  const options = toOptions(REQUIREMENT_VALUES);
+
+  // 배치·라벨은 피그마(253:878) 기준. 설명 문구는 시안 그대로(계약 탭 문구와 같아 디자인 확인 요청)
   return (
     <SettingsSection
       title="매장 시설 필수 조건"
       description="선호하는 계약 조건을 입력해주세요"
       isDirty={isDirty}
       isPending={isPending}
+      errorMessage={error?.message}
       onSubmit={handleSubmit(onSubmit)}
     >
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-        <FormSelect control={control} name="gasImportance" label="가스 시설" options={IMPORTANCE_OPTIONS} />
-        <FormSelect control={control} name="waterImportance" label="급배수" options={IMPORTANCE_OPTIONS} />
-        <FormSelect control={control} name="openFlameImportance" label="직화 시설" options={IMPORTANCE_OPTIONS} />
+        <FormSelect control={control} name="gas_req" label="가스 시설" required options={options} />
+        <FormSelect control={control} name="plumbing_req" label="급배수" required options={options} />
+        <FormSelect control={control} name="direct_fire_req" label="직화 시설" required options={options} />
       </div>
-
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-        <FormSelect control={control} name="ventilationImportance" label="배기 시설" options={IMPORTANCE_OPTIONS} />
-        <FormSelect
-          control={control}
-          name="refrigerationImportance"
-          label="냉장/냉동 저장공간"
-          options={IMPORTANCE_OPTIONS}
-        />
+        <FormSelect control={control} name="vent_req" label="배기 시설" required options={options} />
+        <FormSelect control={control} name="cold_storage_req" label="냉장/냉동 저장공간" required options={options} />
       </div>
     </SettingsSection>
   );

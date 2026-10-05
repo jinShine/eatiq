@@ -30,6 +30,9 @@ export type BrandContractData = components["schemas"]["BrandContractDataDto"];
 export type BrandSignatureData = components["schemas"]["BrandSignatureDataDto"];
 export type BrandContractPolicyData = components["schemas"]["BrandContractPolicyDataDto"];
 export type BrandCommissionData = components["schemas"]["BrandCommissionDataDto"];
+export type BrandLocationStandardData = components["schemas"]["BrandLocationStandardDataDto"];
+export type BrandSizeCriteriaData = components["schemas"]["BrandSizeCriteriaDataDto"];
+export type BrandFacilityReqData = components["schemas"]["BrandFacilityReqDataDto"];
 
 /** 기본 정보 — 브랜드명·런칭 연도·대표자·본사 연락처 */
 export type UpdateBrandBasicRequest = components["schemas"]["UpdateBrandBasicDto"];

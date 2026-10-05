@@ -1,9 +1,9 @@
 import {
   type UpdateBrandCommissionRequest,
   type UpdateBrandContractPolicyRequest,
+  type UpdateBrandFacilityReqRequest,
+  type UpdateBrandLocationStandardRequest,
 } from "@services/api/brand/brand.type";
-
-type Option = { value: string; label: string };
 
 /************************************
  * 계약 및 정책 — 스펙(UpdateBrandContractPolicyDto·UpdateBrandCommissionDto)의 값 그대로.
@@ -66,40 +66,33 @@ export const ROYALTY_PAYMENT_CYCLE_VALUES = [
   "매년",
 ] as const satisfies readonly Commission["royalty_payment_cycle"][];
 
-/** 상권분석 기준 */
-export const AREA_TYPE_OPTIONS: Option[] = [
-  { value: "transit", label: "역세권" },
-  { value: "university", label: "대학가" },
-  { value: "office", label: "오피스" },
-  { value: "residential", label: "주거" },
-  { value: "tourist", label: "관광" },
-  { value: "shopping", label: "쇼핑" },
-  { value: "high_street", label: "중심 상업가" },
-  { value: "mixed_use", label: "복합" },
-  { value: "no_preference", label: "상관없음" },
-];
+/************************************
+ * 상권분석 기준 — 스펙(UpdateBrandLocationStandardDto·FacilityReqDto)의 값 그대로.
+ ************************************/
+type Location = UpdateBrandLocationStandardRequest;
+type Facility = UpdateBrandFacilityReqRequest;
 
-export const FLOOR_OPTIONS: Option[] = [
-  { value: "ground_only", label: "1층만 가능" },
-  { value: "ground_preferred", label: "1층 선호" },
-  { value: "second_preferred", label: "2층 선호" },
-  { value: "basement_allowed", label: "지하 가능" },
-  { value: "rooftop_preferred", label: "루프탑 선호" },
-  { value: "sky_lounge_preferred", label: "스카이라운지 선호" },
-  { value: "no_preference", label: "상관없음" },
-];
+/**
+ * 선호 상권 — 스펙은 선택지 없는 문자열(예시: "오피스, 주거 밀집, 대학가, 번화가 등")이고 서버는 아무 값이나 받는다.
+ * 시안은 선택 박스라 스펙 예시를 선택지로 쓴다. TODO(백엔드): 정식 목록을 받으면 교체
+ */
+export const DISTRICT_VALUES = ["오피스", "주거 밀집", "대학가", "번화가"] as const;
 
-export const EXPANSION_STATUS_OPTIONS: Option[] = [
-  { value: "active", label: "적극 추진" },
-  { value: "exploring", label: "관심 단계" },
-  { value: "paused", label: "보류 중" },
-];
-
-// 공통 척도: 중요도 13개 필드 전부 (매출·설비 포함)
-export const IMPORTANCE_OPTIONS: Option[] = [
-  { value: "must_have", label: "필수" },
-  { value: "important", label: "중요" },
-  { value: "normal", label: "보통" },
-  { value: "low", label: "낮음" },
-  { value: "ignore", label: "고려 안 함" },
-];
+export const FLOOR_RANGE_VALUES = [
+  "1층만 가능",
+  "1~2층",
+  "제한 없음",
+] as const satisfies readonly Location["floor_range"][];
+/** 3단계 중요도(간판·매장 노출, 주중·주말 매출) */
+export const IMPORTANCE_VALUES = ["낮음", "보통", "높음"] as const satisfies readonly Location["sign_imp"][];
+/** 4단계 중요도(점심·심야 매출) — "없음"이 더 있다 */
+export const SALES_IMPORTANCE_VALUES = [
+  "없음",
+  "낮음",
+  "보통",
+  "높음",
+] as const satisfies readonly Location["lunch_imp"][];
+/** 필요 여부(주차·대기공간, 설비 5종) */
+export const REQUIREMENT_VALUES = ["필수", "선호", "불필요"] as const satisfies readonly (
+  Location["parking_req"] | Facility["gas_req"]
+)[];

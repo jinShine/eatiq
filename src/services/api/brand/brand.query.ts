@@ -2,7 +2,7 @@ import { useMutation, useQueries, useQuery } from "@tanstack/react-query";
 
 import { useInvalidateQueries } from "@hooks/commons";
 
-import { IS_MOCK, mockMutation, mockResolve } from "../mock";
+import { IS_MOCK, mockResolve } from "../mock";
 import { getWorkspaceDetail } from "../workspace/workspace.api";
 import { mockWorkspaceDetail } from "../workspace/workspace.mock";
 import { workspaceKeys } from "../workspace/workspace.query";
@@ -13,11 +13,14 @@ import {
   updateBrandContact,
   updateBrandContract,
   updateBrandContractPolicy,
+  updateBrandFacilityReq,
   updateBrandIntro,
+  updateBrandLocationStandard,
   updateBrandSignature,
+  updateBrandSizeCriteria,
   updateBrandStatus,
 } from "./brand.api";
-import { mergeMockSettings, mockBrandCompletion, mockBrandSettings } from "./brand.mock";
+import { mockBrandCompletion, mockBrandSettings } from "./brand.mock";
 import {
   type BrandBasicData,
   type BrandCommissionData,
@@ -28,11 +31,13 @@ import {
   type BrandContactData,
   type BrandContractData,
   type BrandContractPolicyData,
+  type BrandFacilityReqData,
   type BrandIntroData,
+  type BrandLocationStandardData,
   type BrandSignatureData,
+  type BrandSizeCriteriaData,
   type BrandStatusData,
 } from "./brand.type";
-import { type BrandAreaCriteriaView } from "./brand.view";
 
 /** 화면 탭 → 완성도 API 범위. 탭 이름(policy·area)과 API 이름(contract·commercial)이 다르다 */
 const COMPLETION_SCOPE_BY_TAB = {
@@ -65,6 +70,9 @@ export const brandKeys = {
  * 화면이 아는 값은 workspace_uid뿐이라 brand_uid를 얻는 경로가 필요하다.
  * 또 응답(BrandDetailResponseDto)이 설정 화면의 섹션 구조와 맞지 않는다.
  * 매핑이 확정되기 전까지는 목 데이터로만 동작한다.
+ *
+ * 회사 정보 설정 탭은 모두 실제 API(useBrandSection)로 옮겼다. 지금은 AI 상권분석 시작 모달의
+ * 입력칸 미리 채우기(useAnalysisConditionForm)만 쓴다. TODO(API): 로드맵 5번 때 함께 옮기고 삭제
  */
 export function useBrandSettings(workspaceId: string) {
   return useQuery({
@@ -142,6 +150,9 @@ type BrandSectionMap = {
   brand_signature: BrandSignatureData;
   brand_contract_policy: BrandContractPolicyData;
   brand_commission: BrandCommissionData;
+  brand_location_standard: BrandLocationStandardData;
+  brand_size_criteria: BrandSizeCriteriaData;
+  brand_facility_req: BrandFacilityReqData;
 };
 
 export type BrandSectionKey = keyof BrandSectionMap;
@@ -195,40 +206,6 @@ export const useUpdateBrandContract = createBrandSectionMutation(updateBrandCont
 export const useUpdateBrandSignature = createBrandSectionMutation(updateBrandSignature);
 export const useUpdateBrandContractPolicy = createBrandSectionMutation(updateBrandContractPolicy);
 export const useUpdateBrandCommission = createBrandSectionMutation(updateBrandCommission);
-
-/**
- * 섹션 저장 훅 공통 팩토리.
- *
- * 화면은 아직 기존 뷰 타입으로 값을 만든다. 새 백엔드는 필드명(snake_case)과
- * 섹션 구분이 달라서 그대로 보낼 수 없다.
- *
- * TODO(API): 뷰 → DTO 매퍼를 붙여 brand.api.ts의 update* 함수에 연결한다.
- * 그 전까지는 목 모드에서만 동작하고, 실제 호출은 명시적으로 막는다.
- */
-function createSectionMutation<TView>(section: Parameters<typeof mergeMockSettings>[0]) {
-  return (workspaceId: string) => {
-    const invalidateQueries = useInvalidateQueries();
-
-    return useMutation({
-      mutationFn: mockMutation<TView, unknown>(
-        async () => {
-          throw new Error(`${section} 저장이 아직 새 API에 연결되지 않았습니다.`);
-        },
-        body => mergeMockSettings(section, body as object),
-      ),
-      onSuccess: () => {
-        invalidateQueries.single(brandKeys.settings(workspaceId));
-      },
-    });
-  };
-}
-
-/************************************
- * 상권분석 기준
- *
- * 이전 area-criteria 하나가 입지·면적·설비 셋으로 나뉘었다.
- * 화면은 아직 하나로 다루므로 입지 기준에만 연결해 둔다.
- ************************************/
-export const useUpdateBrandAreaCriteria = createSectionMutation<BrandAreaCriteriaView>("brandAreaCriteria");
-export const useUpdateBrandSizeCriteria = createSectionMutation<BrandAreaCriteriaView>("brandAreaCriteria");
-export const useUpdateBrandFacilityReq = createSectionMutation<BrandAreaCriteriaView>("brandAreaCriteria");
+export const useUpdateBrandLocationStandard = createBrandSectionMutation(updateBrandLocationStandard);
+export const useUpdateBrandSizeCriteria = createBrandSectionMutation(updateBrandSizeCriteria);
+export const useUpdateBrandFacilityReq = createBrandSectionMutation(updateBrandFacilityReq);
