@@ -1,47 +1,70 @@
-// v0.7 코드값 규약 기준 (2026-07-30 확정)
+import {
+  type UpdateBrandCommissionRequest,
+  type UpdateBrandContractPolicyRequest,
+} from "@services/api/brand/brand.type";
+
 type Option = { value: string; label: string };
 
-/** 계약 및 정책 */
-export const CONTRACT_TYPE_OPTIONS: Option[] = [
-  { value: "master_franchise", label: "마스터 프랜차이즈" },
-  { value: "area_development", label: "지역 개발권" },
-  { value: "direct_operation", label: "직영" },
-  { value: "joint_venture", label: "합작법인 (JV)" },
-  { value: "licensing", label: "라이선스" },
-  { value: "distribution", label: "유통" },
-  { value: "undecided", label: "미정" },
-];
+/************************************
+ * 계약 및 정책 — 스펙(UpdateBrandContractPolicyDto·UpdateBrandCommissionDto)의 값 그대로.
+ * 서버가 이 값만 받는다(아니면 400). 라벨도 값과 같다. 옛 영어 코드표(v0.7)는 폐기됐다.
+ ************************************/
+type Policy = UpdateBrandContractPolicyRequest;
+type Commission = UpdateBrandCommissionRequest;
 
-// 공통 척도: exclusivity · ingredientSupply · trademark
-export const ALLOWANCE_OPTIONS: Option[] = [
-  { value: "required", label: "필수" },
-  { value: "preferred", label: "선호" },
-  { value: "negotiable", label: "협의 가능" },
-  { value: "not_required", label: "자유 적용" },
-];
+export const TARGET_COUNTRY_VALUES = ["일본", "홍콩", "싱가포르", "태국"] as const satisfies readonly NonNullable<
+  Policy["target_country"]
+>[];
+export const CONTRACT_TYPE_VALUES = [
+  "마스터 프랜차이즈",
+  "지역 개발권",
+  "직영",
+  "합작법인",
+  "라이선스",
+  "유통",
+  "미정",
+] as const satisfies readonly NonNullable<Policy["preferred_contract_type"]>[];
 
-// 공통 척도: menuLocalization · interiorCompliance · manualCompliance
-export const COMPLIANCE_OPTIONS: Option[] = [
-  { value: "strict", label: "엄격 준수" },
-  { value: "partial", label: "일부 조정 가능" },
-  { value: "flexible", label: "유연 조정 가능" },
-];
+// 선택지 순서도 스펙 그대로 둔다(항목마다 순서가 다르다)
+export const EXCLUSIVITY_VALUES = [
+  "불가",
+  "협의 필요",
+  "가능",
+] as const satisfies readonly Policy["exclusivity_level"][];
+export const MENU_LOCALIZATION_VALUES = [
+  "불가",
+  "협의 필요",
+  "가능",
+] as const satisfies readonly Policy["menu_localization_level"][];
+export const INTERIOR_STANDARD_VALUES = [
+  "가능",
+  "협의 필요",
+  "불가",
+] as const satisfies readonly Policy["interior_standard_policy"][];
+export const SUPPLY_CHAIN_VALUES = [
+  "협의 필요",
+  "필수",
+  "불필요",
+] as const satisfies readonly Policy["supply_chain_policy"][];
+export const TRADEMARK_COMPLIANCE_VALUES = [
+  "전면 준수 필수",
+  "부분 협의 가능",
+] as const satisfies readonly Policy["trademark_compliance_level"][];
+export const MANUAL_COMPLIANCE_VALUES = [
+  "전면 준수 필수",
+  "부분 협의 가능",
+] as const satisfies readonly Policy["manual_compliance_level"][];
 
-export const BRAND_TYPE_OPTIONS: Option[] = [
-  { value: "franchise", label: "프랜차이즈" },
-  { value: "direct", label: "직영" },
-];
-
-export const ROYALTY_BASE_OPTIONS: Option[] = [
-  { value: "revenue_pct", label: "매출 비율 기준" },
-  { value: "fixed", label: "고정 금액 기준" },
-];
-
-export const PAYMENT_CYCLE_OPTIONS: Option[] = [
-  { value: "monthly", label: "월" },
-  { value: "quarterly", label: "분기" },
-  { value: "annual", label: "연" },
-];
+export const ROYALTY_CALC_BASE_VALUES = [
+  "총매출",
+  "순매출",
+] as const satisfies readonly Commission["royalty_calc_base"][];
+export const ROYALTY_PAYMENT_CYCLE_VALUES = [
+  "매월",
+  "매 분기",
+  "매 반기",
+  "매년",
+] as const satisfies readonly Commission["royalty_payment_cycle"][];
 
 /** 상권분석 기준 */
 export const AREA_TYPE_OPTIONS: Option[] = [

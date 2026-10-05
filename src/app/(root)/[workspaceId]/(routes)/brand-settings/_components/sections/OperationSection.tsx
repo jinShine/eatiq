@@ -12,6 +12,7 @@ import { type BrandStatusData, type UpdateBrandStatusRequest } from "@services/a
 import useClearOnFormChange from "../../_hooks/useClearOnFormChange";
 import FormMultiSelect, { toTags } from "../FormMultiSelect";
 import { TARGET_AUDIENCE_VALUES, USAGE_CONTEXT_VALUES, toOptions } from "./IntroOptions";
+import { toNumberText } from "./numberText";
 
 /**
  * 폼 필드 이름은 저장 DTO(UpdateBrandStatusDto)와 같다. → BasicInfoSection 주석 참고
@@ -96,21 +97,14 @@ const EMPTY_VALUES: StatusFormValues = {
   usage_context: [],
 };
 
-// String()은 10^21 이상을 지수 표기("1e+38")로 바꾼다. 그러면 쉼표도 안 붙고 상한 대신
-// "정수를 입력해주세요"가 떠서, 지수 없이 펼친다(상한 이전에 저장된 큰 값 대비)
-const toText = (value?: number | null) =>
-  value === null || value === undefined
-    ? ""
-    : value.toLocaleString("en-US", { useGrouping: false, maximumFractionDigits: 20 });
-
 const toFormValues = (saved: BrandStatusData): StatusFormValues => ({
-  domestic_store_total_cnt: toText(saved.domestic_store_total_cnt),
-  domestic_store_direct_cnt: toText(saved.domestic_store_direct_cnt),
-  overseas_store_total_cnt: toText(saved.overseas_store_total_cnt),
-  avg_monthly_sales: toText(saved.avg_monthly_sales),
-  avg_cost_per_customer: toText(saved.avg_cost_per_customer),
-  avg_store_area: toText(saved.avg_store_area),
-  avg_seat_cnt: toText(saved.avg_seat_cnt),
+  domestic_store_total_cnt: toNumberText(saved.domestic_store_total_cnt),
+  domestic_store_direct_cnt: toNumberText(saved.domestic_store_direct_cnt),
+  overseas_store_total_cnt: toNumberText(saved.overseas_store_total_cnt),
+  avg_monthly_sales: toNumberText(saved.avg_monthly_sales),
+  avg_cost_per_customer: toNumberText(saved.avg_cost_per_customer),
+  avg_store_area: toNumberText(saved.avg_store_area),
+  avg_seat_cnt: toNumberText(saved.avg_seat_cnt),
   target_audience: toTags(saved.target_audience),
   usage_context: toTags(saved.usage_context),
 });

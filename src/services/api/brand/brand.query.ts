@@ -9,27 +9,30 @@ import { workspaceKeys } from "../workspace/workspace.query";
 import {
   getBrandCompletion,
   updateBrandBasic,
+  updateBrandCommission,
   updateBrandContact,
+  updateBrandContract,
+  updateBrandContractPolicy,
   updateBrandIntro,
+  updateBrandSignature,
   updateBrandStatus,
 } from "./brand.api";
 import { mergeMockSettings, mockBrandCompletion, mockBrandSettings } from "./brand.mock";
 import {
   type BrandBasicData,
+  type BrandCommissionData,
   type BrandCompletion,
   type BrandCompletionResponse,
   type BrandCompletionScope,
   type BrandCompletionTask,
   type BrandContactData,
+  type BrandContractData,
+  type BrandContractPolicyData,
   type BrandIntroData,
+  type BrandSignatureData,
   type BrandStatusData,
 } from "./brand.type";
-import {
-  type BrandAreaCriteriaView,
-  type BrandContractView,
-  type BrandFeeView,
-  type BrandPolicyView,
-} from "./brand.view";
+import { type BrandAreaCriteriaView } from "./brand.view";
 
 /** 화면 탭 → 완성도 API 범위. 탭 이름(policy·area)과 API 이름(contract·commercial)이 다르다 */
 const COMPLETION_SCOPE_BY_TAB = {
@@ -135,6 +138,10 @@ type BrandSectionMap = {
   brand_intro: BrandIntroData;
   brand_status: BrandStatusData;
   brand_contact: BrandContactData;
+  brand_contract: BrandContractData;
+  brand_signature: BrandSignatureData;
+  brand_contract_policy: BrandContractPolicyData;
+  brand_commission: BrandCommissionData;
 };
 
 export type BrandSectionKey = keyof BrandSectionMap;
@@ -184,6 +191,10 @@ export const useUpdateBrandBasic = createBrandSectionMutation(updateBrandBasic);
 export const useUpdateBrandIntro = createBrandSectionMutation(updateBrandIntro);
 export const useUpdateBrandStatus = createBrandSectionMutation(updateBrandStatus);
 export const useUpdateBrandContact = createBrandSectionMutation(updateBrandContact);
+export const useUpdateBrandContract = createBrandSectionMutation(updateBrandContract);
+export const useUpdateBrandSignature = createBrandSectionMutation(updateBrandSignature);
+export const useUpdateBrandContractPolicy = createBrandSectionMutation(updateBrandContractPolicy);
+export const useUpdateBrandCommission = createBrandSectionMutation(updateBrandCommission);
 
 /**
  * 섹션 저장 훅 공통 팩토리.
@@ -211,13 +222,6 @@ function createSectionMutation<TView>(section: Parameters<typeof mergeMockSettin
     });
   };
 }
-
-/************************************
- * 계약 및 정책
- ************************************/
-export const useUpdateBrandContract = createSectionMutation<BrandContractView>("brandContract");
-export const useUpdateBrandPolicy = createSectionMutation<BrandPolicyView>("brandPolicy");
-export const useUpdateBrandFee = createSectionMutation<BrandFeeView>("brandFee");
 
 /************************************
  * 상권분석 기준

@@ -11,6 +11,7 @@ type FormSelectProps<T extends FieldValues> = {
   label: string;
   placeholder?: string;
   options: readonly { value: string; label: string }[];
+  required?: boolean;
   /** 선행 입력이 없어 아직 고를 수 없는 경우 (예: 국가를 고르기 전의 도시) */
   disabled?: boolean;
   /** 값이 바뀔 때 폼 외 부수 작업이 필요한 경우 (예: 국가 변경 시 도시 초기화) */
@@ -24,6 +25,7 @@ export default function FormSelect<T extends FieldValues>({
   label,
   placeholder = "선택해주세요",
   options,
+  required,
   disabled,
   onValueChange,
 }: FormSelectProps<T>) {
@@ -41,6 +43,7 @@ export default function FormSelect<T extends FieldValues>({
             size="md"
             labelClassName="text-xs"
             label={label}
+            required={required}
             placeholder={placeholder}
             disabled={disabled}
             // 트리거 버튼에 붙는다 — name은 저니 패널 포커스, ref는 제출 실패 시 첫 오류로 포커스,

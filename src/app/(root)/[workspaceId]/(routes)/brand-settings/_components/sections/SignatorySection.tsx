@@ -3,70 +3,62 @@
 import { useForm } from "react-hook-form";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import z from "zod";
 
 import { SettingsSection } from "@components/custom/settings";
-import { Input, Toast } from "@components/ui";
+import { Toast } from "@components/ui";
 
-import { useBrandSettings, useUpdateBrandContract } from "@services/api/brand/brand.query";
-import { type BrandContractView } from "@services/api/brand/brand.view";
+import { useBrandSection, useUpdateBrandSignature } from "@services/api/brand/brand.query";
 
-// PATCH /api/brands/{brandId}/contract — 전체 치환 (ContractSection과 같은 엔드포인트)
-// 계약 담당자 필드(contractContact*)는 ContractSection이 담당하며, 저장 시 서로의 값을 병합 전송한다
-const signatorySchema = z.object({
-  signatoryNameKo: z.string(), // 서명권자 이름(국문)
-  signatoryNameEn: z.string(), // 서명권자 이름(영문)
-  signatoryTitle: z.string(), // 서명권자 직책
-  signatoryEmail: z.union([z.string().email("올바른 이메일 형식이 아니에요"), z.literal("")]), // 서명권자 이메일 · 빈 값 허용
-});
+import useClearOnFormChange from "../../_hooks/useClearOnFormChange";
+import ContractPersonFields from "./ContractPersonFields";
+import {
+  type ContractPersonFormValues,
+  EMPTY_CONTRACT_PERSON,
+  contractPersonSchema,
+  toContractPersonFormValues,
+  toContractPersonRequest,
+} from "./contractPersonForm";
 
-type SignatoryFormValues = z.infer<typeof signatorySchema>;
-
-const EMPTY_VALUES: SignatoryFormValues = {
-  signatoryNameKo: "",
-  signatoryNameEn: "",
-  signatoryTitle: "",
-  signatoryEmail: "",
+const PLACEHOLDERS = {
+  name_ko: "예: 박지훈",
+  name_en: "예: Jihoon Park",
+  position: "예: 대표이사",
+  email: "예: ceo@rollingpasta.com",
 };
-
-const toFormValues = (contract: BrandContractView): SignatoryFormValues => ({
-  signatoryNameKo: contract.signatoryNameKo ?? "",
-  signatoryNameEn: contract.signatoryNameEn ?? "",
-  signatoryTitle: contract.signatoryTitle ?? "",
-  signatoryEmail: contract.signatoryEmail ?? "",
-});
 
 type SignatorySectionProps = {
   workspaceId: string;
 };
 
+/** 서명권자 정보 — 폼 필드 이름은 저장 DTO와 같다. → BasicInfoSection 주석 참고 */
 export default function SignatorySection({ workspaceId }: SignatorySectionProps) {
-  const { data: settings } = useBrandSettings(workspaceId);
-  const { mutate: updateBrandContract, isPending } = useUpdateBrandContract(workspaceId);
+  // React Compiler 제외 — register 폼은 reset 뒤 입력칸이 갱신되지 않는다. → OperationSection 주석 참고
+  "use no memo";
+
+  const { data: saved } = useBrandSection(workspaceId, "brand_signature");
+  const { mutate: save, isPending, error, reset: clearSaveError } = useUpdateBrandSignature(workspaceId);
 
   const {
     register,
+    reset,
+    watch,
     handleSubmit,
     formState: { errors, isDirty },
-  } = useForm<SignatoryFormValues>({
-    resolver: zodResolver(signatorySchema),
-    defaultValues: EMPTY_VALUES,
-    values: settings?.brandContract ? toFormValues(settings.brandContract) : undefined,
+  } = useForm<ContractPersonFormValues>({
+    resolver: zodResolver(contractPersonSchema),
+    defaultValues: EMPTY_CONTRACT_PERSON,
+    values: saved ? toContractPersonFormValues(saved) : undefined,
   });
 
-  const onSubmit = (values: SignatoryFormValues) => {
-    // /contract는 전체 치환이라 계약 담당자 필드도 함께 보내야 유실되지 않는다
-    const body: BrandContractView = {
-      ...values,
-      contractContactNameKo: settings?.brandContract?.contractContactNameKo ?? "",
-      contractContactNameEn: settings?.brandContract?.contractContactNameEn ?? "",
-      contractContactTitle: settings?.brandContract?.contractContactTitle ?? "",
-      contractContactEmail: settings?.brandContract?.contractContactEmail ?? "",
-    };
+  useClearOnFormChange(watch, clearSaveError);
 
-    updateBrandContract(body, {
-      onSuccess: () => Toast.success("서명권자 정보를 저장했어요."),
-      onError: () => Toast.error("저장에 실패했어요. 다시 시도해주세요."),
+  const onSubmit = (values: ContractPersonFormValues) => {
+    save(toContractPersonRequest(values), {
+      onSuccess: response => {
+        // 서버가 저장한 모양으로 폼을 맞춘다(목 모드는 보낸 값)
+        reset(response ? toContractPersonFormValues(response.brand_signature) : values, { keepFieldsRef: true });
+        Toast.success("서명권자 정보를 저장했어요.");
+      },
     });
   };
 
@@ -76,47 +68,16 @@ export default function SignatorySection({ workspaceId }: SignatorySectionProps)
       description="서명권자의 정보를 입력해주세요"
       isDirty={isDirty}
       isPending={isPending}
+      errorMessage={error?.message}
       onSubmit={handleSubmit(onSubmit)}
     >
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-        <Input
-          id="signatoryNameKo"
-          size="md"
-          labelClassName="text-xs"
-          label="서명권자 이름 (한국어)"
-          placeholder="미등록"
-          {...register("signatoryNameKo")}
-        />
-        <Input
-          id="signatoryNameEn"
-          size="md"
-          labelClassName="text-xs"
-          label="서명권자 이름 (영어)"
-          placeholder="미등록"
-          {...register("signatoryNameEn")}
-        />
-        <Input
-          id="signatoryTitle"
-          size="md"
-          labelClassName="text-xs"
-          label="서명권자 직책"
-          placeholder="미등록"
-          {...register("signatoryTitle")}
-        />
-      </div>
-
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-        <Input
-          id="signatoryEmail"
-          size="md"
-          labelClassName="text-xs"
-          label="본사 대표 이메일"
-          placeholder="미등록"
-          error={Boolean(errors.signatoryEmail)}
-          errorText={errors.signatoryEmail?.message}
-          {...register("signatoryEmail")}
-        />
-      </div>
+      <ContractPersonFields
+        idPrefix="signature"
+        role="서명권자"
+        register={register}
+        errors={errors}
+        placeholders={PLACEHOLDERS}
+      />
     </SettingsSection>
   );
 }

@@ -3,13 +3,7 @@
 
 /** 진행 단계 */
 export type StageCode =
-  | "lead"
-  | "contacting"
-  | "meeting"
-  | "negotiating"
-  | "legal_review"
-  | "closed_won"
-  | "closed_lost";
+  "lead" | "contacting" | "meeting" | "negotiating" | "legal_review" | "closed_won" | "closed_lost";
 
 type StageMeta = {
   label: string;
@@ -55,6 +49,17 @@ export const CATEGORY_FILTER_OPTIONS: FilterOption[] = [
   { value: "dessert", label: "디저트" },
 ];
 
-// 계약 방식은 브랜드 설정과 같은 코드값을 쓴다.
-// TODO(리팩토링): 두 도메인이 공유하므로 공용 상수 위치로 옮기는 게 맞다.
-export { CONTRACT_TYPE_OPTIONS } from "../../brand-settings/_components/sections/policyOptions";
+/**
+ * 계약 방식 — 진행 관리 목 데이터의 옛 코드값(v0.7).
+ * 브랜드 설정은 실제 API로 옮기며 스펙 값("마스터 프랜차이즈" 등)으로 바뀌었다(policyOptions의 CONTRACT_TYPE_VALUES).
+ * TODO(API): 진행 관리를 실제 API로 옮길 때 스펙 값으로 바꾸고 이 목록을 지운다.
+ */
+export const CONTRACT_TYPE_OPTIONS = [
+  { value: "master_franchise", label: "마스터 프랜차이즈" },
+  { value: "area_development", label: "지역 개발권" },
+  { value: "direct_operation", label: "직영" },
+  { value: "joint_venture", label: "합작법인 (JV)" },
+  { value: "licensing", label: "라이선스" },
+  { value: "distribution", label: "유통" },
+  { value: "undecided", label: "미정" },
+];

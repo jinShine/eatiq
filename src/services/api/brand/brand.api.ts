@@ -21,6 +21,8 @@ import {
   type UpdateBrandIntroResponse,
   type UpdateBrandLocationStandardRequest,
   type UpdateBrandLocationStandardResponse,
+  type UpdateBrandSignatureRequest,
+  type UpdateBrandSignatureResponse,
   type UpdateBrandSizeCriteriaRequest,
   type UpdateBrandSizeCriteriaResponse,
   type UpdateBrandStatusRequest,
@@ -42,6 +44,7 @@ const ENDPOINTS = {
   status: (workspaceId: string) => `${buildBrandPath(workspaceId)}/status`,
   contact: (workspaceId: string) => `${buildBrandPath(workspaceId)}/contact`,
   contract: (workspaceId: string) => `${buildBrandPath(workspaceId)}/contract`,
+  signature: (workspaceId: string) => `${buildBrandPath(workspaceId)}/signature`,
   contractPolicy: (workspaceId: string) => `${buildBrandPath(workspaceId)}/contract-policy`,
   commission: (workspaceId: string) => `${buildBrandPath(workspaceId)}/commission`,
   locationStandard: (workspaceId: string) => `${buildBrandPath(workspaceId)}/location-standard`,
@@ -89,6 +92,11 @@ export async function updateBrandContact(workspaceId: string, body: UpdateBrandC
 
 export async function updateBrandContract(workspaceId: string, body: UpdateBrandContractRequest) {
   const res = await axiosClientInstance.put<UpdateBrandContractResponse>(ENDPOINTS.contract(workspaceId), body);
+  return res.data;
+}
+
+export async function updateBrandSignature(workspaceId: string, body: UpdateBrandSignatureRequest) {
+  const res = await axiosClientInstance.put<UpdateBrandSignatureResponse>(ENDPOINTS.signature(workspaceId), body);
   return res.data;
 }
 
