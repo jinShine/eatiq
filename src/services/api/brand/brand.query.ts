@@ -6,6 +6,7 @@ import { IS_MOCK, mockResolve } from "../mock";
 import { getWorkspaceDetail } from "../workspace/workspace.api";
 import { mockWorkspaceDetail } from "../workspace/workspace.mock";
 import { workspaceKeys } from "../workspace/workspace.query";
+import { type WorkspaceDetailResponse } from "../workspace/workspace.type";
 import {
   getBrandCompletion,
   updateBrandBasic,
@@ -26,23 +27,10 @@ import {
 } from "./brand.api";
 import { mockBrandCompletion, mockBrandSettings } from "./brand.mock";
 import {
-  type BrandBasicData,
-  type BrandCommissionData,
   type BrandCompletion,
   type BrandCompletionResponse,
   type BrandCompletionScope,
   type BrandCompletionTask,
-  type BrandContactData,
-  type BrandContractData,
-  type BrandContractPolicyData,
-  type BrandFacilityReqData,
-  type BrandIntroData,
-  type BrandLocationStandardData,
-  type BrandMenuItem,
-  type BrandSignatureData,
-  type BrandSizeCriteriaData,
-  type BrandStatusData,
-  type BrandVisualData,
 } from "./brand.type";
 
 /** 화면 탭 → 완성도 API 범위. 탭 이름(policy·area)과 API 이름(contract·commercial)이 다르다 */
@@ -140,30 +128,9 @@ export function useBrandCompletions(workspaceId: string, tabs: readonly BrandSet
   });
 }
 
-/**
- * 읽기 응답의 섹션 → 저장값 타입(*DataDto) 짝.
- *
- * 읽기 응답(WorkspaceDetailBrandDto)의 13개 섹션이 Record<string, never>로 선언돼 있다.
- * 저장 응답의 *DataDto와 같은 모양이라 여기서만 단언한다.
- * TODO(백엔드): 섹션 타입 선언 요청함 — 반영되면 이 맵과 아래 단언을 지운다.
- */
-type BrandSectionMap = {
-  brand_basic: BrandBasicData;
-  brand_intro: BrandIntroData;
-  brand_status: BrandStatusData;
-  brand_contact: BrandContactData;
-  brand_contract: BrandContractData;
-  brand_signature: BrandSignatureData;
-  brand_contract_policy: BrandContractPolicyData;
-  brand_commission: BrandCommissionData;
-  brand_location_standard: BrandLocationStandardData;
-  brand_size_criteria: BrandSizeCriteriaData;
-  brand_facility_req: BrandFacilityReqData;
-  brand_visual: BrandVisualData;
-  brand_menu: BrandMenuItem[];
-};
-
-export type BrandSectionKey = keyof BrandSectionMap;
+/** 워크스페이스 상세의 브랜드 섹션들(brand_basic … brand_facility_req) */
+type WorkspaceDetailBrand = NonNullable<WorkspaceDetailResponse["brand"]>;
+export type BrandSectionKey = Extract<keyof WorkspaceDetailBrand, `brand_${string}`>;
 
 /**
  * 섹션의 현재 저장값.
@@ -175,7 +142,7 @@ export function useBrandSection<K extends BrandSectionKey>(workspaceId: string, 
   return useQuery({
     queryKey: workspaceKeys.detail(workspaceId),
     queryFn: IS_MOCK ? () => mockResolve(mockWorkspaceDetail) : () => getWorkspaceDetail(workspaceId),
-    select: detail => (detail.brand?.[key] ?? null) as BrandSectionMap[K] | null,
+    select: detail => detail.brand?.[key] ?? null,
     enabled: Boolean(workspaceId),
   });
 }
