@@ -35,7 +35,8 @@ export default function SettingsSection({
   };
 
   return (
-    <form noValidate onSubmit={handleSubmit} className="border-border overflow-hidden rounded-2xl border">
+    // space-y-0 — 전역 form 스타일(space-y-5)이 헤더·바디·푸터 사이에 20px 틈을 만든다. 시안은 셋이 붙어 있다
+    <form noValidate onSubmit={handleSubmit} className="border-border space-y-0 overflow-hidden rounded-2xl border">
       {/* 헤더 */}
       <div className="border-border border-b px-6 py-4">
         <h3 className="text-text-primary text-base font-bold tracking-tight">{title}</h3>
