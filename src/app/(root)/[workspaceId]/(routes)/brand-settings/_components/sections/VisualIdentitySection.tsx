@@ -1,5 +1,7 @@
 "use client";
 
+import { useRef } from "react";
+
 import {
   useBrandSection,
   useUpdateBrandFeaturedImages,
@@ -17,6 +19,23 @@ import VisualAssetCard from "../media/VisualAssetCard";
  */
 const MAX_FEATURED = 10;
 
+/**
+ * 저장 요청을 한 줄로 세운다. 앞 요청이 끝나야 다음 요청을 보낸다(실패해도 다음은 보낸다).
+ *
+ * 서버가 비주얼 세 칸(로고·대표 이미지·대표 영상)을 한 덩어리로 읽고 통째로 다시 쓴다.
+ * 그래서 동시에 저장하면 모두 200을 받고도 마지막 요청 하나만 남는다(2026-10-06 확인).
+ * TODO(백엔드): 각 API가 자기 칸만 갱신하도록 고쳐지면 이 줄 세우기를 지운다
+ */
+function useSaveQueue() {
+  const last = useRef<Promise<unknown>>(Promise.resolve());
+
+  return <T,>(save: () => Promise<T>): Promise<T> => {
+    const run = last.current.then(save, save);
+    last.current = run.catch(() => undefined);
+    return run;
+  };
+}
+
 type VisualIdentitySectionProps = {
   workspaceId: string;
 };
@@ -26,6 +45,7 @@ export default function VisualIdentitySection({ workspaceId }: VisualIdentitySec
   const { mutateAsync: saveLogo } = useUpdateBrandLogo(workspaceId);
   const { mutateAsync: saveImages } = useUpdateBrandFeaturedImages(workspaceId);
   const { mutateAsync: saveVideos } = useUpdateBrandFeaturedVideos(workspaceId);
+  const enqueue = useSaveQueue();
 
   return (
     <div className="space-y-3">
@@ -41,7 +61,7 @@ export default function VisualIdentitySection({ workspaceId }: VisualIdentitySec
         max={1}
         urls={visual?.logo_image ? [visual.logo_image] : []}
         // 지우면 빈 목록 → null로 보낸다(서버: null이면 로고 제거)
-        onSave={urls => saveLogo({ logo_image: urls[0] ?? null })}
+        onSave={urls => enqueue(() => saveLogo({ logo_image: urls[0] ?? null }))}
       />
       <VisualAssetCard
         title="브랜드 대표 이미지"
@@ -52,7 +72,7 @@ export default function VisualIdentitySection({ workspaceId }: VisualIdentitySec
         shape="wide"
         max={MAX_FEATURED}
         urls={visual?.featured_image_list ?? []}
-        onSave={urls => saveImages({ featured_image_list: urls })}
+        onSave={urls => enqueue(() => saveImages({ featured_image_list: urls }))}
       />
       <VisualAssetCard
         title="브랜드 대표 영상"
@@ -62,7 +82,7 @@ export default function VisualIdentitySection({ workspaceId }: VisualIdentitySec
         shape="wide"
         max={MAX_FEATURED}
         urls={visual?.featured_video_list ?? []}
-        onSave={urls => saveVideos({ featured_video_list: urls })}
+        onSave={urls => enqueue(() => saveVideos({ featured_video_list: urls }))}
       />
     </div>
   );

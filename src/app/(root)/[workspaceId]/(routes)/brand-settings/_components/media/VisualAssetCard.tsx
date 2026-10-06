@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { Toast } from "@components/ui";
 
@@ -51,11 +51,6 @@ export default function VisualAssetCard({
   const [isSaving, setIsSaving] = useState(false);
   const [removeTarget, setRemoveTarget] = useState<string | null>(null);
 
-  // 서버 값이 새로 오면 낙관적 표시를 끝낸다(저장 직후 다시 받아올 때까지 옛 목록이 깜빡이지 않게)
-  useEffect(() => {
-    setOptimistic(null);
-  }, [urls]);
-
   const shown = optimistic ?? urls;
   const isBusy = isUploading || isSaving;
 
@@ -63,12 +58,14 @@ export default function VisualAssetCard({
     setOptimistic(next);
     setIsSaving(true);
     try {
+      // 저장 훅이 서버 값을 다시 받아온 뒤에 끝난다. 그래서 낙관적 표시를 걷어도 옛 목록이 깜빡이지 않는다.
+      // 서버 값이 바뀌었는지(urls)로 판단하면, 저장 결과가 이전과 같을 때(빈 목록 → 빈 목록) 표시가 남는다
       await onSave(next);
       Toast.success(successMessage);
     } catch (error) {
-      setOptimistic(null);
       Toast.error(error instanceof Error ? error.message : "저장하지 못했어요");
     } finally {
+      setOptimistic(null);
       setIsSaving(false);
     }
   };

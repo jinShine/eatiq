@@ -165,9 +165,11 @@ function createBrandSectionMutation<TBody, TResponse>(save: (workspaceId: string
       mutationFn: IS_MOCK
         ? (_body: TBody) => mockResolve<TResponse | undefined>(undefined)
         : (body: TBody): Promise<TResponse | undefined> => save(workspaceId, body),
+      // 섹션 값은 다시 받아올 때까지 기다린다(반환한 promise를 mutation이 기다린다).
+      // 저장이 끝났을 때 화면이 이미 서버 값을 쥐고 있어야 비주얼 카드처럼 저장 중 표시를 바로 걷어낼 수 있다
       onSuccess: () => {
-        invalidateQueries.single(workspaceKeys.detail(workspaceId));
         invalidateQueries.single(brandKeys.completionAll(workspaceId));
+        return invalidateQueries.single(workspaceKeys.detail(workspaceId));
       },
     });
   };
