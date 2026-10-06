@@ -7,6 +7,8 @@ import { X } from "lucide-react";
 
 import { cn } from "@utils/shadcn";
 
+import { triggerChild } from "../triggerChild";
+
 export type ModalSize = "xs" | "sm" | "md" | "lg" | "full";
 
 const sizeClasses: Record<ModalSize, string> = {
@@ -45,7 +47,7 @@ function Modal({
     <DialogPrimitive.Root open={isOpen} onOpenChange={onOpenChange}>
       {/* 트리거는 넘겼을 때만 만든다. 빈 트리거를 두면 Radix가 닫을 때 그쪽(포커스 불가)으로 포커스를 보내
           body로 빠지고, div에 aria-haspopup·type이 붙어 접근성 검사에도 걸린다 */}
-      {trigger && <DialogPrimitive.Trigger asChild>{trigger}</DialogPrimitive.Trigger>}
+      {trigger && <DialogPrimitive.Trigger asChild>{triggerChild(trigger)}</DialogPrimitive.Trigger>}
       <ModalContent
         className={className}
         size={size}

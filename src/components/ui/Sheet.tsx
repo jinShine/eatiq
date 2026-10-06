@@ -10,6 +10,7 @@ import { X } from "lucide-react";
 import { cn } from "@utils/shadcn";
 
 import { HStack } from "./Container";
+import { triggerChild } from "./triggerChild";
 
 export interface SheetProps {
   children: React.ReactNode;
@@ -40,11 +41,13 @@ function Sheet({
   showCloseButton = true,
   isDismissable = true,
 }: SheetProps) {
+  // 열 때 포커스가 있던 요소 → Modal 주석 참고
+  const returnFocusRef = React.useRef<HTMLElement | null>(null);
+
   return (
     <SheetPrimitive.Root open={isOpen} onOpenChange={onOpenChange}>
-      <SheetPrimitive.Trigger asChild>
-        <div>{trigger}</div>
-      </SheetPrimitive.Trigger>
+      {/* 트리거는 넘겼을 때만 만든다 → Modal 주석 참고 */}
+      {trigger && <SheetPrimitive.Trigger asChild>{triggerChild(trigger)}</SheetPrimitive.Trigger>}
       <SheetContent
         className={className}
         side={side}
@@ -52,6 +55,17 @@ function Sheet({
         footer={footer}
         showCloseButton={showCloseButton}
         isDismissable={isDismissable}
+        onOpenAutoFocus={() => {
+          returnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        }}
+        onCloseAutoFocus={event => {
+          const target = returnFocusRef.current;
+          returnFocusRef.current = null;
+          if (!trigger && target?.isConnected) {
+            event.preventDefault();
+            target.focus();
+          }
+        }}
       >
         {children}
       </SheetContent>

@@ -6,6 +6,8 @@ import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 
 import { cn } from "@utils/shadcn";
 
+import { triggerChild } from "../triggerChild";
+
 interface DropdownMenuProps {
   children: React.ReactNode;
   trigger?: React.ReactNode;
@@ -25,9 +27,8 @@ function DropdownMenu({
 }: DropdownMenuProps) {
   return (
     <DropdownMenuPrimitive.Root modal={modal}>
-      {/* 넘긴 버튼에 바로 붙인다. div로 감싸면 열림 상태(aria-expanded)가 버튼이 아닌 div에 붙어
-          화면 낭독기가 모르고, 닫을 때 포커스도 포커스 불가인 div로 돌아가 body로 빠진다 */}
-      {trigger && <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>}
+      {/* 넘긴 버튼에 바로 붙인다 → triggerChild 주석 참고 */}
+      {trigger && <DropdownMenuTrigger asChild>{triggerChild(trigger)}</DropdownMenuTrigger>}
       <DropdownMenuContent className={className} align={align} side={side}>
         {children}
       </DropdownMenuContent>
