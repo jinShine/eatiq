@@ -25,9 +25,9 @@ function DropdownMenu({
 }: DropdownMenuProps) {
   return (
     <DropdownMenuPrimitive.Root modal={modal}>
-      <DropdownMenuTrigger asChild>
-        <div className="w-fit">{trigger}</div>
-      </DropdownMenuTrigger>
+      {/* 넘긴 버튼에 바로 붙인다. div로 감싸면 열림 상태(aria-expanded)가 버튼이 아닌 div에 붙어
+          화면 낭독기가 모르고, 닫을 때 포커스도 포커스 불가인 div로 돌아가 body로 빠진다 */}
+      {trigger && <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>}
       <DropdownMenuContent className={className} align={align} side={side}>
         {children}
       </DropdownMenuContent>
