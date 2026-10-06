@@ -38,12 +38,33 @@ function Modal({
   isDismissable = false,
   hideCloseButton = false,
 }: DialogProps) {
+  // 열 때 포커스가 있던 요소. 트리거 없이(isOpen으로) 연 모달은 닫힐 때 여기로 포커스를 돌려준다
+  const returnFocusRef = React.useRef<HTMLElement | null>(null);
+
   return (
     <DialogPrimitive.Root open={isOpen} onOpenChange={onOpenChange}>
-      <DialogPrimitive.Trigger asChild>
-        <div className="w-fit">{trigger}</div>
-      </DialogPrimitive.Trigger>
-      <ModalContent className={className} size={size} isDismissable={isDismissable} hideCloseButton={hideCloseButton}>
+      {/* 트리거는 넘겼을 때만 만든다. 빈 트리거를 두면 Radix가 닫을 때 그쪽(포커스 불가)으로 포커스를 보내
+          body로 빠지고, div에 aria-haspopup·type이 붙어 접근성 검사에도 걸린다 */}
+      {trigger && <DialogPrimitive.Trigger asChild>{trigger}</DialogPrimitive.Trigger>}
+      <ModalContent
+        className={className}
+        size={size}
+        isDismissable={isDismissable}
+        hideCloseButton={hideCloseButton}
+        // 열리는 순간은 아직 포커스가 모달 밖(누른 버튼)에 있다
+        onOpenAutoFocus={() => {
+          returnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        }}
+        onCloseAutoFocus={event => {
+          const target = returnFocusRef.current;
+          returnFocusRef.current = null;
+          // 트리거가 있으면 Radix가 트리거로 돌려준다. 누른 요소가 사라졌으면(삭제 등) 기본 동작에 맡긴다
+          if (!trigger && target?.isConnected) {
+            event.preventDefault();
+            target.focus();
+          }
+        }}
+      >
         {children}
       </ModalContent>
     </DialogPrimitive.Root>
