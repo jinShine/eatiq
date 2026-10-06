@@ -21,8 +21,8 @@ export const chosen = <T extends string>(value: T | "") => value as T;
 export const INTEGER = /^\d+$/;
 
 /**
- * 금액 상한 — 서버에 상한이 없어(20자리도 정밀도를 잃은 채 저장) 화면에서 막는다.
- * 운영 현황 매출과 같은 기준. TODO(백엔드): 서버 상한이 정해지면 맞춘다
+ * 금액 상한(가맹비·고정 로열티·임대료) — 서버에 상한이 없어(20자리도 정밀도를 잃은 채 저장) 화면에서 막는다.
+ * TODO(백엔드): 서버 상한이 정해지면 맞춘다
  */
 export const MAX_WON = { value: 10_000_000_000_000, label: "10조 원" };
 

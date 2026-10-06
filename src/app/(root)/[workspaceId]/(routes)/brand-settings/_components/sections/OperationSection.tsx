@@ -24,13 +24,12 @@ import { toNumberText } from "./numberText";
 const REQUIRED = "입력해주세요";
 
 /**
- * 입력 상한. 서버에는 상한이 없어(20자리 숫자도 정밀도를 잃은 채 저장된다) 화면에서 막는다.
- * 값은 2026-10-04 확정. 모두 자바스크립트가 정확히 다루는 정수(약 9,007조) 안이다.
- * TODO(백엔드): 서버 상한이 정해지면 이 값만 맞춘다.
+ * 입력 상한. 서버 범위(-1조~1조, 2026-10-06)가 너무 넓어 화면에서 막는다.
+ * 값은 2026-10-04 확정. 매출만 서버 상한(1조)에 맞춰 낮췄다 — 넘기면 저장이 실패한다.
  */
 const MAX = {
   storeCount: { value: 100_000, label: "10만 개" },
-  monthlySales: { value: 10_000_000_000_000, label: "10조 원" },
+  monthlySales: { value: 1_000_000_000_000, label: "1조 원" },
   costPerCustomer: { value: 100_000_000, label: "1억 원" },
   storeArea: { value: 10_000, label: "1만 평" },
   seatCount: { value: 10_000, label: "1만 석" },
