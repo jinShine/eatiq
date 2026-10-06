@@ -27,6 +27,7 @@ const SCROLL_HEIGHT = MISSING_ITEM_HEIGHT * 2 + MISSING_ITEM_GAP * 2 + Math.roun
  * 남은 항목의 「입력」을 누르면 그 섹션으로 내려가 해당 입력칸에 바로 포커스한다.
  *
  * 서버가 주는 field_key가 폼 필드 이름(저장 DTO 필드명)과 같아 name으로 찾을 수 있다.
+ * 목록 항목(대표 메뉴)은 이름이 "menu_list.0.name_ko"처럼 붙어 있어 끝이 같은 칸도 찾는다 — 화면에 보이는 첫 칸.
  * 섹션은 section_key를 id로 갖는다. 아직 연결 안 된 섹션이면 스크롤만 되고 포커스는 건너뛴다.
  */
 const goToField = (task: BrandCompletionTask) => {
@@ -35,7 +36,9 @@ const goToField = (task: BrandCompletionTask) => {
     return;
   }
   section.scrollIntoView({ behavior: "smooth", block: "start" });
-  section.querySelector<HTMLElement>(`[name="${task.fieldKey}"]`)?.focus({ preventScroll: true });
+  section
+    .querySelector<HTMLElement>(`[name="${task.fieldKey}"], [name$=".${task.fieldKey}"]`)
+    ?.focus({ preventScroll: true });
 };
 
 type CompletionStatusCardProps = {

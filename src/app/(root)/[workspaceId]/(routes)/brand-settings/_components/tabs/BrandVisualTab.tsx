@@ -1,4 +1,5 @@
 import CompletionStatusCard from "../completion/CompletionStatusCard";
+import MenuSection from "../sections/MenuSection";
 import VisualIdentitySection from "../sections/VisualIdentitySection";
 
 type BrandVisualTabProps = {
@@ -16,7 +17,7 @@ export default function BrandVisualTab({ workspaceId }: BrandVisualTabProps) {
           <VisualIdentitySection workspaceId={workspaceId} />
         </section>
         <section id="visual_menu" className="scroll-mt-24">
-          <p className="text-text-tertiary text-sm">대표 메뉴 (다음 단계)</p>
+          <MenuSection workspaceId={workspaceId} />
         </section>
       </div>
     </div>
