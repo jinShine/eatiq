@@ -138,3 +138,16 @@ const isHyphenSeparated = (phoneNumber: string) => {
 const maskAll = (str: string) => {
   return str.replace(/./g, "*");
 };
+
+/**
+ * 한글 낱말 뒤에 받침에 맞는 조사를 붙인다. 받침이 있으면 첫째, 없으면 둘째.
+ * 한글이 아닌 글자로 끝나면 받침 없음으로 본다.
+ * @example
+ * withParticle("브랜드 로고", "을", "를") // "브랜드 로고를"
+ * withParticle("브랜드 대표 영상", "은", "는") // "브랜드 대표 영상은"
+ */
+export function withParticle(word: string, withFinal: string, withoutFinal: string): string {
+  const code = word.charCodeAt(word.length - 1) - 0xac00;
+  const hasFinal = code >= 0 && code <= 11171 && code % 28 !== 0;
+  return `${word}${hasFinal ? withFinal : withoutFinal}`;
+}

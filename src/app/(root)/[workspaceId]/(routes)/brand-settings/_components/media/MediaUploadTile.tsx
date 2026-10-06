@@ -10,6 +10,8 @@ import { MEDIA_RULES, type MediaKind } from "./mediaRules";
 
 type MediaUploadTileProps = {
   kind: MediaKind;
+  /** 저니 패널이 [name=...]으로 이 칸에 포커스한다 — 완성도 API의 field_key */
+  name?: string;
   multiple?: boolean;
   disabled?: boolean;
   onSelect: (files: File[]) => void;
@@ -19,7 +21,13 @@ type MediaUploadTileProps = {
  * 업로드 칸 (피그마 186:2120) — 128×128, 아이콘 + "이미지/영상 업로드" + 형식·용량 안내.
  * 칸 전체가 버튼이라 키보드로도 연다. 고른 파일은 그대로 넘기고, 검사·업로드는 쓰는 쪽(useMediaUpload)이 한다.
  */
-export default function MediaUploadTile({ kind, multiple = false, disabled = false, onSelect }: MediaUploadTileProps) {
+export default function MediaUploadTile({
+  kind,
+  name,
+  multiple = false,
+  disabled = false,
+  onSelect,
+}: MediaUploadTileProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const rule = MEDIA_RULES[kind];
   const Icon = kind === "image" ? CloudUploadIcon : ClapperboardIcon;
@@ -28,6 +36,7 @@ export default function MediaUploadTile({ kind, multiple = false, disabled = fal
   return (
     <button
       type="button"
+      name={name}
       disabled={disabled}
       onClick={() => inputRef.current?.click()}
       className={cn(
