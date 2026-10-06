@@ -19,6 +19,7 @@ type MediaUploadTileProps = {
 
 /**
  * 업로드 칸 (피그마 186:2120) — 128×128, 아이콘 + "이미지/영상 업로드" + 형식·용량 안내.
+ * 글자는 시안(18·14px)보다 줄였다(14·12px) — 128px 칸에 비해 커서 사용자 요청으로 조정
  * 칸 전체가 버튼이라 키보드로도 연다. 고른 파일은 그대로 넘기고, 검사·업로드는 쓰는 쪽(useMediaUpload)이 한다.
  */
 export default function MediaUploadTile({
@@ -45,9 +46,9 @@ export default function MediaUploadTile({
         "disabled:cursor-not-allowed disabled:opacity-50",
       )}
     >
-      <Icon aria-hidden className="text-text-primary size-6" strokeWidth={1.75} />
-      <span className="text-text-primary text-lg font-bold tracking-[-0.9px] whitespace-nowrap">{title}</span>
-      <span className="text-text-tertiary text-sm leading-[21px] font-medium tracking-[-0.7px]">
+      <Icon aria-hidden className="text-text-primary mb-1 size-5" strokeWidth={1.75} />
+      <span className="text-text-primary text-sm font-bold tracking-[-0.35px] whitespace-nowrap">{title}</span>
+      <span className="text-text-tertiary text-xs leading-[18px] font-medium">
         {rule.format}
         <br />
         (최대 {rule.maxLabel})
