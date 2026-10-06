@@ -33,6 +33,8 @@ export type BrandCommissionData = components["schemas"]["BrandCommissionDataDto"
 export type BrandLocationStandardData = components["schemas"]["BrandLocationStandardDataDto"];
 export type BrandSizeCriteriaData = components["schemas"]["BrandSizeCriteriaDataDto"];
 export type BrandFacilityReqData = components["schemas"]["BrandFacilityReqDataDto"];
+export type BrandVisualData = components["schemas"]["BrandVisualDataDto"];
+export type BrandMenuItem = components["schemas"]["MenuItemResponseDto"];
 
 /** 기본 정보 — 브랜드명·런칭 연도·대표자·본사 연락처 */
 export type UpdateBrandBasicRequest = components["schemas"]["UpdateBrandBasicDto"];

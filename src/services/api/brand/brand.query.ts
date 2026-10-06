@@ -14,8 +14,12 @@ import {
   updateBrandContract,
   updateBrandContractPolicy,
   updateBrandFacilityReq,
+  updateBrandFeaturedImages,
+  updateBrandFeaturedVideos,
   updateBrandIntro,
   updateBrandLocationStandard,
+  updateBrandLogo,
+  updateBrandMenu,
   updateBrandSignature,
   updateBrandSizeCriteria,
   updateBrandStatus,
@@ -34,9 +38,11 @@ import {
   type BrandFacilityReqData,
   type BrandIntroData,
   type BrandLocationStandardData,
+  type BrandMenuItem,
   type BrandSignatureData,
   type BrandSizeCriteriaData,
   type BrandStatusData,
+  type BrandVisualData,
 } from "./brand.type";
 
 /** 화면 탭 → 완성도 API 범위. 탭 이름(policy·area)과 API 이름(contract·commercial)이 다르다 */
@@ -153,6 +159,8 @@ type BrandSectionMap = {
   brand_location_standard: BrandLocationStandardData;
   brand_size_criteria: BrandSizeCriteriaData;
   brand_facility_req: BrandFacilityReqData;
+  brand_visual: BrandVisualData;
+  brand_menu: BrandMenuItem[];
 };
 
 export type BrandSectionKey = keyof BrandSectionMap;
@@ -209,3 +217,7 @@ export const useUpdateBrandCommission = createBrandSectionMutation(updateBrandCo
 export const useUpdateBrandLocationStandard = createBrandSectionMutation(updateBrandLocationStandard);
 export const useUpdateBrandSizeCriteria = createBrandSectionMutation(updateBrandSizeCriteria);
 export const useUpdateBrandFacilityReq = createBrandSectionMutation(updateBrandFacilityReq);
+export const useUpdateBrandLogo = createBrandSectionMutation(updateBrandLogo);
+export const useUpdateBrandFeaturedImages = createBrandSectionMutation(updateBrandFeaturedImages);
+export const useUpdateBrandFeaturedVideos = createBrandSectionMutation(updateBrandFeaturedVideos);
+export const useUpdateBrandMenu = createBrandSectionMutation(updateBrandMenu);

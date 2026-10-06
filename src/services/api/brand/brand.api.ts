@@ -17,10 +17,18 @@ import {
   type UpdateBrandContractResponse,
   type UpdateBrandFacilityReqRequest,
   type UpdateBrandFacilityReqResponse,
+  type UpdateBrandFeaturedImagesRequest,
+  type UpdateBrandFeaturedImagesResponse,
+  type UpdateBrandFeaturedVideosRequest,
+  type UpdateBrandFeaturedVideosResponse,
   type UpdateBrandIntroRequest,
   type UpdateBrandIntroResponse,
   type UpdateBrandLocationStandardRequest,
   type UpdateBrandLocationStandardResponse,
+  type UpdateBrandLogoRequest,
+  type UpdateBrandLogoResponse,
+  type UpdateBrandMenuRequest,
+  type UpdateBrandMenuResponse,
   type UpdateBrandSignatureRequest,
   type UpdateBrandSignatureResponse,
   type UpdateBrandSizeCriteriaRequest,
@@ -45,6 +53,10 @@ const ENDPOINTS = {
   contact: (workspaceId: string) => `${buildBrandPath(workspaceId)}/contact`,
   contract: (workspaceId: string) => `${buildBrandPath(workspaceId)}/contract`,
   signature: (workspaceId: string) => `${buildBrandPath(workspaceId)}/signature`,
+  logo: (workspaceId: string) => `${buildBrandPath(workspaceId)}/visual/logo`,
+  featuredImages: (workspaceId: string) => `${buildBrandPath(workspaceId)}/visual/featured-images`,
+  featuredVideos: (workspaceId: string) => `${buildBrandPath(workspaceId)}/visual/featured-videos`,
+  menu: (workspaceId: string) => `${buildBrandPath(workspaceId)}/menu`,
   contractPolicy: (workspaceId: string) => `${buildBrandPath(workspaceId)}/contract-policy`,
   commission: (workspaceId: string) => `${buildBrandPath(workspaceId)}/commission`,
   locationStandard: (workspaceId: string) => `${buildBrandPath(workspaceId)}/location-standard`,
@@ -128,6 +140,36 @@ export async function updateBrandSizeCriteria(workspaceId: string, body: UpdateB
 
 export async function updateBrandFacilityReq(workspaceId: string, body: UpdateBrandFacilityReqRequest) {
   const res = await axiosClientInstance.put<UpdateBrandFacilityReqResponse>(ENDPOINTS.facilityReq(workspaceId), body);
+  return res.data;
+}
+
+/************************************
+ * 브랜드 비주얼 — 파일은 /api/upload/*로 먼저 올리고 받은 url을 보낸다
+ ************************************/
+export async function updateBrandLogo(workspaceId: string, body: UpdateBrandLogoRequest) {
+  const res = await axiosClientInstance.put<UpdateBrandLogoResponse>(ENDPOINTS.logo(workspaceId), body);
+  return res.data;
+}
+
+export async function updateBrandFeaturedImages(workspaceId: string, body: UpdateBrandFeaturedImagesRequest) {
+  const res = await axiosClientInstance.put<UpdateBrandFeaturedImagesResponse>(
+    ENDPOINTS.featuredImages(workspaceId),
+    body,
+  );
+  return res.data;
+}
+
+export async function updateBrandFeaturedVideos(workspaceId: string, body: UpdateBrandFeaturedVideosRequest) {
+  const res = await axiosClientInstance.put<UpdateBrandFeaturedVideosResponse>(
+    ENDPOINTS.featuredVideos(workspaceId),
+    body,
+  );
+  return res.data;
+}
+
+/** 메뉴 — 목록 전체를 보낸다(전체 치환) */
+export async function updateBrandMenu(workspaceId: string, body: UpdateBrandMenuRequest) {
+  const res = await axiosClientInstance.put<UpdateBrandMenuResponse>(ENDPOINTS.menu(workspaceId), body);
   return res.data;
 }
 
