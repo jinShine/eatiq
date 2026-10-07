@@ -51,6 +51,7 @@ export const workspaceKeys = {
 const toWorkspace = (item: MyWorkspaceItem): Workspace => ({
   id: String(item.uid),
   name: item.name,
+  type: item.type,
   myMember: {
     id: String(item.my_member_info.uid),
     grade: item.my_member_info.grade,
@@ -64,6 +65,15 @@ export function useMyWorkspaces() {
     queryFn: IS_MOCK ? () => mockResolve(mockMyWorkspaces) : getMyWorkspaces,
     select: response => (response.workspaces ?? []).map(toWorkspace),
   });
+}
+
+/**
+ * 지금 보고 있는 워크스페이스. 내 워크스페이스 목록에서 찾는다.
+ * 사이드바가 같은 목록을 이미 받아 두어 요청이 늘지 않는다. 목록을 받기 전에는 undefined
+ */
+export function useCurrentWorkspace(workspaceId: string) {
+  const { data: workspaces } = useMyWorkspaces();
+  return workspaces?.find(workspace => workspace.id === workspaceId);
 }
 
 /**

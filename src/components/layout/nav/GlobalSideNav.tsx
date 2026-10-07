@@ -37,8 +37,8 @@ const NAV_SECTIONS = [
     label: "",
     items: [
       { icon: LayoutDashboard, label: "대시보드", href: "dashboard" },
-      { icon: Store, label: "브랜드 정보 설정", href: "brand-settings" },
-      { icon: FileText, label: "브랜드 문서 작성", href: "brand-documents" },
+      { icon: Store, label: "회사 정보 설정", href: "brand-settings" },
+      { icon: FileText, label: "회사 문서 작성", href: "brand-documents" },
       { icon: Users, label: "바이어 탐색", href: "buyer" },
       { icon: Compass, label: "브랜드 탐색", href: "brand" },
       { icon: BarChart3, label: "진행 관리", href: "progress" },

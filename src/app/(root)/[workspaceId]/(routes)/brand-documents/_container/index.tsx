@@ -7,7 +7,7 @@ import PageHeader from "@components/layout/header/PageHeader";
 export default function BrandDocumentsContainer() {
   return (
     <BaseContainerLayout
-      header={<PageHeader title="브랜드 문서 작성" />}
+      header={<PageHeader title="회사 문서 작성" />}
       content={
         <BaseContentLayout>
           <div className="p-8">

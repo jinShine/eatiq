@@ -11,10 +11,14 @@ export type MyWorkspaceItem = components["schemas"]["MyWorkspaceItemDto"];
 export type CreateWorkspaceRequest = components["schemas"]["CreateWorkspaceDto"];
 export type CreateWorkspaceResponse = components["schemas"]["CreateWorkspaceResponseDto"];
 
+/** 워크스페이스 종류 — 브랜드/바이어에 따라 회사 정보 설정 화면·헤더 기능 등이 달라진다(피그마 「브랜드 / 바이어 차이점」) */
+export type WorkspaceType = MyWorkspaceItem["type"];
+
 /** 앱 안에서 쓰는 워크스페이스 뷰모델 — API DTO를 화면까지 흘려보내지 않는다 */
 export type Workspace = {
   id: string;
   name: string;
+  type: WorkspaceType;
   /**
    * 이 워크스페이스에서의 내 멤버 정보.
    *
