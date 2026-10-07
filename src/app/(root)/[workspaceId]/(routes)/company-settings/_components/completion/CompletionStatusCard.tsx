@@ -155,7 +155,7 @@ export default function CompletionStatusCard({ workspaceId, tab, tabLabel }: Com
             </div>
             {nextTab && (
               <Link
-                href={`/${workspaceId}/brand-settings?tab=${nextTab.key}`}
+                href={`/${workspaceId}/company-settings?tab=${nextTab.key}`}
                 className={`bg-primary text-primary-foreground hover:bg-primary-emphasis group inline-flex w-fit items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${focusRing}`}
               >
                 {nextTab.label} 바로가기

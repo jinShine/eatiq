@@ -7,7 +7,7 @@ import { Button, Input, Modal, ModalBody, ModalFooter, ModalHeader } from "@comp
 
 import { cn } from "@utils/shadcn";
 
-import FormSelect from "../../brand-settings/_components/FormSelect";
+import FormSelect from "../../company-settings/_components/FormSelect";
 import { useAnalysisConditionForm } from "../_hooks/useAnalysisConditionForm";
 import { type AnalysisConditionFormValues } from "./analysisConditionSchema";
 import {

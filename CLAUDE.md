@@ -41,7 +41,7 @@ src/app/
         _hooks/                    # 화면 전용 훅
 ```
 
-라우트: `dashboard` · `brand-settings` · `progress`(+`[progressId]`) · `market-analysis` · `buyer` · `brand` · `brand-documents` · `account` · `workspaces-settings`
+라우트: `dashboard` · `company-settings`(브랜드/바이어 분기) · `progress`(+`[progressId]`) · `market-analysis` · `buyer` · `brand` · `brand-documents` · `account` · `workspaces-settings`
 
 ### page.tsx / \_container 분리 (필수 패턴)
 

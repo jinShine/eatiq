@@ -27,6 +27,11 @@ const nextConfig = {
    * 로컬처럼 NEXT_PUBLIC_API_URL에 백엔드 주소를 직접 넣으면 이 규칙은 쓰이지 않는다.
    * TODO(백엔드): HTTPS가 붙으면 NEXT_PUBLIC_API_URL을 그 주소로 바꾸고 프록시를 걷어낸다
    */
+  // 회사 정보 설정 주소가 brand-settings → company-settings로 바뀌었다(바이어도 같은 화면을 쓴다). 옛 링크·북마크용. ?tab= 쿼리는 그대로 넘어간다
+  async redirects() {
+    return [{ source: "/:workspaceId/brand-settings", destination: "/:workspaceId/company-settings", permanent: false }];
+  },
+
   async rewrites() {
     const backendOrigin = process.env.BACKEND_ORIGIN;
     if (!backendOrigin) {

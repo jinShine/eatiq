@@ -37,7 +37,7 @@ export default function SettingsTabNav({ workspaceId, activeTab }: SettingsTabNa
           <Link
             key={tab.key}
             ref={isActive ? activeTabRef : undefined}
-            href={`/${workspaceId}/brand-settings?tab=${tab.key}`}
+            href={`/${workspaceId}/company-settings?tab=${tab.key}`}
             aria-current={isActive ? "page" : undefined}
             className={cn(
               "shrink-0 border-b-2 px-2 py-5 text-sm font-medium whitespace-nowrap transition-colors",
