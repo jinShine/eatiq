@@ -24,6 +24,7 @@ import {
   updateBrandSignature,
   updateBrandSizeCriteria,
   updateBrandStatus,
+  updateBrandStore,
 } from "./brand.api";
 import { mockBrandCompletion, mockBrandSettings } from "./brand.mock";
 import {
@@ -190,3 +191,4 @@ export const useUpdateBrandLogo = createBrandSectionMutation(updateBrandLogo);
 export const useUpdateBrandFeaturedImages = createBrandSectionMutation(updateBrandFeaturedImages);
 export const useUpdateBrandFeaturedVideos = createBrandSectionMutation(updateBrandFeaturedVideos);
 export const useUpdateBrandMenu = createBrandSectionMutation(updateBrandMenu);
+export const useUpdateBrandStore = createBrandSectionMutation(updateBrandStore);

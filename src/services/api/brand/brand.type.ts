@@ -33,6 +33,7 @@ export type BrandSizeCriteriaData = components["schemas"]["BrandSizeCriteriaData
 export type BrandFacilityReqData = components["schemas"]["BrandFacilityReqDataDto"];
 export type BrandVisualData = components["schemas"]["BrandVisualDataDto"];
 export type BrandMenuItem = components["schemas"]["MenuItemResponseDto"];
+export type BrandStoreData = components["schemas"]["BrandStoreDataDto"];
 
 /** 기본 정보 — 브랜드명·런칭 연도·대표자·본사 연락처 */
 export type UpdateBrandBasicRequest = components["schemas"]["UpdateBrandBasicDto"];
@@ -77,6 +78,10 @@ export type UpdateBrandFacilityReqResponse = components["schemas"]["UpdateBrandF
 /** 대표 메뉴 */
 export type UpdateBrandMenuRequest = components["schemas"]["UpdateBrandMenuDto"];
 export type UpdateBrandMenuResponse = components["schemas"]["UpdateBrandMenuResponseDto"];
+
+/** 대표 매장 */
+export type UpdateBrandStoreRequest = components["schemas"]["UpdateBrandStoreDto"];
+export type UpdateBrandStoreResponse = components["schemas"]["UpdateBrandStoreResponseDto"];
 
 /** 시그니처 */
 export type UpdateBrandSignatureRequest = components["schemas"]["UpdateBrandSignatureDto"];

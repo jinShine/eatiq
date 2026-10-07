@@ -35,6 +35,8 @@ import {
   type UpdateBrandSizeCriteriaResponse,
   type UpdateBrandStatusRequest,
   type UpdateBrandStatusResponse,
+  type UpdateBrandStoreRequest,
+  type UpdateBrandStoreResponse,
 } from "./brand.type";
 
 const BASE_PATH = "/api/workspace";
@@ -57,6 +59,7 @@ const ENDPOINTS = {
   featuredImages: (workspaceId: string) => `${buildBrandPath(workspaceId)}/visual/featured-images`,
   featuredVideos: (workspaceId: string) => `${buildBrandPath(workspaceId)}/visual/featured-videos`,
   menu: (workspaceId: string) => `${buildBrandPath(workspaceId)}/menu`,
+  store: (workspaceId: string) => `${buildBrandPath(workspaceId)}/store`,
   contractPolicy: (workspaceId: string) => `${buildBrandPath(workspaceId)}/contract-policy`,
   commission: (workspaceId: string) => `${buildBrandPath(workspaceId)}/commission`,
   locationStandard: (workspaceId: string) => `${buildBrandPath(workspaceId)}/location-standard`,
@@ -170,6 +173,12 @@ export async function updateBrandFeaturedVideos(workspaceId: string, body: Updat
 /** 메뉴 — 목록 전체를 보낸다(전체 치환) */
 export async function updateBrandMenu(workspaceId: string, body: UpdateBrandMenuRequest) {
   const res = await axiosClientInstance.put<UpdateBrandMenuResponse>(ENDPOINTS.menu(workspaceId), body);
+  return res.data;
+}
+
+/** 대표 매장 — 사진 목록을 빼고 보내면 서버가 사진을 비운다(전체 치환) */
+export async function updateBrandStore(workspaceId: string, body: UpdateBrandStoreRequest) {
+  const res = await axiosClientInstance.put<UpdateBrandStoreResponse>(ENDPOINTS.store(workspaceId), body);
   return res.data;
 }
 

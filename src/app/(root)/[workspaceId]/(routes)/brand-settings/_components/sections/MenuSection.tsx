@@ -11,7 +11,7 @@ import { CommaNumberInput, Input, Toast } from "@components/ui";
 import { useBrandSection, useUpdateBrandMenu } from "@services/api/brand/brand.query";
 
 import useClearOnFormChange from "../../_hooks/useClearOnFormChange";
-import MenuPhotoField from "../menu/MenuPhotoField";
+import PhotoListField from "../media/PhotoListField";
 import MenuRemoveModal from "../menu/MenuRemoveModal";
 import MenuTabs from "../menu/MenuTabs";
 import {
@@ -207,7 +207,8 @@ export default function MenuSection({ workspaceId }: MenuSectionProps) {
             {...register(`${prefix}.explain`)}
           />
 
-          <MenuPhotoField
+          <PhotoListField
+            label="메뉴 사진"
             urls={currentMenu?.image_list ?? []}
             max={MAX_MENU_PHOTOS}
             onAdd={addPhotos(current)}
