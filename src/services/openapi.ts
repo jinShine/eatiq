@@ -1435,6 +1435,47 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/workspace/{workspace_uid}/brand/store": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * 🔥 [NEW 26.10.06] 브랜드 대표 매장 정보 등록 및 수정
+     * @description ### 📝 최근 업데이트 이력 (2026.10.06)
+     *     - **신규 API 추가**: 브랜드 워크스페이스의 대표 매장 정보(`brand_store`: 한국어/영어 매장명, 주소, 사진 목록)를 등록 및 수정하는 전용 엔드포인트가 추가되었습니다.
+     *
+     *     ---
+     *
+     *     ### 📌 상세 역할 및 개요
+     *     - 브랜드 워크스페이스의 대표 매장 정보(`brand_store`)를 등록 또는 수정합니다.
+     *     - 대표 매장 이름(한국어), 대표 매장 이름(영어), 대표 매장 주소, 매장 사진 URL 배열(`image_list`)을 관리합니다.
+     *     - 요청자는 해당 워크스페이스에 소속된 **활성 멤버**여야 합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 브랜드 프로필 관리 페이지 내 [대표 매장 정보] 폼 저장/수정 시.
+     *     2. **사전 작업 (사진 업로드)**:
+     *        - 사진 추가 시 `POST /api/upload/image`를 먼저 호출하여 S3 URL을 발급받은 후, 반환된 URL 배열을 `image_list`에 담아 요청합니다.
+     *     3. **요청 파라미터 (Body)**:
+     *        - `store_name_ko` (string, 필수): 대표 매장 이름(한국어)
+     *        - `store_name_en` (string, 선택): 대표 매장 이름(영어)
+     *        - `store_address` (string, 선택): 대표 매장 주소
+     *        - `image_list` (string[], 선택): 대표 매장 사진 S3 URL 배열 (빈 배열 [] 전송 시 기존 사진 삭제)
+     */
+    put: operations["UpdateBrandStoreController_updateBrandStore"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/workspace/{workspace_uid}/buyer/dashboard": {
     parameters: {
       query?: never;
@@ -3023,6 +3064,30 @@ export interface components {
        */
       cold_storage_req: "필수" | "선호" | "불필요";
     };
+    BrandStoreDataDto: {
+      /**
+       * @description 대표 매장 이름 (한국어)
+       * @example 몽탄 애월점
+       */
+      store_name_ko: string;
+      /**
+       * @description 대표 매장 이름 (영어)
+       * @example Mongtan Aewol
+       */
+      store_name_en: string | null;
+      /**
+       * @description 대표 매장 주소
+       * @example 제주특별자치도 제주시 애월읍 애월리 2546-5 다동
+       */
+      store_address: string | null;
+      /**
+       * @description 대표 매장 사진 URL 배열
+       * @example [
+       *       "https://eatiqlink-s3-bucket.s3.ap-northeast-2.amazonaws.com/uploads/images/2026/10/store1.png"
+       *     ]
+       */
+      image_list: string[];
+    };
     WorkspaceDetailBrandDto: {
       /**
        * @description 브랜드 테이블 고유 식별자 (uid)
@@ -3075,6 +3140,8 @@ export interface components {
       brand_size_criteria: components["schemas"]["BrandSizeCriteriaDataDto"] | null;
       /** @description 브랜드 매장 시설 필수 조건 */
       brand_facility_req: components["schemas"]["BrandFacilityReqDataDto"] | null;
+      /** @description 브랜드 대표 매장 정보 */
+      brand_store: components["schemas"]["BrandStoreDataDto"] | null;
     };
     BuyerBasicDataDto: {
       /**
@@ -5910,6 +5977,45 @@ export interface components {
       workspace_uid: number;
       /** @description 업데이트된 브랜드 메뉴 목록 (brand_menu) */
       brand_menu: components["schemas"]["MenuItemResponseDto"][];
+    };
+    UpdateBrandStoreDto: {
+      /**
+       * @description 대표 매장 이름 (한국어)
+       * @example 몽탄 애월점
+       */
+      store_name_ko: string;
+      /**
+       * @description 대표 매장 이름 (영어)
+       * @example Mongtan Aewol
+       */
+      store_name_en?: string;
+      /**
+       * @description 대표 매장 주소
+       * @example 제주특별자치도 제주시 애월읍 애월리 2546-5 다동
+       */
+      store_address?: string;
+      /**
+       * @description 대표 매장 사진 URL 배열 (/api/upload/image 업로드 후 반환된 S3 URL). 빈 배열 [] 또는 미전송 시 사진 목록 초기화
+       * @example [
+       *       "https://eatiqlink-s3-bucket.s3.ap-northeast-2.amazonaws.com/uploads/images/2026/10/store1.png",
+       *       "https://eatiqlink-s3-bucket.s3.ap-northeast-2.amazonaws.com/uploads/images/2026/10/store2.png"
+       *     ]
+       */
+      image_list?: string[];
+    };
+    UpdateBrandStoreResponseDto: {
+      /**
+       * @description 응답 메시지
+       * @example 브랜드 대표 매장 정보가 성공적으로 등록/수정되었습니다.
+       */
+      message: string;
+      /**
+       * @description 워크스페이스 고유 식별자 (uid)
+       * @example 1
+       */
+      workspace_uid: number;
+      /** @description 저장된 브랜드 대표 매장 정보 */
+      brand_store: components["schemas"]["BrandStoreDataDto"];
     };
     BuyerDashboardStageDto: {
       /**
@@ -9680,6 +9786,61 @@ export interface operations {
         content?: never;
       };
       /** @description 접근 권한 없음 (해당 워크스페이스의 활성 멤버가 아님) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 워크스페이스를 찾을 수 없음 */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  UpdateBrandStoreController_updateBrandStore: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 워크스페이스 고유 식별자 (uid) */
+        workspace_uid: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateBrandStoreDto"];
+      };
+    };
+    responses: {
+      /** @description 브랜드 대표 매장 정보 업데이트 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UpdateBrandStoreResponseDto"];
+        };
+      };
+      /** @description 유효성 검증 실패 또는 브랜드 워크스페이스가 아님 */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 인증 실패 (액세스 토큰 누락 또는 유효하지 않음) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 해당 워크스페이스에 대한 접근 권한이 없거나 활성 멤버가 아님 */
       403: {
         headers: {
           [name: string]: unknown;
