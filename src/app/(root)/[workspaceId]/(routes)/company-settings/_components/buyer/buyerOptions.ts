@@ -18,9 +18,9 @@ type Policy = UpdateBuyerContractPolicyRequest;
 /** 사업 유형 — 서버에는 코드값을 저장하고 화면에는 한국어 이름을 보여준다 */
 export const BUSINESS_TYPE_OPTIONS = [
   { value: "restaurant_chain", label: "외식 체인 운영사" },
-  { value: "fnb_distribution", label: "식음료 유통사" },
+  { value: "fnb_distribution", label: "F&B 유통 · 수입사" },
   { value: "real_estate_developer", label: "부동산 개발사" },
-  { value: "investment_holding", label: "투자·지주회사" },
+  { value: "investment_holding", label: "투자 지주사" },
   { value: "franchise_operator", label: "프랜차이즈 운영사" },
   { value: "other", label: "기타" },
 ] as const;
