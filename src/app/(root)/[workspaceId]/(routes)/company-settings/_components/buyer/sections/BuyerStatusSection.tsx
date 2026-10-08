@@ -9,13 +9,13 @@ import { SettingsSection } from "@components/custom/settings";
 import { Input, Toast } from "@components/ui";
 
 import { useBuyerSection, useUpdateBuyerStatus } from "@services/api/buyer/buyer.query";
-import { type BuyerStatusData, type UpdateBuyerStatusRequest } from "@services/api/buyer/buyer.type";
+import { type BuyerStatusData, type UpdateBuyerStatusBody } from "@services/api/buyer/buyer.type";
 
 import useClearOnFormChange from "../../../_hooks/useClearOnFormChange";
 import FormMultiSelect, { toTags } from "../../FormMultiSelect";
 import FormSelect from "../../FormSelect";
 import { pickOption, toOptions } from "../../sections/IntroOptions";
-import { INTEGER, REQUIRED, chosen, requiredChoice } from "../../sections/formFields";
+import { INTEGER, REQUIRED, chosen, optionalChoice, requiredChoice } from "../../sections/formFields";
 import { toNumberText } from "../../sections/numberText";
 import { ANNUAL_REVENUE_VALUES, BRAND_EXPERIENCE_VALUES, INDUSTRY_VALUES } from "../buyerOptions";
 
@@ -25,24 +25,36 @@ import { ANNUAL_REVENUE_VALUES, BRAND_EXPERIENCE_VALUES, INDUSTRY_VALUES } from 
  * 서버 필수: 업종·매장 수(0 이상 정수)·연매출 규모·브랜드 운영 경험(빈 배열 허용).
  * 시안의 연매출은 USD 구간·하한·상한이지만 API는 원화 구간 하나라 API를 따른다(디자인 확인 요청).
  *
- * 한국 브랜드 운영 경험·보유 브랜드 개수는 API에만 있고 시안에 칸이 없다(기획 확인 중).
- * 칸은 만들지 않지만 PUT이 전체 치환이라, 빼고 보내면 서버 값이 지워진다 — 저장된 값을 그대로 다시 보낸다.
+ * 한국 브랜드 운영 경험·보유 브랜드 수는 시안에 칸이 없지만 기획 확인 결과 필요해서(2026-10-08) 연매출 옆에 둔다.
+ * 둘 다 선택 항목이다. 이 두 필드는 보내지 않으면 서버가 기존 값을 그대로 둬서, 비울 때는 null을 보낸다
+ * (→ UpdateBuyerStatusBody 주석).
  */
-// 매장 수 상한 — 서버에 상한이 없어 브랜드 운영 현황과 같은 기준으로 막는다
-const MAX_STORE_COUNT = { value: 100_000, label: "10만 개" };
+// 매장 수·브랜드 수 상한 — 서버에 상한이 없어 브랜드 운영 현황과 같은 기준으로 막는다
+const MAX_COUNT = { value: 100_000, label: "10만 개" };
+
+const countField = () =>
+  z
+    .string()
+    .regex(INTEGER, "0 이상의 정수를 입력해주세요")
+    .refine(
+      value => !INTEGER.test(value) || Number(value) <= MAX_COUNT.value,
+      `${MAX_COUNT.label} 이하로 입력해주세요`,
+    );
+
+/** 예/아니오 선택 박스 ↔ boolean. 선택 박스 값은 문자열이라 이름을 붙여 둔다 */
+const YES_NO_OPTIONS = [
+  { value: "yes", label: "예" },
+  { value: "no", label: "아니오" },
+] as const;
 
 const statusSchema = z.object({
   current_industry: requiredChoice(INDUSTRY_VALUES),
-  store_cnt: z
-    .string()
-    .min(1, REQUIRED)
-    .regex(INTEGER, "0 이상의 정수를 입력해주세요")
-    .refine(
-      value => !INTEGER.test(value) || Number(value) <= MAX_STORE_COUNT.value,
-      `${MAX_STORE_COUNT.label} 이하로 입력해주세요`,
-    ),
+  store_cnt: z.string().min(1, REQUIRED).pipe(countField()),
   brand_experience_types: z.array(z.enum(BRAND_EXPERIENCE_VALUES)),
   annual_revenue_scale: requiredChoice(ANNUAL_REVENUE_VALUES),
+  korean_brand_experience: optionalChoice(["yes", "no"] as const),
+  // 비워 둘 수 있다
+  brand_count: z.union([z.literal(""), countField()]),
 });
 
 type StatusFormValues = z.infer<typeof statusSchema>;
@@ -52,6 +64,8 @@ const EMPTY_VALUES: StatusFormValues = {
   store_cnt: "",
   brand_experience_types: [],
   annual_revenue_scale: "",
+  korean_brand_experience: "",
+  brand_count: "",
 };
 
 const toFormValues = (saved: BuyerStatusData): StatusFormValues => ({
@@ -63,16 +77,22 @@ const toFormValues = (saved: BuyerStatusData): StatusFormValues => ({
       (BRAND_EXPERIENCE_VALUES as readonly string[]).includes(value),
   ),
   annual_revenue_scale: pickOption(ANNUAL_REVENUE_VALUES, saved.annual_revenue_scale),
+  korean_brand_experience:
+    saved.korean_brand_experience === undefined || saved.korean_brand_experience === null
+      ? ""
+      : saved.korean_brand_experience
+        ? "yes"
+        : "no",
+  brand_count: toNumberText(saved.brand_count),
 });
 
-/** 폼 → 요청. 화면에 칸이 없는 두 값은 저장된 값을 그대로 넘긴다(위 주석) */
-const toRequest = (values: StatusFormValues, saved: BuyerStatusData | null): UpdateBuyerStatusRequest => ({
+const toRequest = (values: StatusFormValues): UpdateBuyerStatusBody => ({
   current_industry: chosen(values.current_industry),
   store_cnt: Number(values.store_cnt),
   brand_experience_types: values.brand_experience_types,
   annual_revenue_scale: chosen(values.annual_revenue_scale),
-  korean_brand_experience: saved?.korean_brand_experience ?? undefined,
-  brand_count: saved?.brand_count ?? undefined,
+  korean_brand_experience: values.korean_brand_experience ? values.korean_brand_experience === "yes" : null,
+  brand_count: values.brand_count ? Number(values.brand_count) : null,
 });
 
 type BuyerStatusSectionProps = {
@@ -102,7 +122,7 @@ export default function BuyerStatusSection({ workspaceId }: BuyerStatusSectionPr
   useClearOnFormChange(watch, clearSaveError);
 
   const onSubmit = (values: StatusFormValues) => {
-    updateBuyerStatus(toRequest(values, saved ?? null), {
+    updateBuyerStatus(toRequest(values), {
       onSuccess: response => {
         reset(response ? toFormValues(response.buyer_status) : values, { keepFieldsRef: true });
         Toast.success("운영 현황을 저장했어요.");
@@ -154,6 +174,23 @@ export default function BuyerStatusSection({ workspaceId }: BuyerStatusSectionPr
           label="연매출 규모"
           required
           options={toOptions(ANNUAL_REVENUE_VALUES)}
+        />
+        <FormSelect
+          control={control}
+          name="korean_brand_experience"
+          label="한국 브랜드 운영 경험"
+          options={YES_NO_OPTIONS}
+        />
+        <Input
+          id="brand_count"
+          size="md"
+          labelClassName="text-xs"
+          label="보유 브랜드 수"
+          placeholder="예: 8"
+          inputMode="numeric"
+          error={Boolean(errors.brand_count)}
+          errorText={errors.brand_count?.message}
+          {...register("brand_count")}
         />
       </div>
     </SettingsSection>

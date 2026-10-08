@@ -22,6 +22,19 @@ export type UpdateBuyerBasicResponse = components["schemas"]["UpdateBuyerBasicRe
 export type UpdateBuyerStatusRequest = components["schemas"]["UpdateBuyerStatusDto"];
 export type UpdateBuyerStatusResponse = components["schemas"]["UpdateBuyerStatusResponseDto"];
 
+/**
+ * 운영 현황 요청 본문 — 스펙 타입에서 두 선택 항목만 null을 허용하도록 넓힌다.
+ *
+ * 이 두 필드만 동작이 다르다(400·200 응답으로 확인, 2026-10-08): 보내지 않으면 서버가 기존 값을 그대로 두고,
+ * null을 보내야 비워진다. 다른 섹션의 선택 항목은 보내지 않으면 비워진다(전체 치환).
+ * 스펙은 null을 허용하지 않아(brand_count?: number) 비울 방법이 타입에 없다.
+ * TODO(백엔드): 다른 섹션처럼 빼면 비우거나, 스펙에 null을 허용해 달라고 요청함 — 반영되면 이 타입을 지운다
+ */
+export type UpdateBuyerStatusBody = Omit<UpdateBuyerStatusRequest, "korean_brand_experience" | "brand_count"> & {
+  korean_brand_experience?: boolean | null;
+  brand_count?: number | null;
+};
+
 /** 회사 소개 */
 export type UpdateBuyerIntroRequest = components["schemas"]["UpdateBuyerIntroDto"];
 export type UpdateBuyerIntroResponse = components["schemas"]["UpdateBuyerIntroResponseDto"];
