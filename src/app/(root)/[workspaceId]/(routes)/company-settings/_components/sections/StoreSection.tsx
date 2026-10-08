@@ -152,11 +152,10 @@ export default function StoreSection({ workspaceId }: StoreSectionProps) {
         />
 
         {/* 시안의 칸 이름은 "메뉴 사진"이지만 매장 사진을 받는다.
-            업로드 칸 name은 완성도 API field_key(store_image_list) — 저장 필드(image_list)와 이름이 달라 따로 준다.
-            TODO(백엔드): 완성도 field_key를 image_list로 맞춰 달라고 요청함 */}
+            업로드 칸 name = 완성도 API field_key(image_list) — 저니 패널이 이 칸으로 포커스한다 */}
         <PhotoListField
           label="매장 사진"
-          name="store_image_list"
+          name="image_list"
           urls={photos}
           max={MAX_STORE_PHOTOS}
           onAdd={addPhotos}
