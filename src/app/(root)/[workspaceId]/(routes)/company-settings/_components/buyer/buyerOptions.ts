@@ -31,7 +31,7 @@ export const BUSINESS_TYPE_VALUES = BUSINESS_TYPE_OPTIONS.map(option => option.v
 ];
 
 /** 운영 국가 — 값과 라벨이 같다. 바이어 탐색의 국가 필터도 이 목록을 쓴다 */
-export const OPERATING_COUNTRY_VALUES = ["일본", "홍콩", "싱가포르", "태국", "대한민국"] as const;
+export const OPERATING_COUNTRY_VALUES = ["대한민국", "일본", "홍콩", "싱가포르", "태국"] as const;
 
 export const INDUSTRY_VALUES = [
   "양식",
