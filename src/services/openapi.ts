@@ -250,9 +250,9 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * 🔄 [UPDATE 26.10.06] 워크스페이스 상세 정보 조회 (브랜드/바이어 상세 섹션 DTO 타입 구체화)
-     * @description ### 📝 최근 업데이트 이력 (2026.10.06)
-     *     - **브랜드/바이어 상세 섹션 DTO 타입 구체화**: `brand` 및 `buyer` 하위 상세 프로필 객체(13개 브랜드 섹션, 5개 바이어 섹션)가 기존 `Record<string, any>`(`type: Object`)에서 `Brand*DataDto` 및 `Buyer*DataDto` 구체 타입으로 명시되어, 프론트엔드 타입 자동 생성 시 `Record<string, never>`로 추론되던 문제가 개선되었습니다.
+     * 🔄 [UPDATE 26.10.08] 워크스페이스 상세 정보 조회 (바이어 운영 도시 제거 반영)
+     * @description ### 📝 최근 업데이트 이력 (2026.10.08)
+     *     - **바이어 운영 도시(`city`) 필드 제거**: 바이어 기본 정보 스펙 변경에 따라 `buyer` 상세 프로필 객체 및 `buyer_basic` 내 `city` 필드가 제거되었습니다.
      *
      *     ---
      *
@@ -1488,11 +1488,16 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * 🔥 [NEW 26.10.02] 바이어 워크스페이스 대시보드 조회
-     * @description ### 📌 상세 역할 및 개요
+     * 🔄 [UPDATE 26.10.08] 바이어 워크스페이스 대시보드 조회 (운영 도시 항목 제거 반영)
+     * @description ### 📝 최근 업데이트 이력 (2026.10.08)
+     *     - **운영 도시(`city`) 평가 항목 제거**: 바이어 기본 정보 스펙 변경에 따라 대시보드 정보 완성도 산출 대상 항목에서 `city`가 제외되었습니다 (총 28개 → 27개).
+     *
+     *     ---
+     *
+     *     ### 📌 상세 역할 및 개요
      *     - 바이어 워크스페이스 메인 대시보드 화면에 필요한 핵심 정보 완성도, 단계별 추천 항목, 최근 Next Action 목록, CRM 업무 진행 현황(8단계 카운트), 최근 활동 로그(최대 10개)를 종합 반환합니다.
      *     - 향후 대시보드 지표 및 섹션 데이터가 점진적으로 확장 추가될 수 있는 표준 구조입니다.
-     *     - **종합 완성도 (`completion_rate`)**: 5대 섹션(기본정보, 계약및정책, 현황, 소개, 담당자)의 총 28개 필드 입력 여부를 합산하여 산출합니다.
+     *     - **종합 완성도 (`completion_rate`)**: 5대 섹션(기본정보, 계약및정책, 현황, 소개, 담당자)의 총 27개 필드 입력 여부를 합산하여 산출합니다.
      *     - **단계별 상태 및 문구 (`stage`)**:
      *       - **시작 (0~24%)**: "우리 회사와 잘 맞는 브랜드를 찾아볼 수 있어요"
      *       - **성장 (25~89%)**: "회사 정보를 정리 중이에요\n브랜드가 우리 회사를 확인하고 먼저 연락해올 수 있어요"
@@ -1536,8 +1541,13 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * 바이어 탐색 및 목록 조회
-     * @description ### 📌 상세 역할 및 개요
+     * 🔄 [UPDATE 26.10.08] 바이어 탐색 및 목록 조회 (도시 필드 제거)
+     * @description ### 📝 최근 업데이트 이력 (2026.10.08)
+     *     - **반환 항목 내 도시(`city`) 필드 제거**: 바이어 기본 정보 스펙 변경에 따라 바이어 카드 목록(`items`)의 `city` 필드가 제거되었습니다.
+     *
+     *     ---
+     *
+     *     ### 📌 상세 역할 및 개요
      *     - 해외 진출을 함께할 바이어/파트너 목록을 탐색 및 조회하는 메인 검색 API입니다.
      *     - 국가, 선호 계약 조건, 카테고리(사업 유형), 키워드 필터링 및 페이징을 지원하며, 화면 상단 필터 드롭다운에 즉시 바인딩 가능한 `filterOptions` 목록을 함께 제공합니다.
      *
@@ -1614,14 +1624,17 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * 🔥 [NEW 26.09.23] 바이어 정보 완성 현황 조회
-     * @description > 🆕 **신규 추가 API (26.09.23)**
+     * 🔄 [UPDATE 26.10.08] 바이어 정보 완성 현황 조회 (운영 도시 항목 제거)
+     * @description ### 📝 최근 업데이트 이력 (2026.10.08)
+     *     - **운영 도시(`city`) 평가 항목 제거**: 바이어 기본 정보 스펙 간소화에 따라 평가 항목에서 `city`가 제외되었으며, 기본 정보 평가 항목이 8개에서 7개(전체 총 27개)로 조정되었습니다.
+     *
+     *     ---
      *
      *     ### 📌 상세 역할 및 개요
-     *     - 바이어 워크스페이스의 기업 정보 완성 현황(완성도 %, 총 28개 세부 평가 항목 입력 여부, 5개 섹션별 달성도, 다음 작업 및 남은 주요 항목)을 조회합니다.
+     *     - 바이어 워크스페이스의 기업 정보 완성 현황(완성도 %, 총 27개 세부 평가 항목 입력 여부, 5개 섹션별 달성도, 다음 작업 및 남은 주요 항목)을 조회합니다.
      *     - 브랜드 정보 완성 현황 API와 동일한 표준 포맷(`stage`, `next_task`, `remaining_tasks`, `sections`)으로 응답합니다.
-     *     - 평가 대상 5개 섹션 (총 28개 평가 항목):
-     *       1. **기업 기본 정보** (`buyer_basic` - 8개): 회사명(필수), 설립연도, 대표자 이름, 운영 국가, 운영 도시, 본사 홈페이지, 본사 대표 이메일, 본사 주소
+     *     - 평가 대상 5개 섹션 (총 27개 평가 항목):
+     *       1. **기업 기본 정보** (`buyer_basic` - 7개): 회사명(필수), 설립연도, 대표자 이름, 운영 국가, 본사 홈페이지, 본사 대표 이메일, 본사 주소
      *       2. **희망 파트너 조건 및 정책** (`buyer_contract_policy` - 10개): 도입 희망 업종(필수), 선호 계약 방식(필수), 희망 파트너 역할(필수), 초기 투자 가능 규모(필수), 선호 로열티 방식, 선호 가격대, 독점권 요구 수준, 메뉴 현지화 요구 수준, 인테리어 기준 선호, 자체 식자재 공급망
      *       3. **기업 운영 현황** (`buyer_status` - 4개): 현재 운영 중인 업종, 운영 매장 수, 연매출 규모, 브랜드 운영 경험
      *       4. **기업 소개 및 차별점** (`buyer_intro` - 2개): 회사 소개, 핵심 차별점
@@ -1665,8 +1678,13 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * 바이어 기업명 자동완성 조회
-     * @description ### 📌 상세 역할 및 개요
+     * 🔄 [UPDATE 26.10.08] 바이어 기업명 자동완성 조회 (도시 필드 제거)
+     * @description ### 📝 최근 업데이트 이력 (2026.10.08)
+     *     - **보조 정보 내 도시(`city`) 필드 제거**: 바이어 기본 정보 스펙 변경에 따라 자동완성 프리뷰 목록 항목에서 `city` 필드가 제거되었습니다.
+     *
+     *     ---
+     *
+     *     ### 📌 상세 역할 및 개요
      *     - 바이어 기업명 입력 시 일치하는 등록 바이어의 검색어 자동완성 및 프리뷰 목록을 반환합니다.
      *     - 로그인된 사용자(`JwtAuthGuard`)만 조회 가능합니다.
      *
@@ -1679,7 +1697,7 @@ export interface paths {
      *        - `keyword` (필수, string): 검색 키워드 (**최소 2글자 이상**).
      *        - 2글자 미만 입력 시 `400 Bad Request`가 반환되므로, 프론트엔드에서 2글자 이상 입력 시에만 API를 호출하도록 사전 제어하는 것을 권장합니다.
      *     3. **UI 바인딩 팁**:
-     *        - 드롭다운 목록에 `company_name`(기업명)과 보조 정보(`country`, `city`, `contact_name`)를 표시하여 사용자가 원하는 바이어를 직관적으로 식별 및 선택할 수 있도록 구성합니다.
+     *        - 드롭다운 목록에 `company_name`(기업명)과 보조 정보(`country`, `contact_name`)를 표시하여 사용자가 원하는 바이어를 직관적으로 식별 및 선택할 수 있도록 구성합니다.
      */
     get: operations["AutocompleteBuyerController_execute"];
     put?: never;
@@ -1699,11 +1717,16 @@ export interface paths {
     };
     get?: never;
     /**
-     * 바이어 회사 기본 정보 입력 및 업데이트
-     * @description ### 📌 상세 역할 및 개요
-     *     - 바이어 워크스페이스의 회사 기본 정보(`buyer_basic`: 회사명, 설립연도, 본사 위치, 국가, 도시, 주요 업종, 웹사이트 등)를 등록 또는 수정합니다.
+     * 🔄 [UPDATE 26.10.08] 바이어 회사 기본 정보 입력 및 업데이트 (운영 도시 제거)
+     * @description ### 📝 최근 업데이트 이력 (2026.10.08)
+     *     - **운영 도시(`city`) 필드 제거**: 바이어 기본 정보 스펙 간소화에 따라 요청 Body 및 반환 응답에서 운영 도시(`city`) 필드가 제거되었습니다.
+     *
+     *     ---
+     *
+     *     ### 📌 상세 역할 및 개요
+     *     - 바이어 워크스페이스의 회사 기본 정보(`buyer_basic`: 회사명, 설립연도, 국가, 주요 업종, 웹사이트 등)를 등록 또는 수정합니다.
      *     - 요청자는 해당 워크스페이스에 소속된 **활성 멤버**여야 합니다.
-     *     - 바이어 테이블(`etq_workspace_buyer`)의 JSON 컬럼(`buyer_basic`)과 개별 인덱싱 컬럼(`business_type`, `country`, `city`)에 자동 동기화되어 저장됩니다.
+     *     - 바이어 테이블(`etq_workspace_buyer`)의 JSON 컬럼(`buyer_basic`)과 개별 인덱싱 컬럼(`business_type`, `country`)에 자동 동기화되어 저장됩니다.
      *
      *     ---
      *
@@ -1715,9 +1738,8 @@ export interface paths {
      *        - **Body (JSON)**:
      *          - `company_name` (string, 필수): 회사명
      *          - `business_type` (string, 필수): 사업 유형 (예: "외식 운영사", "유통" 등)
-     *          - `country` (string, 필수): 소재 국가
-     *          - `city` (string, 필수): 소재 도시
-     *          - `founded_year`, `headquarter_location`, `target_industry`, `website_url` 등 선택 항목 전달
+     *          - `country` (string, 선택): 소재 국가
+     *          - `founded_year`, `ceo_name`, `homepage_url`, `official_email`, `official_address` 등 선택 항목 전달
      *     3. **에러 핸들링**:
      *        - `400 Bad Request`: 필수 입력값 누락 또는 바이어 워크스페이스가 아닌 경우 (`"바이어 워크스페이스가 아닙니다."`)
      *        - `403 Forbidden`: 해당 워크스페이스의 멤버 권한이 없는 경우
@@ -3174,11 +3196,6 @@ export interface components {
        */
       country: string | null;
       /**
-       * @description 운영 도시
-       * @example 서울
-       */
-      city: string | null;
-      /**
        * @description 본사 홈페이지 URL
        * @example https://www.globalfood.com
        */
@@ -3378,11 +3395,6 @@ export interface components {
        * @example 대한민국
        */
       country: string | null;
-      /**
-       * @description 도시
-       * @example 서울
-       */
-      city: string | null;
       /** @description 바이어 기본 정보 */
       buyer_basic: components["schemas"]["BuyerBasicDataDto"] | null;
       /** @description 바이어 소개 정보 */
@@ -6242,11 +6254,6 @@ export interface components {
        */
       country: string | null;
       /**
-       * @description 도시 / 세부 지역
-       * @example 도쿄도 오타구
-       */
-      city: string | null;
-      /**
        * @description 사업 유형
        * @example 외식 프랜차이즈 그룹
        */
@@ -6411,8 +6418,8 @@ export interface components {
        */
       founded_year: number | null;
       /**
-       * @description 본사 위치 / 도시
-       * @example 일본 도쿄
+       * @description 본사 위치
+       * @example 일본
        */
       headquarter_location: string | null;
       /**
@@ -6568,11 +6575,6 @@ export interface components {
        * @example true
        */
       country: boolean;
-      /**
-       * @description 운영 도시
-       * @example true
-       */
-      city: boolean;
       /**
        * @description 본사 홈페이지
        * @example true
@@ -6876,11 +6878,6 @@ export interface components {
        */
       country: string | null;
       /**
-       * @description 도시
-       * @example 도쿄도 미나토구
-       */
-      city: string | null;
-      /**
        * @description 연락처 담당자 이름
        * @example 홍길동
        */
@@ -6927,11 +6924,6 @@ export interface components {
        */
       country?: string;
       /**
-       * @description 운영 도시
-       * @example 서울
-       */
-      city?: string;
-      /**
        * @description 본사 홈페이지 URL
        * @example https://www.globalfood.com
        */
@@ -6968,11 +6960,6 @@ export interface components {
        * @example 대한민국
        */
       country: string | null;
-      /**
-       * @description 운영 도시 컬럼 값
-       * @example 서울
-       */
-      city: string | null;
       /** @description 업데이트된 바이어 회사 기본 정보 (buyer_basic) */
       buyer_basic: components["schemas"]["BuyerBasicDataDto"];
     };
