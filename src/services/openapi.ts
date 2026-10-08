@@ -739,16 +739,20 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * 🔥 [NEW 26.09.23] 브랜드(비주얼) 정보 완성 현황 조회
-     * @description > 🆕 **신규 추가/업데이트 API (26.09.23)**
+     * 🔄 [UPDATE 26.10.08] 브랜드(비주얼) 정보 완성 현황 조회 (대표 매장 image_list 필드명 통일 및 매장 영상 제거)
+     * @description ### 📝 최근 업데이트 이력 (2026.10.08)
+     *     - **대표 매장 사진 필드명 통일(`store_image_list` ➔ `image_list`)**: 대표 매장 DTO 스펙(`UpdateBrandStoreDto`)과 일치하도록 대표 매장 비주얼 평가 필드명을 `image_list`로 변경했습니다.
+     *     - **대표 매장 영상(`store_video_list`, `store_video_count`) 제거**: 대표 매장에는 영상 업로드가 없으므로 비주얼 평가 항목에서 매장 영상을 제거하고, 대표 매장 비주얼을 4개 항목(총 12개 항목)으로 개편했습니다.
+     *
+     *     ---
      *
      *     ### 📌 상세 역할 및 개요
-     *     - 브랜드 워크스페이스의 비주얼 자산 등록 완성 현황(완성도 %, 총 13개 세부 평가 항목 등록 여부, 섹션별 달성도, 다음 작업 및 세부 자산 통계)을 조회합니다.
+     *     - 브랜드 워크스페이스의 비주얼 자산 등록 완성 현황(완성도 %, 총 12개 세부 평가 항목 등록 여부, 섹션별 달성도, 다음 작업 및 세부 자산 통계)을 조회합니다.
      *     - 기본정보 완성 현황 API와 동일한 표준 포맷(`stage`, `next_task`, `remaining_tasks`, `sections`, `details`)으로 응답합니다.
-     *     - 평가 대상 3개 섹션 (총 13개 평가 항목):
+     *     - 평가 대상 3개 섹션 (총 12개 평가 항목):
      *       1. **브랜드 대표 비주얼** (`visual_identity` - 3개): 브랜드 로고(필수), 브랜드 대표 이미지(필수), 브랜드 대표 영상
      *       2. **대표 메뉴 비주얼** (`visual_menu` - 5개): 메뉴 이름(한국어, 필수), 메뉴 가격(필수), 메뉴 설명(필수), 메뉴 사진(필수), 메뉴 이름(영어)
-     *       3. **대표 매장 비주얼** (`visual_store` - 5개): 대표 매장 이름(한국어), 대표 매장 이름(영어), 매장 사진, 대표 매장 주소, 매장 영상
+     *       3. **대표 매장 비주얼** (`visual_store` - 4개): 대표 매장 이름(한국어), 대표 매장 이름(영어), 매장 사진, 대표 매장 주소
      *     - **다음으로 해야 할 일(`next_task`)**: 우선순위가 가장 높은 미등록 비주얼 항목 1개와 안내 문구 반환 (모두 등록 완료 시 `null`)
      *     - **남은 주요 항목(`remaining_tasks`)**: `next_task`를 제외한 다음 우선순위 미등록 항목 최대 3개 목록
      *     - 요청자는 해당 워크스페이스에 소속된 **활성 멤버**여야 합니다.
@@ -4663,17 +4667,12 @@ export interface components {
        * @description 매장 사진 등록 여부 (1개 이상 등록 시 true)
        * @example true
        */
-      store_image_list: boolean;
+      image_list: boolean;
       /**
        * @description 대표 매장 주소 입력 여부
        * @example true
        */
       store_address: boolean;
-      /**
-       * @description 매장 영상 등록 여부 (1개 이상 등록 시 true)
-       * @example false
-       */
-      store_video_list: boolean;
     };
     VisualStoreSectionDto: {
       /**
@@ -4733,11 +4732,6 @@ export interface components {
        * @example 1
        */
       store_image_count: number;
-      /**
-       * @description 등록된 매장 영상 수
-       * @example 0
-       */
-      store_video_count: number;
     };
     GetBrandCompletionVisualResponseDto: {
       /**
@@ -4747,12 +4741,12 @@ export interface components {
       workspace_uid: number;
       /**
        * @description 전체 브랜드 비주얼 완성도 (0~100%)
-       * @example 62
+       * @example 67
        */
       completion_rate: number;
       /**
        * @description 비주얼 총 평가 항목 수
-       * @example 13
+       * @example 12
        */
       total_fields: number;
       /**
