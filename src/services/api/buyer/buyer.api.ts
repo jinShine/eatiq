@@ -2,6 +2,9 @@ import axiosClientInstance from "@services/axios.client";
 
 import {
   type BuyerCompletionResponse,
+  type BuyerDetailResponse,
+  type BuyerListQuery,
+  type BuyerListResponse,
   type UpdateBuyerBasicRequest,
   type UpdateBuyerBasicResponse,
   type UpdateBuyerContactRequest,
@@ -20,6 +23,8 @@ const BASE_PATH = "/api/workspace";
 const buildBuyerPath = (workspaceId: string) => `${BASE_PATH}/${workspaceId}/buyer`;
 
 const ENDPOINTS = {
+  list: `${BASE_PATH}/buyer/list`,
+  detail: (buyerId: string) => `${BASE_PATH}/buyer/${buyerId}`,
   basic: (workspaceId: string) => `${buildBuyerPath(workspaceId)}/basic`,
   status: (workspaceId: string) => `${buildBuyerPath(workspaceId)}/status`,
   intro: (workspaceId: string) => `${buildBuyerPath(workspaceId)}/intro`,
@@ -27,6 +32,21 @@ const ENDPOINTS = {
   contact: (workspaceId: string) => `${buildBuyerPath(workspaceId)}/contact`,
   completion: (workspaceId: string) => `${buildBuyerPath(workspaceId)}/completion`,
 };
+
+/************************************
+ * 바이어 탐색
+ ************************************/
+/** 목록 — 필터 값이 없으면 보내지 않는다(서버는 없거나 "전체"면 전체 조회) */
+export async function getBuyerList(query: BuyerListQuery): Promise<BuyerListResponse> {
+  const res = await axiosClientInstance.get<BuyerListResponse>(ENDPOINTS.list, { params: query });
+  return res.data;
+}
+
+/** 상세 — 탐색 목록의 uid(바이어 식별자). 워크스페이스 id가 아니다 */
+export async function getBuyerDetail(buyerId: string): Promise<BuyerDetailResponse> {
+  const res = await axiosClientInstance.get<BuyerDetailResponse>(ENDPOINTS.detail(buyerId));
+  return res.data;
+}
 
 /************************************
  * 회사 정보 설정 — 섹션 저장 (PUT, 전체 치환)

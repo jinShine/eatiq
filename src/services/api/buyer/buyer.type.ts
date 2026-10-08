@@ -1,4 +1,12 @@
-import { type components } from "@services/openapi";
+import { type components, type operations } from "@services/openapi";
+
+/************************************
+ * 바이어 탐색 — 목록·상세 조회
+ ************************************/
+export type BuyerListQuery = NonNullable<operations["GetBuyerListController_execute"]["parameters"]["query"]>;
+export type BuyerListResponse = components["schemas"]["GetBuyerListResponseDto"];
+export type BuyerListItem = components["schemas"]["BuyerListItemDto"];
+export type BuyerDetailResponse = components["schemas"]["GetBuyerDetailResponseDto"];
 
 /************************************
  * 회사 정보 설정 — 바이어 섹션별 저장값 (읽기)

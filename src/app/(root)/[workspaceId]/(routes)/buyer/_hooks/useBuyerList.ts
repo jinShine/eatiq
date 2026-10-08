@@ -1,28 +1,23 @@
-import { useEffect, useMemo, useState } from "react";
+import { type BuyerListFilters, useBuyerList as useBuyerListQuery } from "@services/api/buyer/buyer.query";
 
-import { BUYER_MOCK, type BuyerRow } from "../_components/buyerMock";
-
-type UseBuyerListResult = {
-  buyers: BuyerRow[];
-  isLoading: boolean;
-};
+import { toBuyerCard } from "../_components/buyerView";
 
 /**
- * 바이어 목록 조회.
- *
- * TODO(API): 목록 API가 준비되면 useQuery로 교체한다. 반환 모양을
- * { buyers, isLoading }으로 맞춰뒀으므로 이 훅 안만 바꾸면 된다.
+ * 바이어 탐색 목록 — 받은 페이지를 이어 붙여 카드 뷰모델로 바꾼다.
+ * 「더 보기」는 다음 페이지를 받는다(loadMore).
  */
-export function useBuyerList(workspaceId: string): UseBuyerListResult {
-  // TODO(API): 목업 단계에서 로딩 UI를 확인하기 위한 임시 상태다
-  const [isLoading, setIsLoading] = useState(true);
+export function useBuyerList(filters: BuyerListFilters) {
+  const query = useBuyerListQuery(filters);
+  const buyers = query.data?.pages.flatMap(page => page.items.map(toBuyerCard)) ?? [];
 
-  useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 400);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const buyers = useMemo(() => (workspaceId ? BUYER_MOCK : []), [workspaceId]);
-
-  return { buyers, isLoading };
+  return {
+    buyers,
+    total: query.data?.pages[0]?.total ?? 0,
+    isLoading: query.isLoading,
+    error: query.error,
+    hasMore: query.hasNextPage,
+    isLoadingMore: query.isFetchingNextPage,
+    loadMore: () => query.fetchNextPage(),
+    retry: () => query.refetch(),
+  };
 }

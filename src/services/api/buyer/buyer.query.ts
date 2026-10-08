@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
 
 import { useInvalidateQueries } from "@hooks/commons";
 
@@ -9,18 +9,59 @@ import { workspaceKeys } from "../workspace/workspace.query";
 import { type WorkspaceDetailResponse } from "../workspace/workspace.type";
 import {
   getBuyerCompletion,
+  getBuyerDetail,
+  getBuyerList,
   updateBuyerBasic,
   updateBuyerContact,
   updateBuyerContractPolicy,
   updateBuyerIntro,
   updateBuyerStatus,
 } from "./buyer.api";
-import { type BuyerCompletion, type BuyerCompletionResponse, type BuyerCompletionTask } from "./buyer.type";
+import {
+  type BuyerCompletion,
+  type BuyerCompletionResponse,
+  type BuyerCompletionTask,
+  type BuyerListQuery,
+} from "./buyer.type";
 
 export const buyerKeys = {
   all: ["buyers"] as const,
+  list: (filters: BuyerListFilters) => [...buyerKeys.all, "list", filters] as const,
+  detail: (buyerId: string) => [...buyerKeys.all, "detail", buyerId] as const,
   completion: (workspaceId: string) => [...buyerKeys.all, "completion", workspaceId] as const,
 };
+
+/************************************
+ * 바이어 탐색
+ ************************************/
+export type BuyerListFilters = Pick<BuyerListQuery, "country" | "category" | "contract_type">;
+
+/** 한 번에 받는 개수 — 서버 기본값(최대 50). 「더 보기」를 누르면 다음 페이지를 이어 붙인다 */
+const BUYER_PAGE_SIZE = 12;
+
+/**
+ * 바이어 탐색 목록 — 페이지를 이어 붙인다(「더 보기」).
+ * 필터가 바뀌면 queryKey가 바뀌어 첫 페이지부터 다시 받는다.
+ * TODO(API): 목 데이터가 없어 목 모드에서는 요청하지 않는다
+ */
+export function useBuyerList(filters: BuyerListFilters) {
+  return useInfiniteQuery({
+    queryKey: buyerKeys.list(filters),
+    queryFn: ({ pageParam }) => getBuyerList({ ...filters, page: pageParam, limit: BUYER_PAGE_SIZE }),
+    initialPageParam: 1,
+    getNextPageParam: lastPage => (lastPage.page < lastPage.total_pages ? lastPage.page + 1 : undefined),
+    enabled: !IS_MOCK,
+  });
+}
+
+/** 바이어 상세 — 드로어가 열려 있을 때만(buyerId가 있을 때만) 받는다 */
+export function useBuyerDetail(buyerId: string | null) {
+  return useQuery({
+    queryKey: buyerKeys.detail(buyerId ?? ""),
+    queryFn: () => getBuyerDetail(buyerId as string),
+    enabled: Boolean(buyerId) && !IS_MOCK,
+  });
+}
 
 type CompletionTaskDto = NonNullable<BuyerCompletionResponse["next_task"]>;
 
