@@ -5,20 +5,22 @@ import { motion, useReducedMotion } from "motion/react";
 
 import { cn } from "@utils/shadcn";
 
-import { JOURNEY_STAGES } from "./journeyStages";
+import { type JourneyStage } from "./journeyStages";
 
 type JourneyStepperProps = {
+  /** 브랜드 4단계 / 바이어 3단계 */
+  stages: readonly JourneyStage[];
   currentIndex: number; // toStageIndex 결과
 };
 
-export default function JourneyStepper({ currentIndex }: JourneyStepperProps) {
+export default function JourneyStepper({ stages, currentIndex }: JourneyStepperProps) {
   const shouldReduceMotion = useReducedMotion();
 
   return (
     <ol className="flex items-center">
-      {JOURNEY_STAGES.map((stage, index) => {
+      {stages.map((stage, index) => {
         const isDone = index <= currentIndex;
-        const isLast = index === JOURNEY_STAGES.length - 1;
+        const isLast = index === stages.length - 1;
 
         return (
           <li key={stage.step} className={cn("flex items-center", isLast ? "shrink-0" : "flex-1")}>

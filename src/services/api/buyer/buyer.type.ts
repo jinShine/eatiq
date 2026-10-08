@@ -38,3 +38,28 @@ export type UpdateBuyerContactResponse = components["schemas"]["UpdateBuyerConta
  * 정보 완성 현황
  ************************************/
 export type BuyerCompletionResponse = components["schemas"]["GetBuyerCompletionResponseDto"];
+
+export type BuyerCompletionStep = components["schemas"]["BuyerCompletionStageDto"]["step"];
+
+/** 다음 할 일·남은 항목 한 칸 → BrandCompletionTask 주석 참고 */
+export type BuyerCompletionTask = {
+  title: string;
+  description: string;
+  isRequired: boolean;
+  /** 이동할 섹션 — 화면 섹션의 id(buyer_basic 등) */
+  sectionKey: string;
+  /** 포커스할 필드 — 폼 필드 이름(DTO 필드명)과 같다 */
+  fieldKey: string;
+};
+
+/** 저니 패널 뷰모델 */
+export type BuyerCompletion = {
+  rate: number;
+  totalFields: number;
+  completedFields: number;
+  step: BuyerCompletionStep;
+  /** 단계별 안내 문구 — 서버가 준다(줄바꿈 \n 포함) */
+  stepMessage: string;
+  nextTask: BuyerCompletionTask | null;
+  remainingTasks: BuyerCompletionTask[];
+};

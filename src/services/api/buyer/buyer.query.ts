@@ -8,17 +8,52 @@ import { mockWorkspaceDetail } from "../workspace/workspace.mock";
 import { workspaceKeys } from "../workspace/workspace.query";
 import { type WorkspaceDetailResponse } from "../workspace/workspace.type";
 import {
+  getBuyerCompletion,
   updateBuyerBasic,
   updateBuyerContact,
   updateBuyerContractPolicy,
   updateBuyerIntro,
   updateBuyerStatus,
 } from "./buyer.api";
+import { type BuyerCompletion, type BuyerCompletionResponse, type BuyerCompletionTask } from "./buyer.type";
 
 export const buyerKeys = {
   all: ["buyers"] as const,
   completion: (workspaceId: string) => [...buyerKeys.all, "completion", workspaceId] as const,
 };
+
+type CompletionTaskDto = NonNullable<BuyerCompletionResponse["next_task"]>;
+
+const toCompletionTask = (task: CompletionTaskDto): BuyerCompletionTask => ({
+  title: task.title,
+  description: task.description,
+  isRequired: task.is_required,
+  sectionKey: task.section_key,
+  fieldKey: task.field_key,
+});
+
+const toCompletion = (response: BuyerCompletionResponse): BuyerCompletion => ({
+  rate: response.completion_rate,
+  totalFields: response.total_fields,
+  completedFields: response.completed_fields,
+  step: response.stage.step,
+  stepMessage: response.stage.message,
+  nextTask: response.next_task ? toCompletionTask(response.next_task) : null,
+  remainingTasks: response.remaining_tasks.map(toCompletionTask),
+});
+
+/**
+ * 바이어 정보 완성 현황 (저니 패널). 브랜드와 달리 탭 없이 한 번에 받는다.
+ * TODO(API): 목 데이터가 없어 목 모드에서는 요청하지 않는다
+ */
+export function useBuyerCompletion(workspaceId: string) {
+  return useQuery({
+    queryKey: buyerKeys.completion(workspaceId),
+    queryFn: () => getBuyerCompletion(workspaceId),
+    select: toCompletion,
+    enabled: Boolean(workspaceId) && !IS_MOCK,
+  });
+}
 
 /** 워크스페이스 상세의 바이어 섹션들(buyer_basic … buyer_contact) */
 type WorkspaceDetailBuyer = NonNullable<WorkspaceDetailResponse["buyer"]>;
