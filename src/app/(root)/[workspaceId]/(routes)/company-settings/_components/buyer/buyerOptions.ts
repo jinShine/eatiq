@@ -10,6 +10,29 @@ import { type UpdateBuyerContractPolicyRequest, type UpdateBuyerStatusRequest } 
 type Status = UpdateBuyerStatusRequest;
 type Policy = UpdateBuyerContractPolicyRequest;
 
+/************************************
+ * 회사 기본 정보 — 사업 유형·운영 국가.
+ * 스펙은 자유 문자열이라 선택지를 프론트에서 관리한다(백엔드와 합의, 2026-10-08).
+ ************************************/
+
+/** 사업 유형 — 서버에는 코드값을 저장하고 화면에는 한국어 이름을 보여준다 */
+export const BUSINESS_TYPE_OPTIONS = [
+  { value: "restaurant_chain", label: "외식 체인 운영사" },
+  { value: "fnb_distribution", label: "식음료 유통사" },
+  { value: "real_estate_developer", label: "부동산 개발사" },
+  { value: "investment_holding", label: "투자·지주회사" },
+  { value: "franchise_operator", label: "프랜차이즈 운영사" },
+  { value: "other", label: "기타" },
+] as const;
+
+export const BUSINESS_TYPE_VALUES = BUSINESS_TYPE_OPTIONS.map(option => option.value) as [
+  (typeof BUSINESS_TYPE_OPTIONS)[number]["value"],
+  ...(typeof BUSINESS_TYPE_OPTIONS)[number]["value"][],
+];
+
+/** 운영 국가 — 값과 라벨이 같다(브랜드 진출 목표 국가와 같은 목록) */
+export const OPERATING_COUNTRY_VALUES = ["일본", "홍콩", "싱가포르", "태국"] as const;
+
 export const INDUSTRY_VALUES = [
   "양식",
   "한식",

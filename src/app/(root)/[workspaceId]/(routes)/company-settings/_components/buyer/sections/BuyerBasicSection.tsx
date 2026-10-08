@@ -14,13 +14,18 @@ import { type BuyerBasicData, type UpdateBuyerBasicRequest } from "@services/api
 import { isUrl } from "@utils/functions";
 
 import useClearOnFormChange from "../../../_hooks/useClearOnFormChange";
+import FormSelect from "../../FormSelect";
+import { pickOption, toOptions } from "../../sections/IntroOptions";
+import { optionalChoice } from "../../sections/formFields";
+import { BUSINESS_TYPE_OPTIONS, BUSINESS_TYPE_VALUES, OPERATING_COUNTRY_VALUES } from "../buyerOptions";
 
 /**
  * 회사 기본 정보 (피그마 961:10022) — PUT /buyer/basic. 폼 필드 이름은 저장 DTO와 같다 → BasicInfoSection 주석 참고.
  *
- * 서버 규칙(400 응답으로 확인): 회사명 필수 100자, 설립 연도 1800~2100, 사업 유형·대표자·국가·도시 100자,
+ * 서버 규칙(400 응답으로 확인): 회사명 필수 100자, 설립 연도 1800~2100, 대표자 100자,
  * 주소 255자, 홈페이지 URL·이메일 형식. 시안의 「런칭 연도」는 API에 없어 뺐다.
- * TODO(백엔드): 사업 유형·운영 국가·운영 도시는 시안대로 선택 박스가 된다(선택지 추가 예정). 지금은 자유 입력
+ * 사업 유형·운영 국가는 선택지를 프론트에서 관리한다(buyerOptions). 운영 도시는 기획에서 빼기로 했다 —
+ * 보내지 않으면 PUT 전체 치환이라 서버의 도시 값은 비워진다.
  */
 const maxLength = (max: number) => `${max}자 이내로 입력해주세요`;
 
@@ -29,10 +34,9 @@ const basicSchema = z.object({
   founded_year: z.string().refine(v => !v || (/^\d{4}$/.test(v) && Number(v) >= 1800 && Number(v) <= 2100), {
     message: "1800~2100 사이 연도를 입력해주세요",
   }),
-  business_type: z.string().trim().max(100, maxLength(100)),
+  business_type: optionalChoice(BUSINESS_TYPE_VALUES),
   ceo_name: z.string().trim().max(100, maxLength(100)),
-  country: z.string().trim().max(100, maxLength(100)),
-  city: z.string().trim().max(100, maxLength(100)),
+  country: optionalChoice(OPERATING_COUNTRY_VALUES),
   homepage_url: z
     .string()
     .trim()
@@ -52,7 +56,6 @@ const EMPTY_VALUES: BasicFormValues = {
   business_type: "",
   ceo_name: "",
   country: "",
-  city: "",
   homepage_url: "",
   official_email: "",
   official_address: "",
@@ -61,10 +64,10 @@ const EMPTY_VALUES: BasicFormValues = {
 const toFormValues = (saved: BuyerBasicData): BasicFormValues => ({
   company_name: saved.company_name ?? "",
   founded_year: saved.founded_year ? String(saved.founded_year) : "",
-  business_type: saved.business_type ?? "",
+  // 선택지에 없는 값(예전 자유 입력값)은 "선택 안 함"으로 → pickOption 주석 참고
+  business_type: pickOption(BUSINESS_TYPE_VALUES, saved.business_type),
   ceo_name: saved.ceo_name ?? "",
-  country: saved.country ?? "",
-  city: saved.city ?? "",
+  country: pickOption(OPERATING_COUNTRY_VALUES, saved.country),
   homepage_url: saved.homepage_url ?? "",
   official_email: saved.official_email ?? "",
   official_address: saved.official_address ?? "",
@@ -77,10 +80,9 @@ const toRequest = (values: BasicFormValues): UpdateBuyerBasicRequest => {
   return {
     company_name: values.company_name.trim(),
     founded_year: values.founded_year ? Number(values.founded_year) : undefined,
-    business_type: optional(values.business_type),
+    business_type: values.business_type || undefined,
     ceo_name: optional(values.ceo_name),
-    country: optional(values.country),
-    city: optional(values.city),
+    country: values.country || undefined,
     homepage_url: optional(values.homepage_url),
     official_email: optional(values.official_email),
     official_address: optional(values.official_address),
@@ -99,6 +101,7 @@ export default function BuyerBasicSection({ workspaceId }: BuyerBasicSectionProp
   const { mutate: updateBuyerBasic, isPending, error, reset: clearSaveError } = useUpdateBuyerBasic(workspaceId);
 
   const {
+    control,
     register,
     reset,
     watch,
@@ -121,7 +124,7 @@ export default function BuyerBasicSection({ workspaceId }: BuyerBasicSectionProp
     });
   };
 
-  const field = (name: keyof BasicFormValues) => ({
+  const field = (name: Exclude<keyof BasicFormValues, "business_type" | "country">) => ({
     id: name,
     size: "md" as const,
     labelClassName: "text-xs",
@@ -142,13 +145,12 @@ export default function BuyerBasicSection({ workspaceId }: BuyerBasicSectionProp
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         <Input label="회사명" required placeholder="예: 롤링 인베스트먼트" {...field("company_name")} />
         <Input label="설립 연도" placeholder="예: 2018" inputMode="numeric" {...field("founded_year")} />
-        <Input label="사업 유형" placeholder="예: 외식 체인 운영사" {...field("business_type")} />
+        <FormSelect control={control} name="business_type" label="사업 유형" options={BUSINESS_TYPE_OPTIONS} />
       </div>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         <Input label="대표자 이름" placeholder="예: 김도경" {...field("ceo_name")} />
-        <Input label="운영 국가" placeholder="예: 일본" {...field("country")} />
-        <Input label="운영 도시" placeholder="예: 도쿄" {...field("city")} />
+        <FormSelect control={control} name="country" label="운영 국가" options={toOptions(OPERATING_COUNTRY_VALUES)} />
       </div>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
