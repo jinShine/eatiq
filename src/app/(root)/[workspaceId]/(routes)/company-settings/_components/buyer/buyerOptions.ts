@@ -30,8 +30,8 @@ export const BUSINESS_TYPE_VALUES = BUSINESS_TYPE_OPTIONS.map(option => option.v
   ...(typeof BUSINESS_TYPE_OPTIONS)[number]["value"][],
 ];
 
-/** 운영 국가 — 값과 라벨이 같다(브랜드 진출 목표 국가와 같은 목록) */
-export const OPERATING_COUNTRY_VALUES = ["일본", "홍콩", "싱가포르", "태국"] as const;
+/** 운영 국가 — 값과 라벨이 같다. 바이어 탐색의 국가 필터도 이 목록을 쓴다 */
+export const OPERATING_COUNTRY_VALUES = ["일본", "홍콩", "싱가포르", "태국", "대한민국"] as const;
 
 export const INDUSTRY_VALUES = [
   "양식",
