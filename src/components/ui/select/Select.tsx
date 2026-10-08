@@ -66,7 +66,11 @@ export function Select({
         </HStack>
       )}
 
-      <ShadcnSelect value={value} onValueChange={onValueChange}>
+      {/* 빈 값("") 변경은 무시한다. Radix는 폼 안에서 숨은 native <select>를 같이 두고, 값이 바뀌면 거기에도 넣은 뒤
+          change를 쏜다. 그 순간 <option>이 아직 없으면 native 값이 ""로 남아, ""가 onValueChange로 되돌아와
+          저장된 값을 지운다(캐시된 데이터로 폼이 바로 채워질 때 — 다른 메뉴에 갔다 돌아오면 저장 안 된 변경으로 보였다).
+          항목 값은 ""가 될 수 없어(Radix 제약) 사용자가 고른 결과로 ""가 오는 일은 없다. 비우기는 폼 reset·setValue로 한다 */}
+      <ShadcnSelect value={value} onValueChange={next => next !== "" && onValueChange?.(next)}>
         <SelectTrigger
           aria-required={required || undefined}
           {...props}
