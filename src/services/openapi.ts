@@ -647,6 +647,39 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/workspace/brand/autocomplete": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * 브랜드 기업명 자동완성 조회
+     * @description ### 📌 상세 역할 및 개요
+     *     - 브랜드 검색창 및 바이어의 타깃 브랜드 입력 시 실시간 기업명 자동완성 추천 목록을 제공합니다.
+     *     - JWT 인증 토큰(`access_token`)이 필요합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 검색 인풋에 사용자가 2글자 이상 입력했을 때 실시간 호출 (디바운스 200~300ms 권장).
+     *     2. **요청 파라미터 (Query)**:
+     *        - `keyword` (string, 필수): 검색어 (최소 2글자 이상 필수, 미만 시 `400 Bad Request`).
+     *     3. **화면 렌더링 활용**:
+     *        - 자동완성 드롭다운에 브랜드명(`company_name`, `brand_name_en`), 로고(`logo_url`), 카테고리/국가 바인딩.
+     *        - 항목 선택 시 해당 브랜드 상세 모달 열기 또는 검색 필터 적용.
+     */
+    get: operations["AutocompleteBrandController_execute"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/workspace/brand/{brand_uid}": {
     parameters: {
       query?: never;
@@ -880,39 +913,6 @@ export interface paths {
      *        - `sections.[섹션키].fields.[필드명]`: 해당 필드의 등록 완료 여부(boolean).
      */
     get: operations["GetBrandCompletionCommercialController_getBrandCommercialCompletion"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/workspace/brand/autocomplete": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * 브랜드 기업명 자동완성 조회
-     * @description ### 📌 상세 역할 및 개요
-     *     - 브랜드 검색창 및 바이어의 타깃 브랜드 입력 시 실시간 기업명 자동완성 추천 목록을 제공합니다.
-     *     - JWT 인증 토큰(`access_token`)이 필요합니다.
-     *
-     *     ---
-     *
-     *     ### 💻 프론트엔드 연동 가이드
-     *     1. **호출 시점**:
-     *        - 검색 인풋에 사용자가 2글자 이상 입력했을 때 실시간 호출 (디바운스 200~300ms 권장).
-     *     2. **요청 파라미터 (Query)**:
-     *        - `keyword` (string, 필수): 검색어 (최소 2글자 이상 필수, 미만 시 `400 Bad Request`).
-     *     3. **화면 렌더링 활용**:
-     *        - 자동완성 드롭다운에 브랜드명(`company_name`, `brand_name_en`), 로고(`logo_url`), 카테고리/국가 바인딩.
-     *        - 항목 선택 시 해당 브랜드 상세 모달 열기 또는 검색 필터 적용.
-     */
-    get: operations["AutocompleteBrandController_execute"];
     put?: never;
     post?: never;
     delete?: never;
@@ -1541,15 +1541,16 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * 🔄 [UPDATE 26.10.08] 바이어 탐색 및 목록 조회 (도시 필드 제거)
+     * 🔄 [UPDATE 26.10.08] 바이어 탐색 및 목록 조회 (도시 필드 제거 및 필터 설명 정정)
      * @description ### 📝 최근 업데이트 이력 (2026.10.08)
+     *     - **필터 옵션 연동 가이드 정정**: 응답 본문에 제공되지 않는 `filterOptions` 설명을 제거하고, 프론트엔드 내 표준 Enum/상수 기반 필터링 가이드로 정정하였습니다.
      *     - **반환 항목 내 도시(`city`) 필드 제거**: 바이어 기본 정보 스펙 변경에 따라 바이어 카드 목록(`items`)의 `city` 필드가 제거되었습니다.
      *
      *     ---
      *
      *     ### 📌 상세 역할 및 개요
      *     - 해외 진출을 함께할 바이어/파트너 목록을 탐색 및 조회하는 메인 검색 API입니다.
-     *     - 국가, 선호 계약 조건, 카테고리(사업 유형), 키워드 필터링 및 페이징을 지원하며, 화면 상단 필터 드롭다운에 즉시 바인딩 가능한 `filterOptions` 목록을 함께 제공합니다.
+     *     - 국가, 선호 계약 조건, 카테고리(사업 유형), 키워드 필터링 및 페이징을 지원합니다.
      *
      *     ---
      *
@@ -1562,14 +1563,52 @@ export interface paths {
      *        - `page` (number, 기본값 1): 요청 페이지 번호
      *        - `limit` (number, 기본값 12, 최대 50): 페이지당 항목 수 (카드 그리드 UI에 맞춤)
      *        - `country` (string, 선택): 국가 필터 (미지정 또는 `"전체"` 전달 시 전체 조회)
-     *        - `contract_type` (string, 선택): 계약 방식 필터 (`"전체"`, `"마스터 프랜차이즈"`, `"합작법인 (JV)"` 등)
-     *        - `category` (string, 선택): 사업 유형 필터 (`"전체"`, `"외식 운영사"`, `"유통"` 등)
+     *        - `contract_type` (string, 선택): 계약 방식 필터 (`"전체"`, `"마스터 프랜차이즈"`, `"지역 개발권"`, `"직영"`, `"합작법인"`, `"라이선스"`, `"유통"`, `"미정"` 등)
+     *        - `category` (string, 선택): 사업 유형 필터 (`"전체"`, `"외식 체인 운영사"`, `"F&B 유통 · 수입사"`, `"부동산 개발사"`, `"투자 지주사"`, `"프랜차이즈 운영사"`, `"기타"` 등)
      *        - `keyword` (string, 선택): 바이어 회사명 또는 소개글 부분 일치 검색어
      *     3. **UI 바인딩 팁**:
-     *        - **필터 드롭다운**: 응답의 `filterOptions` 객체 내 `countries`, `contract_types`, `categories` 배열을 셀렉트 박스 옵션으로 즉시 바인딩할 수 있습니다. (첫 번째 요소로 `"전체"`가 자동 포함됨)
+     *        - **필터 드롭다운**: 국가, 계약 방식(`BuyerPreferredContractTypeEnum`), 사업 유형(`BuyerBusinessTypeEnum`)은 프론트엔드 표준 상수/Enum을 드롭다운 옵션으로 바인딩하여 쿼리 파라미터로 전송합니다.
      *        - **바이어 카드 리스트**: `items` 배열의 데이터를 사용하여 프로토타입 형태의 카드(회사명, 이니셜, 국가, 운영 브랜드 수, 매칭 추천 포인트 등)를 렌더링합니다.
      */
     get: operations["GetBuyerListController_execute"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/workspace/buyer/autocomplete": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * 🔄 [UPDATE 26.10.08] 바이어 기업명 자동완성 조회 (도시 필드 제거)
+     * @description ### 📝 최근 업데이트 이력 (2026.10.08)
+     *     - **보조 정보 내 도시(`city`) 필드 제거**: 바이어 기본 정보 스펙 변경에 따라 자동완성 프리뷰 목록 항목에서 `city` 필드가 제거되었습니다.
+     *
+     *     ---
+     *
+     *     ### 📌 상세 역할 및 개요
+     *     - 바이어 기업명 입력 시 일치하는 등록 바이어의 검색어 자동완성 및 프리뷰 목록을 반환합니다.
+     *     - 로그인된 사용자(`JwtAuthGuard`)만 조회 가능합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 바이어 검색창, 필터 입력창 등에서 사용자가 텍스트를 타이핑할 때 (Debounce 200~300ms 적용 권장).
+     *     2. **요청 파라미터**:
+     *        - `keyword` (필수, string): 검색 키워드 (**최소 2글자 이상**).
+     *        - 2글자 미만 입력 시 `400 Bad Request`가 반환되므로, 프론트엔드에서 2글자 이상 입력 시에만 API를 호출하도록 사전 제어하는 것을 권장합니다.
+     *     3. **UI 바인딩 팁**:
+     *        - 드롭다운 목록에 `company_name`(기업명)과 보조 정보(`country`, `contact_name`)를 표시하여 사용자가 원하는 바이어를 직관적으로 식별 및 선택할 수 있도록 구성합니다.
+     */
+    get: operations["AutocompleteBuyerController_execute"];
     put?: never;
     post?: never;
     delete?: never;
@@ -1670,44 +1709,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/workspace/buyer/autocomplete": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * 🔄 [UPDATE 26.10.08] 바이어 기업명 자동완성 조회 (도시 필드 제거)
-     * @description ### 📝 최근 업데이트 이력 (2026.10.08)
-     *     - **보조 정보 내 도시(`city`) 필드 제거**: 바이어 기본 정보 스펙 변경에 따라 자동완성 프리뷰 목록 항목에서 `city` 필드가 제거되었습니다.
-     *
-     *     ---
-     *
-     *     ### 📌 상세 역할 및 개요
-     *     - 바이어 기업명 입력 시 일치하는 등록 바이어의 검색어 자동완성 및 프리뷰 목록을 반환합니다.
-     *     - 로그인된 사용자(`JwtAuthGuard`)만 조회 가능합니다.
-     *
-     *     ---
-     *
-     *     ### 💻 프론트엔드 연동 가이드
-     *     1. **호출 시점**:
-     *        - 바이어 검색창, 필터 입력창 등에서 사용자가 텍스트를 타이핑할 때 (Debounce 200~300ms 적용 권장).
-     *     2. **요청 파라미터**:
-     *        - `keyword` (필수, string): 검색 키워드 (**최소 2글자 이상**).
-     *        - 2글자 미만 입력 시 `400 Bad Request`가 반환되므로, 프론트엔드에서 2글자 이상 입력 시에만 API를 호출하도록 사전 제어하는 것을 권장합니다.
-     *     3. **UI 바인딩 팁**:
-     *        - 드롭다운 목록에 `company_name`(기업명)과 보조 정보(`country`, `contact_name`)를 표시하여 사용자가 원하는 바이어를 직관적으로 식별 및 선택할 수 있도록 구성합니다.
-     */
-    get: operations["AutocompleteBuyerController_execute"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   "/api/workspace/{workspace_uid}/buyer/basic": {
     parameters: {
       query?: never;
@@ -1717,8 +1718,9 @@ export interface paths {
     };
     get?: never;
     /**
-     * 🔄 [UPDATE 26.10.08] 바이어 회사 기본 정보 입력 및 업데이트 (운영 도시 제거)
+     * 🔄 [UPDATE 26.10.08] 바이어 회사 기본 정보 입력 및 업데이트 (사업유형 소문자 key 표준화 및 도시 제거)
      * @description ### 📝 최근 업데이트 이력 (2026.10.08)
+     *     - **사업유형(`business_type`) 소문자 key 표준화**: 사업유형 선택지를 6종 소문자 key(`restaurant_chain`, `fnb_distribution`, `real_estate_developer`, `investment_holding`, `franchise_operator`, `other`)로 표준화하고 한글 레이블과 매핑 안내 적용.
      *     - **운영 도시(`city`) 필드 제거**: 바이어 기본 정보 스펙 간소화에 따라 요청 Body 및 반환 응답에서 운영 도시(`city`) 필드가 제거되었습니다.
      *
      *     ---
@@ -1737,11 +1739,11 @@ export interface paths {
      *        - **Path**: `workspace_uid` (number, 필수)
      *        - **Body (JSON)**:
      *          - `company_name` (string, 필수): 회사명
-     *          - `business_type` (string, 필수): 사업 유형 (예: "외식 운영사", "유통" 등)
+     *          - `business_type` (string, 선택): 사업 유형 (`restaurant_chain`(외식 체인 운영사), `fnb_distribution`(F&B 유통 · 수입사), `real_estate_developer`(부동산 개발사), `investment_holding`(투자 지주사), `franchise_operator`(프랜차이즈 운영사), `other`(기타))
      *          - `country` (string, 선택): 소재 국가
      *          - `founded_year`, `ceo_name`, `homepage_url`, `official_email`, `official_address` 등 선택 항목 전달
      *     3. **에러 핸들링**:
-     *        - `400 Bad Request`: 필수 입력값 누락 또는 바이어 워크스페이스가 아닌 경우 (`"바이어 워크스페이스가 아닙니다."`)
+     *        - `400 Bad Request`: 필수 입력값 누락, 사업유형 형식 오류, 또는 바이어 워크스페이스가 아닌 경우 (`"바이어 타입의 워크스페이스만 바이어 회사 기본 정보를 수정할 수 있습니다."`)
      *        - `403 Forbidden`: 해당 워크스페이스의 멤버 권한이 없는 경우
      */
     put: operations["UpdateBuyerBasicController_handle"];
@@ -1761,9 +1763,14 @@ export interface paths {
     };
     get?: never;
     /**
-     * 바이어 현재 운영 현황 입력 및 업데이트
-     * @description ### 📌 상세 역할 및 개요
-     *     - 바이어 워크스페이스의 현재 외식/식품 사업 운영 현황(`buyer_status`: 총 매장 수, 연간 매출 규모, 주요 운영 브랜드 목록, 운영 국가 등)을 등록 또는 수정합니다.
+     * 🔄 [UPDATE 26.10.08] 바이어 현재 운영 현황 입력 및 업데이트 (한국 브랜드 경험 및 브랜드 개수 null 허용 및 미전송 비움 반영)
+     * @description ### 📝 최근 업데이트 이력 (2026.10.08)
+     *     - **운영 현황 선택 항목 비움 처리 개선**: `korean_brand_experience`, `brand_count` 항목을 미전송(`undefined`)하거나 명시적으로 `null` 전송 시 비움(`null`) 처리되도록 변경 (다른 섹션과 일관성 유지).
+     *
+     *     ---
+     *
+     *     ### 📌 상세 역할 및 개요
+     *     - 바이어 워크스페이스의 현재 외식/식품 사업 운영 현황(`buyer_status`: 현재 업종, 매장 수, 브랜드 운영 경험, 연간 매출 규모, 한국 브랜드 운영 경험 여부, 보유 브랜드 수 등)을 등록 또는 수정합니다.
      *     - 요청자는 해당 워크스페이스에 소속된 **활성 멤버**여야 합니다.
      *
      *     ---
@@ -1774,10 +1781,12 @@ export interface paths {
      *     2. **파라미터**:
      *        - **Path**: `workspace_uid` (number, 필수)
      *        - **Body (JSON)**:
-     *          - `total_store_count` (number, 선택): 현재 총 운영 매장 수
-     *          - `annual_revenue_scale` (string, 선택): 연간 매출 규모 구간
-     *          - `operating_brands` (array, 선택): 현재 운영 중인 브랜드 목록 객체 배열 (`brand_name`, `store_count`, `contract_type`, `started_year`, `source_url`)
-     *          - `operating_countries` (string[], 선택): 사업 진출 국가 목록
+     *          - `current_industry` (string, 필수): 현재 운영 중인 업종 (예: '양식')
+     *          - `store_cnt` (number, 필수): 운영 매장 수 (0 이상)
+     *          - `brand_experience_types` (string[], 필수): 브랜드 운영 경험 배열
+     *          - `annual_revenue_scale` (string, 필수): 연매출 규모 구간
+     *          - `korean_brand_experience` (boolean | null, 선택): 한국 브랜드 운영 경험 여부 (생략 또는 null 시 비움)
+     *          - `brand_count` (number | null, 선택): 보유 브랜드 개수 (생략 또는 null 시 비움)
      *     3. **에러 핸들링**:
      *        - `400 Bad Request`: 바이어 워크스페이스가 아닌 경우
      *        - `403 Forbidden`: 해당 워크스페이스 활성 멤버가 아닌 경우
@@ -1837,8 +1846,13 @@ export interface paths {
     };
     get?: never;
     /**
-     * 바이어 계약 정책 입력 및 업데이트
-     * @description ### 📌 상세 역할 및 개요
+     * 🔄 [UPDATE 26.10.08] 바이어 계약 정책 입력 및 업데이트 (선택지 문구 및 유효성 검증 메시지 동기화)
+     * @description ### 📝 최근 업데이트 이력 (2026.10.08)
+     *     - **선택지 문구 및 400 유효성 검증 안내 일치화**: 로열티 방식, 목표 고객 가격대(객단가), 독점권 요구, 메뉴 현지화 필수 여부, 인테리어 시공 선호, 자체 식자재 공급망 항목의 설명 및 유효성 검증(400 에러) 문구를 실제 수신 Enum 값과 100% 일치하도록 정정.
+     *
+     *     ---
+     *
+     *     ### 📌 상세 역할 및 개요
      *     - 바이어 워크스페이스의 파트너십 선호 계약 정책(`buyer_contract_policy`: 선호 계약 방식, 희망 가격대, 독점권 조건, 메뉴 현지화 요구, 로열티 선호, 식자재 유통망 보유 여부 등)을 등록 또는 수정합니다.
      *     - 요청자는 해당 워크스페이스에 소속된 **활성 멤버**여야 합니다.
      *     - `preferred_contract_type`(선호 계약 방식)은 개별 컬럼에도 함께 자동 동기화됩니다.
@@ -1851,12 +1865,16 @@ export interface paths {
      *     2. **파라미터**:
      *        - **Path**: `workspace_uid` (number, 필수)
      *        - **Body (JSON)**:
-     *          - `preferred_contract_type` (string, 필수): 희망 계약 방식 (예: "마스터 프랜차이즈", "합작법인 (JV)" 등)
-     *          - `target_price_tier` (string, 선택): 선호 객단가/가격대
-     *          - `exclusivity_requirement` (string, 선택): 독점권 요구 조건
-     *          - `localization_requirement` (string, 선택): 메뉴 현지화 수용 기준
-     *          - `preferred_royalty_type` (string, 선택): 선호 로열티 산정 방식
-     *          - `has_supply_chain` (boolean, 선택): 식자재/물류 공급망 보유 여부
+     *          - `target_industry` (string, 필수): 도입 희망 업종
+     *          - `preferred_contract_type` (string, 선택): 선호 계약 방식
+     *          - `target_partner_role` (string, 필수): 희망 파트너 역할
+     *          - `investment_budget_scale` (string, 필수): 초기 투자 가능 금액
+     *          - `preferred_royalty_type` (string, 필수): 선호 로열티 방식 (예: "총매출 기준 비율", "순수익 기준 비율", "월정액", "로열티 없음", "협의 가능")
+     *          - `target_price_tier` (string, 필수): 목표 고객 가격대 (예: "1만원 미만", "1만 ~ 2만원", "2만 ~ 4만원", "4만원 이상")
+     *          - `exclusivity_requirement` (string, 필수): 독점권 요구 수준 (예: "국가 단위 독점 필수", "지역 단위 독점 희망", "비독점 수용 가능", "협의 필요")
+     *          - `localization_requirement` (string, 필수): 메뉴 현지화 필수 여부 (예: "할랄 인증 필수", "비건/채식 메뉴 필수", "현지 입맛 조정 필수", "원작 유지 선호", "협의 가능")
+     *          - `interior_preference` (string, 필수): 인테리어 시공/구매 방식 선호 (예: "현지 직접 조달 희망", "본사 지정 감리/구매 수용", "협의 가능")
+     *          - `has_supply_chain` (string, 필수): 자체 식자재 공급망 보유 여부 (예: "자체 유통망 보유", "협력 물류망 활용 가능", "본사 지원 필요")
      *     3. **에러 핸들링**:
      *        - `400 Bad Request`: 필수 파라미터 누락 또는 바이어 워크스페이스가 아님
      *        - `403 Forbidden`: 해당 워크스페이스 활성 멤버가 아님
@@ -3181,10 +3199,18 @@ export interface components {
        */
       founded_year: number | null;
       /**
-       * @description 사업유형
-       * @example 식음료 유통 및 도소매
+       * @description 사업유형 (restaurant_chain, fnb_distribution, real_estate_developer, investment_holding, franchise_operator, other)
+       * @example restaurant_chain
+       * @enum {string|null}
        */
-      business_type: string | null;
+      business_type:
+        | "restaurant_chain"
+        | "fnb_distribution"
+        | "real_estate_developer"
+        | "investment_holding"
+        | "franchise_operator"
+        | "other"
+        | null;
       /**
        * @description 대표자 이름
        * @example 김대표
@@ -3271,7 +3297,7 @@ export interface components {
        * @description 한국 브랜드 운영 경험 여부
        * @example true
        */
-      korean_brand_experience?: boolean;
+      korean_brand_experience?: boolean | null;
       /**
        * @description 보유 브랜드 개수
        * @example 8
@@ -3312,33 +3338,33 @@ export interface components {
        */
       preferred_royalty_type: "총매출 기준 비율" | "순수익 기준 비율" | "월정액" | "로열티 없음" | "협의 가능";
       /**
-       * @description 선호 가격대
-       * @example 중가
+       * @description 목표 고객 가격대/1인 객단가
+       * @example 1만 ~ 2만원
        * @enum {string}
        */
       target_price_tier: "1만원 미만" | "1만 ~ 2만원" | "2만 ~ 4만원" | "4만원 이상";
       /**
        * @description 독점권 요구 수준
-       * @example 국가 독점
+       * @example 국가 단위 독점 필수
        * @enum {string}
        */
       exclusivity_requirement: "국가 단위 독점 필수" | "지역 단위 독점 희망" | "비독점 수용 가능" | "협의 필요";
       /**
-       * @description 메뉴 현지화 요구 수준
-       * @example 적극적 현지화 희망
+       * @description 메뉴 현지화 필수 여부
+       * @example 할랄 인증 필수
        * @enum {string}
        */
       localization_requirement:
         "할랄 인증 필수" | "비건/채식 메뉴 필수" | "현지 입맛 조정 필수" | "원작 유지 선호" | "협의 가능";
       /**
-       * @description 인테리어 기준 선호
-       * @example 본사 표준안 전면 적용
+       * @description 인테리어 시공/구매 방식 선호
+       * @example 현지 직접 조달 희망
        * @enum {string}
        */
       interior_preference: "현지 직접 조달 희망" | "본사 지정 감리/구매 수용" | "협의 가능";
       /**
-       * @description 자체 식자재 공급망
-       * @example 보유(자체 공급망 활용)
+       * @description 자체 식자재 공급망 보유 여부
+       * @example 자체 유통망 보유
        * @enum {string}
        */
       has_supply_chain: "자체 유통망 보유" | "협력 물류망 활용 가능" | "본사 지원 필요";
@@ -4068,6 +4094,57 @@ export interface components {
        * @example 3
        */
       total_pages: number;
+    };
+    BrandAutocompleteItemDto: {
+      /**
+       * @description 브랜드 고유 식별자 (uid)
+       * @example 1
+       */
+      uid: number;
+      /**
+       * @description 브랜드 기업명/브랜드명 (한국어)
+       * @example 플러그푸드
+       */
+      company_name: string;
+      /**
+       * @description 브랜드 영문명
+       * @example PlugFood
+       */
+      brand_name_en: string | null;
+      /**
+       * @description 업종/카테고리
+       * @example 외식/식음료
+       */
+      category: string | null;
+      /**
+       * @description 본사 위치/국가
+       * @example 대한민국
+       */
+      country: string | null;
+      /**
+       * @description 담당자 이름
+       * @example 홍길동
+       */
+      contact_name: string | null;
+      /**
+       * @description 담당자 이메일
+       * @example contact@plugfood.com
+       */
+      contact_email: string | null;
+      /**
+       * @description 브랜드 로고 이미지 URL
+       * @example https://storage.eatiqlink.com/logos/plugfood.png
+       */
+      logo_url: string | null;
+    };
+    AutocompleteBrandResponseDto: {
+      /** @description 자동완성 검색 결과 목록 */
+      items: components["schemas"]["BrandAutocompleteItemDto"][];
+      /**
+       * @description 조회된 결과 건수
+       * @example 3
+       */
+      total: number;
     };
     BrandDetailPartnershipConditionsDto: {
       /**
@@ -5227,57 +5304,6 @@ export interface components {
       /** @description 섹션별 상세 완성 현황 */
       sections: components["schemas"]["BrandCommercialSectionsDto"];
     };
-    BrandAutocompleteItemDto: {
-      /**
-       * @description 브랜드 고유 식별자 (uid)
-       * @example 1
-       */
-      uid: number;
-      /**
-       * @description 브랜드 기업명/브랜드명 (한국어)
-       * @example 플러그푸드
-       */
-      company_name: string;
-      /**
-       * @description 브랜드 영문명
-       * @example PlugFood
-       */
-      brand_name_en: string | null;
-      /**
-       * @description 업종/카테고리
-       * @example 외식/식음료
-       */
-      category: string | null;
-      /**
-       * @description 본사 위치/국가
-       * @example 대한민국
-       */
-      country: string | null;
-      /**
-       * @description 담당자 이름
-       * @example 홍길동
-       */
-      contact_name: string | null;
-      /**
-       * @description 담당자 이메일
-       * @example contact@plugfood.com
-       */
-      contact_email: string | null;
-      /**
-       * @description 브랜드 로고 이미지 URL
-       * @example https://storage.eatiqlink.com/logos/plugfood.png
-       */
-      logo_url: string | null;
-    };
-    AutocompleteBrandResponseDto: {
-      /** @description 자동완성 검색 결과 목록 */
-      items: components["schemas"]["BrandAutocompleteItemDto"][];
-      /**
-       * @description 조회된 결과 건수
-       * @example 3
-       */
-      total: number;
-    };
     UpdateBrandBasicDto: {
       /**
        * @description 브랜드 이름 (한국어)
@@ -6332,6 +6358,42 @@ export interface components {
        */
       total_pages: number;
     };
+    BuyerAutocompleteItemDto: {
+      /**
+       * @description 바이어 고유 식별자 (uid)
+       * @example 1
+       */
+      uid: number;
+      /**
+       * @description 바이어 기업명
+       * @example WDI Corporation
+       */
+      company_name: string;
+      /**
+       * @description 국가
+       * @example 일본
+       */
+      country: string | null;
+      /**
+       * @description 연락처 담당자 이름
+       * @example 홍길동
+       */
+      contact_name: string | null;
+      /**
+       * @description 연락처 담당자 메일
+       * @example contact@wdi.co.jp
+       */
+      contact_email: string | null;
+    };
+    AutocompleteBuyerResponseDto: {
+      /** @description 자동완성 검색 결과 목록 */
+      items: components["schemas"]["BuyerAutocompleteItemDto"][];
+      /**
+       * @description 조회된 결과 건수
+       * @example 3
+       */
+      total: number;
+    };
     OperatingBrandDto: {
       /**
        * @description 브랜드명
@@ -6861,42 +6923,6 @@ export interface components {
       /** @description 섹션별 상세 완성 현황 */
       sections: components["schemas"]["BuyerCompletionSectionsDto"];
     };
-    BuyerAutocompleteItemDto: {
-      /**
-       * @description 바이어 고유 식별자 (uid)
-       * @example 1
-       */
-      uid: number;
-      /**
-       * @description 바이어 기업명
-       * @example WDI Corporation
-       */
-      company_name: string;
-      /**
-       * @description 국가
-       * @example 일본
-       */
-      country: string | null;
-      /**
-       * @description 연락처 담당자 이름
-       * @example 홍길동
-       */
-      contact_name: string | null;
-      /**
-       * @description 연락처 담당자 메일
-       * @example contact@wdi.co.jp
-       */
-      contact_email: string | null;
-    };
-    AutocompleteBuyerResponseDto: {
-      /** @description 자동완성 검색 결과 목록 */
-      items: components["schemas"]["BuyerAutocompleteItemDto"][];
-      /**
-       * @description 조회된 결과 건수
-       * @example 3
-       */
-      total: number;
-    };
     UpdateBuyerBasicDto: {
       /**
        * @description 회사명
@@ -6909,10 +6935,18 @@ export interface components {
        */
       founded_year?: number;
       /**
-       * @description 사업유형
-       * @example 식음료 유통 및 도소매
+       * @description 사업유형 (선택지: restaurant_chain(외식 체인 운영사), fnb_distribution(F&B 유통 · 수입사), real_estate_developer(부동산 개발사), investment_holding(투자 지주사), franchise_operator(프랜차이즈 운영사), other(기타))
+       * @example restaurant_chain
+       * @enum {string|null}
        */
-      business_type?: string;
+      business_type?:
+        | "restaurant_chain"
+        | "fnb_distribution"
+        | "real_estate_developer"
+        | "investment_holding"
+        | "franchise_operator"
+        | "other"
+        | null;
       /**
        * @description 대표자 이름
        * @example 김대표
@@ -6951,10 +6985,18 @@ export interface components {
        */
       workspace_uid: number;
       /**
-       * @description 사업유형 컬럼 값
-       * @example 식음료 유통 및 도소매
+       * @description 사업유형 컬럼 값 (restaurant_chain, fnb_distribution, real_estate_developer, investment_holding, franchise_operator, other)
+       * @example restaurant_chain
+       * @enum {string|null}
        */
-      business_type: string | null;
+      business_type:
+        | "restaurant_chain"
+        | "fnb_distribution"
+        | "real_estate_developer"
+        | "investment_holding"
+        | "franchise_operator"
+        | "other"
+        | null;
       /**
        * @description 운영 국가 컬럼 값
        * @example 대한민국
@@ -6998,15 +7040,15 @@ export interface components {
        */
       annual_revenue_scale: "10억 미만" | "10억 ~ 50억" | "50억 ~ 100억" | "100억 ~ 500억" | "500억 이상";
       /**
-       * @description 한국 브랜드 운영 경험 여부
+       * @description 한국 브랜드 운영 경험 여부 (미전송 또는 null 전송 시 비움 처리)
        * @example true
        */
-      korean_brand_experience?: boolean;
+      korean_brand_experience?: boolean | null;
       /**
-       * @description 보유 브랜드 개수
+       * @description 보유 브랜드 개수 (미전송 또는 null 전송 시 비움 처리)
        * @example 8
        */
-      brand_count?: number;
+      brand_count?: number | null;
     };
     UpdateBuyerStatusResponseDto: {
       /**
@@ -7086,39 +7128,39 @@ export interface components {
        */
       investment_budget_scale: "1억 미만" | "1억 ~ 3억" | "3억 ~ 5억" | "5억 ~ 10억" | "10억 이상";
       /**
-       * @description 선호 로열티 방식 (선택지: 총매출 기준 비율, 순매출 기준 비율, 고정 로열티(정액제), 협의 필요)
+       * @description 선호 로열티 방식 (선택지: 총매출 기준 비율, 순수익 기준 비율, 월정액, 로열티 없음, 협의 가능)
        * @example 총매출 기준 비율
        * @enum {string}
        */
       preferred_royalty_type: "총매출 기준 비율" | "순수익 기준 비율" | "월정액" | "로열티 없음" | "협의 가능";
       /**
-       * @description 선호 가격대 (선택지: 저가, 중가, 고가)
-       * @example 중가
+       * @description 목표 고객 가격대/1인 객단가 (선택지: 1만원 미만, 1만 ~ 2만원, 2만 ~ 4만원, 4만원 이상)
+       * @example 1만 ~ 2만원
        * @enum {string}
        */
       target_price_tier: "1만원 미만" | "1만 ~ 2만원" | "2만 ~ 4만원" | "4만원 이상";
       /**
-       * @description 독점권 요구 수준 (선택지: 국가 독점, 지역/권역 독점, 독점권 불필요, 협의 필요)
-       * @example 국가 독점
+       * @description 독점권 요구 수준 (선택지: 국가 단위 독점 필수, 지역 단위 독점 희망, 비독점 수용 가능, 협의 필요)
+       * @example 국가 단위 독점 필수
        * @enum {string}
        */
       exclusivity_requirement: "국가 단위 독점 필수" | "지역 단위 독점 희망" | "비독점 수용 가능" | "협의 필요";
       /**
-       * @description 메뉴 현지화 요구 수준 (선택지: 적극적 현지화 희망, 원형 유지 희망, 협의 필요)
-       * @example 적극적 현지화 희망
+       * @description 메뉴 현지화 필수 여부 (선택지: 할랄 인증 필수, 비건/채식 메뉴 필수, 현지 입맛 조정 필수, 원작 유지 선호, 협의 가능)
+       * @example 할랄 인증 필수
        * @enum {string}
        */
       localization_requirement:
         "할랄 인증 필수" | "비건/채식 메뉴 필수" | "현지 입맛 조정 필수" | "원작 유지 선호" | "협의 가능";
       /**
-       * @description 인테리어 기준 선호 (선택지: 본사 표준안 전면 적용, 현지 사정 맞춰 일부 수정, 자체 디자인 적용(협의), 협의 필요)
-       * @example 본사 표준안 전면 적용
+       * @description 인테리어 시공/구매 방식 선호 (선택지: 현지 직접 조달 희망, 본사 지정 감리/구매 수용, 협의 가능)
+       * @example 현지 직접 조달 희망
        * @enum {string}
        */
       interior_preference: "현지 직접 조달 희망" | "본사 지정 감리/구매 수용" | "협의 가능";
       /**
-       * @description 자체 식자재 공급망 (선택지: 보유(자체 공급망 활용), 미보유(본사 공급 필요), 협의 필요)
-       * @example 보유(자체 공급망 활용)
+       * @description 자체 식자재 공급망 보유 여부 (선택지: 자체 유통망 보유, 협력 물류망 활용 가능, 본사 지원 필요)
+       * @example 자체 유통망 보유
        * @enum {string}
        */
       has_supply_chain: "자체 유통망 보유" | "협력 물류망 활용 가능" | "본사 지원 필요";
@@ -8791,6 +8833,43 @@ export interface operations {
       };
     };
   };
+  AutocompleteBrandController_execute: {
+    parameters: {
+      query: {
+        /** @description 브랜드 기업명 검색어 (최소 2글자 이상 필수) */
+        keyword: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 브랜드 기업명 자동완성 조회 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AutocompleteBrandResponseDto"];
+        };
+      };
+      /** @description 잘못된 요청 (최소 2글자 미만 입력 시 유효성 검사 실패) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 토큰 또는 미제공) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
   GetBrandDetailController_execute: {
     parameters: {
       query?: never;
@@ -8917,43 +8996,6 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["GetBrandCompletionCommercialResponseDto"];
         };
-      };
-    };
-  };
-  AutocompleteBrandController_execute: {
-    parameters: {
-      query: {
-        /** @description 브랜드 기업명 검색어 (최소 2글자 이상 필수) */
-        keyword: string;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description 브랜드 기업명 자동완성 조회 성공 */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["AutocompleteBrandResponseDto"];
-        };
-      };
-      /** @description 잘못된 요청 (최소 2글자 미만 입력 시 유효성 검사 실패) */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description 인증 실패 (유효하지 않거나 만료된 토큰 또는 미제공) */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
       };
     };
   };
@@ -9928,6 +9970,43 @@ export interface operations {
       };
     };
   };
+  AutocompleteBuyerController_execute: {
+    parameters: {
+      query: {
+        /** @description 바이어 기업명 검색어 (최소 2글자 이상 필수) */
+        keyword: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 바이어 기업명 자동완성 조회 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AutocompleteBuyerResponseDto"];
+        };
+      };
+      /** @description 잘못된 요청 (최소 2글자 미만 입력 시 유효성 검사 실패) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 토큰 또는 미제공) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
   GetBuyerDetailController_execute: {
     parameters: {
       query?: never;
@@ -9985,43 +10064,6 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["GetBuyerCompletionResponseDto"];
         };
-      };
-    };
-  };
-  AutocompleteBuyerController_execute: {
-    parameters: {
-      query: {
-        /** @description 바이어 기업명 검색어 (최소 2글자 이상 필수) */
-        keyword: string;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description 바이어 기업명 자동완성 조회 성공 */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["AutocompleteBuyerResponseDto"];
-        };
-      };
-      /** @description 잘못된 요청 (최소 2글자 미만 입력 시 유효성 검사 실패) */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description 인증 실패 (유효하지 않거나 만료된 토큰 또는 미제공) */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
       };
     };
   };
