@@ -110,8 +110,8 @@ export const toBuyerDetailView = (detail: BuyerDetailResponse): BuyerDetailView 
 /************************************
  * 필터 선택지 — 「전체」는 FilterChip이 앞에 붙인다(값 "" = 필터 없음)
  *
- * TODO(백엔드): 목록 응답에 filterOptions가 오면 그걸로 바꾼다(스펙 설명에는 있는데 응답에 없음).
- * 그 전까지는 회사 정보 설정과 같은 선택지를 쓴다.
+ * 서버는 선택지를 내려주지 않고 프론트 상수로 필터한다(백엔드와 합의, 2026-10-09).
+ * 바이어가 저장하는 값과 같아야 걸리므로 회사 정보 설정의 선택지를 그대로 쓴다.
  ************************************/
 export const COUNTRY_FILTER_OPTIONS = OPERATING_COUNTRY_VALUES.map(value => ({ value, label: value }));
 export const CATEGORY_FILTER_OPTIONS = BUSINESS_TYPE_OPTIONS.map(option => ({ ...option }));

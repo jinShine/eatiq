@@ -13,7 +13,7 @@ import {
   type UpdateBuyerContractPolicyResponse,
   type UpdateBuyerIntroRequest,
   type UpdateBuyerIntroResponse,
-  type UpdateBuyerStatusBody,
+  type UpdateBuyerStatusRequest,
   type UpdateBuyerStatusResponse,
 } from "./buyer.type";
 
@@ -56,8 +56,7 @@ export async function updateBuyerBasic(workspaceId: string, body: UpdateBuyerBas
   return res.data;
 }
 
-/** 운영 현황 — 두 선택 항목은 비울 때 null을 보낸다 → UpdateBuyerStatusBody 주석 참고 */
-export async function updateBuyerStatus(workspaceId: string, body: UpdateBuyerStatusBody) {
+export async function updateBuyerStatus(workspaceId: string, body: UpdateBuyerStatusRequest) {
   const res = await axiosClientInstance.put<UpdateBuyerStatusResponse>(ENDPOINTS.status(workspaceId), body);
   return res.data;
 }

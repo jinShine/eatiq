@@ -9,7 +9,7 @@ import { SettingsSection } from "@components/custom/settings";
 import { Input, Toast } from "@components/ui";
 
 import { useBuyerSection, useUpdateBuyerStatus } from "@services/api/buyer/buyer.query";
-import { type BuyerStatusData, type UpdateBuyerStatusBody } from "@services/api/buyer/buyer.type";
+import { type BuyerStatusData, type UpdateBuyerStatusRequest } from "@services/api/buyer/buyer.type";
 
 import useClearOnFormChange from "../../../_hooks/useClearOnFormChange";
 import FormMultiSelect, { toTags } from "../../FormMultiSelect";
@@ -26,8 +26,7 @@ import { ANNUAL_REVENUE_VALUES, BRAND_EXPERIENCE_VALUES, INDUSTRY_VALUES } from 
  * 시안의 연매출은 USD 구간·하한·상한이지만 API는 원화 구간 하나라 API를 따른다(디자인 확인 요청).
  *
  * 한국 브랜드 운영 경험·보유 브랜드 수는 시안에 칸이 없지만 기획 확인 결과 필요해서(2026-10-08) 연매출 옆에 둔다.
- * 둘 다 선택 항목이다. 이 두 필드는 보내지 않으면 서버가 기존 값을 그대로 둬서, 비울 때는 null을 보낸다
- * (→ UpdateBuyerStatusBody 주석).
+ * 둘 다 선택 항목이다. 비울 때는 null을 보낸다(빼고 보내도 비워진다).
  */
 // 매장 수·브랜드 수 상한 — 서버에 상한이 없어 브랜드 운영 현황과 같은 기준으로 막는다
 const MAX_COUNT = { value: 100_000, label: "10만 개" };
@@ -86,7 +85,7 @@ const toFormValues = (saved: BuyerStatusData): StatusFormValues => ({
   brand_count: toNumberText(saved.brand_count),
 });
 
-const toRequest = (values: StatusFormValues): UpdateBuyerStatusBody => ({
+const toRequest = (values: StatusFormValues): UpdateBuyerStatusRequest => ({
   current_industry: chosen(values.current_industry),
   store_cnt: Number(values.store_cnt),
   brand_experience_types: values.brand_experience_types,
