@@ -1,4 +1,4 @@
-import { useMutation, useQueries, useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQueries, useQuery } from "@tanstack/react-query";
 
 import { useInvalidateQueries } from "@hooks/commons";
 
@@ -9,6 +9,8 @@ import { workspaceKeys } from "../workspace/workspace.query";
 import { type WorkspaceDetailResponse } from "../workspace/workspace.type";
 import {
   getBrandCompletion,
+  getBrandDetail,
+  getBrandList,
   updateBrandBasic,
   updateBrandCommission,
   updateBrandContact,
@@ -32,6 +34,7 @@ import {
   type BrandCompletionResponse,
   type BrandCompletionScope,
   type BrandCompletionTask,
+  type BrandListQuery,
 } from "./brand.type";
 
 /** 화면 탭 → 완성도 API 범위. 탭 이름(policy·area)과 API 이름(contract·commercial)이 다르다 */
@@ -48,11 +51,44 @@ export const brandKeys = {
   all: ["brands"] as const,
   list: () => [...brandKeys.all, "list"] as const,
   settings: (workspaceId: string) => [...brandKeys.all, "settings", workspaceId] as const,
+  explore: (filters: BrandListFilters) => [...brandKeys.all, "explore", filters] as const,
+  exploreDetail: (brandId: string) => [...brandKeys.all, "explore-detail", brandId] as const,
   /** 탭별 완성도의 상위 키 — 섹션을 저장하면 탭 구분 없이 한 번에 무효화한다 */
   completionAll: (workspaceId: string) => [...brandKeys.all, "completion", workspaceId] as const,
   completion: (workspaceId: string, scope: BrandCompletionScope) =>
     [...brandKeys.completionAll(workspaceId), scope] as const,
 };
+
+/************************************
+ * 브랜드 탐색
+ ************************************/
+export type BrandListFilters = Pick<BrandListQuery, "country" | "category" | "contract_type">;
+
+/** 한 번에 받는 개수 — 서버 기본값(최대 50). 카드가 3열이라 3의 배수로 둔다 */
+const BRAND_PAGE_SIZE = 12;
+
+/**
+ * 브랜드 탐색 목록 — 페이지를 이어 붙인다(「더 보기」). 필터가 바뀌면 첫 페이지부터 다시 받는다.
+ * TODO(API): 목 데이터가 없어 목 모드에서는 요청하지 않는다
+ */
+export function useBrandExploreList(filters: BrandListFilters) {
+  return useInfiniteQuery({
+    queryKey: brandKeys.explore(filters),
+    queryFn: ({ pageParam }) => getBrandList({ ...filters, page: pageParam, limit: BRAND_PAGE_SIZE }),
+    initialPageParam: 1,
+    getNextPageParam: lastPage => (lastPage.page < lastPage.total_pages ? lastPage.page + 1 : undefined),
+    enabled: !IS_MOCK,
+  });
+}
+
+/** 브랜드 탐색 상세 — 드로어가 열려 있을 때만(brandId가 있을 때만) 받는다 */
+export function useBrandExploreDetail(brandId: string | null) {
+  return useQuery({
+    queryKey: brandKeys.exploreDetail(brandId ?? ""),
+    queryFn: () => getBrandDetail(brandId as string),
+    enabled: Boolean(brandId) && !IS_MOCK,
+  });
+}
 
 /************************************
  * 브랜드 정보 설정

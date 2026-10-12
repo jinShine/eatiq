@@ -4,6 +4,7 @@ import {
   type BrandCompletionResponse,
   type BrandCompletionScope,
   type BrandDetail,
+  type BrandListQuery,
   type BrandListResponse,
   type UpdateBrandBasicRequest,
   type UpdateBrandBasicResponse,
@@ -72,11 +73,13 @@ const ENDPOINTS = {
 /************************************
  * 조회
  ************************************/
-export async function getBrandList(): Promise<BrandListResponse> {
-  const res = await axiosClientInstance.get<BrandListResponse>(ENDPOINTS.list);
+/** 브랜드 탐색 목록 — 필터 값이 없으면 보내지 않는다(서버는 없거나 "전체"면 전체 조회) */
+export async function getBrandList(query: BrandListQuery): Promise<BrandListResponse> {
+  const res = await axiosClientInstance.get<BrandListResponse>(ENDPOINTS.list, { params: query });
   return res.data;
 }
 
+/** 브랜드 탐색 상세 — 탐색 목록의 uid(브랜드 식별자). 워크스페이스 id가 아니다 */
 export async function getBrandDetail(brandId: string): Promise<BrandDetail> {
   const res = await axiosClientInstance.get<BrandDetail>(ENDPOINTS.detail(brandId));
   return res.data;

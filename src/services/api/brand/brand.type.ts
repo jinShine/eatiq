@@ -1,8 +1,9 @@
-import { type components } from "@services/openapi";
+import { type components, type operations } from "@services/openapi";
 
 /************************************
- * 조회
+ * 브랜드 탐색 — 목록·상세 조회
  ************************************/
+export type BrandListQuery = NonNullable<operations["GetBrandListController_execute"]["parameters"]["query"]>;
 export type BrandDetail = components["schemas"]["BrandDetailResponseDto"];
 export type BrandListItem = components["schemas"]["BrandListItemDto"];
 export type BrandListResponse = components["schemas"]["GetBrandListResponseDto"];
