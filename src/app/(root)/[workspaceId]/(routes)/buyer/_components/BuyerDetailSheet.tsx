@@ -22,7 +22,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 
 function DetailSkeleton() {
   return (
-    <div role="status" aria-label="바이어 정보를 불러오는 중" className="flex flex-col gap-6 px-3 py-4">
+    <div role="status" aria-label="바이어 정보를 불러오는 중" className="flex flex-col gap-6 px-2 py-4">
       <div className="flex items-start gap-4">
         <Skeleton className="size-[60px] shrink-0 rounded-lg" />
         <div className="flex flex-1 flex-col gap-2 pt-1">
@@ -64,9 +64,9 @@ export default function BuyerDetailSheet({ detail, isLoading, isOpen, onOpenChan
     >
       {isLoading && <DetailSkeleton />}
 
-      {/* px-3은 Sheet 기본 패딩 12px에 더해져 시안의 좌우 24px가 된다 */}
+      {/* px-2는 Sheet 기본 패딩 12px에 더해져 좌우 20px가 된다 */}
       {detail && (
-        <div className="flex flex-col gap-6 px-3 py-4">
+        <div className="flex flex-col gap-6 px-2 py-4">
           {/* 요약 — 목록 행과 같은 아바타·타이틀 구성 */}
           <div className="flex items-start gap-4">
             <div className="border-border bg-accent flex size-[60px] shrink-0 items-center justify-center rounded-lg border">
