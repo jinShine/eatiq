@@ -17,7 +17,7 @@ export const BRAND_JOURNEY_STAGES = [
 ] as const satisfies readonly { step: BrandCompletionStep; threshold: number }[];
 
 /**
- * 바이어 저니 단계 — 완성까지 3단계(피그마 「브랜드 / 바이어 차이점」).
+ * 바이어 저니 단계 — 완성까지 3단계(바이어 완성도 API의 stage.step).
  * 비율·이름은 API 기준: 시작 0~24% → 성장 25~89% → 완성 90%~.
  * 시안은 가운데 단계를 「준비」로 적었지만 API는 「성장」이다(디자인 확인 요청).
  */

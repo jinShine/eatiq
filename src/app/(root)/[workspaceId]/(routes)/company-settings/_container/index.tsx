@@ -17,7 +17,8 @@ type CompanySettingsContainerProps = {
 };
 
 /**
- * 회사 정보 설정 — 워크스페이스 종류에 따라 화면이 다르다(피그마 「브랜드 / 바이어 차이점」).
+ * 회사 정보 설정 — 워크스페이스 종류에 따라 화면이 다르다. 저장하는 데이터(API)가 달라서다 —
+ * 브랜드는 섹션 13개를 탭 4개로, 바이어는 섹션 5개를 한 페이지로(피그마 961:10022).
  * 브랜드는 탭 4개, 바이어는 탭 없는 한 페이지. 메뉴·주소는 같다.
  */
 export default function CompanySettingsContainer({ workspaceId, activeTab }: CompanySettingsContainerProps) {

@@ -11,7 +11,10 @@ export type MyWorkspaceItem = components["schemas"]["MyWorkspaceItemDto"];
 export type CreateWorkspaceRequest = components["schemas"]["CreateWorkspaceDto"];
 export type CreateWorkspaceResponse = components["schemas"]["CreateWorkspaceResponseDto"];
 
-/** 워크스페이스 종류 — 브랜드/바이어에 따라 회사 정보 설정 화면·헤더 기능 등이 달라진다(피그마 「브랜드 / 바이어 차이점」) */
+/**
+ * 워크스페이스 종류 — 회사 정보 설정 화면이 이걸로 갈린다(저장 API가 다르다).
+ * 메뉴·헤더 등 나머지는 두 종류가 같다(기획 확인, 2026-10-13 — 피그마 「브랜드 / 바이어 차이점」 표는 갱신 안 된 옛 내용)
+ */
 export type WorkspaceType = MyWorkspaceItem["type"];
 
 /** 앱 안에서 쓰는 워크스페이스 뷰모델 — API DTO를 화면까지 흘려보내지 않는다 */
