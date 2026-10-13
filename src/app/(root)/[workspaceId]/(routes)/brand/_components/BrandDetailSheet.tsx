@@ -60,7 +60,8 @@ export default function BrandDetailSheet({ detail, isLoading, isOpen, onOpenChan
       side="right"
       isOpen={isOpen}
       onOpenChange={onOpenChange}
-      className="w-full sm:max-w-[560px]"
+      // border-l-0 — 시트 왼쪽 1px 테두리가 대표 이미지 옆에서 밝은 여백처럼 보여 없앤다(그림자로 구분된다)
+      className="w-full border-l-0 sm:max-w-[560px]"
       header={<h2 className="text-text-primary text-sm font-bold tracking-[-0.7px]">브랜드 상세</h2>}
     >
       {isLoading && <DetailSkeleton />}
