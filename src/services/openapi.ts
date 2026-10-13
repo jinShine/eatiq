@@ -620,23 +620,34 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * 브랜드 탐색 및 검색 목록 조회
-     * @description ### 📌 상세 역할 및 개요
-     *     - 바이어가 파트너 브랜드를 발굴하고 탐색할 수 있는 카드 뷰 목록 및 검색 필터 옵션을 조회합니다.
+     * 🔄 [UPDATE 26.10.13] 브랜드 탐색 및 검색 목록 조회 (필터 옵션 연동 가이드 정정 - 프론트 상수 필터링)
+     * @description ### 📝 최근 업데이트 이력 (2026.10.13)
+     *     - **필터 옵션 연동 가이드 정정**: 응답 본문에 제공되지 않는 `filter_options` 설명을 제거하고, 바이어 목록(`buyer/list`)과 동일하게 프론트엔드 내 표준 Enum/상수 기반 필터링 가이드로 정정하였습니다.
+     *
+     *     ---
+     *
+     *     ### 📌 상세 역할 및 개요
+     *     - 바이어가 파트너 브랜드를 발굴하고 탐색할 수 있는 카드 뷰 목록 및 검색 API입니다.
+     *     - 국가, 카테고리(업종), 선호 계약 조건, 키워드 검색 및 페이징을 지원합니다.
      *     - JWT 인증 토큰(`access_token`)이 필요합니다.
      *
      *     ---
      *
      *     ### 💻 프론트엔드 연동 가이드
      *     1. **호출 시점**:
-     *        - 파트너 발굴 / 브랜드 탐색 페이지 진입 시 및 필터/검색어 변경 시.
-     *     2. **필터 및 검색 파라미터**:
-     *        - `keyword`: 브랜드명(국/영문) 또는 한줄 소개 부분 일치 검색. (미입력 시 전체)
-     *        - `country` / `category` / `contract_type`: 비우거나 `"전체"`(또는 `"all"`) 전달 시 전체 조건 대상 검색.
-     *        - `page`(기본 1), `limit`(기본 12, 최대 50): 무한 스크롤 또는 페이지네이션 연동.
-     *     3. **화면 렌더링 활용**:
-     *        - `items`: 카드 그리드 목록에 필요한 브랜드명, 썸네일, 카테고리, 대표 메뉴, 태그 바인딩.
-     *        - `filter_options`: 상단 드롭다운 필터의 옵션 목록으로 즉시 바인딩 (`전체` 기본 포함).
+     *        - 파트너 발굴 / 브랜드 탐색 페이지 진입 시.
+     *        - 상단 필터(국가, 카테고리, 계약 방식) 선택 변경 또는 검색어 입력 시.
+     *        - 페이지네이션 번호 클릭 또는 무한 스크롤 발생 시.
+     *     2. **요청 파라미터 (Query)**:
+     *        - `page` (number, 기본값 1): 요청 페이지 번호
+     *        - `limit` (number, 기본값 12, 최대 50): 페이지당 항목 수 (카드 그리드 UI에 맞춤)
+     *        - `country` (string, 선택): 진출 목표 국가 필터 (미지정 또는 `"전체"` 전달 시 모든 국가 대상 검색, 예: `"일본"`, `"태국"`, `"싱가포르"`, `"미국"` 등)
+     *        - `category` (string, 선택): 카테고리/업종 필터 (미지정 또는 `"전체"` 전달 시 모든 카테고리 대상 검색, 예: `"한식"`, `"일식"`, `"양식"`, `"중식"`, `"치킨"`, `"디저트"`, `"커피"` 등)
+     *        - `contract_type` (string, 선택): 선호 계약 조건 필터 (미지정 또는 `"전체"` 전달 시 모든 조건 대상 검색, 예: `"마스터 프랜차이즈"`, `"지역 개발권"`, `"합작법인"`, `"직영"`, `"라이선스"` 등)
+     *        - `keyword` (string, 선택): 브랜드명(국/영문) 또는 한줄 소개 부분 일치 검색어
+     *     3. **UI 바인딩 팁**:
+     *        - **필터 드롭다운 (프론트 상수로 필터)**: 국가, 카테고리, 계약 방식은 응답으로 제공되지 않으며, 바이어 목록(`buyer/list`)과 동일하게 프론트엔드 내 정의된 표준 상수/Enum 배열(`"전체"` 옵션 포함)을 드롭다운으로 바인딩하여 쿼리 파라미터로 전송합니다.
+     *        - **브랜드 카드 리스트**: `items` 배열의 데이터를 사용하여 브랜드 카드(브랜드명 국/영문, 로고, 대표 이미지, 카테고리, 대표 메뉴, 메타 텍스트, 진출 희망 국가 등)를 렌더링합니다.
      */
     get: operations["GetBrandListController_execute"];
     put?: never;
@@ -688,8 +699,14 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * 브랜드 탐색 상세 정보 조회
-     * @description ### 📌 상세 역할 및 개요
+     * 🔄 [UPDATE 26.10.12] 브랜드 탐색 상세 정보 조회 (featured_image_list 추가 및 비주얼 이미지 파싱 수정)
+     * @description ### 📝 최근 업데이트 이력 (2026.10.12)
+     *     - **비주얼 이미지 파싱 정상화**: DB 내 `brand_visual` 컬럼 매핑 오류를 수정하여 `logo_image` 및 `featured_image`가 null로 반환되던 문제를 해결했습니다.
+     *     - **`featured_image_list` 응답 필드 추가**: 상세 페이지/캐러셀 뷰에서 전체 비주얼 이미지를 렌더링할 수 있도록 `featured_image_list`(전체 대표 이미지 URL 배열, `string[]`) 필드를 응답 스펙에 추가했습니다. (기존 `featured_image` 단일 URL 필드는 첫 번째 대표 이미지로 하위 호환성을 완벽히 유지합니다.)
+     *
+     *     ---
+     *
+     *     ### 📌 상세 역할 및 개요
      *     - 바이어가 특정 파트너 브랜드의 상세 프로필(기본 정보, 비주얼, 파트너십 조건, 메뉴, 담당자 등)을 조회합니다.
      *     - JWT 인증 토큰(`access_token`)이 필요합니다.
      *
@@ -701,8 +718,8 @@ export interface paths {
      *     2. **경로 파라미터**:
      *        - `brand_uid`: 조회할 브랜드의 식별자(PK).
      *     3. **화면 렌더링 활용**:
-     *        - 헤더/비주얼: `brand_name_ko`, `brand_name_en`, `logo_image`, `featured_image_list`.
-     *        - 파트너십 조건: 계약 형태(`preferred_contract_type`), 독점권, 로열티, 마진율 등 조건 표시.
+     *        - 헤더/비주얼: `brand_name_ko`, `brand_name_en`, `logo_image`, `featured_image` (단일 대표), `featured_image_list` (전체 갤러리/캐러셀 배열).
+     *        - 파트너십 조건: 선호 계약 방식(`preferred_contract_type`), 독점권 요구 수준(`exclusivity_level`), 메뉴 현지화(`menu_localization`), 로열티 요약(`royalty`), 식자재 공급망(`supply_chain`), 인테리어 기준(`interior_criteria`), 상표 준수(`trademark_standard`), 운영 매뉴얼 준수(`manual_compliance`).
      *        - 보안 유의사항: 본사 공식 이메일 등 민감 정보는 마스킹되거나 응답에서 제외되어 있습니다.
      */
     get: operations["GetBrandDetailController_execute"];
@@ -4017,7 +4034,7 @@ export interface components {
        */
       logo_image: string | null;
       /**
-       * @description 브랜드 대표 히어로 이미지 URL
+       * @description 브랜드 대표 이미지 URL
        * @example https://images.unsplash.com/photo-1544025162-d76694265947
        */
       featured_image: string | null;
@@ -4150,18 +4167,22 @@ export interface components {
       /**
        * @description 선호 계약 방식
        * @example 마스터 프랜차이즈
+       * @enum {string|null}
        */
-      preferred_contract_type: string | null;
+      preferred_contract_type:
+        "마스터 프랜차이즈" | "지역 개발권" | "직영" | "합작법인" | "라이선스" | "유통" | "미정" | null;
       /**
-       * @description 독점권 요구 수준 (필수/협의 필요/불가)
+       * @description 독점권 요구 수준 (필수/협의 필요/가능/불가)
        * @example 필수
+       * @enum {string|null}
        */
-      exclusivity_level: string | null;
+      exclusivity_level: "필수" | "협의 필요" | "가능" | "불가" | null;
       /**
        * @description 메뉴 현지화 요구 수준 (불가/협의 필요/가능/일부 허용)
        * @example 일부 허용
+       * @enum {string|null}
        */
-      menu_localization: string | null;
+      menu_localization: "불가" | "협의 필요" | "가능" | "일부 허용" | null;
       /**
        * @description 로열티 선호 조건 요약 (비율 또는 금액)
        * @example 5%
@@ -4170,23 +4191,27 @@ export interface components {
       /**
        * @description 식자재 공급망 (필수/협의 필요/불필요/자체 공급 가능)
        * @example 자체 공급 가능
+       * @enum {string|null}
        */
-      supply_chain: string | null;
+      supply_chain: "필수" | "협의 필요" | "불필요" | "자체 공급 가능" | null;
       /**
        * @description 인테리어 기준 선호 (가능/협의 필요/불가)
        * @example 협의 필요
+       * @enum {string|null}
        */
-      interior_criteria: string | null;
+      interior_criteria: "가능" | "협의 필요" | "불가" | null;
       /**
-       * @description 상표 및 브랜드 사용 기준
+       * @description 상표 및 브랜드 사용 기준 (전면 준수 필수/부분 협의 가능)
        * @example 전면 준수 필수
+       * @enum {string|null}
        */
-      trademark_standard: string | null;
+      trademark_standard: "전면 준수 필수" | "부분 협의 가능" | null;
       /**
-       * @description 운영 매뉴얼 준수 수준
+       * @description 운영 매뉴얼 준수 수준 (전면 준수 필수/부분 협의 가능)
        * @example 전면 준수 필수
+       * @enum {string|null}
        */
-      manual_compliance: string | null;
+      manual_compliance: "전면 준수 필수" | "부분 협의 가능" | null;
     };
     BrandDetailContactDto: {
       /**
@@ -4241,10 +4266,18 @@ export interface components {
        */
       logo_image: string | null;
       /**
-       * @description 브랜드 대표 히어로 이미지 URL
+       * @description 브랜드 대표 이미지 URL (단일, featured_image_list의 첫 번째 이미지)
        * @example https://images.unsplash.com/photo-1544025162-d76694265947
        */
       featured_image: string | null;
+      /**
+       * @description 브랜드 대표 이미지 URL 목록 (상세 헤더 갤러리/캐러셀 비주얼용)
+       * @example [
+       *       "https://images.unsplash.com/photo-1544025162-d76694265947",
+       *       "https://images.unsplash.com/photo-1555396273-367ea4eb4db5"
+       *     ]
+       */
+      featured_image_list: string[];
       /**
        * @description 카테고리 / 업종
        * @example 디저트
