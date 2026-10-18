@@ -58,7 +58,7 @@ export default function ProgressFilterBar({
       <div className="flex min-w-0 items-center gap-2 overflow-x-auto [&>*]:shrink-0">
         <Input
           size="sm"
-          placeholder="이름·담당자 검색"
+          placeholder="검색"
           aria-label={`${partnerLabel} 이름·담당자 검색`}
           className="w-60"
           startAdornment={<Search className="text-text-disabled size-4" />}
