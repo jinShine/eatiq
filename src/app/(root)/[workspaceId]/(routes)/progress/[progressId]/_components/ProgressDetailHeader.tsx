@@ -36,7 +36,9 @@ export default function ProgressDetailHeader({
         </Link>
 
         <h2 className="text-text-primary truncate text-[22px] font-bold tracking-[-1.1px]">
-          {partnerName} {location}
+          {partnerName}
+          {/* 모바일은 폭이 좁아 이름만 — 국가·도시는 아래 「기본 정보」에 있다 */}
+          {location && <span className="hidden sm:inline"> {location}</span>}
         </h2>
 
         <DropdownMenu
@@ -58,9 +60,10 @@ export default function ProgressDetailHeader({
         </DropdownMenu>
       </div>
 
-      <Button size="sm" className="shrink-0" onClick={onAddRecord}>
+      {/* 모바일은 아이콘만 — 글자까지 넣으면 상대 이름이 몇 글자만 남는다 */}
+      <Button size="sm" className="shrink-0" onClick={onAddRecord} aria-label="진행 기록 추가">
         <Plus className="size-3.5" />
-        진행 기록 추가
+        <span className="hidden sm:inline">진행 기록 추가</span>
       </Button>
     </div>
   );

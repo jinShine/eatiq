@@ -97,7 +97,8 @@ const ModalContent = React.forwardRef<
       <DialogPrimitive.Content
         ref={ref}
         className={cn(
-          "fixed left-[50%] top-[50%] z-50 grid w-full max-w-[90%] max-h-[90%] translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200",
+          // overflow-y-auto — 화면보다 긴 모달(낮은 휴대폰 화면의 폼 등)은 max-h에서 잘리고 아래 버튼을 누를 수 없었다
+          "fixed left-[50%] top-[50%] z-50 grid w-full max-w-[90%] max-h-[90%] translate-x-[-50%] translate-y-[-50%] gap-4 overflow-y-auto border bg-background p-6 shadow-lg duration-200",
           "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
           "rounded-lg",
           sizeClasses[size],
