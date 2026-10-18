@@ -7,20 +7,21 @@ import { ArrowLeft, EllipsisVertical, Plus } from "lucide-react";
 import { Button, DropdownMenu, DropdownMenuItem } from "@components/ui";
 
 type ProgressDetailHeaderProps = {
-  buyerName: string;
-  country: string;
-  city: string;
+  partnerName: string;
+  /** 「일본 · 도쿄」 — 둘 다 비면 빈 문자열 */
+  location: string;
   /** 목록으로 돌아가는 경로 */
   backHref: string;
   onAddRecord?: () => void;
+  onDelete: () => void;
 };
 
 export default function ProgressDetailHeader({
-  buyerName,
-  country,
-  city,
+  partnerName,
+  location,
   backHref,
   onAddRecord,
+  onDelete,
 }: ProgressDetailHeaderProps) {
   return (
     <div className="border-border flex h-16 shrink-0 items-center justify-between gap-4 border-b px-6">
@@ -35,7 +36,7 @@ export default function ProgressDetailHeader({
         </Link>
 
         <h2 className="text-text-primary truncate text-[22px] font-bold tracking-[-1.1px]">
-          {buyerName} {country} · {city}
+          {partnerName} {location}
         </h2>
 
         <DropdownMenu
@@ -43,17 +44,16 @@ export default function ProgressDetailHeader({
           trigger={
             <button
               type="button"
-              aria-label={`${buyerName} 관리 메뉴`}
+              aria-label={`${partnerName} 관리 메뉴`}
               className="text-text-disabled hover:bg-secondary-background hover:text-text-secondary focus-visible:ring-ring flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors focus-visible:ring-2 focus-visible:outline-none"
             >
               <EllipsisVertical className="size-4" />
             </button>
           }
         >
-          {/* TODO(API): 상세 API 연결 시 실제 동작을 붙인다 */}
-          <DropdownMenuItem disabled>바이어 정보 수정</DropdownMenuItem>
-          <DropdownMenuItem disabled variant="destructive">
-            목록에서 제외
+          {/* 기본 정보 수정은 API가 없어 두지 않는다 */}
+          <DropdownMenuItem variant="destructive" onSelect={onDelete}>
+            삭제
           </DropdownMenuItem>
         </DropdownMenu>
       </div>

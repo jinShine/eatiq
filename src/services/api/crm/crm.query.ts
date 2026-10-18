@@ -1,10 +1,18 @@
-import { keepPreviousData, useInfiniteQuery, useMutation } from "@tanstack/react-query";
+import { keepPreviousData, useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useInvalidateQueries } from "@hooks/commons";
 
 import { IS_MOCK } from "../mock";
-import { createCrm, deleteCrm, getCrmList } from "./crm.api";
-import { type CreateCrmRequest, type CrmListQuery } from "./crm.type";
+import {
+  createCrm,
+  deleteCrm,
+  deleteCrmAction,
+  getCrmDetail,
+  getCrmList,
+  updateCrmActionDone,
+  updateCrmStage,
+} from "./crm.api";
+import { type CreateCrmRequest, type CrmDetailResponse, type CrmListQuery, type CrmStage } from "./crm.type";
 
 export type CrmListFilters = Pick<CrmListQuery, "keyword" | "country" | "category" | "contract_type">;
 
@@ -12,6 +20,7 @@ export const crmKeys = {
   all: ["crm"] as const,
   lists: (workspaceId: string) => [...crmKeys.all, "list", workspaceId] as const,
   list: (workspaceId: string, filters: CrmListFilters) => [...crmKeys.lists(workspaceId), filters] as const,
+  detail: (crmId: string) => [...crmKeys.all, "detail", crmId] as const,
 };
 
 /** 한 번에 받는 개수 — 서버 기본값. 「더 보기」를 누르면 다음 페이지를 이어 붙인다 */
@@ -56,5 +65,98 @@ export function useDeleteCrm(workspaceId: string) {
   return useMutation({
     mutationFn: (crmId: string) => deleteCrm(crmId),
     onSuccess: () => invalidateQueries.single(crmKeys.lists(workspaceId)),
+  });
+}
+
+/************************************
+ * 상세
+ ************************************/
+
+/** 상세 — 응답의 data만 꺼낸다. 404(삭제됨)는 다시 시도해도 같으니 재시도하지 않는다 */
+export function useCrmDetail(crmId: string) {
+  return useQuery({
+    queryKey: crmKeys.detail(crmId),
+    queryFn: () => getCrmDetail(crmId),
+    select: response => response.data,
+    retry: false,
+    enabled: Boolean(crmId) && !IS_MOCK,
+  });
+}
+
+/**
+ * 상세 화면의 변경 — 상세와 목록(현재 단계·다음 액션 열)을 함께 다시 받는다.
+ * 상세는 다시 받아올 때까지 기다린다(화면이 서버 값으로 맞춰진 뒤 pending이 풀리게)
+ */
+function useInvalidateCrm(workspaceId: string, crmId: string) {
+  const invalidateQueries = useInvalidateQueries();
+
+  return () => {
+    invalidateQueries.single(crmKeys.lists(workspaceId));
+    return invalidateQueries.single(crmKeys.detail(crmId));
+  };
+}
+
+/** 상세 캐시를 바로 고쳐 쓰는 낙관적 업데이트 — 실패하면 이전 값으로 되돌린다 */
+function useOptimisticDetail(crmId: string) {
+  const queryClient = useQueryClient();
+  const queryKey = crmKeys.detail(crmId);
+
+  return {
+    apply: async (update: (data: CrmDetailResponse["data"]) => CrmDetailResponse["data"]) => {
+      // 진행 중인 재조회가 낙관적 값을 덮어쓰지 않게 멈춘다
+      await queryClient.cancelQueries({ queryKey });
+      const previous = queryClient.getQueryData<CrmDetailResponse>(queryKey);
+      if (previous) {
+        queryClient.setQueryData<CrmDetailResponse>(queryKey, { ...previous, data: update(previous.data) });
+      }
+      return { previous };
+    },
+    rollback: (previous: CrmDetailResponse | undefined) => {
+      if (previous) {
+        queryClient.setQueryData(queryKey, previous);
+      }
+    },
+  };
+}
+
+/** 현재 단계 변경 — 선택 박스가 바로 바뀌도록 낙관적으로 반영한다 */
+export function useUpdateCrmStage(workspaceId: string, crmId: string) {
+  const invalidate = useInvalidateCrm(workspaceId, crmId);
+  const optimistic = useOptimisticDetail(crmId);
+
+  return useMutation({
+    mutationFn: (stage: CrmStage) => updateCrmStage(crmId, stage),
+    onMutate: stage => optimistic.apply(data => ({ ...data, current_stage: stage })),
+    onError: (_error, _stage, context) => optimistic.rollback(context?.previous),
+    onSettled: invalidate,
+  });
+}
+
+/** 다음 액션 완료 — 스위치가 바로 바뀌도록 낙관적으로 반영한다 */
+export function useUpdateCrmActionDone(workspaceId: string, crmId: string) {
+  const invalidate = useInvalidateCrm(workspaceId, crmId);
+  const optimistic = useOptimisticDetail(crmId);
+
+  return useMutation({
+    mutationFn: ({ actionId, isDone }: { actionId: string; isDone: boolean }) => updateCrmActionDone(actionId, isDone),
+    onMutate: ({ actionId, isDone }) =>
+      optimistic.apply(data => ({
+        ...data,
+        next_actions: data.next_actions.map(action =>
+          String(action.uid) === actionId ? { ...action, is_done: isDone ? "Y" : "N" } : action,
+        ),
+      })),
+    onError: (_error, _variables, context) => optimistic.rollback(context?.previous),
+    onSettled: invalidate,
+  });
+}
+
+/** 진행 기록 삭제 */
+export function useDeleteCrmAction(workspaceId: string, crmId: string) {
+  const invalidate = useInvalidateCrm(workspaceId, crmId);
+
+  return useMutation({
+    mutationFn: (actionId: string) => deleteCrmAction(actionId),
+    onSuccess: invalidate,
   });
 }

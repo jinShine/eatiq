@@ -18,3 +18,19 @@ export type CreateCrmRequest = components["schemas"]["CreateCrmDto"];
 export type CreateCrmResponse = components["schemas"]["CreateCrmResponseDto"];
 
 export type DeleteCrmResponse = components["schemas"]["DeleteCrmResponseDto"];
+
+/************************************
+ * 상세 — 응답은 data로 한 번 감싸져 온다(목록과 다르다)
+ ************************************/
+export type CrmDetailResponse = components["schemas"]["GetCrmDetailResponseDto"];
+export type CrmDetail = CrmDetailResponse["data"];
+export type CrmActionRecord = components["schemas"]["CrmActionRecordDto"];
+export type CrmNextActionSummary = components["schemas"]["NextActionSummaryDto"];
+export type CrmActionFile = components["schemas"]["ActionFileDto"];
+
+/** 진행 기록 유형 9개 — 단계 8개 + 「지정안됨」 */
+export type CrmActionType = components["schemas"]["CreateCrmActionDto"]["action_type"];
+
+export type UpdateCrmStageResponse = components["schemas"]["UpdateCrmStageResponseDto"];
+export type UpdateCrmActionDoneResponse = components["schemas"]["UpdateCrmActionDoneResponseDto"];
+export type DeleteCrmActionResponse = components["schemas"]["DeleteCrmActionResponseDto"];

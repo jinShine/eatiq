@@ -8,11 +8,11 @@ import { Button, Input, Select, SelectItem, Sheet, Textarea } from "@components/
 
 import { useProgressRecordForm } from "../_hooks/useProgressRecordForm";
 import { EMPTY_ACTION } from "./progressRecordSchema";
-import { RECORD_TYPE_META, type RecordType } from "./recordOptions";
+import { ACTION_TYPE_META } from "./recordOptions";
 
-const RECORD_TYPE_OPTIONS = (Object.keys(RECORD_TYPE_META) as RecordType[]).map(code => ({
+const RECORD_TYPE_OPTIONS = (Object.keys(ACTION_TYPE_META) as (keyof typeof ACTION_TYPE_META)[]).map(code => ({
   value: code,
-  label: RECORD_TYPE_META[code].label,
+  label: ACTION_TYPE_META[code].label,
 }));
 
 type AddProgressRecordSheetProps = {

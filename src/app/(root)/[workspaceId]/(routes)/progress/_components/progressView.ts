@@ -1,5 +1,3 @@
-import dayjs from "dayjs";
-
 import { type CrmFilterOptions, type CrmListItem } from "@services/api/crm/crm.type";
 
 import { type StageCode } from "./progressOptions";
@@ -24,16 +22,24 @@ export type ProgressRow = {
   nextActionDueAt: string | null;
 };
 
+const DATE_ONLY = /^(\d{4})[.-](\d{2})[.-](\d{2})$/;
+
 /**
- * 서버 날짜는 「YYYY.MM.DD」 또는 「YYYY-MM-DD」로 온다(스펙).
- * 점 구분은 브라우저마다 Date 해석이 달라 ISO 형식으로 맞춘다.
+ * 서버 날짜를 YYYY-MM-DD로 맞춘다.
+ * 스펙은 「YYYY.MM.DD」 또는 「YYYY-MM-DD」지만, 진행 기록의 action_time은 실제로
+ * 「Fri Oct 16 2026 00:00:00 GMT+0000 (…)」 같은 Date 문자열로 온다(백엔드 요청, 2026-10-19).
+ * 그 값은 UTC 자정이라 UTC 기준 날짜를 꺼낸다 — 현지 시간으로 바꾸면 시차에 따라 하루가 밀린다.
  */
-const toIsoDate = (value: string | null) => {
+export const toIsoDate = (value: string | null) => {
   if (!value) {
     return null;
   }
-  const normalized = value.replaceAll(".", "-");
-  return dayjs(normalized).isValid() ? normalized : null;
+  const dateOnly = DATE_ONLY.exec(value.trim());
+  if (dateOnly) {
+    return `${dateOnly[1]}-${dateOnly[2]}-${dateOnly[3]}`;
+  }
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString().slice(0, 10);
 };
 
 export const toProgressRow = (item: CrmListItem): ProgressRow => ({

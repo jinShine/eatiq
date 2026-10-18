@@ -4,14 +4,15 @@ import { FileText } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 
 import ProgressTimelineItem from "./ProgressTimelineItem";
-import { type ProgressRecord } from "./progressDetailMock";
+import { type ProgressRecord } from "./progressDetailView";
 
 type ProgressTimelineProps = {
   records: ProgressRecord[];
-  onToggleAction: (recordId: string, isDone: boolean) => void;
+  onDelete: (record: ProgressRecord) => void;
 };
 
-export default function ProgressTimeline({ records, onToggleAction }: ProgressTimelineProps) {
+/** 진행 기록 타임라인 — 서버가 최신순으로 준다 */
+export default function ProgressTimeline({ records, onDelete }: ProgressTimelineProps) {
   const shouldReduceMotion = useReducedMotion();
 
   if (records.length === 0) {
@@ -37,7 +38,7 @@ export default function ProgressTimeline({ records, onToggleAction }: ProgressTi
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.24, delay: shouldReduceMotion ? 0 : index * 0.04, ease: [0.16, 1, 0.3, 1] }}
         >
-          <ProgressTimelineItem record={record} onToggleAction={onToggleAction} />
+          <ProgressTimelineItem record={record} onDelete={onDelete} />
         </motion.li>
       ))}
     </ol>

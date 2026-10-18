@@ -24,27 +24,3 @@ export const STAGE_META: Record<StageCode, StageMeta> = {
   계약완료: { label: "계약 완료", className: "bg-[#047857] text-white" },
   보류: { label: "보류", className: "bg-[#111827] text-white" },
 };
-
-type FilterOption = { value: string; label: string };
-
-/**
- * 상세 화면 목 데이터용 표시명 — 목록은 서버 문구를 그대로 쓴다.
- * TODO(API): 상세를 실제 API로 옮길 때 지운다
- */
-export const COUNTRY_FILTER_OPTIONS: FilterOption[] = [
-  { value: "JP", label: "일본" },
-  { value: "HK", label: "홍콩" },
-  { value: "SG", label: "싱가포르" },
-  { value: "TH", label: "태국" },
-];
-
-/** 상세 화면 목 데이터의 옛 계약 방식 코드값(v0.7). TODO(API): 상세를 실제 API로 옮길 때 지운다 */
-export const CONTRACT_TYPE_OPTIONS = [
-  { value: "master_franchise", label: "마스터 프랜차이즈" },
-  { value: "area_development", label: "지역 개발권" },
-  { value: "direct_operation", label: "직영" },
-  { value: "joint_venture", label: "합작법인 (JV)" },
-  { value: "licensing", label: "라이선스" },
-  { value: "distribution", label: "유통" },
-  { value: "undecided", label: "미정" },
-];
