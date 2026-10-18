@@ -12,22 +12,25 @@ import PageHeader from "@components/layout/header/PageHeader";
 import { Button, Skeleton, Toast } from "@components/ui";
 
 import {
+  useCreateCrmAction,
   useDeleteCrm,
   useDeleteCrmAction,
+  useUpdateCrmAction,
   useUpdateCrmActionDone,
   useUpdateCrmStage,
 } from "@services/api/crm/crm.query";
 
 import ProgressDeleteModal from "../../_components/ProgressDeleteModal";
 import { type StageCode } from "../../_components/progressOptions";
-import AddProgressRecordSheet from "../_components/AddProgressRecordSheet";
 import BuyerInfoCard from "../_components/BuyerInfoCard";
 import NextActionSummaryCard from "../_components/NextActionSummaryCard";
 import ProgressDetailHeader from "../_components/ProgressDetailHeader";
+import ProgressRecordSheet from "../_components/ProgressRecordSheet";
 import ProgressTimeline from "../_components/ProgressTimeline";
 import RecordDeleteModal from "../_components/RecordDeleteModal";
 import StageCard from "../_components/StageCard";
 import { type ProgressRecord } from "../_components/progressDetailView";
+import { type ProgressRecordFormValues, toCreateRequest, toUpdateRequest } from "../_components/progressRecordSchema";
 import { useProgressDetail } from "../_hooks/useProgressDetail";
 
 /** 국가·도시 중 있는 것만 「일본 · 도쿄」로 잇는다 */
@@ -122,8 +125,31 @@ export default function ProgressDetailContainer({ workspaceId, progressId }: Pro
     });
   };
 
-  // Sheet를 여는 버튼은 헤더에 있지만, 저장 후 타임라인을 갱신해야 하므로 공통 부모가 상태를 쥔다
+  // 진행 기록 드로어 — 여는 버튼은 헤더(추가)와 카드 메뉴(수정)에 있어 공통 부모가 상태를 쥔다
   const [isRecordSheetOpen, setIsRecordSheetOpen] = useState(false);
+  const [recordToEdit, setRecordToEdit] = useState<ProgressRecord | null>(null);
+  const createRecord = useCreateCrmAction(workspaceId, progressId);
+  const updateRecord = useUpdateCrmAction(workspaceId, progressId);
+  const recordMutation = recordToEdit ? updateRecord : createRecord;
+
+  const openRecordSheet = (record: ProgressRecord | null) => {
+    createRecord.reset();
+    updateRecord.reset();
+    setRecordToEdit(record);
+    setIsRecordSheetOpen(true);
+  };
+
+  const handleSaveRecord = (values: ProgressRecordFormValues) => {
+    const onSuccess = () => {
+      Toast.success(recordToEdit ? "진행 기록을 수정했어요." : "진행 기록을 저장했어요.");
+      setIsRecordSheetOpen(false);
+    };
+    if (recordToEdit) {
+      updateRecord.mutate({ actionId: recordToEdit.id, body: toUpdateRequest(values) }, { onSuccess });
+    } else {
+      createRecord.mutate(toCreateRequest(values), { onSuccess });
+    }
+  };
 
   const renderContent = () => {
     if (isLoading || isNotFound) {
@@ -152,7 +178,7 @@ export default function ProgressDetailContainer({ workspaceId, progressId }: Pro
           partnerName={detail.partnerName}
           location={toLocation(detail.country, detail.city)}
           backHref={listHref}
-          onAddRecord={() => setIsRecordSheetOpen(true)}
+          onAddRecord={() => openRecordSheet(null)}
           onDelete={() => setIsDeleteOpen(true)}
         />
 
@@ -179,11 +205,18 @@ export default function ProgressDetailContainer({ workspaceId, progressId }: Pro
           </aside>
 
           <div className="min-w-0 flex-1 overflow-y-auto p-6">
-            <ProgressTimeline records={detail.records} onDelete={setRecordToDelete} />
+            <ProgressTimeline records={detail.records} onEdit={openRecordSheet} onDelete={setRecordToDelete} />
           </div>
         </div>
 
-        <AddProgressRecordSheet isOpen={isRecordSheetOpen} onOpenChange={setIsRecordSheetOpen} />
+        <ProgressRecordSheet
+          isOpen={isRecordSheetOpen}
+          record={recordToEdit}
+          isPending={recordMutation.isPending}
+          errorMessage={recordMutation.error?.message}
+          onOpenChange={setIsRecordSheetOpen}
+          onSubmit={handleSaveRecord}
+        />
 
         <RecordDeleteModal
           title={recordToDelete?.title ?? null}

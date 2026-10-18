@@ -12,6 +12,7 @@ import { getActionTypeMeta } from "./recordOptions";
 
 type ProgressTimelineItemProps = {
   record: ProgressRecord;
+  onEdit: (record: ProgressRecord) => void;
   onDelete: (record: ProgressRecord) => void;
 };
 
@@ -20,7 +21,7 @@ type ProgressTimelineItemProps = {
  * 시안 카드 안의 「다음 액션」은 그리지 않는다 — API가 다음 액션이 어느 기록에서 나왔는지 주지 않는다(백엔드 요청).
  * 다음 액션은 왼쪽 「다음 액션 요약」에서 본다.
  */
-export default function ProgressTimelineItem({ record, onDelete }: ProgressTimelineItemProps) {
+export default function ProgressTimelineItem({ record, onEdit, onDelete }: ProgressTimelineItemProps) {
   const meta = getActionTypeMeta(record.type);
 
   return (
@@ -49,7 +50,7 @@ export default function ProgressTimelineItem({ record, onDelete }: ProgressTimel
             </button>
           }
         >
-          {/* 수정은 진행 기록 드로어(4단계)에서 붙인다 */}
+          <DropdownMenuItem onSelect={() => onEdit(record)}>수정</DropdownMenuItem>
           <DropdownMenuItem variant="destructive" onSelect={() => onDelete(record)}>
             삭제
           </DropdownMenuItem>

@@ -5,14 +5,23 @@ import { useInvalidateQueries } from "@hooks/commons";
 import { IS_MOCK } from "../mock";
 import {
   createCrm,
+  createCrmAction,
   deleteCrm,
   deleteCrmAction,
   getCrmDetail,
   getCrmList,
+  updateCrmAction,
   updateCrmActionDone,
   updateCrmStage,
 } from "./crm.api";
-import { type CreateCrmRequest, type CrmDetailResponse, type CrmListQuery, type CrmStage } from "./crm.type";
+import {
+  type CreateCrmActionRequest,
+  type CreateCrmRequest,
+  type CrmDetailResponse,
+  type CrmListQuery,
+  type CrmStage,
+  type UpdateCrmActionRequest,
+} from "./crm.type";
 
 export type CrmListFilters = Pick<CrmListQuery, "keyword" | "country" | "category" | "contract_type">;
 
@@ -148,6 +157,27 @@ export function useUpdateCrmActionDone(workspaceId: string, crmId: string) {
       })),
     onError: (_error, _variables, context) => optimistic.rollback(context?.previous),
     onSettled: invalidate,
+  });
+}
+
+/** 진행 기록 등록 — crm_uid는 상세 화면의 대상으로 채운다. 드로어는 다시 받아올 때까지 기다렸다 닫는다 */
+export function useCreateCrmAction(workspaceId: string, crmId: string) {
+  const invalidate = useInvalidateCrm(workspaceId, crmId);
+
+  return useMutation({
+    mutationFn: (body: Omit<CreateCrmActionRequest, "crm_uid">) => createCrmAction({ ...body, crm_uid: Number(crmId) }),
+    onSuccess: invalidate,
+  });
+}
+
+/** 진행 기록 수정 */
+export function useUpdateCrmAction(workspaceId: string, crmId: string) {
+  const invalidate = useInvalidateCrm(workspaceId, crmId);
+
+  return useMutation({
+    mutationFn: ({ actionId, body }: { actionId: string; body: UpdateCrmActionRequest }) =>
+      updateCrmAction(actionId, body),
+    onSuccess: invalidate,
   });
 }
 

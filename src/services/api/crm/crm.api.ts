@@ -1,6 +1,8 @@
 import axiosClientInstance from "@services/axios.client";
 
 import {
+  type CreateCrmActionRequest,
+  type CreateCrmActionResponse,
   type CreateCrmRequest,
   type CreateCrmResponse,
   type CrmDetailResponse,
@@ -10,6 +12,8 @@ import {
   type DeleteCrmActionResponse,
   type DeleteCrmResponse,
   type UpdateCrmActionDoneResponse,
+  type UpdateCrmActionRequest,
+  type UpdateCrmActionResponse,
   type UpdateCrmStageResponse,
 } from "./crm.type";
 
@@ -20,6 +24,7 @@ const ENDPOINTS = {
   list: `${BASE_PATH}/list`,
   detail: (crmId: string) => `${BASE_PATH}/${crmId}`,
   stage: (crmId: string) => `${BASE_PATH}/${crmId}/stage`,
+  actions: `${BASE_PATH}/action`,
   action: (actionId: string) => `${BASE_PATH}/action/${actionId}`,
   actionDone: (actionId: string) => `${BASE_PATH}/action/${actionId}/done`,
 };
@@ -47,6 +52,21 @@ export async function updateCrmStage(crmId: string, stage: CrmStage): Promise<Up
   const res = await axiosClientInstance.patch<UpdateCrmStageResponse>(ENDPOINTS.stage(crmId), {
     current_stage: stage,
   });
+  return res.data;
+}
+
+/** 진행 기록 등록 — 다음 액션을 함께 등록한다 */
+export async function createCrmAction(body: CreateCrmActionRequest): Promise<CreateCrmActionResponse> {
+  const res = await axiosClientInstance.post<CreateCrmActionResponse>(ENDPOINTS.actions, body);
+  return res.data;
+}
+
+/** 진행 기록 수정 */
+export async function updateCrmAction(
+  actionId: string,
+  body: UpdateCrmActionRequest,
+): Promise<UpdateCrmActionResponse> {
+  const res = await axiosClientInstance.patch<UpdateCrmActionResponse>(ENDPOINTS.action(actionId), body);
   return res.data;
 }
 

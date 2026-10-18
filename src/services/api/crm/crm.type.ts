@@ -31,6 +31,14 @@ export type CrmActionFile = components["schemas"]["ActionFileDto"];
 /** 진행 기록 유형 9개 — 단계 8개 + 「지정안됨」 */
 export type CrmActionType = components["schemas"]["CreateCrmActionDto"]["action_type"];
 
+/** 진행 기록 등록 — 기록 1건 + 다음 액션 여러 건을 한 번에. 기록은 완료(Y), 다음 액션은 미완료(N)로 저장된다 */
+export type CreateCrmActionRequest = components["schemas"]["CreateCrmActionDto"];
+export type CreateCrmActionResponse = components["schemas"]["CreateCrmActionResponseDto"];
+
+/** 진행 기록 수정 — 보낸 필드만 바뀐다(부분 수정) */
+export type UpdateCrmActionRequest = components["schemas"]["UpdateCrmActionDto"];
+export type UpdateCrmActionResponse = components["schemas"]["UpdateCrmActionResponseDto"];
+
 export type UpdateCrmStageResponse = components["schemas"]["UpdateCrmStageResponseDto"];
 export type UpdateCrmActionDoneResponse = components["schemas"]["UpdateCrmActionDoneResponseDto"];
 export type DeleteCrmActionResponse = components["schemas"]["DeleteCrmActionResponseDto"];
