@@ -11,55 +11,21 @@ import { DropdownMenu, DropdownMenuItem } from "@components/ui";
 import { cn } from "@utils/shadcn";
 
 import StageBadge from "./StageBadge";
-import { PROGRESS_GRID_COLS, type ProgressRow } from "./progressColumns";
-import { CLOSED_STAGES, CONTRACT_TYPE_OPTIONS, COUNTRY_FILTER_OPTIONS } from "./progressOptions";
+import { PROGRESS_GRID_COLS } from "./progressColumns";
+import { type ProgressRow } from "./progressView";
 
 const EMPTY_CELL = "—";
 
-/** 기한이 임박했다고 볼 남은 일수 */
-const DUE_SOON_DAYS = 3;
-
-type DueTone = "overdue" | "soon" | "normal";
-
-// 기한 상태는 렌더 시점의 날짜로 계산한다.
-// 서버가 계산해 내려주는 편이 안전하지만, 목록 API가 아직 없어 클라이언트에서 판단한다.
-const resolveDueTone = (dueDate: string | null, isClosed: boolean): DueTone => {
-  if (!dueDate || isClosed) {
-    return "normal";
-  }
-
-  const diff = dayjs(dueDate).startOf("day").diff(dayjs().startOf("day"), "day");
-
-  if (diff < 0) {
-    return "overdue";
-  }
-  if (diff <= DUE_SOON_DAYS) {
-    return "soon";
-  }
-  return "normal";
-};
-
-const DUE_TONE_CLASS: Record<DueTone, string> = {
-  overdue: "text-[#dc2626] font-medium",
-  soon: "text-[#d97700] font-medium",
-  normal: "text-[#6b7280]",
-};
-
 const formatCellDate = (date: string | null) => (date ? dayjs(date).format("YYYY.MM.DD") : EMPTY_CELL);
-
-const findContractLabel = (code: string) => CONTRACT_TYPE_OPTIONS.find(option => option.value === code)?.label ?? code;
-
-const findCountryLabel = (code: string) => COUNTRY_FILTER_OPTIONS.find(option => option.value === code)?.label ?? code;
 
 type ProgressTableRowProps = {
   row: ProgressRow;
+  onDelete: (row: ProgressRow) => void;
 };
 
-export default function ProgressTableRow({ row }: ProgressTableRowProps) {
+export default function ProgressTableRow({ row, onDelete }: ProgressTableRowProps) {
   const { workspaceId } = useParams<{ workspaceId: string }>();
 
-  const isClosed = CLOSED_STAGES.includes(row.stage);
-  const dueTone = resolveDueTone(row.nextActionDueAt, isClosed);
   const detailHref = `/${workspaceId}/progress/${row.id}`;
 
   return (
@@ -73,16 +39,16 @@ export default function ProgressTableRow({ row }: ProgressTableRowProps) {
           href={detailHref}
           className="focus-visible:ring-ring block truncate rounded text-[13px] font-semibold text-[#111827] hover:underline focus-visible:ring-2 focus-visible:outline-none"
         >
-          {row.buyerName}
+          {row.partnerName}
         </Link>
       </div>
 
       <div role="cell" className="truncate pr-3 text-[13px] text-[#6b7280]">
-        {findCountryLabel(row.countryCode)} · {row.city}
+        {row.location || EMPTY_CELL}
       </div>
 
       <div role="cell" className="truncate pr-3 text-[13px] text-[#6b7280]">
-        {findContractLabel(row.contractType)}
+        {row.contractType ?? EMPTY_CELL}
       </div>
 
       <div role="cell" className="pr-3">
@@ -98,9 +64,9 @@ export default function ProgressTableRow({ row }: ProgressTableRowProps) {
         {row.nextAction ?? EMPTY_CELL}
       </div>
 
-      <div role="cell" className={cn("pr-3 text-[13px] tabular-nums", DUE_TONE_CLASS[dueTone])}>
+      {/* 기한 지남·임박 강조는 두지 않는다 — 경고 표시는 「방치」 배지로 통일(기획 확인 중) */}
+      <div role="cell" className="pr-3 text-[13px] text-[#6b7280] tabular-nums">
         {formatCellDate(row.nextActionDueAt)}
-        {dueTone === "overdue" && <span className="ml-1.5 text-[11px]">지연</span>}
       </div>
 
       <div role="cell" className="flex justify-end">
@@ -109,7 +75,7 @@ export default function ProgressTableRow({ row }: ProgressTableRowProps) {
           trigger={
             <button
               type="button"
-              aria-label={`${row.buyerName} 진행 관리 메뉴`}
+              aria-label={`${row.partnerName} 진행 관리 메뉴`}
               className="text-text-disabled hover:bg-secondary-background hover:text-text-secondary focus-visible:ring-ring flex size-8 items-center justify-center rounded-lg transition-colors focus-visible:ring-2 focus-visible:outline-none"
             >
               <EllipsisVertical className="size-4" />
@@ -119,10 +85,9 @@ export default function ProgressTableRow({ row }: ProgressTableRowProps) {
           <DropdownMenuItem asChild>
             <Link href={detailHref}>상세 보기</Link>
           </DropdownMenuItem>
-          {/* TODO(API): 나머지는 진행 관리 API 연결 시 동작을 붙인다 */}
-          <DropdownMenuItem disabled>단계 변경</DropdownMenuItem>
-          <DropdownMenuItem disabled variant="destructive">
-            목록에서 제외
+          {/* 단계 변경은 시안상 상세 화면에서만 한다 */}
+          <DropdownMenuItem variant="destructive" onSelect={() => onDelete(row)}>
+            삭제
           </DropdownMenuItem>
         </DropdownMenu>
       </div>

@@ -16,6 +16,8 @@ type FormSelectProps<T extends FieldValues> = {
   disabled?: boolean;
   /** 값이 바뀔 때 폼 외 부수 작업이 필요한 경우 (예: 국가 변경 시 도시 초기화) */
   onValueChange?: (value: string) => void;
+  /** 라벨 크기 — 설정 화면은 12px, 모달은 옆 입력칸에 맞춰 바꾼다 */
+  labelClassName?: string;
 };
 
 // Select는 제어형이라 register가 아닌 Controller로 연결한다
@@ -28,6 +30,7 @@ export default function FormSelect<T extends FieldValues>({
   required,
   disabled,
   onValueChange,
+  labelClassName = "text-xs",
 }: FormSelectProps<T>) {
   // 검증 문구를 aria-describedby로 트리거에 연결한다. 같은 필드 이름이 한 화면에 둘 있어도 겹치지 않게 자동 id
   const errorId = useId();
@@ -41,7 +44,7 @@ export default function FormSelect<T extends FieldValues>({
         <div className="flex flex-col gap-1.5">
           <Select
             size="md"
-            labelClassName="text-xs"
+            labelClassName={labelClassName}
             label={label}
             required={required}
             placeholder={placeholder}

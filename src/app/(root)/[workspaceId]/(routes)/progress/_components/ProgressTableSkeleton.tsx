@@ -2,20 +2,25 @@ import { Skeleton } from "@components/ui";
 
 import { cn } from "@utils/shadcn";
 
-import { PROGRESS_COLUMNS, PROGRESS_GRID_COLS, PROGRESS_MIN_WIDTH } from "./progressColumns";
+import { PROGRESS_GRID_COLS, PROGRESS_MIN_WIDTH, getProgressColumns } from "./progressColumns";
 
 /** 셀마다 폭을 달리해 실제 데이터처럼 보이게 한다 (모두 같은 길이면 로딩이 더 지루해 보인다) */
 const CELL_WIDTHS = ["w-28", "w-24", "w-20", "w-14", "w-20", "w-24", "w-20"];
 
 const SKELETON_ROWS = 6;
 
-export default function ProgressTableSkeleton() {
+type ProgressTableSkeletonProps = {
+  /** 「바이어」 또는 「브랜드」 — 첫 열 제목 */
+  partnerLabel?: string;
+};
+
+export default function ProgressTableSkeleton({ partnerLabel = "바이어" }: ProgressTableSkeletonProps) {
   return (
     <div className="border-border overflow-hidden rounded-2xl border bg-white">
       <div className="overflow-x-auto">
         <div className={PROGRESS_MIN_WIDTH}>
           <div className={cn("grid h-10 items-center pr-5 pl-6", PROGRESS_GRID_COLS)} aria-hidden>
-            {PROGRESS_COLUMNS.map(column => (
+            {getProgressColumns(partnerLabel).map(column => (
               <div
                 key={column.key}
                 className="text-text-tertiary pr-3 text-sm font-medium tracking-[-0.7px] whitespace-nowrap"

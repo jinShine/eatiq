@@ -50,7 +50,7 @@ export const PROGRESS_DETAIL_MOCK: ProgressDetail = {
   countryCode: "JP",
   city: "도쿄",
   contractType: "master_franchise",
-  stage: "meeting",
+  stage: "미팅",
   classifiedAt: "2026-07-02 14:10",
   classifiedReason: "미팅 기록 존재",
   contactName: "Yuki Tanaka",
