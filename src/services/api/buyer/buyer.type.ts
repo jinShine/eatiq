@@ -71,3 +71,8 @@ export type BuyerCompletion = {
   nextTask: BuyerCompletionTask | null;
   remainingTasks: BuyerCompletionTask[];
 };
+
+/************************************
+ * 대시보드 — GET /api/workspace/{workspace_uid}/buyer/dashboard
+ ************************************/
+export type BuyerDashboardResponse = components["schemas"]["GetBuyerDashboardResponseDto"];

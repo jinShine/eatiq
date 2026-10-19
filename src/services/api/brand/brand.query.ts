@@ -9,6 +9,7 @@ import { workspaceKeys } from "../workspace/workspace.query";
 import { type WorkspaceDetailResponse } from "../workspace/workspace.type";
 import {
   getBrandCompletion,
+  getBrandDashboard,
   getBrandDetail,
   getBrandList,
   updateBrandBasic,
@@ -53,6 +54,7 @@ export const brandKeys = {
   settings: (workspaceId: string) => [...brandKeys.all, "settings", workspaceId] as const,
   explore: (filters: BrandListFilters) => [...brandKeys.all, "explore", filters] as const,
   exploreDetail: (brandId: string) => [...brandKeys.all, "explore-detail", brandId] as const,
+  dashboard: (workspaceId: string) => [...brandKeys.all, "dashboard", workspaceId] as const,
   /** 탭별 완성도의 상위 키 — 섹션을 저장하면 탭 구분 없이 한 번에 무효화한다 */
   completionAll: (workspaceId: string) => [...brandKeys.all, "completion", workspaceId] as const,
   completion: (workspaceId: string, scope: BrandCompletionScope) =>
@@ -228,3 +230,15 @@ export const useUpdateBrandFeaturedImages = createBrandSectionMutation(updateBra
 export const useUpdateBrandFeaturedVideos = createBrandSectionMutation(updateBrandFeaturedVideos);
 export const useUpdateBrandMenu = createBrandSectionMutation(updateBrandMenu);
 export const useUpdateBrandStore = createBrandSectionMutation(updateBrandStore);
+
+/**
+ * 브랜드 대시보드 — 브랜드 워크스페이스에서만 부른다(바이어 워크스페이스면 서버가 400).
+ * TODO(API): 목 데이터가 없어 목 모드에서는 요청하지 않는다
+ */
+export function useBrandDashboard(workspaceId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: brandKeys.dashboard(workspaceId),
+    queryFn: () => getBrandDashboard(workspaceId),
+    enabled: enabled && Boolean(workspaceId) && !IS_MOCK,
+  });
+}

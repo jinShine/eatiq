@@ -9,6 +9,7 @@ import { workspaceKeys } from "../workspace/workspace.query";
 import { type WorkspaceDetailResponse } from "../workspace/workspace.type";
 import {
   getBuyerCompletion,
+  getBuyerDashboard,
   getBuyerDetail,
   getBuyerList,
   updateBuyerBasic,
@@ -29,6 +30,7 @@ export const buyerKeys = {
   list: (filters: BuyerListFilters) => [...buyerKeys.all, "list", filters] as const,
   detail: (buyerId: string) => [...buyerKeys.all, "detail", buyerId] as const,
   completion: (workspaceId: string) => [...buyerKeys.all, "completion", workspaceId] as const,
+  dashboard: (workspaceId: string) => [...buyerKeys.all, "dashboard", workspaceId] as const,
 };
 
 /************************************
@@ -137,3 +139,15 @@ export const useUpdateBuyerStatus = createBuyerSectionMutation(updateBuyerStatus
 export const useUpdateBuyerIntro = createBuyerSectionMutation(updateBuyerIntro);
 export const useUpdateBuyerContractPolicy = createBuyerSectionMutation(updateBuyerContractPolicy);
 export const useUpdateBuyerContact = createBuyerSectionMutation(updateBuyerContact);
+
+/**
+ * 바이어 대시보드 — 바이어 워크스페이스에서만 부른다.
+ * TODO(API): 목 데이터가 없어 목 모드에서는 요청하지 않는다
+ */
+export function useBuyerDashboard(workspaceId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: buyerKeys.dashboard(workspaceId),
+    queryFn: () => getBuyerDashboard(workspaceId),
+    enabled: enabled && Boolean(workspaceId) && !IS_MOCK,
+  });
+}

@@ -139,3 +139,8 @@ export type BrandCompletion = {
   nextTask: BrandCompletionTask | null;
   remainingTasks: BrandCompletionTask[];
 };
+
+/************************************
+ * 대시보드 — GET /api/workspace/{workspace_uid}/brand/dashboard
+ ************************************/
+export type BrandDashboardResponse = components["schemas"]["GetBrandDashboardResponseDto"];

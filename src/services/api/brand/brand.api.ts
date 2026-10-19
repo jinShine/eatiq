@@ -3,6 +3,7 @@ import axiosClientInstance from "@services/axios.client";
 import {
   type BrandCompletionResponse,
   type BrandCompletionScope,
+  type BrandDashboardResponse,
   type BrandDetail,
   type BrandListQuery,
   type BrandListResponse,
@@ -66,6 +67,7 @@ const ENDPOINTS = {
   locationStandard: (workspaceId: string) => `${buildBrandPath(workspaceId)}/location-standard`,
   sizeCriteria: (workspaceId: string) => `${buildBrandPath(workspaceId)}/size-criteria`,
   facilityReq: (workspaceId: string) => `${buildBrandPath(workspaceId)}/facility-req`,
+  dashboard: (workspaceId: string) => `${buildBrandPath(workspaceId)}/dashboard`,
   completion: (workspaceId: string, scope: BrandCompletionScope) =>
     `${buildBrandPath(workspaceId)}/completion/${scope}`,
 };
@@ -73,6 +75,12 @@ const ENDPOINTS = {
 /************************************
  * 조회
  ************************************/
+/** 대시보드 — 완성도·권장 항목·다음 액션·진행 단계 건수·최근 활동을 한 번에 */
+export async function getBrandDashboard(workspaceId: string): Promise<BrandDashboardResponse> {
+  const res = await axiosClientInstance.get<BrandDashboardResponse>(ENDPOINTS.dashboard(workspaceId));
+  return res.data;
+}
+
 /** 브랜드 탐색 목록 — 필터 값이 없으면 보내지 않는다(서버는 없거나 "전체"면 전체 조회) */
 export async function getBrandList(query: BrandListQuery): Promise<BrandListResponse> {
   const res = await axiosClientInstance.get<BrandListResponse>(ENDPOINTS.list, { params: query });

@@ -2,6 +2,7 @@ import axiosClientInstance from "@services/axios.client";
 
 import {
   type BuyerCompletionResponse,
+  type BuyerDashboardResponse,
   type BuyerDetailResponse,
   type BuyerListQuery,
   type BuyerListResponse,
@@ -31,11 +32,18 @@ const ENDPOINTS = {
   contractPolicy: (workspaceId: string) => `${buildBuyerPath(workspaceId)}/contract-policy`,
   contact: (workspaceId: string) => `${buildBuyerPath(workspaceId)}/contact`,
   completion: (workspaceId: string) => `${buildBuyerPath(workspaceId)}/completion`,
+  dashboard: (workspaceId: string) => `${buildBuyerPath(workspaceId)}/dashboard`,
 };
 
 /************************************
  * 바이어 탐색
  ************************************/
+/** 대시보드 — 완성도·권장 항목·다음 액션·진행 단계 건수·최근 활동을 한 번에 */
+export async function getBuyerDashboard(workspaceId: string): Promise<BuyerDashboardResponse> {
+  const res = await axiosClientInstance.get<BuyerDashboardResponse>(ENDPOINTS.dashboard(workspaceId));
+  return res.data;
+}
+
 /** 목록 — 필터 값이 없으면 보내지 않는다(서버는 없거나 "전체"면 전체 조회) */
 export async function getBuyerList(query: BuyerListQuery): Promise<BuyerListResponse> {
   const res = await axiosClientInstance.get<BuyerListResponse>(ENDPOINTS.list, { params: query });

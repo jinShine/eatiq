@@ -1,5 +1,13 @@
-import AppContainer from "./_container";
+import { use } from "react";
 
-export default function DashboardPage() {
-  return <AppContainer />;
+import DashboardContainer from "./_container";
+
+type DashboardPageProps = {
+  params: Promise<{ workspaceId: string }>;
+};
+
+export default function DashboardPage({ params }: DashboardPageProps) {
+  const { workspaceId } = use(params);
+
+  return <DashboardContainer workspaceId={workspaceId} />;
 }

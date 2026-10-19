@@ -4,6 +4,7 @@ import BuyerContractPolicySection from "../_components/buyer/sections/BuyerContr
 import BuyerIntroSection from "../_components/buyer/sections/BuyerIntroSection";
 import BuyerStatusSection from "../_components/buyer/sections/BuyerStatusSection";
 import BuyerCompletionCard from "../_components/completion/BuyerCompletionCard";
+import { useJumpToHash } from "../_hooks/useJumpToHash";
 
 type SectionProps = { workspaceId: string };
 
@@ -25,6 +26,9 @@ type BuyerSettingsProps = {
 
 /** 바이어 워크스페이스의 회사 정보 설정 — 탭 없는 한 페이지 */
 export default function BuyerSettings({ workspaceId }: BuyerSettingsProps) {
+  // 대시보드의 「입력」(…#섹션/필드)으로 들어오면 그 칸으로 이동한다
+  useJumpToHash();
+
   // 브랜드 탭 화면과 같은 배치 — 저니 패널은 폭 전체, 섹션은 아래에 여백을 두고 쌓는다
   return (
     <div>
