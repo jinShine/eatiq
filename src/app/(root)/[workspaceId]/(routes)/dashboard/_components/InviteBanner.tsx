@@ -1,5 +1,7 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+
 import dayjs from "dayjs";
 import { Mail } from "lucide-react";
 
@@ -9,9 +11,15 @@ import { useInvitedWorkspaces, useRespondInviteMutation } from "@services/api/wo
 
 /**
  * 받은 워크스페이스 초대 (피그마 64:255) — 받은 초대가 있을 때만 맨 위에 보인다.
- * 시안의 「초대한 사람(이름·메일)」은 API가 주지 않아 받은 날짜만 보여준다(백엔드 요청).
+ * 시안에 없는 왼쪽 메일 아이콘은 사용자 요청으로 더했다(2026-10-19).
+ * 시안의 「초대한 사람(이름·메일)」은 API가 주지 않아 날짜만 보여준다(백엔드 요청).
+ * 수락해도 지금 워크스페이스에 머물고, 토스트의 「이동」으로 원할 때 옮겨 간다.
  */
+/** 「이동」 버튼이 있는 토스트를 띄워 두는 시간 */
+const ACTION_TOAST_MS = 8000;
+
 export default function InviteBanner() {
+  const router = useRouter();
   const { data: invites = [] } = useInvitedWorkspaces();
   const { mutate: respond, isPending, variables } = useRespondInviteMutation();
 
@@ -28,9 +36,14 @@ export default function InviteBanner() {
             { workspaceId: invite.id, action },
             {
               onSuccess: () =>
-                Toast.success(action === "수락" ? "워크스페이스에 참여했어요." : "초대를 거절했어요.", {
-                  description: invite.name,
-                }),
+                action === "수락"
+                  ? Toast.success("워크스페이스에 참여했어요.", {
+                      description: invite.name,
+                      action: { label: "이동", onClick: () => router.push(`/${invite.id}/dashboard`) },
+                      // 버튼을 누를 틈을 준다 — 기본(4초)은 읽고 누르기에 짧다
+                      duration: ACTION_TOAST_MS,
+                    })
+                  : Toast.success("초대를 거절했어요.", { description: invite.name }),
               onError: error => Toast.error(error.message),
             },
           );
@@ -38,28 +51,37 @@ export default function InviteBanner() {
         return (
           <li
             key={invite.id}
-            className="border-border flex flex-col gap-3 rounded-xl border bg-white px-5 py-4 sm:flex-row sm:items-center sm:justify-between"
+            className="bg-primary-50 flex flex-col gap-4 rounded-xl p-6 sm:flex-row sm:items-center sm:justify-between"
           >
-            <div className="flex min-w-0 items-center gap-3">
-              <div className="bg-primary-background text-primary flex size-9 shrink-0 items-center justify-center rounded-full">
-                <Mail className="size-4" aria-hidden />
+            <div className="flex min-w-0 items-center gap-4">
+              <div className="text-primary flex size-10 shrink-0 items-center justify-center rounded-full bg-white">
+                <Mail className="size-5" aria-hidden />
               </div>
-              <div className="min-w-0">
-                <p className="text-text-primary truncate text-sm font-bold tracking-[-0.7px]">
+              <div className="flex min-w-0 flex-col gap-1">
+                <p className="truncate text-lg font-bold tracking-[-0.9px] text-[#1d1d1f]">
                   {invite.name} 워크스페이스 초대
                 </p>
                 {invite.invitedAt && (
-                  <p className="text-text-tertiary text-xs">
-                    {dayjs(invite.invitedAt).format("YYYY.MM.DD")}에 초대받았어요
+                  <p className="text-sm font-medium tracking-[-0.7px] text-[#6b7280]">
+                    {dayjs(invite.invitedAt).format("YYYY.MM.DD")}에 초대했습니다.
                   </p>
                 )}
               </div>
             </div>
             <div className="flex shrink-0 gap-2">
-              <Button variant="outline" size="sm" disabled={isResponding} onClick={() => handleRespond("거절")}>
+              <Button
+                variant="outline"
+                className="h-auto bg-white px-[18px] py-[9px] text-[13px] font-semibold"
+                disabled={isResponding}
+                onClick={() => handleRespond("거절")}
+              >
                 거절
               </Button>
-              <Button size="sm" disabled={isResponding} onClick={() => handleRespond("수락")}>
+              <Button
+                className="h-auto px-[18px] py-[9px] text-[13px] font-semibold"
+                disabled={isResponding}
+                onClick={() => handleRespond("수락")}
+              >
                 수락
               </Button>
             </div>

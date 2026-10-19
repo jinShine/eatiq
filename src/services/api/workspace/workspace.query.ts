@@ -208,11 +208,10 @@ export function useRespondInviteMutation() {
           })
       : ({ workspaceId, ...body }: RespondInviteRequest & { workspaceId: string }) =>
           respondWorkspaceInvite(workspaceId, body),
-    // 수락하면 내 워크스페이스가 늘고, 어느 쪽이든 초대 목록에서는 빠진다
-    onSuccess: () => {
-      invalidateQueries.single(workspaceKeys.my());
-      invalidateQueries.single(workspaceKeys.invited());
-    },
+    // 수락하면 내 워크스페이스가 늘고, 어느 쪽이든 초대 목록에서는 빠진다.
+    // 다시 받아올 때까지 기다린다 — 수락 직후 그 워크스페이스로 이동하면 멤버 확인(WorkspaceGuard)이
+    // 옛 목록으로 판정해 다른 워크스페이스로 튕겨 낸다
+    onSuccess: () => invalidateQueries.multiple([workspaceKeys.my(), workspaceKeys.invited()]),
   });
 }
 
