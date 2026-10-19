@@ -74,13 +74,14 @@ export default function ProgressDetailContainer({ workspaceId, progressId }: Pro
   const { detail, isLoading, error, retry } = useProgressDetail(progressId);
   const isNotFound = isAxiosError(error) && error.response?.status === 404;
 
-  // 지워졌거나 없는 항목이면 알리고 목록으로 보낸다 — 스펙의 404 처리 안내
+  // 지워졌거나 없는 항목이면 알리고 목록으로 보낸다 — 스펙의 404 처리 안내.
+  // 서버 문구(「해당 CRM 레코드를…」)는 개발 용어라 화면 문구로 바꾼다
   useEffect(() => {
     if (isNotFound) {
-      Toast.error(error.message);
+      Toast.error("이미 삭제된 진행 건이에요.");
       router.replace(listHref);
     }
-  }, [isNotFound, error, router, listHref]);
+  }, [isNotFound, router, listHref]);
 
   const { mutate: updateStage } = useUpdateCrmStage(workspaceId, progressId);
   const { mutate: updateActionDone } = useUpdateCrmActionDone(workspaceId, progressId);
