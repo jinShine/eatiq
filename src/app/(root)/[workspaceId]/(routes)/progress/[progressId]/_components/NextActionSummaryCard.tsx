@@ -28,6 +28,15 @@ type NextActionSummaryCardProps = {
  */
 export default function NextActionSummaryCard({ actions: allActions, onToggle }: NextActionSummaryCardProps) {
   const [page, setPage] = useState(0);
+
+  // 새 액션이 생기면(진행 기록 추가) 맨 앞 액션이 바뀐다 — 1페이지로 돌아가 방금 추가한 액션이 보이게 한다.
+  // 렌더 중에 상태를 맞추는 방식(effect를 쓰면 옛 페이지가 한 번 그려진다)
+  const newestId = allActions[0]?.id;
+  const [seenNewestId, setSeenNewestId] = useState(newestId);
+  if (newestId !== seenNewestId) {
+    setSeenNewestId(newestId);
+    setPage(0);
+  }
   const shouldReduceMotion = useReducedMotion();
 
   // 방금 완료로 바꿔 아직 목록에 남겨 둘 액션

@@ -56,15 +56,17 @@ export default function ProgressFilterBar({
     // 모바일: 「검색 + 추가 버튼」 한 줄, 칩은 아랫줄에서 가로 스크롤 — 한 줄에 다 넣으면 칩이 화면 밖으로 사라진다
     // 데스크톱(md~): 시안대로 한 줄. 추가 버튼만 오른쪽 끝
     <div className="border-border grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 border-b px-6 py-3 md:flex md:h-16 md:gap-4 md:py-0">
-      <Input
-        size="sm"
-        placeholder="검색"
-        aria-label={`${partnerLabel} 이름·담당자 검색`}
-        className="w-full md:w-60 md:shrink-0"
-        startAdornment={<Search className="text-text-disabled size-4" />}
-        value={filters.keyword}
-        onChange={event => patch("keyword")(event.target.value)}
-      />
+      {/* Input 바깥 틀이 h-full이라 그대로 두면 필터바 높이(64px)로 늘어나 입력칸이 위로 붙는다 — 한 번 감싼다 */}
+      <div className="min-w-0 md:w-60 md:shrink-0">
+        <Input
+          size="sm"
+          placeholder="검색"
+          aria-label={`${partnerLabel} 이름·담당자 검색`}
+          startAdornment={<Search className="text-text-disabled size-4" />}
+          value={filters.keyword}
+          onChange={event => patch("keyword")(event.target.value)}
+        />
+      </div>
 
       <Button size="sm" className="shrink-0 md:order-last md:ml-auto" onClick={onAdd}>
         <Plus className="size-4" />

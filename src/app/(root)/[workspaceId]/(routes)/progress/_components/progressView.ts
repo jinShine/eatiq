@@ -45,8 +45,8 @@ export const toIsoDate = (value: string | null) => {
 export const toProgressRow = (item: CrmListItem): ProgressRow => ({
   id: String(item.crm_uid),
   partnerName: item.company_name,
-  // 수기 등록에서 국가·도시를 비우면 빈 문구가 올 수 있다
-  location: item.location.trim(),
+  // 국가·도시를 비워 등록하면 서버가 「-」를 준다 — 빈 값으로 받아 다른 빈 칸과 같은 「—」로 그린다
+  location: item.location.trim() === "-" ? "" : item.location.trim(),
   contractType: item.contract_type,
   stage: item.current_stage,
   lastContactedAt: toIsoDate(item.recent_contact_date),
