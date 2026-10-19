@@ -2,6 +2,8 @@ import { keepPreviousData, useInfiniteQuery, useMutation, useQuery, useQueryClie
 
 import { useInvalidateQueries } from "@hooks/commons";
 
+import { brandKeys } from "../brand/brand.query";
+import { buyerKeys } from "../buyer/buyer.query";
 import { IS_MOCK } from "../mock";
 import {
   createCrm,
@@ -31,6 +33,13 @@ export const crmKeys = {
   list: (workspaceId: string, filters: CrmListFilters) => [...crmKeys.lists(workspaceId), filters] as const,
   detail: (crmId: string) => [...crmKeys.all, "detail", crmId] as const,
 };
+
+/**
+ * 진행 관리 데이터를 요약해 보여주는 대시보드(단계 건수·다음 액션·최근 활동).
+ * 진행 관리에서 무엇이든 바뀌면 함께 다시 받는다 — 안 그러면 캐시 유효 시간(1분) 동안 옛 숫자가 보인다.
+ * 워크스페이스 유형을 몰라도 되도록 브랜드·바이어 키를 모두 넘긴다(없는 쪽은 아무 일도 없다)
+ */
+const dashboardKeys = (workspaceId: string) => [brandKeys.dashboard(workspaceId), buyerKeys.dashboard(workspaceId)];
 
 /** 한 번에 받는 개수 — 서버 기본값. 「더 보기」를 누르면 다음 페이지를 이어 붙인다 */
 const CRM_PAGE_SIZE = 20;
@@ -63,7 +72,7 @@ export function useCreateCrm(workspaceId: string) {
   return useMutation({
     mutationFn: (body: Omit<CreateCrmRequest, "source_workspace_uid">) =>
       createCrm({ ...body, source_workspace_uid: Number(workspaceId) }),
-    onSuccess: () => invalidateQueries.single(crmKeys.lists(workspaceId)),
+    onSuccess: () => invalidateQueries.multiple([crmKeys.lists(workspaceId), ...dashboardKeys(workspaceId)]),
   });
 }
 
@@ -73,7 +82,7 @@ export function useDeleteCrm(workspaceId: string) {
 
   return useMutation({
     mutationFn: (crmId: string) => deleteCrm(crmId),
-    onSuccess: () => invalidateQueries.single(crmKeys.lists(workspaceId)),
+    onSuccess: () => invalidateQueries.multiple([crmKeys.lists(workspaceId), ...dashboardKeys(workspaceId)]),
   });
 }
 
@@ -100,7 +109,7 @@ function useInvalidateCrm(workspaceId: string, crmId: string) {
   const invalidateQueries = useInvalidateQueries();
 
   return () => {
-    invalidateQueries.single(crmKeys.lists(workspaceId));
+    invalidateQueries.multiple([crmKeys.lists(workspaceId), ...dashboardKeys(workspaceId)]);
     return invalidateQueries.single(crmKeys.detail(crmId));
   };
 }
