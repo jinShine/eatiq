@@ -24,3 +24,15 @@ export const STAGE_META: Record<StageCode, StageMeta> = {
   계약완료: { label: "계약 완료", className: "bg-[#047857] text-white" },
   보류: { label: "보류", className: "bg-[#111827] text-white" },
 };
+
+/** 단계를 나타내는 진한 색 — 대시보드 「업무 진행 현황」 막대 */
+export const STAGE_BAR_CLASS: Record<StageCode, string> = {
+  리드: "bg-[#6b7280]",
+  검토: "bg-[#0e7490]",
+  접촉: "bg-[#d97700]",
+  미팅: "bg-[#0066cc]",
+  법무검토: "bg-[#b45309]",
+  협상: "bg-[#059669]",
+  계약완료: "bg-[#047857]",
+  보류: "bg-[#111827]",
+};

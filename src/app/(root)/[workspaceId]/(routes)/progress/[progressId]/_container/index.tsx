@@ -16,7 +16,7 @@ import {
   useDeleteCrm,
   useDeleteCrmAction,
   useUpdateCrmAction,
-  useUpdateCrmActionDone,
+  useUpdateCrmNextActionDone,
   useUpdateCrmStage,
 } from "@services/api/crm/crm.query";
 
@@ -29,7 +29,7 @@ import ProgressRecordSheet from "../_components/ProgressRecordSheet";
 import ProgressTimeline from "../_components/ProgressTimeline";
 import RecordDeleteModal from "../_components/RecordDeleteModal";
 import StageCard from "../_components/StageCard";
-import { type ProgressRecord } from "../_components/progressDetailView";
+import { type NextActionSummary, type ProgressRecord } from "../_components/progressDetailView";
 import { type ProgressRecordFormValues, toCreateRequest, toUpdateRequest } from "../_components/progressRecordSchema";
 import { useProgressDetail } from "../_hooks/useProgressDetail";
 
@@ -84,13 +84,16 @@ export default function ProgressDetailContainer({ workspaceId, progressId }: Pro
   }, [isNotFound, router, listHref]);
 
   const { mutate: updateStage } = useUpdateCrmStage(workspaceId, progressId);
-  const { mutate: updateActionDone } = useUpdateCrmActionDone(workspaceId, progressId);
+  const { mutate: updateActionDone } = useUpdateCrmNextActionDone(workspaceId, progressId);
 
   const handleStageChange = (stage: StageCode) =>
     updateStage(stage, { onError: stageError => Toast.error(stageError.message) });
 
-  const handleToggleAction = (actionId: string, isDone: boolean) =>
-    updateActionDone({ actionId, isDone }, { onError: doneError => Toast.error(doneError.message) });
+  const handleToggleAction = (action: NextActionSummary, isDone: boolean) =>
+    updateActionDone(
+      { actionId: action.actionId, idx: action.idx, isDone },
+      { onError: doneError => Toast.error(doneError.message) },
+    );
 
   // 진행 기록 삭제
   const [recordToDelete, setRecordToDelete] = useState<ProgressRecord | null>(null);

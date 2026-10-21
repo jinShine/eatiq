@@ -28,8 +28,13 @@ export type CrmActionRecord = components["schemas"]["CrmActionRecordDto"];
 export type CrmNextActionSummary = components["schemas"]["NextActionSummaryDto"];
 export type CrmActionFile = components["schemas"]["ActionFileDto"];
 
-/** 진행 기록 유형 9개 — 단계 8개 + 「지정안됨」 */
+/** 진행 기록 유형 3개 — 미팅 · 통화 · 메일 (2026-10-20 단계와 분리) */
 export type CrmActionType = components["schemas"]["CreateCrmActionDto"]["action_type"];
+
+/** 진행 기록 안의 다음 액션 — 기록마다 배열로 저장되고 idx로 구분한다 */
+export type CrmNextActionItem = components["schemas"]["NextActionItemDto"];
+/** 수정할 때 보내는 다음 액션 — idx가 있으면 그 항목을 고치고, 없으면 새로 만든다. 보낸 배열로 통째로 바뀐다 */
+export type UpdateCrmNextActionItem = components["schemas"]["UpdateNextActionItemDto"];
 
 /** 진행 기록 등록 — 기록 1건 + 다음 액션 여러 건을 한 번에. 기록은 완료(Y), 다음 액션은 미완료(N)로 저장된다 */
 export type CreateCrmActionRequest = components["schemas"]["CreateCrmActionDto"];
@@ -40,5 +45,5 @@ export type UpdateCrmActionRequest = components["schemas"]["UpdateCrmActionDto"]
 export type UpdateCrmActionResponse = components["schemas"]["UpdateCrmActionResponseDto"];
 
 export type UpdateCrmStageResponse = components["schemas"]["UpdateCrmStageResponseDto"];
-export type UpdateCrmActionDoneResponse = components["schemas"]["UpdateCrmActionDoneResponseDto"];
+export type UpdateCrmNextActionDoneResponse = components["schemas"]["UpdateCrmNextActionDoneResponseDto"];
 export type DeleteCrmActionResponse = components["schemas"]["DeleteCrmActionResponseDto"];

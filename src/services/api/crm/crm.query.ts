@@ -13,7 +13,7 @@ import {
   getCrmDetail,
   getCrmList,
   updateCrmAction,
-  updateCrmActionDone,
+  updateCrmNextActionDone,
   updateCrmStage,
 } from "./crm.api";
 import {
@@ -150,18 +150,27 @@ export function useUpdateCrmStage(workspaceId: string, crmId: string) {
   });
 }
 
-/** 다음 액션 완료 — 스위치가 바로 바뀌도록 낙관적으로 반영한다 */
-export function useUpdateCrmActionDone(workspaceId: string, crmId: string) {
+/** 다음 액션 완료 — 스위치가 바로 바뀌도록 낙관적으로 반영한다(진행 기록 안의 idx번 액션) */
+export function useUpdateCrmNextActionDone(workspaceId: string, crmId: string) {
   const invalidate = useInvalidateCrm(workspaceId, crmId);
   const optimistic = useOptimisticDetail(crmId);
 
   return useMutation({
-    mutationFn: ({ actionId, isDone }: { actionId: string; isDone: boolean }) => updateCrmActionDone(actionId, isDone),
-    onMutate: ({ actionId, isDone }) =>
+    mutationFn: ({ actionId, idx, isDone }: { actionId: string; idx: number; isDone: boolean }) =>
+      updateCrmNextActionDone(actionId, idx, isDone),
+    // 기록 안의 그 액션만 바꾼다. 요약(next_actions)은 서버가 다시 계산해 주므로 재조회를 기다린다
+    onMutate: ({ actionId, idx, isDone }) =>
       optimistic.apply(data => ({
         ...data,
-        next_actions: data.next_actions.map(action =>
-          String(action.uid) === actionId ? { ...action, is_done: isDone ? "Y" : "N" } : action,
+        actions: data.actions.map(action =>
+          String(action.uid) === actionId
+            ? {
+                ...action,
+                next_actions: action.next_actions?.map(item =>
+                  item.idx === idx ? { ...item, is_done: isDone ? "Y" : "N" } : item,
+                ),
+              }
+            : action,
         ),
       })),
     onError: (_error, _variables, context) => optimistic.rollback(context?.previous),

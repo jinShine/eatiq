@@ -4,8 +4,7 @@ import Link from "next/link";
 
 import { cn } from "@utils/shadcn";
 
-import { getActionTypeMeta } from "../../progress/[progressId]/_components/recordOptions";
-import { STAGE_META } from "../../progress/_components/progressOptions";
+import { STAGE_BAR_CLASS, STAGE_META } from "../../progress/_components/progressOptions";
 import SectionHeader from "./SectionHeader";
 import { type StageCountView } from "./dashboardView";
 
@@ -34,8 +33,7 @@ export default function PipelineSection({ workspaceId, stageCounts }: PipelineSe
               aria-label={`${STAGE_META[stage].label} ${count}건 — 진행 관리 보기`}
               className="border-border hover:border-text-disabled focus-visible:ring-primary flex flex-col gap-2 rounded-xl border bg-white p-4 transition-colors focus-visible:ring-2 focus-visible:outline-none"
             >
-              {/* 막대 색은 진행 기록 카드의 유형 점과 같은 계열 */}
-              <span aria-hidden className={cn("h-1 w-full rounded-sm", getActionTypeMeta(stage).dotClassName)} />
+              <span aria-hidden className={cn("h-1 w-full rounded-sm", STAGE_BAR_CLASS[stage])} />
               <span className="text-[11px] font-medium tracking-[-0.55px] text-[#9ca3aa]">
                 {STAGE_META[stage].label}
               </span>

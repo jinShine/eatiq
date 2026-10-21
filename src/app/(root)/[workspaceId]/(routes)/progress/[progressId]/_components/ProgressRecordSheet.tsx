@@ -38,8 +38,9 @@ type ProgressRecordSheetProps = {
  * 진행 기록 추가 · 수정 드로어 (피그마 693:2471).
  *
  * - 「AI 초안 생성」은 API가 없어 버튼만 둔다(비활성).
- * - 「관련 파일 업로드」는 문서 업로드 API가 없어 비활성(백엔드 요청).
- * - 수정할 때는 기록만 고친다. 다음 액션은 기록과 이어지는 값이 없어(백엔드 요청) 수정 화면에서 다루지 않는다.
+ * - 「관련 파일 업로드」는 파일 첨부 단계에서 붙인다(비활성).
+ * - 다음 액션은 진행 기록 안에 배열로 저장된다(2026-10-20 구조 변경). 수정할 때도 고치기·지우기·추가가 되며,
+ *   저장하면 폼의 배열로 통째로 바뀐다 — 각 행은 보이지 않는 번호(idx)와 완료 여부를 들고 있다가 그대로 보낸다.
  */
 export default function ProgressRecordSheet({
   isOpen,
@@ -161,14 +162,14 @@ export default function ProgressRecordSheet({
           />
 
           <Input
-            id="action_time"
+            id="action_date"
             size="md"
             type="date"
             label="진행 날짜"
             required
-            error={Boolean(errors.action_time)}
-            errorText={errors.action_time?.message}
-            {...register("action_time")}
+            error={Boolean(errors.action_date)}
+            errorText={errors.action_date?.message}
+            {...register("action_date")}
           />
 
           <Input
@@ -192,77 +193,79 @@ export default function ProgressRecordSheet({
           />
         </section>
 
-        {/* 다음 액션 — 추가할 때만 */}
-        {!isEdit && (
-          <section className="flex flex-col gap-4">
-            <h3 className="text-text-primary text-sm font-bold">다음 액션</h3>
+        {/* 다음 액션 */}
+        <section className="flex flex-col gap-4">
+          <h3 className="text-text-primary text-sm font-bold">다음 액션</h3>
 
-            {fields.length === 0 && (
-              <p className="text-text-tertiary text-xs">등록할 다음 액션이 없다면 비워두어도 괜찮아요.</p>
-            )}
+          {fields.length === 0 && (
+            <p className="text-text-tertiary text-xs">
+              {isEdit ? "등록된 다음 액션이 없어요." : "등록할 다음 액션이 없다면 비워두어도 괜찮아요."}
+            </p>
+          )}
 
-            {/* key는 반드시 field.id — index를 쓰면 삭제 시 입력값이 다른 행에 남는다 */}
-            {fields.map((field, index) => (
-              <div key={field.id} className="flex flex-col gap-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-text-secondary text-xs font-semibold">액션 {index + 1}</span>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="xs"
-                    className="text-destructive hover:border-destructive"
-                    onClick={() => remove(index)}
-                  >
-                    <Trash2 className="size-3" />
-                    액션 삭제
-                  </Button>
-                </div>
-
-                <Input
-                  size="md"
-                  label="제목"
-                  placeholder="제목을 입력해주세요"
-                  error={Boolean(errors.next_actions?.[index]?.title)}
-                  errorText={errors.next_actions?.[index]?.title?.message}
-                  {...register(`next_actions.${index}.title`)}
-                />
-
-                <Input size="md" type="date" label="마감일" {...register(`next_actions.${index}.action_time`)} />
-
-                <Input
-                  size="md"
-                  label="담당자"
-                  placeholder="담당자를 입력해주세요"
-                  error={Boolean(errors.next_actions?.[index]?.partner_name)}
-                  errorText={errors.next_actions?.[index]?.partner_name?.message}
-                  {...register(`next_actions.${index}.partner_name`)}
-                />
-
-                <Input
-                  size="md"
-                  label="메모"
-                  placeholder="메모를 입력해주세요"
-                  error={Boolean(errors.next_actions?.[index]?.content)}
-                  errorText={errors.next_actions?.[index]?.content?.message}
-                  {...register(`next_actions.${index}.content`)}
-                />
+          {/* key는 반드시 field.id — index를 쓰면 삭제 시 입력값이 다른 행에 남는다 */}
+          {fields.map((field, index) => (
+            <div key={field.id} className="flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <span className="text-text-secondary flex items-center gap-1.5 text-xs font-semibold">
+                  액션 {index + 1}
+                  {/* 수정할 때 이미 끝낸 액션인지 알 수 있게 — 시안에는 없다 */}
+                  {field.is_done === "Y" && (
+                    <span className="rounded bg-[#ecfdf5] px-1.5 py-0.5 text-[11px] font-medium text-[#059669]">
+                      완료
+                    </span>
+                  )}
+                </span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="xs"
+                  className="text-destructive hover:border-destructive"
+                  onClick={() => remove(index)}
+                >
+                  <Trash2 className="size-3" />
+                  액션 삭제
+                </Button>
               </div>
-            ))}
 
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="self-center"
-              onClick={() => append(EMPTY_ACTION)}
-            >
-              <Plus className="size-3.5" />
-              액션 추가
-            </Button>
-          </section>
-        )}
+              <Input
+                size="md"
+                label="제목"
+                placeholder="제목을 입력해주세요"
+                error={Boolean(errors.next_actions?.[index]?.title)}
+                errorText={errors.next_actions?.[index]?.title?.message}
+                {...register(`next_actions.${index}.title`)}
+              />
 
-        {/* 관련 파일 업로드 — 문서 업로드 API가 없어 비활성 */}
+              <Input size="md" type="date" label="마감일" {...register(`next_actions.${index}.deadline`)} />
+
+              <Input
+                size="md"
+                label="담당자"
+                placeholder="담당자를 입력해주세요"
+                error={Boolean(errors.next_actions?.[index]?.partner_name)}
+                errorText={errors.next_actions?.[index]?.partner_name?.message}
+                {...register(`next_actions.${index}.partner_name`)}
+              />
+
+              <Input
+                size="md"
+                label="메모"
+                placeholder="메모를 입력해주세요"
+                error={Boolean(errors.next_actions?.[index]?.memo)}
+                errorText={errors.next_actions?.[index]?.memo?.message}
+                {...register(`next_actions.${index}.memo`)}
+              />
+            </div>
+          ))}
+
+          <Button type="button" variant="ghost" size="sm" className="self-center" onClick={() => append(EMPTY_ACTION)}>
+            <Plus className="size-3.5" />
+            액션 추가
+          </Button>
+        </section>
+
+        {/* 관련 파일 업로드 — 파일 첨부 단계에서 붙인다 */}
         <section className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <h3 className="text-text-primary text-sm font-bold">관련 파일 업로드</h3>

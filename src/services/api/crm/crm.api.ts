@@ -11,9 +11,9 @@ import {
   type CrmStage,
   type DeleteCrmActionResponse,
   type DeleteCrmResponse,
-  type UpdateCrmActionDoneResponse,
   type UpdateCrmActionRequest,
   type UpdateCrmActionResponse,
+  type UpdateCrmNextActionDoneResponse,
   type UpdateCrmStageResponse,
 } from "./crm.type";
 
@@ -26,7 +26,7 @@ const ENDPOINTS = {
   stage: (crmId: string) => `${BASE_PATH}/${crmId}/stage`,
   actions: `${BASE_PATH}/action`,
   action: (actionId: string) => `${BASE_PATH}/action/${actionId}`,
-  actionDone: (actionId: string) => `${BASE_PATH}/action/${actionId}/done`,
+  nextActionDone: (actionId: string, idx: number) => `${BASE_PATH}/action/${actionId}/next-action/${idx}/done`,
 };
 
 /** 목록 — 필터 값이 없으면 보내지 않는다(서버는 없거나 "전체"면 전체 조회) */
@@ -70,15 +70,22 @@ export async function updateCrmAction(
   return res.data;
 }
 
-/** 다음 액션 완료 여부 — 토글이 아니라 값을 명시해 보낸다(두 번 눌려도 결과가 같게) */
-export async function updateCrmActionDone(actionId: string, isDone: boolean): Promise<UpdateCrmActionDoneResponse> {
-  const res = await axiosClientInstance.patch<UpdateCrmActionDoneResponse>(ENDPOINTS.actionDone(actionId), {
-    is_done: isDone ? "Y" : "N",
-  });
+/** 다음 액션 완료 여부 — 진행 기록(actionId) 안의 idx번 액션. 토글이 아니라 값을 명시해 보낸다(두 번 눌려도 결과가 같게) */
+export async function updateCrmNextActionDone(
+  actionId: string,
+  idx: number,
+  isDone: boolean,
+): Promise<UpdateCrmNextActionDoneResponse> {
+  const res = await axiosClientInstance.patch<UpdateCrmNextActionDoneResponse>(
+    ENDPOINTS.nextActionDone(actionId, idx),
+    {
+      is_done: isDone ? "Y" : "N",
+    },
+  );
   return res.data;
 }
 
-/** 진행 기록·다음 액션 삭제(논리 삭제) */
+/** 진행 기록 삭제(논리 삭제) — 기록 안의 다음 액션도 함께 사라진다 */
 export async function deleteCrmAction(actionId: string): Promise<DeleteCrmActionResponse> {
   const res = await axiosClientInstance.delete<DeleteCrmActionResponse>(ENDPOINTS.action(actionId));
   return res.data;

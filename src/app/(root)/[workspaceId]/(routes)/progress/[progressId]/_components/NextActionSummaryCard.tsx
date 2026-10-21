@@ -19,7 +19,7 @@ const LEAVE_DELAY_MS = 1000;
 
 type NextActionSummaryCardProps = {
   actions: NextActionSummary[];
-  onToggle: (id: string, isDone: boolean) => void;
+  onToggle: (action: NextActionSummary, isDone: boolean) => void;
 };
 
 /**
@@ -48,7 +48,8 @@ export default function NextActionSummaryCard({ actions: allActions, onToggle }:
     return () => pending.forEach(timer => clearTimeout(timer));
   }, []);
 
-  const handleToggle = (id: string, isDone: boolean) => {
+  const handleToggle = (action: NextActionSummary, isDone: boolean) => {
+    const { id } = action;
     clearTimeout(timers.current.get(id));
     timers.current.delete(id);
 
@@ -72,7 +73,7 @@ export default function NextActionSummaryCard({ actions: allActions, onToggle }:
         return next;
       });
     }
-    onToggle(id, isDone);
+    onToggle(action, isDone);
   };
 
   const actions = allActions.filter(action => !action.isDone || leavingIds.has(action.id));
@@ -116,7 +117,7 @@ export default function NextActionSummaryCard({ actions: allActions, onToggle }:
 
                   <Switch
                     checked={action.isDone}
-                    onCheckedChange={checked => handleToggle(action.id, checked)}
+                    onCheckedChange={checked => handleToggle(action, checked)}
                     aria-label={`${action.title} 완료 여부`}
                     className="shrink-0"
                   />
