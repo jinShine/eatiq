@@ -666,8 +666,13 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * 브랜드 기업명 자동완성 조회
-     * @description ### 📌 상세 역할 및 개요
+     * 🔄 [UPDATE 26.10.19] 브랜드 기업명 자동완성 조회 (workspace_uid 추가)
+     * @description ### 📝 최근 업데이트 이력 (2026.10.19)
+     *     - **workspace_uid 필드 추가**: 진행 관리(CRM) 대상 추가(`POST /api/crm`) 시 `target_workspace_uid` 파라미터 매핑 및 워크스페이스 식별을 위해 항목별 소속 `workspace_uid`를 반환합니다.
+     *
+     *     ---
+     *
+     *     ### 📌 상세 역할 및 개요
      *     - 브랜드 검색창 및 바이어의 타깃 브랜드 입력 시 실시간 기업명 자동완성 추천 목록을 제공합니다.
      *     - JWT 인증 토큰(`access_token`)이 필요합니다.
      *
@@ -675,12 +680,12 @@ export interface paths {
      *
      *     ### 💻 프론트엔드 연동 가이드
      *     1. **호출 시점**:
-     *        - 검색 인풋에 사용자가 2글자 이상 입력했을 때 실시간 호출 (디바운스 200~300ms 권장).
+     *        - 검색 인풋 또는 진행 관리(CRM) 관리 브랜드 추가 검색에 사용자가 2글자 이상 입력했을 때 실시간 호출 (디바운스 200~300ms 권장).
      *     2. **요청 파라미터 (Query)**:
      *        - `keyword` (string, 필수): 검색어 (최소 2글자 이상 필수, 미만 시 `400 Bad Request`).
-     *     3. **화면 렌더링 활용**:
+     *     3. **화면 렌더링 및 CRM 연동 활용**:
      *        - 자동완성 드롭다운에 브랜드명(`company_name`, `brand_name_en`), 로고(`logo_url`), 카테고리/국가 바인딩.
-     *        - 항목 선택 시 해당 브랜드 상세 모달 열기 또는 검색 필터 적용.
+     *        - 항목 선택 시 반환된 `workspace_uid`를 `POST /api/crm` 호출 시 `target_workspace_uid` 필드로 전달하여 손쉽게 CRM 관리 상대로 추가하거나 해당 브랜드 상세 모달 열기 또는 검색 필터 적용에 활용할 수 있습니다.
      */
     get: operations["AutocompleteBrandController_execute"];
     put?: never;
@@ -1604,9 +1609,11 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * 🔄 [UPDATE 26.10.08] 바이어 기업명 자동완성 조회 (도시 필드 제거)
-     * @description ### 📝 최근 업데이트 이력 (2026.10.08)
-     *     - **보조 정보 내 도시(`city`) 필드 제거**: 바이어 기본 정보 스펙 변경에 따라 자동완성 프리뷰 목록 항목에서 `city` 필드가 제거되었습니다.
+     * 🔄 [UPDATE 26.10.19] 바이어 기업명 자동완성 조회 (음식 카테고리 필드 추가)
+     * @description ### 📝 최근 업데이트 이력 (2026.10.19)
+     *     - **category(음식 카테고리) 필드 추가**: 바이어 자동완성 결과 드롭다운에서 취급/운영 음식 카테고리(예: 한식, 일식, 양식, 중식, 카페/베이커리 등)를 식별할 수 있도록 `category` 필드를 추가 반환합니다.
+     *     - **workspace_uid 필드 추가**: 진행 관리(CRM) 대상 추가(`POST /api/crm`) 시 `target_workspace_uid` 파라미터 매핑 및 워크스페이스 식별을 위해 항목별 소속 `workspace_uid`를 반환합니다.
+     *     - **보조 정보 내 도시(`city`) 필드 제거 (2026.10.08)**: 바이어 기본 정보 스펙 변경에 따라 자동완성 프리뷰 목록 항목에서 `city` 필드가 제거되었습니다.
      *
      *     ---
      *
@@ -1618,12 +1625,13 @@ export interface paths {
      *
      *     ### 💻 프론트엔드 연동 가이드
      *     1. **호출 시점**:
-     *        - 바이어 검색창, 필터 입력창 등에서 사용자가 텍스트를 타이핑할 때 (Debounce 200~300ms 적용 권장).
+     *        - 바이어 검색창, 필터 입력창, 진행 관리(CRM) 관리 바이어 추가 검색 등에서 사용자가 텍스트를 타이핑할 때 (Debounce 200~300ms 적용 권장).
      *     2. **요청 파라미터**:
      *        - `keyword` (필수, string): 검색 키워드 (**최소 2글자 이상**).
      *        - 2글자 미만 입력 시 `400 Bad Request`가 반환되므로, 프론트엔드에서 2글자 이상 입력 시에만 API를 호출하도록 사전 제어하는 것을 권장합니다.
-     *     3. **UI 바인딩 팁**:
-     *        - 드롭다운 목록에 `company_name`(기업명)과 보조 정보(`country`, `contact_name`)를 표시하여 사용자가 원하는 바이어를 직관적으로 식별 및 선택할 수 있도록 구성합니다.
+     *     3. **UI 바인딩 및 CRM 연동 팁**:
+     *        - 드롭다운 목록에 `company_name`(기업명)과 보조 정보(`category`, `country`, `contact_name`)를 표시하여 사용자가 원하는 바이어를 직관적으로 식별 및 선택할 수 있도록 구성합니다.
+     *        - 항목 선택 시 반환된 `workspace_uid`를 `POST /api/crm` 호출 시 `target_workspace_uid` 필드로 전달하여 손쉽게 CRM 관리 상대로 추가할 수 있습니다.
      */
     get: operations["AutocompleteBuyerController_execute"];
     put?: never;
@@ -2032,6 +2040,67 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/upload/file": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * 🔥 [NEW 26.10.20] 파일 업로드 (문서/일반 파일)
+     * @description ### 📝 최근 업데이트 이력 (2026.10.20)
+     *     - **[신규] 일반 파일/문서 업로드 엔드포인트 추가**: CRM 진행기록 첨부파일 및 일반 업무 문서(PDF, Word, Excel, PPT, HWP, 압축파일 등)를 S3에 안전하게 업로드하고 URL을 획득할 수 있습니다.
+     *
+     *     ---
+     *
+     *     ### 📌 상세 역할 및 개요
+     *     - 문서 및 일반 첨부파일을 AWS S3 스토리지에 업로드하고, 접근 가능한 CDN/S3 URL 및 메타데이터를 반환합니다.
+     *     - CRM 진행 기록 첨부파일(`file_list`), 브랜드/바이어 문서(회사소개서, 사업계획서, 제안서, 계약 관련 문서 등) 등록 시 활용됩니다.
+     *     - 업로드된 파일은 파일명 충돌을 방지하기 위해 UUID 기반의 고유 파일명(`files/{uuid}.ext`)으로 변환되어 안전하게 보관됩니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **요청 방식 (Multipart Form Data)**:
+     *        - `Content-Type: multipart/form-data` 형식으로 전송합니다.
+     *        - 폼 데이터(FormData)의 필드 키 이름은 반드시 **`file`**로 설정해야 합니다.
+     *          ```typescript
+     *          const formData = new FormData();
+     *          formData.append('file', selectedFile); // key: 'file'
+     *          ```
+     *     2. **연동 흐름 (2-Step Pattern)**:
+     *        - **Step 1**: 본 API(`POST /api/upload/file`)를 호출하여 파일 업로드 후 응답의 `url`, `original_name`, `size`, `mimetype` 획득
+     *        - **Step 2**: 획득한 정보를 대상 API(예: CRM 진행기록 등록 `/api/crm/action`의 `file_list` 배열)에 전달하여 저장
+     *          ```typescript
+     *          // 예: CRM 진행기록 등록 시 file_list 구성
+     *          const fileList = [
+     *            {
+     *              name: response.original_name,
+     *              url: response.url,
+     *              size: response.size,
+     *              mimetype: response.mimetype,
+     *            }
+     *          ];
+     *          ```
+     *     3. **허용 확장자 및 용량 제한**:
+     *        - 지원 포맷: `pdf`, `doc`, `docx`, `xls`, `xlsx`, `ppt`, `pptx`, `hwp`, `hwpx`, `txt`, `csv`, `zip`, `7z`, `png`, `jpg` 등 일반 문서 및 압축/이미지 파일
+     *        - 보안 제한: 보안상 위험한 실행 파일(`.exe`, `.sh`, `.bat`, `.cmd`, `.msi`, `.jar`, `.jsp`, `.php` 등)은 업로드가 차단됩니다.
+     *        - 최대 크기: **50MB** 이하 (초과 시 `400 Bad Request` 반환)
+     *     4. **에러 핸들링**:
+     *        - `400 Bad Request`: 파일 미첨부, 금지된 실행 파일 확장자이거나 50MB 용량 초과 시 발생
+     *        - `401 Unauthorized`: AccessToken 만료 또는 미제공
+     *        - `500 Internal Server Error`: S3 스토리지 연동 오류
+     */
+    post: operations["UploadFileController_handle"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/crm/list": {
     parameters: {
       query?: never;
@@ -2040,10 +2109,18 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * 진행 관리(CRM) 목록 조회
-     * @description ### 📌 상세 역할 및 개요
+     * 🔄 [UPDATE 26.10.19] 진행 관리(CRM) 목록 조회 (방치 여부 is_neglected 추가)
+     * @description ### 📝 최근 업데이트 이력 (2026.10.19)
+     *     - **방치 여부 (`is_neglected`) 필드 추가**:
+     *       - 미완료 다음 액션의 마감일이 2주일(14일) 이상 지났거나(미래 마감일 부재), 다음 액션이 등록되지 않은 채 2주일 이상 경과한 CRM 건을 판별합니다.
+     *       - 프론트엔드 목록 화면에서 바이어 이름 앞에 '방치' 배지를 표시할 때 사용합니다 (`true` 시 방치 배지 노출).
+     *       - '계약완료' 및 '보류' 단계는 종결된 항목이므로 방치 대상에서 제외(`false`)됩니다.
+     *
+     *     ---
+     *
+     *     ### 📌 상세 역할 및 개요
      *     - 현재 워크스페이스에 등록된 진행 관리(CRM) 대상(바이어/브랜드) 목록을 필터 및 페이징 조건에 맞춰 조회합니다.
-     *     - 각 대상의 기본 정보, 현재 진행 단계(`current_stage`), 최근 접점일, 다음 액션 예정 사항을 한 번에 제공합니다.
+     *     - 각 대상의 기본 정보, 현재 진행 단계(`current_stage`), 최근 접점일, 다음 액션 예정 사항, 방치 여부(`is_neglected`)를 한 번에 제공합니다.
      *     - 화면 상단 필터 칩에 즉시 바인딩 가능한 동적 옵션 목록(`filter_options`)을 함께 반환합니다.
      *
      *     ---
@@ -2056,7 +2133,7 @@ export interface paths {
      *        - `workspace_uid`: 특정 워크스페이스 컨텍스트에서 조회 시 전달 (미전달 시 사용자의 기본 활성 워크스페이스 적용).
      *        - `country`, `category`, `contract_type`: '전체'일 경우 파라미터를 생략하거나 전달하지 않습니다.
      *     3. **UI 바인딩 팁**:
-     *        - `items`: 테이블 또는 카드 리스트에 렌더링.
+     *        - `items`: 테이블 또는 카드 리스트에 렌더링. 바이어/기업명 앞에 `is_neglected === true`일 경우 주황색/경고성 '방치' 배지를 노출합니다.
      *        - `filter_options`: 응답의 필터 옵션 배열을 셀렉트 박스나 필터 칩 목록에 직접 맵핑.
      *     4. **후속 액션 연계**:
      *        - 행(Row) 클릭 시 해당 항목의 `uid`를 경로 파라미터로 사용하여 **CRM 상세 조회 API(`GET /api/crm/{crm_uid}`)**로 이동.
@@ -2126,27 +2203,91 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * 진행 기록(crm_action) 및 다음 액션 등록
-     * @description ### 📌 상세 역할 및 개요
-     *     - 진행 관리 상세 화면에서 메인 진행 기록 1건과 선택적 복수 다음 액션(`next_actions`)을 단일 트랜잭션으로 등록합니다.
-     *     - 메인 진행 기록은 완료 상태(`is_done = "Y"`)로 자동 등록되며, 다음 액션들은 미완료(`is_done = "N"`) 상태로 저장됩니다.
-     *     - 첨부파일(`file_list`)은 파일 업로드 API를 통해 발급받은 URL과 메타데이터를 전달받아 함께 저장합니다.
+     * 🔄 [UPDATE 26.10.20] 진행 기록(crm_action) 등록 (action_type 3종 축소 및 next_actions 컬럼 배열 저장)
+     * @description ### 📝 최근 업데이트 이력 (2026.10.20)
+     *     - **action_type 3종 표준화**: 진행 타입이 `미팅`, `통화`, `메일` 3가지 선택지로 단순화되었습니다.
+     *     - **is_done 필드 미사용**: 다음 액션을 별도 미완료 레코드로 분리하지 않고, 진행 기록 레코드 1건으로 통합 관리합니다.
+     *     - **다음 액션(next_actions) 배열 컬럼 저장**: 진행 기록에 포함된 다음 액션 목록은 해당 진행 기록 레코드의 `next_actions` JSON 배열로 함께 저장 및 반환됩니다.
+     *     - **첨부파일 업로드 API 연동 안내**: 첨부파일은 신규 파일 업로드 API(`POST /api/upload/file`)를 통해 업로드 후 반환된 메타데이터를 `file_list`에 담아 요청합니다.
+     *
+     *     ---
+     *
+     *     ### 📌 상세 역할 및 개요
+     *     - 파트너사와의 상담/진행 이력(미팅, 통화, 메일)을 등록합니다.
+     *     - 진행 내용과 함께 필요한 경우 다음 일정/할 일(`next_actions`) 및 첨부문서(`file_list`)를 단일 레코드에 함께 저장합니다.
      *
      *     ---
      *
      *     ### 💻 프론트엔드 연동 가이드
-     *     1. **호출 시점**:
-     *        - 상세 화면의 '진행 기록 추가' 드로어 또는 팝업에서 내용 작성 후 '등록' 클릭 시.
-     *     2. **연동 흐름**:
-     *        - 파일 첨부가 있는 경우: `POST /api/upload/crm-action` 등을 먼저 호출하여 파일 업로드 후 반환된 정보(`file_name`, `file_url`, `file_size`, `mime_type`)를 `file_list` 배열에 구성.
-     *        - 본 API 호출(`POST /api/crm/action`)하여 진행 기록 본문 및 다음 액션 항목들을 함께 전송.
-     *     3. **요청 파라미터 핵심**:
-     *        - `crm_uid`: 대상 CRM 레코드 UID (필수).
-     *        - `action_type`: 허용 단계 8개 중 하나 (`리드`, `검토`, `접촉`, `미팅`, `법무검토`, `협상`, `계약완료`, `보류`) 또는 `지정안됨` (필수).
-     *        - `title`, `action_time`: 필수.
-     *        - `next_actions`: 등록과 동시에 추가할 다음 액션 배열 (선택, 각 항목의 `action_type`, `title`, `action_time` 포함).
-     *     4. **성공 후 UX 처리**:
-     *        - 드로어/모달 닫기 및 CRM 상세 조회 API(`GET /api/crm/{crm_uid}`)를 다시 호출하여 타임라인 및 다음 액션 목록 갱신.
+     *
+     *     #### 1. 첨부파일 업로드 선행 흐름 (2-Step Pattern)
+     *     첨부파일이 있는 경우, 본 API 호출 전에 **`POST /api/upload/file`** 엔드포인트를 먼저 호출합니다:
+     *     ```typescript
+     *     // Step 1. 파일 업로드 API 호출
+     *     const formData = new FormData();
+     *     formData.append('file', selectedFile); // key: 'file'
+     *
+     *     const uploadRes = await axios.post('/api/upload/file', formData, {
+     *       headers: {
+     *         'Content-Type': 'multipart/form-data',
+     *         Authorization: `Bearer ${accessToken}`,
+     *       },
+     *     });
+     *
+     *     // uploadRes.data 예시:
+     *     // {
+     *     //   url: "https://d1pkdqo8o4d6zs.cloudfront.net/files/uuid.pdf",
+     *     //   key: "files/uuid.pdf",
+     *     //   original_name: "미팅회의록_20261020.pdf",
+     *     //   mimetype: "application/pdf",
+     *     //   size: 1048576
+     *     // }
+     *     ```
+     *
+     *     #### 2. 진행 기록 등록 본 API 호출
+     *     획득한 파일 정보를 `file_list`에 담고, 다음 액션이 있다면 `next_actions` 배열에 담아 전송합니다:
+     *     ```typescript
+     *     // Step 2. 진행 기록 등록 API 호출
+     *     const payload = {
+     *       crm_uid: 1,
+     *       action_type: '미팅', // '미팅' | '통화' | '메일'
+     *       title: '1차 조건 협의 미팅',
+     *       action_date: '2026-10-20', // YYYY-MM-DD
+     *       partner_name: 'Antenna Retail Yuki Tanaka',
+     *       content: '신주쿠 지점 방문 미팅 진행. 로열티 조건 논의.',
+     *       file_list: [
+     *         {
+     *           name: uploadRes.data.original_name,
+     *           url: uploadRes.data.url,
+     *           size: uploadRes.data.size,
+     *           mimetype: uploadRes.data.mimetype,
+     *         }
+     *       ],
+     *       next_actions: [
+     *         {
+     *           title: '로열티 조건 자료 요청',
+     *           deadline: '2026-12-10', // YYYY-MM-DD
+     *           partner_name: '김도경',
+     *           is_done: 'N', // Y or N (기본값: N)
+     *           memo: '본사 승인 필요 조건 검토'
+     *         }
+     *       ]
+     *     };
+     *
+     *     const response = await axios.post('/api/crm/action', payload, {
+     *       headers: { Authorization: `Bearer ${accessToken}` }
+     *     });
+     *     ```
+     *
+     *     #### 3. 요청 파라미터 요약
+     *     - `crm_uid`: 대상 CRM 레코드 UID (필수).
+     *     - `action_type`: **`미팅`**, **`통화`**, **`메일`** 중 택 1 (필수).
+     *     - `title`: 진행 기록 제목 (필수, 255자 이하).
+     *     - `action_date`: 진행 날짜 (필수, `YYYY-MM-DD` 형식).
+     *     - `partner_name`: 상대방 / 담당자명 (선택).
+     *     - `content`: 진행 상세 내용 (선택).
+     *     - `file_list`: 첨부 파일 목록 배열 (선택, 최대 3개 권장).
+     *     - `next_actions`: 함께 등록할 다음 액션 배열 (선택, 각 객체: `title`, `deadline`, `partner_name`, `is_done`(기본값 N), `memo`).
      */
     post: operations["CreateCrmActionController_createAction"];
     delete?: never;
@@ -2188,19 +2329,56 @@ export interface paths {
     options?: never;
     head?: never;
     /**
-     * 진행 기록(crm_action) 수정
-     * @description ### 📌 상세 역할 및 개요
-     *     - 등록된 진행 기록 또는 다음 액션의 상세 내용(유형, 제목, 일시, 대상자, 내용, 첨부파일, 완료 여부 등)을 수정합니다.
-     *     - 전달된 필드만 부분 업데이트(Partial Update)됩니다.
+     * 🔄 [UPDATE 26.10.20] 진행 기록(crm_action) 수정 (action_type 3종 및 next_actions 배열 수정 지원)
+     * @description ### 📝 최근 업데이트 이력 (2026.10.20)
+     *     - **action_type 3종 표준화**: 진행 타입이 `미팅`, `통화`, `메일` 3가지 선택지로 제한되었습니다.
+     *     - **is_done 필드 미사용**: 개별 row의 완료 여부 필드는 미사용되며, `next_actions` 내부의 각 할 일 항목별 `is_done`(Y/N)으로 관리됩니다.
+     *     - **다음 액션(next_actions) 배열 수정 지원**: 진행 기록에 포함된 다음 액션 목록(`next_actions`)을 배열 형태로 전송하여 한 번에 대체 수정할 수 있습니다.
+     *       - **기존 항목 수정**: 이미 발급받은 **`idx`를 함께 전달**하면 해당 키값에 맞춰 내용이 수정되며 고유 `idx`가 영구 보존됩니다.
+     *       - **신규 항목 추가**: **`idx`를 생략**하여 전송하면 서버가 기존 최대 번호 다음 번호로 자동 발급합니다.
+     *     - **첨부파일 업로드 API 연동 안내**: 첨부파일 변경 시 `POST /api/upload/file` 엔드포인트를 호출하여 업로드 후 `file_list`에 담아 요청합니다.
+     *
+     *     ---
+     *
+     *     ### 📌 상세 역할 및 개요
+     *     - 등록된 진행 기록의 상세 내용(유형, 제목, 진행일시, 대상자, 내용, 첨부파일, 다음 액션 목록 등)을 부분 수정(Partial Update)합니다.
+     *     - 전달된 필드만 선택적으로 업데이트됩니다.
      *
      *     ---
      *
      *     ### 💻 프론트엔드 연동 가이드
      *     1. **호출 시점**:
-     *        - 타임라인의 진행 기록 카드 또는 다음 액션 항목의 수정 드로어/모달에서 '저장' 버튼 클릭 시.
+     *        - 타임라인의 진행 기록 카드 수정 드로어/모달에서 '저장' 버튼 클릭 시.
      *     2. **요청 파라미터**:
      *        - Path: `action_uid` (수정 대상 액션 UID)
-     *        - Body: 변경하고자 하는 필드만 선택적 전송 (`action_type`, `title`, `action_time`, `partner_name`, `content`, `file_list`, `is_done`).
+     *        - Body: 변경하고자 하는 필드만 선택적 전송 (`action_type`, `title`, `action_date`, `partner_name`, `content`, `file_list`, `next_actions`).
+     *          ```typescript
+     *          // 예: 다음 액션 목록 수정 및 신규 추가 시
+     *          const payload = {
+     *            title: '1차 조건 협의 미팅 (수정)',
+     *            action_type: '미팅',
+     *            next_actions: [
+     *              {
+     *                idx: 1, // 기존 항목 수정: idx를 전달하여 고유 키값 유지
+     *                title: '로열티 조건 자료 요청 (수정된 제목)',
+     *                deadline: '2026-12-10',
+     *                partner_name: '김도경',
+     *                is_done: 'N',
+     *                memo: '본사 승인 필요'
+     *              },
+     *              {
+     *                // 신규 추가 항목: idx 생략 시 서버에서 max(idx) + 1 로 자동 발급
+     *                title: '2차 계약서 초안 작성 (새로 추가)',
+     *                deadline: '2026-12-20',
+     *                partner_name: '이담당',
+     *                is_done: 'N'
+     *              }
+     *            ]
+     *          };
+     *          await axios.patch(`/api/crm/action/${actionUid}`, payload, {
+     *            headers: { Authorization: `Bearer ${accessToken}` }
+     *          });
+     *          ```
      *     3. **성공 후 UX 처리**:
      *        - 수정 모달/드로어를 닫고, CRM 상세 조회 API(`GET /api/crm/{crm_uid}`)를 재호출하거나 로컬 상태를 업데이트하여 화면 반영.
      *     4. **에러 핸들링**:
@@ -2208,6 +2386,104 @@ export interface paths {
      *        - `404 Not Found`: 존재하지 않거나 이미 삭제된 액션 UID.
      */
     patch: operations["UpdateCrmActionController_updateAction"];
+    trace?: never;
+  };
+  "/api/crm/action/{action_uid}/next-action/{idx}/done": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * 🔥 [NEW 26.10.20] 진행 기록 내 다음 액션(next_actions) 완료 여부(is_done) 처리 및 토글
+     * @description ### 📌 상세 역할 및 개요
+     *     - 특정 진행 기록(`etq_crm_action`)의 `next_actions` JSON 배열 내부에서 **URL 파라미터로 지정한 식별 번호(`idx`)의 다음 액션에 대해 완료 여부(`is_done`)를 변경(Y 또는 N)하거나 토글**합니다.
+     *     - 삭제 API(`DELETE /api/crm/action/:action_uid/next-action/:idx`)와 동일한 URL 파라미터 규칙을 따릅니다.
+     *
+     *     ---
+     *
+     *     ### 📝 최근 업데이트 이력 (2026.10.20)
+     *     - **URL 파라미터 방식 표준화**:
+     *       - `idx` 파라미터가 Body에서 URL 경로 파라미터(`.../next-action/:idx/done`)로 이동하여 삭제 API와 일관된 규격을 제공합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - CRM 상세 화면 또는 타임라인 카드에서 특정 '다음 액션' 체크박스/완료 토글 스위치를 클릭했을 때.
+     *     2. **요청 파라미터**:
+     *        - **Path**:
+     *          - `action_uid`: 해당 진행 기록의 고유 UID (number)
+     *          - `idx`: 대상 다음 액션의 고유 식별 번호 (number)
+     *        - **Body (선택)**:
+     *          - `is_done`: 완료 여부 (`'Y'` 또는 `'N'`, 선택 - 미전달 또는 `{}` 전송 시 현재 상태를 반전 Toggle)
+     *     3. **완료 처리 호출 예시**:
+     *        ```http
+     *        PATCH /api/crm/action/15/next-action/1/done
+     *        Content-Type: application/json
+     *
+     *        {
+     *          "is_done": "Y"
+     *        }
+     *        ```
+     *        *(미전달 시 토글: Body에 `{}` 또는 `is_done` 생략 가능)*
+     *     4. **응답 데이터 활용**:
+     *        - `data.updated_next_action`: 완료 상태가 갱신된 해당 다음 액션 객체 (`is_done: 'Y' | 'N'`)
+     *        - `data.next_actions`: 최신 상태로 동기화된 해당 진행 기록의 전체 다음 액션 배열 (화면 상태 갱신에 직접 바인딩 가능)
+     *     5. **에러 핸들링**:
+     *        - `404 Not Found`: 유효하지 않은 `action_uid`이거나 해당 진행 기록 내에 전달받은 `idx`가 존재하지 않는 경우.
+     *        - `403 Forbidden`: 해당 CRM의 워크스페이스에 대한 활성 멤버 권한이 없는 경우.
+     */
+    patch: operations["UpdateCrmNextActionDoneController_execute"];
+    trace?: never;
+  };
+  "/api/crm/action/{action_uid}/next-action/{idx}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * 🔥 [NEW 26.10.20] 진행 기록 내 특정 다음 액션(next_action) 삭제
+     * @description ### 📌 상세 역할 및 개요
+     *     - 특정 진행 기록(`etq_crm_action`)의 `next_actions` 배열에서 **지정한 식별 번호(`idx`)의 다음 액션을 단일 삭제**합니다.
+     *     - 특정 항목이 삭제되더라도, **남아있는 다른 다음 액션 항목들의 고유 `idx`는 변경되거나 앞당겨지지 않고 그대로 유지**됩니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - CRM 상세 화면 또는 타임라인 카드에서 다음 액션 항목의 '삭제' 버튼 클릭 후 확인 시.
+     *     2. **요청 파라미터**:
+     *        - Path:
+     *          - `action_uid` (해당 진행 기록의 고유 UID, number)
+     *          - `idx` (삭제할 다음 액션의 식별 번호, number)
+     *     3. **호출 예시**:
+     *        ```http
+     *        DELETE /api/crm/action/15/next-action/1
+     *        ```
+     *     4. **응답 데이터 활용**:
+     *        - `data.deleted_idx`: 삭제된 항목의 식별 번호 (`idx`)
+     *        - `data.next_actions`: 해당 항목이 삭제되고 남은 최신 전체 다음 액션 목록 (화면 상태 갱신에 직접 바인딩 가능)
+     *     5. **에러 핸들링**:
+     *        - `404 Not Found`: 유효하지 않은 `action_uid`이거나 해당 진행 기록 내에 전달받은 `idx`가 존재하지 않는 경우.
+     *        - `403 Forbidden`: 해당 CRM의 워크스페이스에 대한 활성 멤버 권한이 없는 경우.
+     */
+    delete: operations["DeleteCrmNextActionController_execute"];
+    options?: never;
+    head?: never;
+    patch?: never;
     trace?: never;
   };
   "/api/crm/action/{action_uid}/done": {
@@ -2224,8 +2500,15 @@ export interface paths {
     options?: never;
     head?: never;
     /**
-     * 진행 완료 여부(is_done) 처리 및 토글
-     * @description ### 📌 상세 역할 및 개요
+     * ⚠️ [제거 예정 / Deprecated] 진행 완료 여부(is_done) 처리 및 토글
+     * @deprecated
+     * @description ### ⚠️ [제거 예정 안내 (Deprecated)]
+     *     - 본 API는 과거 row 단위 단독 다음 액션 처리용 레거시 API입니다.
+     *     - 단일 진행 기록(`crm_action`) 내부의 `next_actions` 배열 항목 완료 처리는 신규 API인 **`PATCH /api/crm/action/:action_uid/next-action/:idx/done`**을 사용해 주시기 바랍니다.
+     *
+     *     ---
+     *
+     *     ### 📌 상세 역할 및 개요
      *     - 진행 관리 상세 화면의 '다음 액션' 목록이나 타임라인 카드에서 완료 스위치를 켜고 끌 때 사용합니다.
      *     - Body에 값을 명시하거나 생략하여 반전(Toggle)시킬 수 있습니다.
      *
@@ -2255,9 +2538,18 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * 진행 관리(CRM) 상세 정보 조회
-     * @description ### 📌 상세 역할 및 개요
-     *     - 특정 진행 관리 대상의 상세 프로필, 현재 진행 단계(`current_stage`), 예정된 다음 액션 목록(`next_actions`), 전체 진행 히스토리 타임라인(`actions`)을 한 번에 조회합니다.
+     * 🔄 [UPDATE 26.10.21] 진행 관리(CRM) 상세 정보 조회 (미완료 다음 액션 요약 리스트 next_actions 제공)
+     * @description ### 📝 최근 업데이트 이력 (2026.10.21)
+     *     - **미완료 다음 액션 요약 리스트(`data.next_actions`) 추가**:
+     *       - 상세 화면 상단/사이드바에 즉시 바인딩할 수 있도록, 각 활동 기록의 다음 액션 중 **완료되지 않은 항목(`is_done === 'N'`)만 필터링**하여 **마감일(`deadline`)이 오래된 순(오름차순)으로 정렬**된 요약 리스트를 제공합니다.
+     *       - 각 항목에는 부모 진행 기록 식별자(`action_uid`), 다음 액션 식별 번호(`idx`), `title`, `deadline`, `partner_name`, `memo` 등이 포함되어 완료 토글(`PATCH /api/crm/action/:action_uid/next-action/:idx/done`) 및 삭제 API와 즉시 연동됩니다.
+     *     - **진행 기록 타임라인(`actions`) 정상화**:
+     *       - 타임라인 목록 카드에는 완료/미완료를 포함한 해당 기록의 전체 `next_actions` 배열이 함께 포함됩니다.
+     *
+     *     ---
+     *
+     *     ### 📌 상세 역할 및 개요
+     *     - 특정 진행 관리 대상의 상세 프로필, 현재 진행 단계(`current_stage`), 미완료 다음 액션 요약 리스트(`next_actions`), 전체 진행 히스토리 타임라인(`actions`)을 한 번에 조회합니다.
      *     - 상세 화면에서 필요한 모든 데이터를 단일 호출로 취합하여 반환합니다.
      *
      *     ---
@@ -2265,12 +2557,15 @@ export interface paths {
      *     ### 💻 프론트엔드 연동 가이드
      *     1. **호출 시점**:
      *        - CRM 목록에서 특정 카드를 클릭하여 상세 페이지 진입 시.
-     *        - 액션 등록/수정/삭제 또는 단계 변경 후 최신 데이터 동기화 시.
+     *        - 액션 등록/수정/삭제 또는 다음 액션 완료 토글 후 최신 데이터 동기화 시.
      *     2. **응답 데이터 구조 및 렌더링 영역**:
      *        - `crm`: 상단 헤더 및 기본 정보 패널 (기업명, 국가/도시, 카테고리, 담당자 연락처, 메모 등).
      *        - `current_stage`: 상단 단계 프로그레스 바 활성화 상태 표시.
-     *        - `next_actions`: 좌측 또는 상단 '예정된 다음 액션' 리스트 (완료 토글 스위치 제공).
-     *        - `actions`: 우측 메인 '진행 기록 타임라인' 목록 (날짜 역순 정렬, 첨부파일 목록 포함).
+     *        - `next_actions`: 상단 또는 사이드바 '미완료 다음 액션' 요약 체크리스트 (마감일 `deadline` 오래된 순 정렬).
+     *          - **완료 여부 변경**: `PATCH /api/crm/action/:action_uid/next-action/:idx/done` 호출 (미전달 시 토글)
+     *          - **항목 삭제**: `DELETE /api/crm/action/:action_uid/next-action/:idx` 호출
+     *        - `actions`: 메인 타임라인 목록 (날짜 역순 정렬).
+     *          - 각 기록 카드 내부의 `next_actions` 배열을 통해 연계된 전체 할 일 목록을 직접 렌더링합니다.
      *     3. **에러 핸들링**:
      *        - `404 Not Found`: 삭제되었거나 존재하지 않는 CRM 항목인 경우 목록 화면으로 리다이렉트 및 토스트 알림.
      *        - `403 Forbidden`: 해당 CRM 대상의 워크스페이스에 접근 권한이 없는 경우 안내.
@@ -4119,6 +4414,11 @@ export interface components {
        */
       uid: number;
       /**
+       * @description 브랜드 소속 워크스페이스 고유 식별자 (workspace_uid)
+       * @example 4
+       */
+      workspace_uid: number;
+      /**
        * @description 브랜드 기업명/브랜드명 (한국어)
        * @example 플러그푸드
        */
@@ -4129,8 +4429,8 @@ export interface components {
        */
       brand_name_en: string | null;
       /**
-       * @description 업종/카테고리
-       * @example 외식/식음료
+       * @description 업종/음식 카테고리 (예: 한식, 일식, 양식, 중식 등)
+       * @example 한식
        */
       category: string | null;
       /**
@@ -6398,10 +6698,20 @@ export interface components {
        */
       uid: number;
       /**
+       * @description 바이어 소속 워크스페이스 고유 식별자 (workspace_uid)
+       * @example 32
+       */
+      workspace_uid: number;
+      /**
        * @description 바이어 기업명
        * @example WDI Corporation
        */
       company_name: string;
+      /**
+       * @description 운영/도입 음식 카테고리 (예: 한식, 일식, 양식, 중식, 카페/베이커리 등)
+       * @example 일식
+       */
+      category: string | null;
       /**
        * @description 국가
        * @example 일본
@@ -7320,6 +7630,40 @@ export interface components {
        */
       size: number;
     };
+    UploadFileDto: {
+      /**
+       * Format: binary
+       * @description 업로드할 문서 또는 일반 첨부 파일 (pdf, doc, docx, xls, xlsx, ppt, pptx, hwp, hwpx, txt, csv, zip 등, 최대 50MB)
+       */
+      file: string;
+    };
+    UploadFileResponseDto: {
+      /**
+       * @description S3/CloudFront에 업로드된 파일 접근 URL
+       * @example https://d1pkdqo8o4d6zs.cloudfront.net/files/e47ac10b-58cc-4372-a567-0e02b2c3d479.pdf
+       */
+      url: string;
+      /**
+       * @description S3 버킷 내 객체 키(Key) 경로
+       * @example files/e47ac10b-58cc-4372-a567-0e02b2c3d479.pdf
+       */
+      key: string;
+      /**
+       * @description 원본 파일명
+       * @example 회의록_20261020.pdf
+       */
+      original_name: string;
+      /**
+       * @description 파일의 MIME 타입
+       * @example application/pdf
+       */
+      mimetype: string;
+      /**
+       * @description 파일 크기 (Byte 단위)
+       * @example 1048576
+       */
+      size: number;
+    };
     CrmListItemDto: {
       /**
        * @description CRM 레코드 UID (`etq_crm.uid`)
@@ -7402,6 +7746,11 @@ export interface components {
        * @example contact@partner.com
        */
       contact_email: string | null;
+      /**
+       * @description 방치 여부 (2주일 이상 후속 액션이 지연되었거나 미등록 상태로 방치된 경우 true, 바이어 이름 앞 방치 배지 표기용)
+       * @example true
+       */
+      is_neglected: boolean;
       /**
        * @description 생성 일시
        * @example 2026-09-15T04:00:00.000Z
@@ -7597,16 +7946,16 @@ export interface components {
     ActionFileDto: {
       /**
        * @description 원본 파일명
-       * @example 회의록_20260702.pdf
+       * @example 회의록_20261020.pdf
        */
       name: string;
       /**
-       * @description 파일 URL
-       * @example https://d1pkdqo8o4d6zs.cloudfront.net/files/sample.pdf
+       * @description 파일 접근 URL (`POST /api/upload/file`을 통해 발급받은 URL)
+       * @example https://d1pkdqo8o4d6zs.cloudfront.net/files/e47ac10b-58cc-4372-a567-0e02b2c3d479.pdf
        */
       url: string;
       /**
-       * @description 파일 크기 (Byte)
+       * @description 파일 크기 (Byte 단위)
        * @example 1048576
        */
       size?: number;
@@ -7616,27 +7965,34 @@ export interface components {
        */
       mimetype?: string;
     };
-    NextActionItemDto: {
+    CreateNextActionItemDto: {
       /**
        * @description 다음 액션 제목
        * @example 로열티 조건 자료 요청
        */
       title: string;
       /**
-       * @description 다음 액션 마감일 (YYYY-MM-DD)
-       * @example 2026-07-10
+       * @description 마감일 (YYYY-MM-DD)
+       * @example 2026-12-10
        */
-      action_time?: string;
+      deadline?: string;
       /**
-       * @description 다음 액션 담당자
+       * @description 담당자
        * @example 김도경
        */
       partner_name?: string;
       /**
-       * @description 다음 액션 관련 메모/내용
+       * @description 완료 여부 (Y 또는 N, 미입력 시 기본값 N)
+       * @default N
+       * @example N
+       * @enum {string}
+       */
+      is_done: "Y" | "N";
+      /**
+       * @description 메모
        * @example 본사 승인 필요 조건 검토
        */
-      content?: string;
+      memo?: string;
     };
     CreateCrmActionDto: {
       /**
@@ -7645,11 +8001,11 @@ export interface components {
        */
       crm_uid: number;
       /**
-       * @description 진행 타입:<br/>• 지정안됨<br/>• 리드<br/>• 검토<br/>• 접촉<br/>• 미팅<br/>• 법무검토<br/>• 협상<br/>• 계약완료<br/>• 보류
+       * @description 진행 타입 (미팅, 통화, 메일 중 택 1)
        * @example 미팅
        * @enum {string}
        */
-      action_type: "지정안됨" | "리드" | "검토" | "접촉" | "미팅" | "법무검토" | "협상" | "계약완료" | "보류";
+      action_type: "미팅" | "통화" | "메일";
       /**
        * @description 진행 기록 제목
        * @example 1차 조건 협의 미팅
@@ -7657,9 +8013,9 @@ export interface components {
       title: string;
       /**
        * @description 진행 날짜 (YYYY-MM-DD)
-       * @example 2026-07-02
+       * @example 2026-10-20
        */
-      action_time: string;
+      action_date: string;
       /**
        * @description 상대방 / 미팅 대상자
        * @example Antenna Retail Yuki Tanaka
@@ -7670,14 +8026,48 @@ export interface components {
        * @example 신주쿠 지점 방문 미팅 진행. 매장 컨디션 확인 및 로열티 조건 논의.
        */
       content?: string;
-      /** @description 진행 기록 첨부 파일 목록 (최대 3개 권장, 다음 액션이 아닌 진행기록에만 저장됩니다) */
+      /** @description 진행 기록 첨부 파일 목록 (`POST /api/upload/file`로 업로드 후 발급된 파일 정보 배열) */
       file_list?: components["schemas"]["ActionFileDto"][];
-      /** @description 함께 등록할 다음 액션 목록 (복수 등록 가능) */
-      next_actions?: components["schemas"]["NextActionItemDto"][];
+      /** @description 해당 진행 기록에 연계된 다음 액션 목록 (배열 형태로 crm_action의 next_actions 컬럼에 저장, idx는 서버 자동 부여) */
+      next_actions?: components["schemas"]["CreateNextActionItemDto"][];
+    };
+    NextActionItemDto: {
+      /**
+       * @description 다음 액션 제목
+       * @example 로열티 조건 자료 요청
+       */
+      title: string;
+      /**
+       * @description 마감일 (YYYY-MM-DD)
+       * @example 2026-12-10
+       */
+      deadline?: string;
+      /**
+       * @description 담당자
+       * @example 김도경
+       */
+      partner_name?: string;
+      /**
+       * @description 완료 여부 (Y 또는 N, 미입력 시 기본값 N)
+       * @default N
+       * @example N
+       * @enum {string}
+       */
+      is_done: "Y" | "N";
+      /**
+       * @description 메모
+       * @example 본사 승인 필요 조건 검토
+       */
+      memo?: string;
+      /**
+       * @description 다음 액션 식별 번호 (1부터 시작, 서버 자동 부여)
+       * @example 1
+       */
+      idx: number;
     };
     CrmActionRecordDto: {
       /**
-       * @description 등록된 액션 레코드 UID (`etq_crm_action.uid`)
+       * @description 등록된 액션 레코드 고유 식별자 (`etq_crm_action.uid`)
        * @example 10
        */
       uid: number;
@@ -7687,57 +8077,63 @@ export interface components {
        */
       crm_uid: number;
       /**
-       * @description 진행 타입
+       * @description 진행 기록 타입 (미팅, 통화, 메일)
        * @example 미팅
+       * @enum {string}
        */
-      action_type: string;
+      action_type: "미팅" | "통화" | "메일";
       /**
-       * @description 완료 여부 (진행 기록은 Y, 다음 액션은 N)
-       * @example Y
-       */
-      is_done: string;
-      /**
-       * @description 제목
+       * @description 기록 제목
        * @example 1차 조건 협의 미팅
        */
       title: string;
       /**
-       * @description 진행 날짜 또는 마감일
-       * @example 2026-07-02
+       * @description 진행 날짜 (YYYY-MM-DD)
+       * @example 2026-10-20
        */
-      action_time: string | null;
+      action_date: string | null;
       /**
-       * @description 상대 / 담당자
+       * @description 상대방 / 미팅 대상자
        * @example Antenna Retail Yuki Tanaka
        */
       partner_name: string | null;
       /**
-       * @description 내용 또는 메모
-       * @example 신주쿠 지점 미팅 내용
+       * @description 진행 상세 내용
+       * @example 신주쿠 지점 방문 미팅 진행. 매장 컨디션 확인 및 조건 협의.
        */
       content: string | null;
       /**
-       * @description 첨부 파일 목록 (진행 기록에만 존재)
+       * @description 첨부 파일 목록
        * @example [
        *       {
-       *         "name": "회의록.pdf",
-       *         "url": "https://d1pkdqo8o4d6zs.cloudfront.net/files/sample.pdf"
+       *         "name": "회의록_20261020.pdf",
+       *         "url": "https://d1pkdqo8o4d6zs.cloudfront.net/files/sample.pdf",
+       *         "size": 1048576,
+       *         "mimetype": "application/pdf"
        *       }
        *     ]
        */
-      file_list: Record<string, never>[] | null;
+      file_list: components["schemas"]["ActionFileDto"][] | null;
+      /**
+       * @description 연계된 다음 액션 목록 (JSON 배열, idx 포함)
+       * @example [
+       *       {
+       *         "idx": 1,
+       *         "title": "로열티 조건 자료 요청",
+       *         "deadline": "2026-12-10",
+       *         "partner_name": "김도경",
+       *         "is_done": "N",
+       *         "memo": "본사 승인 필요 조건 검토"
+       *       }
+       *     ]
+       */
+      next_actions?: components["schemas"]["NextActionItemDto"][] | null;
       /**
        * Format: date-time
        * @description 생성 일시
-       * @example 2026-09-15T05:00:00.000Z
+       * @example 2026-10-20T05:24:00.000Z
        */
       created_time: string;
-    };
-    CreateCrmActionDataDto: {
-      /** @description 등록된 메인 진행 기록 */
-      main_action: components["schemas"]["CrmActionRecordDto"];
-      /** @description 함께 등록된 다음 액션 목록 (없을 경우 빈 배열) */
-      next_actions: components["schemas"]["CrmActionRecordDto"][];
     };
     CreateCrmActionResponseDto: {
       /**
@@ -7746,20 +8142,54 @@ export interface components {
        */
       statusCode: number;
       /**
-       * @description 결과 메시지
+       * @description 응답 메시지
        * @example 진행 기록이 성공적으로 등록되었습니다.
        */
       message: string;
-      /** @description 등록 결과 데이터 */
-      data: components["schemas"]["CreateCrmActionDataDto"];
+      /** @description 등록된 진행 기록 데이터 (내부에 next_actions 포함) */
+      data: components["schemas"]["CrmActionRecordDto"];
+    };
+    UpdateNextActionItemDto: {
+      /**
+       * @description 기존 다음 액션 고유 식별 번호 (한번 부여된 후 변경 불가. 기존 항목 수정/유지 시 필수 전달, 신규 추가 항목은 생략 시 서버 자동 발급)
+       * @example 1
+       */
+      idx?: number;
+      /**
+       * @description 다음 액션 제목
+       * @example 로열티 조건 자료 요청
+       */
+      title: string;
+      /**
+       * @description 마감일 (YYYY-MM-DD)
+       * @example 2026-12-10
+       */
+      deadline?: string;
+      /**
+       * @description 담당자
+       * @example 김도경
+       */
+      partner_name?: string;
+      /**
+       * @description 완료 여부 (Y 또는 N, 미입력 시 기본값 N)
+       * @default N
+       * @example N
+       * @enum {string}
+       */
+      is_done: "Y" | "N";
+      /**
+       * @description 메모
+       * @example 본사 승인 필요 조건 검토
+       */
+      memo?: string;
     };
     UpdateCrmActionDto: {
       /**
-       * @description 진행 타입:<br/>• 지정안됨<br/>• 리드<br/>• 검토<br/>• 접촉<br/>• 미팅<br/>• 법무검토<br/>• 협상<br/>• 계약완료<br/>• 보류
+       * @description 진행 타입 (미팅, 통화, 메일 중 택 1)
        * @example 미팅
        * @enum {string}
        */
-      action_type?: "지정안됨" | "리드" | "검토" | "접촉" | "미팅" | "법무검토" | "협상" | "계약완료" | "보류";
+      action_type?: "미팅" | "통화" | "메일";
       /**
        * @description 진행 기록 제목
        * @example 1차 조건 협의 미팅 (수정)
@@ -7767,9 +8197,9 @@ export interface components {
       title?: string;
       /**
        * @description 진행 날짜 (YYYY-MM-DD)
-       * @example 2026-07-05
+       * @example 2026-10-20
        */
-      action_time?: string;
+      action_date?: string;
       /**
        * @description 상대방 / 미팅 대상자
        * @example Antenna Retail Yuki Tanaka
@@ -7780,14 +8210,10 @@ export interface components {
        * @example 신주쿠 지점 방문 미팅 진행. 매장 컨디션 재확인 및 수정된 로열티 조건 협의.
        */
       content?: string;
-      /**
-       * @description 완료 여부 (Y 또는 N)
-       * @example Y
-       * @enum {string}
-       */
-      is_done?: "Y" | "N";
-      /** @description 첨부 파일 목록 (배열 전달 시 기존 파일 목록을 대체합니다) */
+      /** @description 첨부 파일 목록 (배열 전달 시 기존 파일 목록을 대체합니다. `POST /api/upload/file` 이용) */
       file_list?: components["schemas"]["ActionFileDto"][];
+      /** @description 연계된 다음 액션 목록 (기존 항목은 idx를 유지하여 전송, 신규 추가 항목은 idx 생략 시 서버 자동 발급) */
+      next_actions?: components["schemas"]["UpdateNextActionItemDto"][];
     };
     UpdateCrmActionResponseDto: {
       /**
@@ -7802,6 +8228,67 @@ export interface components {
       message: string;
       /** @description 수정된 진행 기록 데이터 */
       data: components["schemas"]["CrmActionRecordDto"];
+    };
+    UpdateCrmNextActionDoneDto: {
+      /**
+       * @description 완료 여부 (Y: 완료, N: 미완료). 미전달 또는 빈 객체 전송 시 현재 상태 반전(Y ↔ N Toggle)
+       * @example Y
+       * @enum {string}
+       */
+      is_done?: "Y" | "N";
+    };
+    UpdateCrmNextActionDoneDataDto: {
+      /**
+       * @description 진행 기록 고유 식별자 (`etq_crm_action.uid`)
+       * @example 15
+       */
+      action_uid: number;
+      /** @description 완료 상태가 갱신된 다음 액션 항목 */
+      updated_next_action: components["schemas"]["NextActionItemDto"];
+      /** @description 해당 진행 기록의 최신 전체 다음 액션 목록 */
+      next_actions: components["schemas"]["NextActionItemDto"][];
+    };
+    UpdateCrmNextActionDoneResponseDto: {
+      /**
+       * @description HTTP 상태 코드
+       * @example 200
+       */
+      statusCode: number;
+      /**
+       * @description 응답 메시지
+       * @example 다음 액션의 완료 상태가 성공적으로 변경되었습니다.
+       */
+      message: string;
+      /** @description 갱신된 다음 액션 정보 데이터 */
+      data: components["schemas"]["UpdateCrmNextActionDoneDataDto"];
+    };
+    DeleteCrmNextActionDataDto: {
+      /**
+       * @description 진행 기록 고유 식별자 (`etq_crm_action.uid`)
+       * @example 15
+       */
+      action_uid: number;
+      /**
+       * @description 삭제된 다음 액션 고유 식별 번호 (idx)
+       * @example 1
+       */
+      deleted_idx: number;
+      /** @description 삭제 후 남아있는 최신 다음 액션 목록 */
+      next_actions: components["schemas"]["NextActionItemDto"][];
+    };
+    DeleteCrmNextActionResponseDto: {
+      /**
+       * @description HTTP 상태 코드
+       * @example 200
+       */
+      statusCode: number;
+      /**
+       * @description 응답 메시지
+       * @example 다음 액션이 성공적으로 삭제되었습니다.
+       */
+      message: string;
+      /** @description 삭제 결과 데이터 */
+      data: components["schemas"]["DeleteCrmNextActionDataDto"];
     };
     UpdateCrmActionDoneDto: {
       /**
@@ -7909,53 +8396,53 @@ export interface components {
     };
     NextActionSummaryDto: {
       /**
-       * @description 액션 UID (`etq_crm_action.uid`)
-       * @example 12
+       * @description 부모 진행 기록 UID (`etq_crm_action.uid`)
+       * @example 15
        */
-      uid: number;
+      action_uid: number;
       /**
-       * @description 액션 제목
+       * @description 해당 진행 기록 내 다음 액션 식별 번호 (1부터 시작하는 idx)
+       * @example 1
+       */
+      idx: number;
+      /**
+       * @description 다음 액션 제목
        * @example 로열티 조건 자료 요청
        */
       title: string;
       /**
        * @description 마감일 (YYYY-MM-DD)
-       * @example 2026-07-02
+       * @example 2026-07-10
        */
-      action_time: string | null;
+      deadline: string | null;
       /**
        * @description 담당자
-       * @example Yuki Tanaka
+       * @example 김도경
        */
       partner_name: string | null;
       /**
-       * @description 내용 / 메모
+       * @description 메모 / 상세 내용
        * @example 본사 승인 필요 조건 검토
        */
-      content: string | null;
+      memo: string | null;
       /**
-       * @description 완료 여부 (Y 또는 N)
+       * @description 완료 여부 (미완료 항목만 필터링되므로 항상 N)
        * @example N
+       * @enum {string}
        */
-      is_done: string;
-      /**
-       * Format: date-time
-       * @description 생성 일시
-       * @example 2026-09-15T05:00:00.000Z
-       */
-      created_time: string;
+      is_done: "N";
     };
     GetCrmDetailDataDto: {
       /** @description CRM 기본 정보 (기업명, 국가, 도시, 계약방식, 담당자 등) */
       crm: components["schemas"]["CrmItemDto"];
       /**
-       * @description 현재 진행 단계 (최근 등록된 진행 기록의 action_type 또는 기본값)
+       * @description 현재 진행 단계 (etq_crm.current_stage 값 또는 기본값)
        * @example 미팅
        */
       current_stage: string;
-      /** @description 다음 액션 요약 목록 (좌측 사이드바: 미완료/완료 액션 목록) */
+      /** @description 미완료 다음 액션 요약 리스트 (is_done이 N인 항목만 추출, deadline 오래된 순으로 오름차순 정렬) */
       next_actions: components["schemas"]["NextActionSummaryDto"][];
-      /** @description 진행 기록 타임라인 목록 (우측 메인: 완료된 활동 기록 목록, 최신순) */
+      /** @description 진행 기록 타임라인 목록 (활동 기록 목록, 최신순 정렬, 각 기록 내부에 해당 next_actions 배열 포함) */
       actions: components["schemas"]["CrmActionRecordDto"][];
     };
     GetCrmDetailResponseDto: {
@@ -10467,6 +10954,52 @@ export interface operations {
       };
     };
   };
+  UploadFileController_handle: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description 업로드할 단일 파일 (문서, 압축, 이미지 등) */
+    requestBody: {
+      content: {
+        "multipart/form-data": components["schemas"]["UploadFileDto"];
+      };
+    };
+    responses: {
+      /** @description 파일 업로드 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UploadFileResponseDto"];
+        };
+      };
+      /** @description 파일이 없거나 허용되지 않는 실행 파일 또는 50MB 초과 */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 AccessToken) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description S3 업로드 중 서버 오류 발생 */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
   GetCrmListController_execute: {
     parameters: {
       query?: {
@@ -10581,7 +11114,7 @@ export interface operations {
       };
     };
     responses: {
-      /** @description 진행 기록 및 다음 액션 등록 성공 */
+      /** @description 진행 기록 등록 성공 */
       201: {
         headers: {
           [name: string]: unknown;
@@ -10590,7 +11123,7 @@ export interface operations {
           "application/json": components["schemas"]["CreateCrmActionResponseDto"];
         };
       };
-      /** @description 입력값 유효성 검증 실패 */
+      /** @description 입력값 유효성 검증 실패 (허용되지 않는 action_type 등) */
       400: {
         headers: {
           [name: string]: unknown;
@@ -10711,6 +11244,95 @@ export interface operations {
         content?: never;
       };
       /** @description 대상 진행 기록 또는 CRM 레코드를 찾을 수 없는 경우 */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  UpdateCrmNextActionDoneController_execute: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 수정할 다음 액션이 속한 진행 기록 UID (`etq_crm_action.uid`) */
+        action_uid: number;
+        /** @description 완료 처리할 다음 액션의 고유 식별 번호 (1부터 시작하는 idx) */
+        idx: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateCrmNextActionDoneDto"];
+      };
+    };
+    responses: {
+      /** @description 다음 액션 완료 여부(is_done) 수정 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UpdateCrmNextActionDoneResponseDto"];
+        };
+      };
+      /** @description 잘못된 요청 파라미터 (유효성 검사 실패) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 워크스페이스 접근 권한 없음 */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 진행 기록 또는 해당 idx의 다음 액션을 찾을 수 없음 */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  DeleteCrmNextActionController_execute: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 대상 진행 기록 UID (`etq_crm_action.uid`) */
+        action_uid: number;
+        /** @description 삭제할 다음 액션의 고유 식별 번호 (1부터 시작하는 idx) */
+        idx: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 다음 액션 삭제 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DeleteCrmNextActionResponseDto"];
+        };
+      };
+      /** @description 워크스페이스 접근 권한 없음 */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 진행 기록 또는 해당 idx의 다음 액션을 찾을 수 없음 */
       404: {
         headers: {
           [name: string]: unknown;
