@@ -180,13 +180,16 @@ export default function PartnerSearchField({
                 </>
               )}
 
-              {/* 시안: 목록 맨 아래 — 찾는 상대가 플랫폼에 없을 때 */}
+              {/* 시안: 목록 맨 아래 — 찾는 상대가 플랫폼에 없을 때.
+                  결과와 같은 무게로 보이지 않게 구분선을 두고 한 단계 작게 쓴다 */}
+              {/* cmdk는 검색어가 있으면 구분선을 숨긴다 — 검색 중에만 보이는 목록이라 항상 그린다 */}
+              <CommandPrimitive.Separator alwaysRender className="bg-border my-1 h-px" />
               <CommandPrimitive.Item
                 value={MANUAL_VALUE}
                 onSelect={() => onManualAdd(trimmed)}
-                className="text-primary data-[selected=true]:bg-secondary-background flex cursor-pointer items-center gap-1.5 px-3 py-2.5 text-sm font-medium tracking-[-0.7px]"
+                className="text-primary data-[selected=true]:bg-secondary-background flex cursor-pointer items-center gap-1 px-3 py-2 text-[13px] font-medium tracking-[-0.65px]"
               >
-                <Plus className="size-4" aria-hidden />
+                <Plus className="size-3.5" aria-hidden />
                 목록에 없는 {partnerLabel} 직접 추가
               </CommandPrimitive.Item>
             </CommandPrimitive.List>
