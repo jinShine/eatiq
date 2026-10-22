@@ -27,7 +27,7 @@ function ActivityContent({ activity }: { activity: ActivityView }) {
           <span className="font-medium text-[#6b7280]"> · {activity.time}</span>
           {activity.isDeleted && (
             <span className="ml-2 rounded bg-[#f3f4f6] px-1.5 py-0.5 align-middle text-[11px] font-medium text-[#6b7280]">
-              삭제된 진행 건
+              삭제됨
             </span>
           )}
         </span>
@@ -44,7 +44,7 @@ type ActivitySectionProps = {
 
 /**
  * 최근 활동 (피그마 59:6714) — 최신순 최대 10개. 진행 관리 건이면 누르면 그 상세로 간다.
- * 이미 지운 건(is_deleted)은 누르기 전에 알 수 있게 「삭제된 진행 건」을 붙이고 이동하지 않는다.
+ * 연결된 진행 건이나 진행 기록을 지웠으면(is_deleted — 어느 쪽인지는 알 수 없다) 「삭제됨」을 붙이고 이동하지 않는다.
  */
 export default function ActivitySection({ workspaceId, activities }: ActivitySectionProps) {
   return (
