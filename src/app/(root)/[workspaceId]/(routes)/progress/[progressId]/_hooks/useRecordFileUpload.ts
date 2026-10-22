@@ -70,7 +70,7 @@ export default function useRecordFileUpload({ onUploaded }: UseRecordFileUploadO
       if (round !== roundRef.current) {
         return;
       }
-      // 이름은 고른 파일에서 쓴다 — 서버 응답의 original_name은 한글이 깨져 온다
+      // 이름은 사용자가 고른 파일 그대로 쓴다
       onUploaded({ name: file.name, url: uploaded.url, size: uploaded.size, mimetype: uploaded.mimetype });
       setPending(current => current.filter(item => item.id !== id));
     } catch (error) {
