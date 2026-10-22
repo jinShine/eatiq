@@ -137,8 +137,13 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * 내가 초대받은(초대중) 워크스페이스 목록 조회
-     * @description ### 📌 상세 역할 및 개요
+     * 🔄 [UPDATE 26.10.21] 내가 초대받은(초대중) 워크스페이스 목록 조회 (초대한 사람 정보 추가)
+     * @description ### 📝 최근 업데이트 이력 (2026.10.21)
+     *     - **초대한 사람 정보(`inviter`) 객체 추가**:
+     *       - 초대 대기 목록 항목에 초대한 사람의 정보 객체(`inviter: { name: string | null, email: string | null }`)가 추가되었습니다.
+     *       - 초대 알림 카드나 목록 화면에서 "홍길동(admin@eatiq.com)님이 초대한 워크스페이스입니다" 형태로 UI를 표시할 수 있습니다.
+     *
+     *     ### 📌 상세 역할 및 개요
      *     - 현재 로그인한 사용자가 초대받아 수락 대기 중인(`status: "초대중"`) 워크스페이스 목록을 조회합니다.
      *     - 본인이 아직 수락/거절하지 않은 모든 초대 내역을 한눈에 확인할 수 있습니다.
      *
@@ -568,8 +573,17 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * 🔄 [UPDATE 26.10.06] 브랜드 워크스페이스 대시보드 조회 (허용 파트너 역할 항목 제거 반영)
-     * @description ### 📝 최근 업데이트 이력 (2026.10.06)
+     * 🔄 [UPDATE 26.10.21] 브랜드 워크스페이스 대시보드 조회 (최근 활동 is_deleted 및 next_actions 표준화)
+     * @description ### 📝 최근 업데이트 이력 (2026.10.21)
+     *     - **최근 Next Action(`next_actions`) 표준 스펙 경량화 및 일원화**:
+     *       - 진행 기록(`etq_crm_action`) 내부의 `next_actions` JSON 배열에서 미완료(`is_done === 'N'`) 항목들을 추출하여 마감일 임박순으로 최대 3개를 제공합니다.
+     *       - 응답 필드를 CRM 다음 액션 핵심 스펙(`action_uid`, `idx`, `crm_uid`, `company_name`, `title`, `deadline`, `partner_name`, `memo`, `is_done`)으로 일원화하고 불필요한 레거시 필드(`d_day`, `d_day_count`, `description`, `action_date`, `due_date`, `uid`)를 제거했습니다.
+     *     - **최근 활동 삭제 여부(`is_deleted`) 필드 추가**:
+     *       - `recent_activities` 응답 객체에 `is_deleted` (boolean) 필드가 추가되었습니다.
+     *       - 활동 로그와 연결된 진행 건(CRM) 또는 액션(CRM Action)이 소프트 삭제되었거나 데이터베이스에 존재하지 않는 경우 `true`를 반환합니다.
+     *       - 프론트엔드에서는 `is_deleted === true`인 경우 상세 이동 클릭을 비활성화하거나 삭제된 리소스 안내 토스트/뱃지를 표시할 수 있습니다.
+     *
+     *     ### 📝 이전 업데이트 이력 (2026.10.06)
      *     - **계약 및 정책 평가 항목 조정**: 미사용 '허용 파트너 역할(`partner_roles`)' 필드가 제거되어 평가 대상 필드가 총 80개(계약 및 정책 16개)로 조정되었습니다.
      *
      *     ### 📌 상세 역할 및 개요
@@ -1510,8 +1524,17 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * 🔄 [UPDATE 26.10.08] 바이어 워크스페이스 대시보드 조회 (운영 도시 항목 제거 반영)
-     * @description ### 📝 최근 업데이트 이력 (2026.10.08)
+     * 🔄 [UPDATE 26.10.21] 바이어 워크스페이스 대시보드 조회 (최근 활동 is_deleted 및 next_actions 표준화)
+     * @description ### 📝 최근 업데이트 이력 (2026.10.21)
+     *     - **최근 Next Action(`next_actions`) 표준 스펙 경량화 및 일원화**:
+     *       - 진행 기록(`etq_crm_action`) 내부의 `next_actions` JSON 배열에서 미완료(`is_done === 'N'`) 항목들을 추출하여 마감일 임박순으로 최대 3개를 제공합니다.
+     *       - 응답 필드를 CRM 다음 액션 핵심 스펙(`action_uid`, `idx`, `crm_uid`, `company_name`, `title`, `deadline`, `partner_name`, `memo`, `is_done`)으로 일원화하고 불필요한 레거시 필드(`d_day`, `d_day_count`, `description`, `action_date`, `due_date`, `uid`)를 제거했습니다.
+     *     - **최근 활동 삭제 여부(`is_deleted`) 필드 추가**:
+     *       - `recent_activities` 응답 객체에 `is_deleted` (boolean) 필드가 추가되었습니다.
+     *       - 활동 로그와 연결된 진행 건(CRM) 또는 액션(CRM Action)이 소프트 삭제되었거나 데이터베이스에 존재하지 않는 경우 `true`를 반환합니다.
+     *       - 프론트엔드에서는 `is_deleted === true`인 경우 상세 이동 클릭을 비활성화하거나 삭제된 리소스 안내 토스트/뱃지를 표시할 수 있습니다.
+     *
+     *     ### 📝 이전 업데이트 이력 (2026.10.08)
      *     - **운영 도시(`city`) 평가 항목 제거**: 바이어 기본 정보 스펙 변경에 따라 대시보드 정보 완성도 산출 대상 항목에서 `city`가 제외되었습니다 (총 28개 → 27개).
      *
      *     ---
@@ -2819,6 +2842,18 @@ export interface components {
       /** @description 소속 워크스페이스 목록 */
       workspaces: components["schemas"]["MyWorkspaceItemDto"][];
     };
+    InvitedWorkspaceInviterDto: {
+      /**
+       * @description 초대한 사람 이름
+       * @example 홍길동
+       */
+      name: string | null;
+      /**
+       * @description 초대한 사람 이메일
+       * @example admin@eatiq.com
+       */
+      email: string | null;
+    };
     InvitedWorkspaceMemberSummaryDto: {
       /**
        * @description 멤버 레코드 고유 식별자 (uid)
@@ -2866,6 +2901,8 @@ export interface components {
        * @enum {string}
        */
       type: "brand" | "buyer";
+      /** @description 초대한 사람 정보 객체 ({ name, email }) */
+      inviter: components["schemas"]["InvitedWorkspaceInviterDto"] | null;
       /** @description 나의 초대 상태 정보 */
       my_member_info: components["schemas"]["InvitedWorkspaceMemberSummaryDto"];
       /**
@@ -4148,10 +4185,15 @@ export interface components {
     };
     BrandDashboardNextActionDto: {
       /**
-       * @description 액션 UID (`etq_crm_action.uid`)
-       * @example 12
+       * @description 부모 진행 기록 UID (`etq_crm_action.uid`)
+       * @example 15
        */
-      uid: number;
+      action_uid: number;
+      /**
+       * @description 진행 기록 내 다음 액션 식별 번호 (1부터 시작하는 idx)
+       * @example 1
+       */
+      idx: number;
       /**
        * @description 연결된 CRM 레코드 UID (`etq_crm.uid`)
        * @example 1
@@ -4163,30 +4205,31 @@ export interface components {
        */
       company_name: string;
       /**
-       * @description 마감일 기준 D-day (예: "D-day", "D-3", "D+2", 마감일 없을 시 null)
-       * @example D-3
-       */
-      d_day: string | null;
-      /**
-       * @description D-day 숫자 일수 (오늘 기준 잔여 일수, 지난 경우 음수, 마감일 없을 시 null)
-       * @example 3
-       */
-      d_day_count: number | null;
-      /**
        * @description 다음 액션 제목
        * @example 로열티 조건 자료 요청
        */
       title: string;
       /**
-       * @description 설명 또는 내용/메모 (내용 없을 시 제목 사용)
-       * @example 본사 승인 필요 조건 검토
-       */
-      description: string | null;
-      /**
-       * @description 마감일 (YYYY-MM-DD)
+       * @description 마감일 (`YYYY-MM-DD`, 마감일 없을 시 null)
        * @example 2026-07-10
        */
-      action_date: string | null;
+      deadline: string | null;
+      /**
+       * @description 담당자
+       * @example 김도경
+       */
+      partner_name: string | null;
+      /**
+       * @description 메모 / 상세 내용
+       * @example 본사 승인 필요 조건 검토
+       */
+      memo: string | null;
+      /**
+       * @description 완료 여부 (미완료 항목만 필터링되므로 항상 N)
+       * @example N
+       * @enum {string}
+       */
+      is_done: "N";
     };
     BrandDashboardCrmStageSummaryDto: {
       /**
@@ -4259,6 +4302,11 @@ export interface components {
        *     }
        */
       payload: Record<string, never> | null;
+      /**
+       * @description 연결된 대상 리소스(CRM 진행 건, 액션 등)의 삭제 여부 (삭제된 리소스인 경우 true)
+       * @example false
+       */
+      is_deleted: boolean;
       /**
        * @description 사용자 친화적 시간 표기 (예: 오늘 14:23, 어제 17:45, 이틀 전 16:20, 3일 전, 2026-09-15)
        * @example 오늘 14:23
@@ -6431,10 +6479,15 @@ export interface components {
     };
     BuyerDashboardNextActionDto: {
       /**
-       * @description 액션 UID (`etq_crm_action.uid`)
-       * @example 12
+       * @description 부모 진행 기록 UID (`etq_crm_action.uid`)
+       * @example 15
        */
-      uid: number;
+      action_uid: number;
+      /**
+       * @description 진행 기록 내 다음 액션 식별 번호 (1부터 시작하는 idx)
+       * @example 1
+       */
+      idx: number;
       /**
        * @description 연결된 CRM 레코드 UID (`etq_crm.uid`)
        * @example 1
@@ -6446,36 +6499,31 @@ export interface components {
        */
       company_name: string;
       /**
-       * @description 마감일 기준 D-day (예: "D-day", "D-3", "D+2", 마감일 없을 시 null)
-       * @example D-3
-       */
-      d_day: string | null;
-      /**
-       * @description D-day 숫자 일수 (오늘 기준 잔여 일수, 지난 경우 음수, 마감일 없을 시 null)
-       * @example 3
-       */
-      d_day_count: number | null;
-      /**
-       * @description 마감일 (`YYYY-MM-DD`, 마감일 없을 시 null)
-       * @example 2026-10-05
-       */
-      due_date: string | null;
-      /**
-       * @description 액션 제목
+       * @description 다음 액션 제목
        * @example 계약 조건 검토 미팅
        */
       title: string;
       /**
-       * @description 액션 상세 내용
+       * @description 마감일 (`YYYY-MM-DD`, 마감일 없을 시 null)
+       * @example 2026-10-05
+       */
+      deadline: string | null;
+      /**
+       * @description 담당자
+       * @example 김도경
+       */
+      partner_name: string | null;
+      /**
+       * @description 메모 / 상세 내용
        * @example 미팅 준비 및 세부 조율
        */
-      description: string;
+      memo: string | null;
       /**
-       * @description 액션 유형 (메모, 미팅, 메일, 전화, 제안서, 계약서, 법무검토, 기타, 지정안됨)
-       * @example 미팅
+       * @description 완료 여부 (미완료 항목만 필터링되므로 항상 N)
+       * @example N
        * @enum {string}
        */
-      action_type: "메모" | "미팅" | "메일" | "전화" | "제안서" | "계약서" | "법무검토" | "기타" | "지정안됨";
+      is_done: "N";
     };
     BuyerDashboardCrmStageSummaryDto: {
       /**
@@ -6548,6 +6596,11 @@ export interface components {
        *     }
        */
       payload: Record<string, never> | null;
+      /**
+       * @description 연결된 대상 리소스(CRM 진행 건, 액션 등)의 삭제 여부 (삭제된 리소스인 경우 true)
+       * @example false
+       */
+      is_deleted: boolean;
       /**
        * @description 사용자 친화적 시간 표기 (예: 오늘 14:23, 어제 17:45, 이틀 전 16:20, 3일 전, 2026-09-15)
        * @example 오늘 14:23
