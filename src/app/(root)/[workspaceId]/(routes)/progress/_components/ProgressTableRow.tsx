@@ -33,11 +33,17 @@ export default function ProgressTableRow({ row, onDelete }: ProgressTableRowProp
       role="row"
       className={cn("group grid h-[50px] items-center px-6 transition-colors hover:bg-[#fafafb]", PROGRESS_GRID_COLS)}
     >
-      <div role="cell" className="min-w-0 pr-3">
+      <div role="cell" className="flex min-w-0 items-center gap-2.5 pr-3">
+        {/* 방치 배지 (피그마 944:6316) — 이름 앞, 서버 판정(is_neglected) */}
+        {row.isNeglected && (
+          <span className="shrink-0 rounded-full bg-[#dc2626] p-1 text-[11px] leading-none font-medium text-white">
+            방치
+          </span>
+        )}
         {/* 행 전체를 클릭 영역으로 만들면 케밥 버튼과 겹치므로 이름만 링크로 둔다 */}
         <Link
           href={detailHref}
-          className="focus-visible:ring-ring block truncate rounded text-[13px] font-semibold text-[#111827] hover:underline focus-visible:ring-2 focus-visible:outline-none"
+          className="focus-visible:ring-ring block min-w-0 truncate rounded text-[13px] font-semibold text-[#111827] hover:underline focus-visible:ring-2 focus-visible:outline-none"
         >
           {row.partnerName}
         </Link>

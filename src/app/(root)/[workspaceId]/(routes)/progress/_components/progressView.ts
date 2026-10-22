@@ -20,6 +20,8 @@ export type ProgressRow = {
   nextAction: string | null;
   /** YYYY-MM-DD · 없으면 null */
   nextActionDueAt: string | null;
+  /** 방치 — 후속 액션 없이 2주 이상 지난 건. 서버가 판정한다(계약완료·보류는 제외) */
+  isNeglected: boolean;
 };
 
 const DATE_ONLY = /^(\d{4})[.-](\d{2})[.-](\d{2})$/;
@@ -52,6 +54,7 @@ export const toProgressRow = (item: CrmListItem): ProgressRow => ({
   lastContactedAt: toIsoDate(item.recent_contact_date),
   nextAction: item.next_action_title,
   nextActionDueAt: toIsoDate(item.next_action_due_date),
+  isNeglected: item.is_neglected,
 });
 
 export type ProgressFilterOptions = Record<
