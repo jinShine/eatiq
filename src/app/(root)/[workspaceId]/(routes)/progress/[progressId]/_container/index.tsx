@@ -29,7 +29,7 @@ import ProgressRecordSheet from "../_components/ProgressRecordSheet";
 import ProgressTimeline from "../_components/ProgressTimeline";
 import RecordDeleteModal from "../_components/RecordDeleteModal";
 import StageCard from "../_components/StageCard";
-import { type NextActionSummary, type ProgressRecord } from "../_components/progressDetailView";
+import { type NextActionSummary, type ProgressRecord, type RecordNextAction } from "../_components/progressDetailView";
 import { type ProgressRecordFormValues, toCreateRequest, toUpdateRequest } from "../_components/progressRecordSchema";
 import { useProgressDetail } from "../_hooks/useProgressDetail";
 
@@ -89,11 +89,15 @@ export default function ProgressDetailContainer({ workspaceId, progressId }: Pro
   const handleStageChange = (stage: StageCode) =>
     updateStage(stage, { onError: stageError => Toast.error(stageError.message) });
 
-  const handleToggleAction = (action: NextActionSummary, isDone: boolean) =>
-    updateActionDone(
-      { actionId: action.actionId, idx: action.idx, isDone },
-      { onError: doneError => Toast.error(doneError.message) },
-    );
+  // 다음 액션 완료 — 왼쪽 요약과 카드 안 토글이 같은 요청을 보낸다(둘 다 기록 캐시를 보고 그려 함께 바뀐다)
+  const toggleActionDone = (actionId: string, idx: number, isDone: boolean) =>
+    updateActionDone({ actionId, idx, isDone }, { onError: doneError => Toast.error(doneError.message) });
+
+  const handleToggleSummaryAction = (action: NextActionSummary, isDone: boolean) =>
+    toggleActionDone(action.actionId, action.idx, isDone);
+
+  const handleToggleRecordAction = (record: ProgressRecord, item: RecordNextAction, isDone: boolean) =>
+    toggleActionDone(record.id, item.idx, isDone);
 
   // 진행 기록 삭제
   const [recordToDelete, setRecordToDelete] = useState<ProgressRecord | null>(null);
@@ -205,11 +209,16 @@ export default function ProgressDetailContainer({ workspaceId, progressId }: Pro
 
             <div className="h-px bg-[#f3f4f6]" />
 
-            <NextActionSummaryCard actions={detail.nextActions} onToggle={handleToggleAction} />
+            <NextActionSummaryCard actions={detail.nextActions} onToggle={handleToggleSummaryAction} />
           </aside>
 
           <div className="min-w-0 flex-1 overflow-y-auto p-6">
-            <ProgressTimeline records={detail.records} onEdit={openRecordSheet} onDelete={setRecordToDelete} />
+            <ProgressTimeline
+              records={detail.records}
+              onEdit={openRecordSheet}
+              onDelete={setRecordToDelete}
+              onToggleAction={handleToggleRecordAction}
+            />
           </div>
         </div>
 
