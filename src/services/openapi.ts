@@ -2180,17 +2180,27 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * 🔄 [UPDATE 26.09.28] 진행 관리(CRM) 관리 대상(바이어/브랜드) 추가 (파라미터/가이드 보강)
+     * 🔄 [UPDATE 26.10.22] 진행 관리(CRM) 관리 대상(바이어/브랜드) 추가 (category 파라미터 및 자동 연동 지원)
      * @description ### 📌 상세 역할 및 개요
      *     - 진행 관리(CRM)에 신규 관리 대상(바이어 또는 브랜드)을 등록합니다.
-     *     - 플랫폼 내 등록된 타 워크스페이스를 연동(`target_workspace_uid`)하거나, 수기 정보(`company_name` 등)로 등록할 수 있습니다.
+     *     - 플랫폼 내 등록된 타 워크스페이스를 연동(`target_workspace_uid`, 선택)하거나, DB에 없는 바이어/브랜드의 경우 수기 정보(`company_name` 등)만으로 등록할 수 있습니다.
      *     - 등록자의 워크스페이스 타입에 맞춰 대상 유형(`workspace_type`)이 자동으로 결정됩니다 (브랜드 워크스페이스는 바이어를 등록, 바이어 워크스페이스는 브랜드를 등록).
      *
      *     ---
      *
-     *     ### 📝 최근 업데이트 이력 (2026.09.28)
+     *     ### 📝 최근 업데이트 이력 (2026.10.22)
+     *     - **카테고리(`category`) 파라미터 추가 및 자동 연동**:
+     *       - `target_workspace_uid`가 없을 때(수기 등록 시): 전달된 `category` 값으로 저장됩니다.
+     *       - `target_workspace_uid`가 있을 때: 대상 워크스페이스에 등록된 카테고리(브랜드 카테고리 또는 바이어 사업유형)가 자동으로 연동되어 저장됩니다 (파라미터 생략 가능).
+     *     - **관리 대상 워크스페이스(`target_workspace_uid`) 선택(Optional) 지원**: DB에 등록되지 않은 외부 바이어/브랜드와 커뮤니케이션을 진행할 수 있도록 수기 직접 등록(`target_workspace_uid` 생략 또는 `null`)을 지원합니다.
+     *     - **중복 등록 방지**: 플랫폼 내 워크스페이스 연동 시(`target_workspace_uid` 전달 시), 동일 워크스페이스 내에 이미 등록된 대상 워크스페이스는 중복 등록할 수 없으며 시도 시 `409 Conflict` 에러를 반환합니다.
+     *
+     *     <details>
+     *     <summary><b>📂 이전 업데이트 이력 (2026.09.28)</b></summary>
+     *
      *     - **입력 파라미터 최신화**: 실제 DTO 유효성 스키마에 맞춰 DTO에 없는 필드 제거 및 `contact_name`, `contact_email` 등 실제 지원 파라미터 목록으로 명확화.
      *     - **연동 가이드 보강**: 성공 시 모달 닫기/목록 재조회/상세 이동 UX 처리 가이드 및 `400`, `403`, `404` 에러 핸들링 세부사항 추가.
+     *     </details>
      *
      *     ---
      *
@@ -2199,15 +2209,17 @@ export interface paths {
      *        - '관리 바이어 추가' 또는 '관리 브랜드 추가' 모달/폼에서 '저장/추가' 버튼 클릭 시.
      *     2. **입력 파라미터 구성**:
      *        - `source_workspace_uid`: 현재 로그인된 활성 워크스페이스 UID (필수).
-     *        - `target_workspace_uid`: 플랫폼 내 워크스페이스 검색을 통해 선택한 경우 전달 (미선택 시 `null` 또는 생략).
+     *        - `target_workspace_uid`: 플랫폼 내 워크스페이스 검색/선택을 통해 지정한 관리 대상 워크스페이스 UID (선택, 수기 등록 시 `null` 또는 생략).
      *        - `company_name`: 대상 기업명 (필수).
+     *        - `category`: 카테고리 / 사업 유형 (선택, 수기 등록 시 입력 권장. 워크스페이스 연동 시에는 자동 적용되므로 생략 가능).
      *        - `country`, `city`, `contract_type`, `contact_name`, `contact_email`: 부가 프로필 및 담당자 정보 (선택).
      *     3. **성공 후 UX 처리**:
      *        - 모달 닫기 및 CRM 목록 재조회(`GET /api/crm/list`), 또는 생성된 `uid`를 바탕으로 상세 페이지(`GET /api/crm/{uid}`)로 이동.
      *     4. **에러 핸들링**:
-     *        - `400 Bad Request`: 필수값 누락 또는 동일 타입 워크스페이스 등록 시도 시(예: 브랜드가 브랜드를 target으로 지정).
+     *        - `400 Bad Request`: 필수값(`source_workspace_uid`, `company_name`) 누락 또는 동일 타입 워크스페이스 등록 시도 시(예: 브랜드가 브랜드를 target으로 지정, 자기 자신 등록 시도).
      *        - `403 Forbidden`: source_workspace의 활성 멤버가 아닌 경우.
-     *        - `404 Not Found`: 워크스페이스를 찾을 수 없는 경우.
+     *        - `404 Not Found`: source 또는 target 워크스페이스를 찾을 수 없는 경우.
+     *        - `409 Conflict`: 이미 진행 관리(CRM)에 등록된 대상 워크스페이스인 경우 (`target_workspace_uid` 지정 시).
      */
     post: operations["CreateCrmController_execute"];
     delete?: never;
@@ -7890,7 +7902,7 @@ export interface components {
        */
       source_workspace_uid: number;
       /**
-       * @description 관리 대상 워크스페이스 고유 식별자 (target_workspace_uid).<br/>• source가 브랜드일 때: 바이어 워크스페이스 uid (`etq_workspace.uid`)<br/>• source가 바이어일 때: 브랜드 워크스페이스 uid (`etq_workspace.uid`)<br/>• 수기 직접 입력 시: null 또는 생략 가능
+       * @description 관리 대상 워크스페이스 고유 식별자 (target_workspace_uid).<br/>• source가 브랜드일 때: 바이어 워크스페이스 uid (`etq_workspace.uid`)<br/>• source가 바이어일 때: 브랜드 워크스페이스 uid (`etq_workspace.uid`)<br/>• 수기 직접 입력 시: null 또는 생략 가능 (DB 미등록 바이어/브랜드 대상)
        * @example 2
        */
       target_workspace_uid?: number | null;
@@ -7914,6 +7926,11 @@ export interface components {
        * @example 마스터 프랜차이즈
        */
       contract_type?: string | null;
+      /**
+       * @description 카테고리 / 사업 유형 (예: 외식, 유통, 식음료 등).<br/>• target_workspace_uid가 없을 때(수기 등록 시): 전달된 category 값으로 등록<br/>• target_workspace_uid가 있을 때: 해당 워크스페이스의 category(또는 사업유형)가 자동 적용되므로 생략 가능
+       * @example 외식
+       */
+      category?: string | null;
       /**
        * @description 담당자 이름
        * @example 홍길동
@@ -7966,6 +7983,11 @@ export interface components {
        * @example 마스터 프랜차이즈
        */
       contract_type: string | null;
+      /**
+       * @description 카테고리 / 사업 유형
+       * @example 외식
+       */
+      category: string | null;
       /**
        * @description 담당자 이름
        * @example 홍길동
@@ -11147,6 +11169,13 @@ export interface operations {
       };
       /** @description 지정된 source_workspace_uid 또는 target_workspace_uid를 찾을 수 없음 */
       404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 이미 진행 관리(CRM)에 등록된 대상 워크스페이스인 경우 */
+      409: {
         headers: {
           [name: string]: unknown;
         };
