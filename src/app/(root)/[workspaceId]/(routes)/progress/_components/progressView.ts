@@ -1,3 +1,5 @@
+import { type BrandAutocompleteItem } from "@services/api/brand/brand.type";
+import { type BuyerAutocompleteItem } from "@services/api/buyer/buyer.type";
 import { type CrmFilterOptions, type CrmListItem } from "@services/api/crm/crm.type";
 
 import { type StageCode } from "./progressOptions";
@@ -72,3 +74,35 @@ export const toFilterOptions = (options: CrmFilterOptions | undefined): Progress
   categories: toChipOptions(options?.categories ?? []),
   contractTypes: toChipOptions(options?.contract_types ?? []),
 });
+
+/************************************
+ * 「검색해서 추가」 — 자동완성 결과(바이어·브랜드)를 같은 모양으로
+ ************************************/
+export type PartnerOption = {
+  /** 연결할 상대 워크스페이스 — 등록할 때 target_workspace_uid로 보낸다 */
+  workspaceUid: number;
+  name: string;
+  /** 「일본 · 양식」 — 비슷한 이름을 구분하는 보조 정보 */
+  meta: string | null;
+  country: string | null;
+  contactName: string | null;
+  contactEmail: string | null;
+  /** 브랜드만 — 로고가 없으면 이니셜 */
+  logo?: { url: string | null; initial: string };
+};
+
+const isBrandItem = (item: BuyerAutocompleteItem | BrandAutocompleteItem): item is BrandAutocompleteItem =>
+  "logo_url" in item;
+
+export const toPartnerOptions = (items: (BuyerAutocompleteItem | BrandAutocompleteItem)[]): PartnerOption[] =>
+  items.map(item => ({
+    workspaceUid: item.workspace_uid,
+    name: item.company_name,
+    meta: [item.country, item.category].filter(Boolean).join(" · ") || null,
+    country: item.country,
+    contactName: item.contact_name,
+    contactEmail: item.contact_email,
+    logo: isBrandItem(item)
+      ? { url: item.logo_url, initial: item.company_name.trim().charAt(0).toUpperCase() }
+      : undefined,
+  }));

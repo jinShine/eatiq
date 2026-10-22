@@ -145,6 +145,7 @@ export default function ProgressContainer({ workspaceId }: ProgressContainerProp
             isOpen={isAddOpen}
             onOpenChange={handleAddOpenChange}
             partnerLabel={partnerLabel}
+            partnerType={workspace?.type === "buyer" ? "brand" : "buyer"}
             options={filterOptions}
             isPending={isCreating}
             errorMessage={createError?.message}

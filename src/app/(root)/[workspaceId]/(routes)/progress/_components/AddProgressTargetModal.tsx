@@ -8,12 +8,14 @@ import z from "zod";
 
 import { Button, Input, Modal, ModalBody, ModalFooter, ModalHeader } from "@components/ui";
 
+import { type CrmPartnerType } from "@services/api/crm/crm.query";
 import { type CreateCrmRequest } from "@services/api/crm/crm.type";
 
 import { cn } from "@utils/shadcn";
 
 import FormSelect from "../../company-settings/_components/FormSelect";
-import { type ProgressFilterOptions } from "./progressView";
+import PartnerSearchField from "./PartnerSearchField";
+import { type PartnerOption, type ProgressFilterOptions } from "./progressView";
 
 /** 서버에 길이 제한이 없어 화면에서 막는다 — 목록 한 칸에 들어갈 만큼 */
 const MAX_NAME_LENGTH = 100;
@@ -42,8 +44,17 @@ const EMPTY_VALUES: TargetFormValues = {
   contact_email: "",
 };
 
-/** 빈 칸은 보내지 않는다 — 선택 항목은 생략하면 비어 있는 채로 저장된다 */
-const toRequest = (values: TargetFormValues): Omit<CreateCrmRequest, "source_workspace_uid"> => ({
+type TabKey = "search" | "manual";
+
+/**
+ * 빈 칸은 보내지 않는다 — 선택 항목은 생략하면 비어 있는 채로 저장된다.
+ * 검색해서 고른 상대면 그 워크스페이스와 연결한다(target_workspace_uid) — 카테고리는 서버가 상대 정보로 채운다
+ */
+const toRequest = (
+  values: TargetFormValues,
+  partner: PartnerOption | null,
+): Omit<CreateCrmRequest, "source_workspace_uid"> => ({
+  target_workspace_uid: partner?.workspaceUid,
   company_name: values.company_name.trim(),
   country: values.country || undefined,
   city: values.city.trim() || undefined,
@@ -52,13 +63,12 @@ const toRequest = (values: TargetFormValues): Omit<CreateCrmRequest, "source_wor
   contact_email: values.contact_email.trim() || undefined,
 });
 
-type TabKey = "search" | "manual";
-
 type AddProgressTargetModalProps = {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   /** 「바이어」 또는 「브랜드」 — 브랜드 워크스페이스는 바이어를, 바이어 워크스페이스는 브랜드를 추가한다 */
   partnerLabel: string;
+  partnerType: CrmPartnerType;
   /** 국가·계약 방식 선택지 — 목록 응답의 필터 선택지와 같은 값을 써야 필터에 걸린다 */
   options: ProgressFilterOptions;
   isPending: boolean;
@@ -70,14 +80,16 @@ type AddProgressTargetModalProps = {
 /**
  * 관리 대상 추가 (피그마 693:1867 · 693:1925).
  *
- * 「DB에서 검색」 탭은 자동완성 응답에 워크스페이스 uid가 없어 연결할 수 없다(백엔드 요청).
- * 그동안은 탭만 보여주고 「직접 입력」으로 연다.
- * 도시는 시안에서 선택 박스지만 선택지가 없어 직접 입력으로 둔다.
+ * - 「검색해서 추가」(기본 탭): 플랫폼의 상대를 골라 그 워크스페이스와 연결한다.
+ *   고른 상대의 담당자 이름·메일은 미리 채우고(고칠 수 있다), 국가도 함께 보낸다 — 서버가 연결해도 국가를 채우지 않는다(백엔드 요청).
+ *   목록에 없으면 「직접 추가」로 넘어가며 친 이름을 그대로 채운다.
+ * - 「직접 입력」: 플랫폼에 없는 상대. 도시는 시안에서 선택 박스지만 선택지가 없어 직접 입력으로 둔다.
  */
 export default function AddProgressTargetModal({
   isOpen,
   onOpenChange,
   partnerLabel,
+  partnerType,
   options,
   isPending,
   errorMessage,
@@ -86,13 +98,18 @@ export default function AddProgressTargetModal({
   // React Compiler 제외 — register 폼은 reset 뒤 입력칸이 갱신되지 않는다(BasicInfoSection 주석 참고)
   "use no memo";
 
-  const [activeTab, setActiveTab] = useState<TabKey>("manual");
+  const [activeTab, setActiveTab] = useState<TabKey>("search");
+  // 검색해서 고른 상대 — 「직접 입력」 탭에서는 늘 비어 있다
+  const [partner, setPartner] = useState<PartnerOption | null>(null);
 
   const {
     control,
     register,
     handleSubmit,
     reset,
+    setValue,
+    setError,
+    clearErrors,
     formState: { errors },
   } = useForm<TargetFormValues>({
     resolver: zodResolver(targetSchema),
@@ -103,14 +120,50 @@ export default function AddProgressTargetModal({
   useEffect(() => {
     if (!isOpen) {
       reset(EMPTY_VALUES);
-      setActiveTab("manual");
+      setActiveTab("search");
+      setPartner(null);
     }
   }, [isOpen, reset]);
 
-  const tabs: { key: TabKey; label: string; disabled: boolean }[] = [
-    { key: "search", label: "검색해서 추가", disabled: true },
-    { key: "manual", label: "직접 입력", disabled: false },
+  const tabs: { key: TabKey; label: string }[] = [
+    { key: "search", label: "검색해서 추가" },
+    { key: "manual", label: "직접 입력" },
   ];
+
+  /** 탭을 바꾸면 고른 상대를 놓는다 — 직접 입력한 건이 다른 워크스페이스와 연결되면 안 된다 */
+  const changeTab = (tab: TabKey) => {
+    setActiveTab(tab);
+    setPartner(null);
+    clearErrors();
+  };
+
+  /** 상대를 고르면 이름·국가·담당자를 채운다. 고르기를 취소하면 그 값들을 비운다 */
+  const handleSelectPartner = (option: PartnerOption | null) => {
+    setPartner(option);
+    clearErrors("company_name");
+    setValue("company_name", option?.name ?? "");
+    setValue("country", option?.country ?? "");
+    setValue("contact_name", option?.contactName ?? "");
+    setValue("contact_email", option?.contactEmail ?? "");
+  };
+
+  const handleManualAdd = (keyword: string) => {
+    changeTab("manual");
+    setValue("company_name", keyword);
+  };
+
+  const submit = handleSubmit(values => {
+    // 검색 탭에서는 목록에서 골라야 한다 — 친 글자만으로는 어느 워크스페이스인지 모른다
+    if (activeTab === "search" && !partner) {
+      setError("company_name", { message: `목록에서 ${partnerLabel}를 골라주세요` });
+      return;
+    }
+    onSubmit(toRequest(values, activeTab === "search" ? partner : null));
+  });
+
+  // 검색 탭은 고르기 전 이름이 비어 있어 스키마의 「이름을 입력해주세요」가 먼저 뜬다 — 검색 탭에 맞는 문구로 바꾼다
+  const searchError =
+    errors.company_name && !partner ? `목록에서 ${partnerLabel}를 골라주세요` : errors.company_name?.message;
 
   return (
     <Modal isOpen={isOpen} onOpenChange={onOpenChange} className="w-full sm:max-w-[480px]">
@@ -125,59 +178,69 @@ export default function AddProgressTargetModal({
               type="button"
               role="tab"
               aria-selected={isActive}
-              disabled={tab.disabled}
-              onClick={() => setActiveTab(tab.key)}
+              onClick={() => changeTab(tab.key)}
               className={cn(
                 "focus-visible:ring-ring -mb-px h-11 border-b-2 px-2 text-sm tracking-[-0.7px] transition-colors focus-visible:ring-2 focus-visible:outline-none",
                 isActive
                   ? "text-text-primary border-text-primary font-bold"
                   : "text-text-secondary hover:text-text-primary border-transparent font-medium",
-                "disabled:text-text-disabled disabled:cursor-not-allowed",
               )}
             >
               {tab.label}
-              {/* title은 탭 이름을 덮어써 스크린리더가 「준비 중이에요」만 읽는다 — 보이는 꼬리표로 둔다 */}
-              {tab.disabled && <span className="ml-1 text-[11px] font-medium">(준비 중)</span>}
             </button>
           );
         })}
       </div>
 
-      <form noValidate onSubmit={handleSubmit(values => onSubmit(toRequest(values)))}>
+      <form noValidate onSubmit={submit}>
         <ModalBody className="gap-6 space-y-0 py-2">
-          <Input
-            id="company_name"
-            size="md"
-            label={`${partnerLabel} 이름`}
-            required
-            autoFocus
-            autoComplete="off"
-            placeholder={`${partnerLabel}명을 입력해주세요`}
-            error={Boolean(errors.company_name)}
-            errorText={errors.company_name?.message}
-            {...register("company_name")}
-          />
+          {activeTab === "search" ? (
+            // 시안(693:1867): 이름 검색 · 계약 방식 · 담당자 — 국가·도시는 고른 상대의 정보로 채운다
+            <PartnerSearchField
+              partnerType={partnerType}
+              partnerLabel={partnerLabel}
+              selected={partner}
+              onSelect={handleSelectPartner}
+              onManualAdd={handleManualAdd}
+              errorText={searchError}
+            />
+          ) : (
+            <>
+              <Input
+                id="company_name"
+                size="md"
+                label={`${partnerLabel} 이름`}
+                required
+                autoFocus
+                autoComplete="off"
+                placeholder={`${partnerLabel}명을 입력해주세요`}
+                error={Boolean(errors.company_name)}
+                errorText={errors.company_name?.message}
+                {...register("company_name")}
+              />
 
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-3">
-            <FormSelect
-              control={control}
-              name="country"
-              label="국가"
-              labelClassName="text-sm"
-              placeholder="국가를 선택해주세요"
-              options={options.countries}
-            />
-            <Input
-              id="city"
-              size="md"
-              label="도시"
-              autoComplete="off"
-              placeholder="도시를 입력해주세요"
-              error={Boolean(errors.city)}
-              errorText={errors.city?.message}
-              {...register("city")}
-            />
-          </div>
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-3">
+                <FormSelect
+                  control={control}
+                  name="country"
+                  label="국가"
+                  labelClassName="text-sm"
+                  placeholder="국가를 선택해주세요"
+                  options={options.countries}
+                />
+                <Input
+                  id="city"
+                  size="md"
+                  label="도시"
+                  autoComplete="off"
+                  placeholder="도시를 입력해주세요"
+                  error={Boolean(errors.city)}
+                  errorText={errors.city?.message}
+                  {...register("city")}
+                />
+              </div>
+            </>
+          )}
 
           <FormSelect
             control={control}

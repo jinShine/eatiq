@@ -1,6 +1,7 @@
 import axiosClientInstance from "@services/axios.client";
 
 import {
+  type BrandAutocompleteResponse,
   type BrandCompletionResponse,
   type BrandCompletionScope,
   type BrandDashboardResponse,
@@ -75,6 +76,12 @@ const ENDPOINTS = {
 /************************************
  * 조회
  ************************************/
+/** 브랜드 기업명 자동완성 — keyword는 2글자 이상 */
+export async function getBrandAutocomplete(keyword: string): Promise<BrandAutocompleteResponse> {
+  const res = await axiosClientInstance.get<BrandAutocompleteResponse>(ENDPOINTS.autocomplete, { params: { keyword } });
+  return res.data;
+}
+
 /** 대시보드 — 완성도·권장 항목·다음 액션·진행 단계 건수·최근 활동을 한 번에 */
 export async function getBrandDashboard(workspaceId: string): Promise<BrandDashboardResponse> {
   const res = await axiosClientInstance.get<BrandDashboardResponse>(ENDPOINTS.dashboard(workspaceId));

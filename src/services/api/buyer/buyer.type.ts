@@ -76,3 +76,7 @@ export type BuyerCompletion = {
  * 대시보드 — GET /api/workspace/{workspace_uid}/buyer/dashboard
  ************************************/
 export type BuyerDashboardResponse = components["schemas"]["GetBuyerDashboardResponseDto"];
+
+/** 자동완성 — 진행 관리 「검색해서 추가」. 2글자 이상부터(미만은 400) */
+export type BuyerAutocompleteResponse = components["schemas"]["AutocompleteBuyerResponseDto"];
+export type BuyerAutocompleteItem = components["schemas"]["BuyerAutocompleteItemDto"];

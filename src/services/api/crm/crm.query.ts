@@ -2,7 +2,9 @@ import { keepPreviousData, useInfiniteQuery, useMutation, useQuery, useQueryClie
 
 import { useInvalidateQueries } from "@hooks/commons";
 
+import { getBrandAutocomplete } from "../brand/brand.api";
 import { brandKeys } from "../brand/brand.query";
+import { getBuyerAutocomplete } from "../buyer/buyer.api";
 import { buyerKeys } from "../buyer/buyer.query";
 import { IS_MOCK } from "../mock";
 import {
@@ -25,6 +27,12 @@ import {
   type UpdateCrmActionRequest,
 } from "./crm.type";
 
+/** 관리 대상의 유형 — 브랜드 워크스페이스는 바이어를, 바이어 워크스페이스는 브랜드를 관리한다 */
+export type CrmPartnerType = "buyer" | "brand";
+
+/** 자동완성은 2글자부터 — 1글자는 서버가 400을 준다 */
+export const PARTNER_SEARCH_MIN_LENGTH = 2;
+
 export type CrmListFilters = Pick<CrmListQuery, "keyword" | "country" | "category" | "contract_type">;
 
 export const crmKeys = {
@@ -32,6 +40,8 @@ export const crmKeys = {
   lists: (workspaceId: string) => [...crmKeys.all, "list", workspaceId] as const,
   list: (workspaceId: string, filters: CrmListFilters) => [...crmKeys.lists(workspaceId), filters] as const,
   detail: (crmId: string) => [...crmKeys.all, "detail", crmId] as const,
+  partnerSearch: (partnerType: CrmPartnerType, keyword: string) =>
+    [...crmKeys.all, "partner-search", partnerType, keyword] as const,
 };
 
 /**
@@ -206,5 +216,18 @@ export function useDeleteCrmAction(workspaceId: string, crmId: string) {
   return useMutation({
     mutationFn: (actionId: string) => deleteCrmAction(actionId),
     onSuccess: invalidate,
+  });
+}
+
+/**
+ * 「검색해서 추가」의 상대 검색 — 상대 유형에 맞는 자동완성을 부른다.
+ * 글자를 더 칠 때 목록이 비었다 다시 차지 않도록 새 결과가 올 때까지 이전 결과를 보여준다.
+ */
+export function useCrmPartnerSearch(partnerType: CrmPartnerType, keyword: string) {
+  return useQuery({
+    queryKey: crmKeys.partnerSearch(partnerType, keyword),
+    queryFn: () => (partnerType === "buyer" ? getBuyerAutocomplete(keyword) : getBrandAutocomplete(keyword)),
+    enabled: keyword.length >= PARTNER_SEARCH_MIN_LENGTH && !IS_MOCK,
+    placeholderData: keepPreviousData,
   });
 }

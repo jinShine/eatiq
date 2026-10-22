@@ -144,3 +144,7 @@ export type BrandCompletion = {
  * 대시보드 — GET /api/workspace/{workspace_uid}/brand/dashboard
  ************************************/
 export type BrandDashboardResponse = components["schemas"]["GetBrandDashboardResponseDto"];
+
+/** 자동완성 — 진행 관리 「검색해서 추가」. 2글자 이상부터(미만은 400) */
+export type BrandAutocompleteResponse = components["schemas"]["AutocompleteBrandResponseDto"];
+export type BrandAutocompleteItem = components["schemas"]["BrandAutocompleteItemDto"];

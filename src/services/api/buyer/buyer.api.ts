@@ -1,6 +1,7 @@
 import axiosClientInstance from "@services/axios.client";
 
 import {
+  type BuyerAutocompleteResponse,
   type BuyerCompletionResponse,
   type BuyerDashboardResponse,
   type BuyerDetailResponse,
@@ -25,6 +26,7 @@ const buildBuyerPath = (workspaceId: string) => `${BASE_PATH}/${workspaceId}/buy
 
 const ENDPOINTS = {
   list: `${BASE_PATH}/buyer/list`,
+  autocomplete: `${BASE_PATH}/buyer/autocomplete`,
   detail: (buyerId: string) => `${BASE_PATH}/buyer/${buyerId}`,
   basic: (workspaceId: string) => `${buildBuyerPath(workspaceId)}/basic`,
   status: (workspaceId: string) => `${buildBuyerPath(workspaceId)}/status`,
@@ -38,6 +40,12 @@ const ENDPOINTS = {
 /************************************
  * 바이어 탐색
  ************************************/
+/** 바이어 기업명 자동완성 — keyword는 2글자 이상 */
+export async function getBuyerAutocomplete(keyword: string): Promise<BuyerAutocompleteResponse> {
+  const res = await axiosClientInstance.get<BuyerAutocompleteResponse>(ENDPOINTS.autocomplete, { params: { keyword } });
+  return res.data;
+}
+
 /** 대시보드 — 완성도·권장 항목·다음 액션·진행 단계 건수·최근 활동을 한 번에 */
 export async function getBuyerDashboard(workspaceId: string): Promise<BuyerDashboardResponse> {
   const res = await axiosClientInstance.get<BuyerDashboardResponse>(ENDPOINTS.dashboard(workspaceId));
