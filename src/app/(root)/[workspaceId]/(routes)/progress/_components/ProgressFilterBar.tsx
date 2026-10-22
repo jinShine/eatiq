@@ -53,41 +53,46 @@ export default function ProgressFilterBar({
   const patch = (key: keyof ProgressFilters) => (value: string) => onChange({ ...filters, [key]: value });
 
   return (
-    // 모바일: 「검색 + 추가 버튼」 한 줄, 칩은 아랫줄에서 가로 스크롤 — 한 줄에 다 넣으면 칩이 화면 밖으로 사라진다
-    // 데스크톱(md~): 시안대로 한 줄. 추가 버튼만 오른쪽 끝
-    <div className="border-border grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 border-b px-6 py-3 md:flex md:h-16 md:gap-4 md:py-0">
-      {/* Input 바깥 틀이 h-full이라 그대로 두면 필터바 높이(64px)로 늘어나 입력칸이 위로 붙는다 — 한 번 감싼다 */}
-      <div className="min-w-0 md:w-60 md:shrink-0">
-        <Input
-          size="sm"
-          placeholder="검색"
-          aria-label={`${partnerLabel} 이름·담당자 검색`}
-          startAdornment={<Search className="text-text-disabled size-4" />}
-          value={filters.keyword}
-          onChange={event => patch("keyword")(event.target.value)}
-        />
-      </div>
+    // 줄 나눔은 화면 폭이 아니라 필터바 자체의 폭으로 정한다(컨테이너 쿼리) — 사이드바를 펼치고 접으면 본문 폭이 달라진다.
+    // 한 줄(시안)에 필요한 폭: 검색 240 + 칩·초기화 395 + 추가 117 + 간격 32 + 좌우 여백 48 ≈ 832px
+    // - 그보다 좁으면: 「검색 + 추가 버튼」 / 「칩 + 초기화」 두 줄 — 한 줄에 넣으면 칩·초기화가 가려진다
+    // - 넓으면: 시안대로 한 줄, 추가 버튼만 오른쪽 끝
+    <div className="border-border @container border-b">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-6 py-3 @[53rem]:flex @[53rem]:h-16 @[53rem]:gap-4 @[53rem]:py-0">
+        {/* Input 바깥 틀이 h-full이라 그대로 두면 필터바 높이(64px)로 늘어나 입력칸이 위로 붙는다 — 한 번 감싼다 */}
+        <div className="min-w-0 @[53rem]:w-60 @[53rem]:shrink-0">
+          <Input
+            size="sm"
+            placeholder="검색"
+            aria-label={`${partnerLabel} 이름·담당자 검색`}
+            startAdornment={<Search className="text-text-disabled size-4" />}
+            value={filters.keyword}
+            onChange={event => patch("keyword")(event.target.value)}
+          />
+        </div>
 
-      <Button size="sm" className="shrink-0 md:order-last md:ml-auto" onClick={onAdd}>
-        <Plus className="size-4" />
-        관리 기록 추가
-      </Button>
+        <Button size="sm" className="shrink-0 @[53rem]:order-last @[53rem]:ml-auto" onClick={onAdd}>
+          <Plus className="size-4" />
+          관리 기록 추가
+        </Button>
 
-      <div className="col-span-2 flex min-w-0 items-center gap-2 overflow-x-auto [&>*]:shrink-0">
-        <FilterChip label="국가" value={filters.country} options={options.countries} onChange={patch("country")} />
-        <FilterChip
-          label="카테고리"
-          value={filters.category}
-          options={options.categories}
-          onChange={patch("category")}
-        />
-        <FilterChip
-          label="계약 방식"
-          value={filters.contractType}
-          options={options.contractTypes}
-          onChange={patch("contractType")}
-        />
-        <FilterResetButton disabled={!hasActiveFilter} onClick={onReset} />
+        {/* 아주 좁은 화면(모바일)에서는 두 줄이어도 칩이 넘쳐 이 줄만 가로로 스크롤한다 */}
+        <div className="col-span-2 flex min-w-0 items-center gap-2 overflow-x-auto [&>*]:shrink-0">
+          <FilterChip label="국가" value={filters.country} options={options.countries} onChange={patch("country")} />
+          <FilterChip
+            label="카테고리"
+            value={filters.category}
+            options={options.categories}
+            onChange={patch("category")}
+          />
+          <FilterChip
+            label="계약 방식"
+            value={filters.contractType}
+            options={options.contractTypes}
+            onChange={patch("contractType")}
+          />
+          <FilterResetButton disabled={!hasActiveFilter} onClick={onReset} />
+        </div>
       </div>
     </div>
   );
