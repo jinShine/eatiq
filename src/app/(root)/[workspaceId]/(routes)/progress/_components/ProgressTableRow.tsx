@@ -36,7 +36,7 @@ export default function ProgressTableRow({ row, onDelete }: ProgressTableRowProp
       <div role="cell" className="flex min-w-0 items-center gap-2.5 pr-3">
         {/* 방치 배지 (피그마 944:6316) — 이름 앞, 서버 판정(is_neglected) */}
         {row.isNeglected && (
-          <span className="shrink-0 rounded-full bg-[#dc2626] p-1 text-[11px] leading-none font-medium text-white">
+          <span className="shrink-0 rounded-full bg-[#dc2626] px-1 py-[3px] text-[10px] leading-none font-medium text-white">
             방치
           </span>
         )}
