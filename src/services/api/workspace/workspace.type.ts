@@ -86,6 +86,8 @@ export type InvitedWorkspace = {
   type: InvitedWorkspaceItem["type"];
   /** 초대받은 시각 — 워크스페이스 생성 시각(created_time)과 다르다 */
   invitedAt: string | null;
+  /** 초대한 사람 — 서버가 모르면 null(이름·메일 각각도 비어 올 수 있다) */
+  inviter: { name: string | null; email: string | null } | null;
 };
 
 /** 초대 수락·거절 */

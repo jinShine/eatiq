@@ -174,6 +174,7 @@ const toInvitedWorkspace = (item: InvitedWorkspaceItem): InvitedWorkspace => ({
   name: item.name,
   type: item.type,
   invitedAt: item.my_member_info.invited_time,
+  inviter: item.inviter,
 });
 
 /** 내가 받은 초대 — 초대 수락 화면, 워크스페이스 없는 빈 화면, 사이드바가 같은 캐시를 쓴다 */

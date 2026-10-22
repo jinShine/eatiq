@@ -57,7 +57,7 @@ export default function NextActionSection({ workspaceId, actions }: NextActionSe
                   </span>
                 </div>
                 <p className="text-text-primary text-sm font-medium tracking-[-0.7px]">{action.title}</p>
-                {/* 서버는 내용이 없으면 제목을 그대로 넣어 준다 — 같으면 한 번만 보여준다 */}
+                {/* 메모가 제목과 같으면 한 번만 보여준다 */}
                 {action.description && action.description !== action.title && (
                   <p className="line-clamp-2 text-sm font-medium tracking-[-0.7px] text-[#6b7280]">
                     {action.description}

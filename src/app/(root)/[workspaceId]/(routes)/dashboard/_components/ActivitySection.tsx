@@ -25,6 +25,11 @@ function ActivityContent({ activity }: { activity: ActivityView }) {
         <span className="text-sm font-bold tracking-[-0.7px]">
           <span className="text-text-primary">{activity.title}</span>
           <span className="font-medium text-[#6b7280]"> · {activity.time}</span>
+          {activity.isDeleted && (
+            <span className="ml-2 rounded bg-[#f3f4f6] px-1.5 py-0.5 align-middle text-[11px] font-medium text-[#6b7280]">
+              삭제된 진행 건
+            </span>
+          )}
         </span>
         <span className="text-xs font-medium tracking-[-0.55px] text-[#6b7280]">{activity.message}</span>
       </span>
@@ -39,7 +44,7 @@ type ActivitySectionProps = {
 
 /**
  * 최근 활동 (피그마 59:6714) — 최신순 최대 10개. 진행 관리 건이면 누르면 그 상세로 간다.
- * 이미 지운 건이면 상세가 404 → 토스트 후 목록으로 돌아온다(진행 관리 상세의 처리).
+ * 이미 지운 건(is_deleted)은 누르기 전에 알 수 있게 「삭제된 진행 건」을 붙이고 이동하지 않는다.
  */
 export default function ActivitySection({ workspaceId, activities }: ActivitySectionProps) {
   return (
@@ -54,7 +59,7 @@ export default function ActivitySection({ workspaceId, activities }: ActivitySec
         <ul className="divide-y divide-[rgba(224,226,229,0.8)]">
           {activities.map(activity => (
             <li key={activity.id}>
-              {activity.crmId ? (
+              {activity.crmId && !activity.isDeleted ? (
                 <Link
                   href={`/${workspaceId}/progress/${activity.crmId}`}
                   className="hover:bg-secondary-background/60 focus-visible:ring-primary -mx-2 flex gap-3.5 rounded-lg px-2 py-3 transition-colors focus-visible:ring-2 focus-visible:outline-none"

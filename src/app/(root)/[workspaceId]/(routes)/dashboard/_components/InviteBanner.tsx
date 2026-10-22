@@ -8,13 +8,33 @@ import { Mail } from "lucide-react";
 import { Button, Toast } from "@components/ui";
 
 import { useInvitedWorkspaces, useRespondInviteMutation } from "@services/api/workspace/workspace.query";
+import { type InvitedWorkspace } from "@services/api/workspace/workspace.type";
 
 /**
  * 받은 워크스페이스 초대 (피그마 64:255) — 받은 초대가 있을 때만 맨 위에 보인다.
  * 시안에 없는 왼쪽 메일 아이콘은 사용자 요청으로 더했다(2026-10-19).
- * 시안의 「초대한 사람(이름·메일)」은 API가 주지 않아 날짜만 보여준다(백엔드 요청).
+ * 초대한 사람(이름·메일)은 서버가 2026-10-22부터 준다.
  * 수락해도 지금 워크스페이스에 머물고, 토스트의 「이동」으로 원할 때 옮겨 간다.
  */
+/**
+ * 시안 문구: 「민서 (minseo@eatiq.io)님이 2026.07.05에 초대했습니다.」
+ * 초대한 사람·날짜 중 없는 것은 빼고 만든다 — 둘 다 없으면 문구를 그리지 않는다
+ */
+const inviteMessage = ({ inviter, invitedAt }: InvitedWorkspace) => {
+  const who = inviter?.name
+    ? inviter.email
+      ? `${inviter.name} (${inviter.email})님이`
+      : `${inviter.name}님이`
+    : inviter?.email
+      ? `${inviter.email}님이`
+      : "";
+  const when = invitedAt ? `${dayjs(invitedAt).format("YYYY.MM.DD")}에` : "";
+  if (!who && !when) {
+    return null;
+  }
+  return `${[who, when].filter(Boolean).join(" ")} 초대했습니다.`;
+};
+
 /** 「이동」 버튼이 있는 토스트를 띄워 두는 시간 */
 const ACTION_TOAST_MS = 8000;
 
@@ -61,10 +81,8 @@ export default function InviteBanner() {
                 <p className="truncate text-lg font-bold tracking-[-0.9px] text-[#1d1d1f]">
                   {invite.name} 워크스페이스 초대
                 </p>
-                {invite.invitedAt && (
-                  <p className="text-sm font-medium tracking-[-0.7px] text-[#6b7280]">
-                    {dayjs(invite.invitedAt).format("YYYY.MM.DD")}에 초대했습니다.
-                  </p>
+                {inviteMessage(invite) && (
+                  <p className="text-sm font-medium tracking-[-0.7px] text-[#6b7280]">{inviteMessage(invite)}</p>
                 )}
               </div>
             </div>

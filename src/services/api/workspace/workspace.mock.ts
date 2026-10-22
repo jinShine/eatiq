@@ -144,6 +144,7 @@ export const mockInvitedWorkspaces: InvitedWorkspacesResponse = {
       uid: 3,
       name: "버즈 브랜드 3",
       type: "brand",
+      inviter: { name: "민서", email: "minseo@eatiq.io" },
       created_time: "2026-09-01T09:00:00.000Z",
       my_member_info: {
         uid: 31,
