@@ -1,12 +1,13 @@
 import axiosClientInstance from "@services/axios.client";
 
-import { type UploadImageResponse, type UploadVideoResponse } from "./upload.type";
+import { type UploadFileResponse, type UploadImageResponse, type UploadVideoResponse } from "./upload.type";
 
 const BASE_PATH = "/api/upload";
 
 const ENDPOINTS = {
   image: `${BASE_PATH}/image`,
   video: `${BASE_PATH}/video`,
+  file: `${BASE_PATH}/file`,
 };
 
 /** 업로드 진행률(0~100) 콜백 — 큰 영상은 오래 걸려 칸에 진행률을 보여준다 */
@@ -35,3 +36,7 @@ export const uploadImage = (file: File, onProgress?: OnProgress) =>
 /** 영상 업로드 — 서버 제한: mp4·webm·mov·avi, 100MB */
 export const uploadVideo = (file: File, onProgress?: OnProgress) =>
   upload<UploadVideoResponse>(ENDPOINTS.video, file, onProgress);
+
+/** 문서·일반 파일 업로드 — 서버 제한: 실행 파일 차단, 50MB. 진행 기록 첨부(file_list)에 쓴다 */
+export const uploadFile = (file: File, onProgress?: OnProgress) =>
+  upload<UploadFileResponse>(ENDPOINTS.file, file, onProgress);

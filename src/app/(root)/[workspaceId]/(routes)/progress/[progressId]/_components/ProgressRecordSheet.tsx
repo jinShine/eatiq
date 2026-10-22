@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect } from "react";
-import { Controller, useFieldArray, useForm } from "react-hook-form";
+import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, Sparkles, Trash2 } from "lucide-react";
 
 import { Button, Input, Select, SelectItem, Sheet, Textarea } from "@components/ui";
 
+import useRecordFileUpload from "../_hooks/useRecordFileUpload";
+import RecordFileField from "./RecordFileField";
 import { type ProgressRecord } from "./progressDetailView";
 import {
   EMPTY_ACTION,
@@ -38,7 +40,7 @@ type ProgressRecordSheetProps = {
  * 진행 기록 추가 · 수정 드로어 (피그마 693:2471).
  *
  * - 「AI 초안 생성」은 API가 없어 버튼만 둔다(비활성).
- * - 「관련 파일 업로드」는 파일 첨부 단계에서 붙인다(비활성).
+ * - 「관련 파일 업로드」는 고르는 즉시 올리고, 다 올라가기 전에는 저장을 막는다. 저장하면 파일 목록도 통째로 바뀐다.
  * - 다음 액션은 진행 기록 안에 배열로 저장된다(2026-10-20 구조 변경). 수정할 때도 고치기·지우기·추가가 되며,
  *   저장하면 폼의 배열로 통째로 바뀐다 — 각 행은 보이지 않는 번호(idx)와 완료 여부를 들고 있다가 그대로 보낸다.
  */
@@ -59,6 +61,8 @@ export default function ProgressRecordSheet({
     register,
     control,
     reset,
+    getValues,
+    setValue,
     handleSubmit,
     formState: { errors },
   } = useForm<ProgressRecordFormValues>({
@@ -69,14 +73,29 @@ export default function ProgressRecordSheet({
   // 다음 액션은 개수가 정해져 있지 않아 배열 필드로 관리한다
   const { fields, append, remove } = useFieldArray({ control, name: "next_actions" });
 
+  // 첨부 파일 — 업로드가 끝난 것만 폼 값에 들어간다. 동시에 끝나도 빠지지 않게 그때의 값에 붙인다
+  const files = useWatch({ control, name: "file_list" });
+  const setFiles = (next: ProgressRecordFormValues["file_list"]) => setValue("file_list", next, { shouldDirty: true });
+  const fileUpload = useRecordFileUpload({
+    onUploaded: file => setFiles([...getValues("file_list"), file]),
+  });
+  const { reset: resetFileUpload } = fileUpload;
+
   // 열 때마다 새로 채운다 — 추가는 빈 폼, 수정은 그 기록의 값
   useEffect(() => {
     if (isOpen) {
       reset(record ? toRecordFormValues(record) : EMPTY_RECORD);
+      resetFileUpload();
     }
+    // resetFileUpload는 렌더마다 새로 만들어진다(use no memo) — 열고 닫힐 때만 돌린다
   }, [isOpen, record, reset]);
 
-  const submit = handleSubmit(onSubmit);
+  const submit = handleSubmit(values => {
+    // 올라가는 중인 파일을 두고 저장하면 그 파일이 빠진다
+    if (!fileUpload.isUploading) {
+      onSubmit(values);
+    }
+  });
 
   return (
     <Sheet
@@ -92,7 +111,8 @@ export default function ProgressRecordSheet({
               {errorMessage}
             </p>
           )}
-          <Button className="w-full" onClick={submit} isLoading={isPending}>
+          {fileUpload.isUploading && <p className="text-text-tertiary text-xs">파일을 올리는 중이에요</p>}
+          <Button className="w-full" onClick={submit} isLoading={isPending} disabled={fileUpload.isUploading}>
             진행 기록 저장
           </Button>
         </div>
@@ -265,16 +285,18 @@ export default function ProgressRecordSheet({
           </Button>
         </section>
 
-        {/* 관련 파일 업로드 — 파일 첨부 단계에서 붙인다 */}
-        <section className="flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-text-primary text-sm font-bold">관련 파일 업로드</h3>
-            <Button type="button" variant="outline" size="xs" disabled>
-              파일 첨부
-            </Button>
-          </div>
-          <p className="text-text-tertiary text-xs">파일은 최대 개당 10MB 이내, 3개까지 업로드 가능합니다.</p>
-        </section>
+        <RecordFileField
+          files={files}
+          pending={fileUpload.pending}
+          notice={fileUpload.notice}
+          onSelect={selected => fileUpload.select(selected, files.length)}
+          onRemove={url => {
+            setFiles(files.filter(file => file.url !== url));
+            fileUpload.clearNotice();
+          }}
+          onRetry={fileUpload.retry}
+          onDismiss={fileUpload.dismiss}
+        />
       </form>
     </Sheet>
   );

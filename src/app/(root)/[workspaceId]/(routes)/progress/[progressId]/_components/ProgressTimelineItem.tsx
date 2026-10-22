@@ -8,6 +8,7 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 
 import { DropdownMenu, DropdownMenuItem, Switch } from "@components/ui";
 
+import { formatFileSize } from "@utils/functions";
 import { cn } from "@utils/shadcn";
 
 import { type ProgressRecord, type RecordNextAction } from "./progressDetailView";
@@ -174,8 +175,11 @@ export default function ProgressTimelineItem({ record, onEdit, onDelete, onToggl
                 rel="noreferrer noopener"
                 className="border-border text-text-secondary hover:text-text-primary focus-visible:ring-ring flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
               >
-                <Paperclip className="size-3.5" aria-hidden />
-                {file.name}
+                <Paperclip className="size-3.5 shrink-0" aria-hidden />
+                <span className="max-w-60 truncate">{file.name}</span>
+                {file.size !== null && (
+                  <span className="text-text-tertiary shrink-0 font-normal">· {formatFileSize(file.size, 1)}</span>
+                )}
               </a>
             </li>
           ))}

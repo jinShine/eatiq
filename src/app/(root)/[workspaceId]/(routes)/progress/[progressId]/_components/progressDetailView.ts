@@ -28,9 +28,13 @@ export type NextActionSummary = RecordNextAction & {
   actionId: string;
 };
 
+/** 진행 기록 첨부 파일 — 수정할 때 그대로 되돌려 보내야 해서(목록 통째 대체) 크기·형식도 들고 있는다 */
 export type RecordFile = {
   name: string;
   url: string;
+  /** 바이트 · 없으면 null */
+  size: number | null;
+  mimetype: string | null;
 };
 
 /** 진행 기록 1건 */
@@ -77,12 +81,13 @@ const toRecordNextAction = (item: CrmNextActionItem): RecordNextAction => ({
   isDone: item.is_done === "Y",
 });
 
-/** 첨부 파일 — 스펙 타입이 비어 있어(Record<string, never>) 모양을 확인하고 꺼낸다 */
 const toRecordFiles = (fileList: CrmActionRecord["file_list"]): RecordFile[] =>
-  (fileList ?? []).flatMap(file => {
-    const { name, url } = file as { name?: unknown; url?: unknown };
-    return typeof name === "string" && typeof url === "string" ? [{ name, url }] : [];
-  });
+  (fileList ?? []).map(file => ({
+    name: file.name,
+    url: file.url,
+    size: file.size ?? null,
+    mimetype: file.mimetype ?? null,
+  }));
 
 const toProgressRecord = (record: CrmActionRecord): ProgressRecord => ({
   id: String(record.uid),

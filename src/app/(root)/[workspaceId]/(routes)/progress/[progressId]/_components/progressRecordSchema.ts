@@ -39,6 +39,14 @@ const nextActionSchema = z.object({
 const isEmptyNewAction = (action: z.infer<typeof nextActionSchema>) =>
   action.idx === undefined && !action.title && !action.deadline && !action.partner_name && !action.memo;
 
+/** 첨부 파일 1건 — 업로드 API가 준 값. 화면에서 고치지 않고 그대로 보낸다 */
+const actionFileSchema = z.object({
+  name: z.string(),
+  url: z.string(),
+  size: z.number().optional(),
+  mimetype: z.string().optional(),
+});
+
 export const progressRecordSchema = z.object({
   action_type: z.enum(ACTION_TYPE_VALUES, { errorMap: () => ({ message: "진행 타입을 선택해주세요" }) }),
   title: z.string().trim().min(1, "기록 제목을 입력해주세요").max(MAX_TITLE_LENGTH, tooLong(MAX_TITLE_LENGTH)),
@@ -53,10 +61,12 @@ export const progressRecordSchema = z.object({
       }
     });
   }),
+  file_list: z.array(actionFileSchema),
 });
 
 export type ProgressRecordFormValues = z.infer<typeof progressRecordSchema>;
 export type NextActionFormValues = z.infer<typeof nextActionSchema>;
+export type ActionFileFormValues = z.infer<typeof actionFileSchema>;
 
 /** 액션 추가 버튼을 누를 때 붙일 빈 행 */
 export const EMPTY_ACTION: NextActionFormValues = {
@@ -74,6 +84,7 @@ export const EMPTY_RECORD: ProgressRecordFormValues = {
   partner_name: "",
   content: "",
   next_actions: [EMPTY_ACTION], // 시안처럼 첫 액션 1개를 미리 펼쳐둔다
+  file_list: [],
 };
 
 /** 수정할 기록 → 폼 값. 다음 액션은 번호(idx)·완료 여부를 그대로 들고 온다 */
@@ -90,6 +101,12 @@ export const toRecordFormValues = (record: ProgressRecord): ProgressRecordFormVa
     deadline: item.dueDate ?? "",
     partner_name: item.assignee ?? "",
     memo: item.memo ?? "",
+  })),
+  file_list: record.files.map(file => ({
+    name: file.name,
+    url: file.url,
+    size: file.size ?? undefined,
+    mimetype: file.mimetype ?? undefined,
   })),
 });
 
@@ -118,6 +135,7 @@ export const toCreateRequest = (values: ProgressRecordFormValues): Omit<CreateCr
   content: optional(values.content),
   // 새 기록이라 idx는 모두 없다 — 서버가 1부터 발급한다
   next_actions: toNextActionRequests(values.next_actions).map(({ idx: _idx, ...action }) => action),
+  file_list: values.file_list.length > 0 ? values.file_list : undefined,
 });
 
 /**
@@ -125,6 +143,7 @@ export const toCreateRequest = (values: ProgressRecordFormValues): Omit<CreateCr
  * - 선택 칸을 비웠다면 빈 문자열을 보내 지운다 — 빼고 보내면 이전 값이 남는다
  * - 다음 액션은 보낸 배열로 통째로 바뀐다: idx가 있으면 그 항목을 고치고, 없으면 새로 만들고, 빠진 항목은 지워진다.
  *   항목마다 모든 칸을 보내야 한다(빠진 칸은 지워진다)
+ * - 첨부 파일도 보낸 배열로 통째로 바뀐다 — 빈 배열이면 모두 지워진다(빼고 보내면 그대로 남는다)
  */
 export const toUpdateRequest = (values: ProgressRecordFormValues): UpdateCrmActionRequest => ({
   action_type: values.action_type,
@@ -133,4 +152,5 @@ export const toUpdateRequest = (values: ProgressRecordFormValues): UpdateCrmActi
   partner_name: values.partner_name,
   content: values.content,
   next_actions: toNextActionRequests(values.next_actions),
+  file_list: values.file_list,
 });
