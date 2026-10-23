@@ -31,6 +31,11 @@ export default [
       "**/*.config.cjs",
       "**/*.config.mjs",
       "src/services/openapi.ts", // openapi-typescript 자동 생성 파일 (lint 제외)
+      // next-pwa 빌드 산출물 (.gitignore와 동일)
+      "public/sw.js",
+      "public/swe-*.js",
+      "public/workbox-*.js",
+      "public/firebase-messaging-sw.js",
     ],
   },
 
