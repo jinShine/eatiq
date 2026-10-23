@@ -73,7 +73,7 @@ export default function ProgressFilterBar({
 
         <Button size="sm" className="shrink-0 @[53rem]:order-last @[53rem]:ml-auto" onClick={onAdd}>
           <Plus className="size-4" />
-          관리 기록 추가
+          관리 {partnerLabel} 추가
         </Button>
 
         {/* 아주 좁은 화면(모바일)에서는 두 줄이어도 칩이 넘쳐 이 줄만 가로로 스크롤한다 */}
