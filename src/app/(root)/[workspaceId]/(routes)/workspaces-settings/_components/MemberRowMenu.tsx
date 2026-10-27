@@ -32,6 +32,8 @@ const MENU_ITEMS: Partial<Record<string, MenuItem[]>> = {
    * TODO(백엔드): 초대취소 멤버도 제거할 수 있어야 목록이 정리된다.
    */
   초대취소: [{ action: "resendInvite", label: "다시 초대" }],
+  /** 내보낸 멤버도 같은 주소로 다시 초대할 수 있다(실측 201 → 초대중). 확인 모달 문구도 "다시 초대 받아야"라고 안내한다 */
+  강제탈퇴: [{ action: "resendInvite", label: "다시 초대" }],
 };
 
 type MemberRowMenuProps = {
