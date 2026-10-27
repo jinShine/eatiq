@@ -28,9 +28,11 @@ type EmailForm = z.infer<typeof emailSchema>;
 type SignInContainerProps = {
   /** 초대 링크로 들어온 경우 그 이메일을 채워둔다. 다른 주소로 가입하면 초대를 수락할 수 없다 */
   defaultEmail?: string;
+  /** 로그인이 만료돼 들어온 경우 — 왜 다시 로그인해야 하는지 알려준다 */
+  isExpired?: boolean;
 };
 
-export default function SignInContainer({ defaultEmail = "" }: SignInContainerProps) {
+export default function SignInContainer({ defaultEmail = "", isExpired = false }: SignInContainerProps) {
   const [sentEmail, setSentEmail] = useState<string | null>(null);
 
   const {
@@ -79,6 +81,12 @@ export default function SignInContainer({ defaultEmail = "" }: SignInContainerPr
   return (
     // noValidate가 없으면 브라우저 기본 검증이 제출을 가로채 zod 검증이 돌지 않는다
     <form noValidate onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 p-6">
+      {isExpired && (
+        <p role="status" className="bg-secondary-background text-text-secondary rounded-lg px-3 py-2.5 text-xs">
+          로그인이 만료됐어요. 다시 로그인해주세요.
+        </p>
+      )}
+
       <div className="flex flex-col gap-2">
         <h1 className="text-text-primary text-lg font-bold tracking-[-0.9px]">로그인</h1>
         <p className="text-text-tertiary text-xs leading-relaxed">

@@ -9,7 +9,7 @@ import { CircleAlert, LogIn, MailCheck, MailX, UserRoundCheck } from "lucide-rea
 import { Button, SpinLoader, Toast } from "@components/ui";
 
 import { useAuthUser } from "@services/api/auth/auth.query";
-import { inviteReturnStorage } from "@services/api/auth/invite-return-storage";
+import { loginReturnStorage } from "@services/api/auth/login-return-storage";
 import { useInvitedWorkspaces, useRespondInviteMutation } from "@services/api/workspace/workspace.query";
 import { tokenStorage } from "@services/token-storage";
 
@@ -43,14 +43,14 @@ export default function InviteContainer({ workspaceId, email }: InviteContainerP
 
   const handleGoLogin = () => {
     // 로그인 메일은 대개 새 탭에서 열린다. 돌아올 곳을 남겨두지 않으면 초대가 끊긴다
-    inviteReturnStorage.set(
+    loginReturnStorage.set(
       `${ROUTES.WORKSPACE.INVITE}?workspace_uid=${workspaceId}&email=${encodeURIComponent(email)}`,
     );
     router.push(`${ROUTES.AUTH.SIGN_IN}?email=${encodeURIComponent(email)}`);
   };
 
   const handleSwitchAccount = () => {
-    inviteReturnStorage.set(
+    loginReturnStorage.set(
       `${ROUTES.WORKSPACE.INVITE}?workspace_uid=${workspaceId}&email=${encodeURIComponent(email)}`,
     );
     tokenStorage.clear();

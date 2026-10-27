@@ -4,6 +4,7 @@ import ROUTES from "@constants/routes";
 
 import { ENV_CLIENT } from "@configs/env/client";
 
+import { loginReturnStorage } from "./api/auth/login-return-storage";
 import { tokenStorage } from "./token-storage";
 
 const axiosClientInstance = axios.create({
@@ -55,6 +56,10 @@ const toUserMessage = (error: AxiosError<{ message?: string | string[] }>) => {
 //
 // 단 인증 화면(/auth/*)은 예외다. 매직링크 검증이 실패했을 때도 401이 오는데,
 // 여기서 리다이렉트를 걸면 화면이 직접 띄우려던 안내(만료·재발송)를 덮어버린다.
+// 화면 하나가 여러 요청을 동시에 보내 401도 여러 번 온다. 첫 번째만 이동시킨다 —
+// 뒤의 401은 토큰이 이미 지워져 「만료 아님」으로 보고 안내 없는 주소로 덮어쓴다
+let isRedirectingToSignIn = false;
+
 axiosClientInstance.interceptors.response.use(
   response => response,
   async (error: AxiosError<{ message?: string | string[] }>) => {
@@ -74,10 +79,14 @@ axiosClientInstance.interceptors.response.use(
       }
     }
 
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 && !isRedirectingToSignIn) {
+      // 토큰이 있었는데 401이면 만료다 — 로그인 화면에서 왜 나왔는지 알려준다
+      const hadToken = Boolean(tokenStorage.getAccessToken());
       tokenStorage.clear();
       if (typeof window !== "undefined" && !window.location.pathname.startsWith(ROUTES.AUTH.ROOT)) {
-        window.location.href = ROUTES.AUTH.SIGN_IN;
+        isRedirectingToSignIn = true;
+        loginReturnStorage.saveCurrent();
+        window.location.href = hadToken ? `${ROUTES.AUTH.SIGN_IN}?expired=1` : ROUTES.AUTH.SIGN_IN;
       }
     }
 

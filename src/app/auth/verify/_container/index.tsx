@@ -14,7 +14,7 @@ import { Button, Input, SpinLoader, Toast } from "@components/ui";
 
 import { useRegisterMutation, useSendMagicLinkMutation, useVerifyMagicLink } from "@services/api/auth/auth.query";
 import { type AuthUser } from "@services/api/auth/auth.type";
-import { inviteReturnStorage } from "@services/api/auth/invite-return-storage";
+import { loginReturnStorage } from "@services/api/auth/login-return-storage";
 import { type PendingSignup, pendingSignupStorage } from "@services/api/auth/signup-storage";
 import { tokenStorage } from "@services/token-storage";
 
@@ -101,8 +101,8 @@ export default function AuthVerifyContainer({ token, email }: Props) {
 
     pendingSignupStorage.clear();
 
-    // 초대 링크로 들어왔다면 그리로 돌려보낸다. 루트로 보내면 초대가 영영 수락되지 않는다
-    const returnTo = inviteReturnStorage.take();
+    // 초대 링크나 로그인이 필요해 튕겨 나온 화면이 있으면 그리로 돌려보낸다. 루트로 보내면 초대가 영영 수락되지 않는다
+    const returnTo = loginReturnStorage.take();
     router.replace(returnTo ?? "/");
   }
 
