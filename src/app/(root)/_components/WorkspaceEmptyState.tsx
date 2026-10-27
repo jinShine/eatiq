@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { LogOut } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 
 import {
@@ -11,7 +12,9 @@ import {
   type WorkspaceType,
   WorkspaceTypeCard,
 } from "@components/custom/workspace";
+import { Button } from "@components/ui";
 
+import { useAuthUser, useLogoutMutation } from "@services/api/auth/auth.query";
 import { type InvitedWorkspace } from "@services/api/workspace/workspace.type";
 
 type WorkspaceEmptyStateProps = {
@@ -50,8 +53,20 @@ export default function WorkspaceEmptyState({ invites, onCreated, onAccepted }: 
 
   const hasInvites = invites.length > 0;
 
+  // 사이드바가 없는 화면이라 로그아웃할 곳이 따로 없다 — 다른 계정으로 바꿀 수 있게 오른쪽 위에 둔다
+  const user = useAuthUser();
+  const { mutate: logout, isPending: isLoggingOut } = useLogoutMutation();
+
   return (
-    <div className="flex min-h-[100dvh] items-center justify-center px-6 py-16">
+    <div className="relative flex min-h-[100dvh] items-center justify-center px-6 py-16">
+      <div className="absolute top-4 right-4 flex items-center gap-2 sm:top-6 sm:right-6">
+        {user?.email && <span className="text-text-tertiary hidden text-xs sm:inline">{user.email}</span>}
+        <Button variant="ghost" size="sm" isLoading={isLoggingOut} onClick={() => logout()}>
+          <LogOut className="size-4" />
+          로그아웃
+        </Button>
+      </div>
+
       <div className="flex w-full max-w-[640px] flex-col gap-8">
         <motion.div className="flex flex-col gap-2" {...reveal(0)}>
           <p className="text-primary text-xs font-bold tracking-[0.04em] uppercase">Workspace</p>
