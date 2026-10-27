@@ -154,7 +154,8 @@ export default function InviteMemberModal({ isOpen, onOpenChange, isPending, onS
           })}
         </ModalBody>
 
-        <ModalFooter className="border-border border-t pt-4 sm:justify-between sm:space-x-0">
+        {/* 기본 푸터는 모바일에서 순서를 뒤집는다(col-reverse). 여기선 "추가하기"가 입력 칸 바로 아래에 와야 해서 정순으로 쌓는다 */}
+        <ModalFooter className="border-border flex-col gap-3 border-t pt-4 sm:justify-between sm:gap-4 sm:space-x-0">
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -173,7 +174,7 @@ export default function InviteMemberModal({ isOpen, onOpenChange, isPending, onS
             )}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               취소
             </Button>
