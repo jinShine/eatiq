@@ -64,6 +64,9 @@ export function useMyWorkspaces() {
     queryKey: workspaceKeys.my(),
     queryFn: IS_MOCK ? () => mockResolve(mockMyWorkspaces) : getMyWorkspaces,
     select: response => (response.workspaces ?? []).map(toWorkspace),
+    // 소속·등급은 다른 사람(관리자)이 바꾼다. 탭에 돌아올 때 다시 받아야
+    // 내보내진 워크스페이스에 머물거나 강등 뒤에도 관리 버튼이 보이는 일이 없다
+    refetchOnWindowFocus: true,
   });
 }
 
