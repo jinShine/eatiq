@@ -6,10 +6,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
 
 import { SettingsSection } from "@components/custom/settings";
+import { workspaceNameField } from "@components/custom/workspace";
 import { Input } from "@components/ui";
 
 const nameSchema = z.object({
-  name: z.string().trim().min(1, "워크스페이스 이름을 입력해주세요."),
+  name: workspaceNameField,
 });
 
 export type WorkspaceNameForm = z.infer<typeof nameSchema>;

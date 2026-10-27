@@ -13,9 +13,10 @@ import { Button, Input, Modal, ModalBody, ModalFooter, ModalHeader, Toast } from
 import { useCreateWorkspaceMutation } from "@services/api/workspace/workspace.query";
 
 import WorkspaceTypeCard, { WORKSPACE_TYPE_OPTIONS, type WorkspaceType } from "./WorkspaceTypeCard";
+import { workspaceNameField } from "./workspaceName";
 
 const nameSchema = z.object({
-  name: z.string().trim().min(1, "워크스페이스 이름을 입력해주세요."),
+  name: workspaceNameField,
 });
 
 type NameForm = z.infer<typeof nameSchema>;
