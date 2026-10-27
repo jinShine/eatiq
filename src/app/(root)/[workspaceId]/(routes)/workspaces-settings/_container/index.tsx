@@ -64,6 +64,9 @@ export default function WorkspacesSettingsContainer({ workspaceId }: { workspace
   // 관리자에게만 메뉴가 보이고, 자기 자신 행에는 보이지 않는다 (피그마 규칙)
   const canManageMember = (member: WorkspaceMember) => isAdmin && member.id !== myMember?.id;
 
+  /** 서버가 준 문구가 훨씬 정확하다 — "마지막 관리자는 강등할 수 없습니다" ·"멤버가 남아 있어 삭제할 수 없습니다" 같은 안내가 그대로 온다 */
+  const toastError = (error: Error, fallback: string) => Toast.error(error.message || fallback);
+
   const handleInvite: React.ComponentProps<typeof InviteMemberModal>["onSubmit"] = (emails, { setEmailError }) => {
     invite(
       { emails },
@@ -89,13 +92,10 @@ export default function WorkspacesSettingsContainer({ workspaceId }: { workspace
           setIsInviteModalOpen(false);
           Toast.success(`${response.invited_count}명을 초대했어요.`);
         },
-        onError: () => Toast.error("초대에 실패했어요. 다시 시도해주세요."),
+        onError: error => toastError(error, "초대에 실패했어요. 다시 시도해주세요."),
       },
     );
   };
-
-  /** 서버가 준 문구가 훨씬 정확하다 — "마지막 관리자는 강등할 수 없습니다" 같은 안내가 그대로 온다 */
-  const toastError = (error: Error, fallback: string) => Toast.error(error.message || fallback);
 
   const handleMemberAction = (action: MemberAction, member: WorkspaceMember) => {
     // 되돌리기 어려운 둘만 확인을 받는다. 나머지는 눌렀을 때 바로 처리한다
@@ -132,7 +132,7 @@ export default function WorkspacesSettingsContainer({ workspaceId }: { workspace
             Toast.error(response.failed_items[0].reason);
             return;
           }
-          Toast.success(`${member.email} 로 초대를 다시 보냈어요.`);
+          Toast.success(`${member.email}에게 초대를 다시 보냈어요.`);
         },
         onError: error => toastError(error, "초대 재발송에 실패했어요."),
       },
@@ -178,7 +178,7 @@ export default function WorkspacesSettingsContainer({ workspaceId }: { workspace
   const handleUpdateName = (values: WorkspaceNameForm) => {
     updateName(values, {
       onSuccess: () => Toast.success("워크스페이스 이름을 변경했어요."),
-      onError: () => Toast.error("이름 변경에 실패했어요. 다시 시도해주세요."),
+      onError: error => toastError(error, "이름 변경에 실패했어요. 다시 시도해주세요."),
     });
   };
 
@@ -188,9 +188,12 @@ export default function WorkspacesSettingsContainer({ workspaceId }: { workspace
     removeWorkspace(undefined, {
       onSuccess: () => {
         setIsDeleteModalOpen(false);
+        // 다른 워크스페이스로 넘어가므로 무엇이 일어났는지 알려야 한다
+        Toast.success(`${workspaceName} 워크스페이스를 삭제했어요.`);
         router.replace(ROUTES.ROOT);
       },
-      onError: () => Toast.error("워크스페이스 삭제에 실패했어요."),
+      // 멤버·초대 대기가 남아 있으면 서버가 400과 함께 정리 방법을 알려준다
+      onError: error => toastError(error, "워크스페이스 삭제에 실패했어요."),
     });
   };
 
