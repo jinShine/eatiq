@@ -52,5 +52,12 @@ export const seoMetadata: Metadata = {
  * @returns 완성된 메타데이터 객체
  */
 export const configureSEOMetadata = (metadata?: Partial<Metadata>): Metadata => {
+  // 빈 제목을 넘기면 템플릿이 「 | EATIQ LINK」를 만든다. 기본 제목을 다시 넣어도 상위 템플릿이 또 감싸
+  // 「EATIQ LINK | EATIQ LINK」가 되므로, title을 아예 빼서 상위 레이아웃의 제목을 물려받는다
+  if (metadata && "title" in metadata && !metadata.title) {
+    const { title: _parentTitle, ...base } = seoMetadata;
+    const { title: _emptyTitle, ...rest } = metadata;
+    return { ...base, ...rest };
+  }
   return { ...seoMetadata, ...metadata };
 };
