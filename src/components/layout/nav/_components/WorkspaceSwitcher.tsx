@@ -56,7 +56,8 @@ export default function WorkspaceSwitcher({
           aria-label={inviteCount > 0 ? `워크스페이스 전환 · 받은 초대 ${inviteCount}개` : "워크스페이스 전환"}
           className={cn(
             "relative flex items-center rounded-lg hover:bg-white/10",
-            collapsed ? "size-9 justify-center" : "gap-1.5 px-2 py-1.5",
+            // 펼친 상태는 min-w-0이 있어야 긴 이름이 말줄임으로 줄어든다 — 없으면 옆의 사이드바 토글을 밀어낸다
+            collapsed ? "size-9 justify-center" : "min-w-0 gap-1.5 px-2 py-1.5",
           )}
         >
           {/* 드롭다운은 열기 전엔 안 보인다. 새 초대를 놓치지 않게 트리거에 점을 찍는다 */}

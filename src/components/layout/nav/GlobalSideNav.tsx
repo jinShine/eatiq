@@ -109,7 +109,7 @@ export default function GlobalSideNav() {
           onClick={toggle}
           aria-label="사이드바 토글"
           className={cn(
-            "flex items-center justify-center rounded-lg text-white/60 hover:bg-white/10",
+            "flex shrink-0 items-center justify-center rounded-lg text-white/60 hover:bg-white/10",
             collapsed ? "size-9" : "ml-auto p-1.5",
           )}
         >
