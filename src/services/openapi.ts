@@ -2670,6 +2670,167 @@ export interface paths {
     patch: operations["UpdateCrmStageController_updateStage"];
     trace?: never;
   };
+  "/api/store-search": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * 🔥 [NEW 26.10.27] 상가 매물 탐색용 상권 분석 실행
+     * @description ### 📌 상세 역할 및 개요
+     *     - 상가 매물 탐색 팝업에서 사용자가 설정한 기본 탐색 조건을 바탕으로 상권 분석을 실행합니다.
+     *     - 사용자가 입력한 탐색 기본 조건(국가, 도시, 층수, 면적 범위, 임대료 예산 등)을 바탕으로 상권 분석을 수행하고 분석 기록을 생성합니다.
+     *     - 탐색 기준 우선순위(**층수 -> 평수 -> 가격**)에 맞춰 후보 매물을 최대 10건 선별하여 결과 목록(`result`)으로 반환합니다.
+     *
+     *     ---
+     *
+     *     ### 📝 최근 업데이트 이력 (2026.10.27)
+     *     - **신규 API 추가**: 상가 매물 탐색용 상권 분석 실행 엔드포인트(`POST /api/store-search`) 신설
+     *       - **필수 조건**: `country`(국가), `city`(도시) 필수 검증
+     *       - **상세 조건 미사용**: 팝업 기본 조건(층수, 면적, 임대료)만으로 경량 분석 실행
+     *       - **원화(KRW) ➔ 현지 통화 실시간 자동 환산**: 사용자가 원화(KRW)로 임대료 예산을 입력하더라도, 대상 국가 현지 통화(일본: JPY 등)의 최신 환율을 적용하여 자동 환산 후 매물 검색을 수행합니다.
+     *       - **층수 옵션 4종 지원**: `지하1층`, `1층`, `2층`, `그외`
+     *       - **우선순위 필터링 및 정렬**: 1순위 층수 일치 -> 2순위 면적 일치 -> 3순위 임대료 일치 순으로 최대 10개 매물 추출
+     *       - **매물 결과 스펙 표준화**: `title`, `title_ko`, `address`, `address_ko`, `image_list`, `rent_fee`, `deposit`, `area`, `floor`, `tel`, `email`, `site_url`
+     *
+     *     ---
+     *
+     *     ### 💡 파라미터 및 프론트엔드 연동 가이드
+     *     1. **필수 입력값**:
+     *        - `workspace_uid` (number): 분석을 실행할 워크스페이스 고유 식별자
+     *        - `country` (string): 국가명 (예: `일본`, `홍콩`)
+     *        - `city` (string): 도시명 (예: `도쿄`, `오사카`, `후쿠오카`, `홍콩`)
+     *     2. **선택 입력값 (탐색 기본 조건)**:
+     *        - `target_floor` (string): `지하1층` | `1층` | `2층` | `그외`
+     *        - `area_min`, `area_max` (number): 면적 범위
+     *        - `area_unit` (string): `m2` | `pyeong` (기본값: `m2`, pyeong 선택 시 내부적으로 ㎡ 환산 검색 지원)
+     *        - `rent_fee_min`, `rent_fee_max` (number): 월 임대료 예산 범위
+     *        - `rent_currency` (string): 통화 코드 (기본값: `KRW`, KRW 입력 시 대상 국가 현지 통화(JPY 등) 환율로 자동 환산 대조)
+     *     3. **응답 데이터 (`data` 평탄화 구조)**:
+     *        - `data.uid`: 생성된 상가 매물 탐색 레코드 UID
+     *        - `data.workspace_uid`: 연결된 워크스페이스 UID
+     *        - `data.account_uid`: 실행한 계정 UID
+     *        - `data.status`: `분석완료`
+     *        - `data.exchange_rate`: 1,000원(KRW) 기준 현지 통화 환율 (예: 1,000 KRW = 110.2 JPY)
+     *        - `data.converted_rent_currency`: 환산된 현지 통화 코드 (예: `JPY`)
+     *        - `data.converted_rent_fee_min`, `data.converted_rent_fee_max`: 현지 통화로 환산된 임대료 예산 범위
+     *        - `data.result`: 최대 10개의 추천 매물 객체 목록 (이미지, 임대료, 보증금, 면적, 층수, 주소, 연락처, 원본 URL 등 포함)
+     */
+    post: operations["ExecuteStoreSearchController_execute"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/store-search/list": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * 🔥 [NEW 26.10.27] 상가 매물 탐색 목록 리스트 조회
+     * @description ### 📌 상세 역할 및 개요
+     *     - 워크스페이스에서 실행된 상가 매물 탐색(상권 분석) 이력 목록을 조회합니다.
+     *     - 프로토타입 상가 매물 탐색 화면의 테이블 및 필터 UI 규격에 맞춰 필요한 정보(국가/도시, 층수, 면적, 임대료, 매물 수, 상태, 생성일시 등)를 제공합니다.
+     *     - 국가, 도시, 분석 기간(`start_date`/`end_date`) 필터링과 페이징을 지원합니다.
+     *     - **키워드 검색 미사용**: 기획 스펙에 따라 텍스트 키워드 검색(`keyword`) 파라미터는 지원하지 않습니다.
+     *
+     *     ---
+     *
+     *     ### 📝 최근 업데이트 이력 (2026.10.27)
+     *     - **신규 API 추가**: 상가 매물 탐색 목록 조회 엔드포인트(`GET /api/store-search/list`) 신설
+     *       - **워크스페이스 편의성**: `workspace_uid` 미입력 시 로그인 사용자가 속한 활성 워크스페이스 전체 목록 자동 조회
+     *       - **필터 지원**: `country`(국가), `city`(도시), `start_date`/`end_date`(지정 기간)
+     *       - **키워드/상태/기간 간편 필터 제외**: 요구사항에 따라 `keyword`, `status`, `period` 파라미터 미사용
+     *       - **응답 항목 최적화**: 평형/임대료/일시 원본 수치 및 일시 데이터 중심 제공
+     *         1. `location_title` (예: `"일본 · 도쿄"`, `"홍콩"`): 국가 및 도시 표기
+     *         2. `area_min`, `area_max`, `area_unit`: 면적 범위 및 단위
+     *         3. `rent_fee_min`, `rent_fee_max`, `rent_currency`: 임대료 범위 및 통화
+     *         4. `result_count` (예: `8`): 발굴된 추천 매물 건수
+     *         5. `status` (예: `"분석완료"`, `"분석 진행 중"`): 분석 진행 상태
+     *         6. `created_time`: 분석 일시 (ISO 8601)
+     *
+     *     ---
+     *
+     *     ### 💡 파라미터 및 프론트엔드 연동 가이드
+     *     1. **요청 쿼리 파라미터 (Query)**:
+     *        - `workspace_uid` (number, 선택): 특정 워크스페이스 지정 조회 (미입력 시 본인이 속한 모든 활성 워크스페이스 대상 자동 조회)
+     *        - `country` (string, 선택): 국가 필터 (미입력 또는 `"전체"` 전달 시 모든 국가 대상 검색)
+     *        - `city` (string, 선택): 도시 필터 (미입력 또는 `"전체"` 전달 시 모든 도시 대상 검색)
+     *        - `start_date`, `end_date` (string, 선택, YYYY-MM-DD): 상세 분석 기간 시작/종료 일자 (미입력 시 전체 기간 조회)
+     *        - `page` (number, 기본값 1): 요청 페이지 번호
+     *        - `limit` (number, 기본값 20, 최대 100): 한 페이지당 항목 수
+     *     2. **화면 인터랙션 가이드**:
+     *        - 테이블 행 또는 **[상세 분석 보기]** 버튼 클릭 시 해당 항목의 `uid`를 바탕으로 상세 결과 화면으로 전환합니다.
+     */
+    get: operations["GetStoreSearchListController_getList"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/store-search/detail/{uid}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * 🔥 [NEW 26.10.27] 상가 매물 탐색 상세 분석 정보 조회
+     * @description ### 📌 상세 역할 및 개요
+     *     - 워크스페이스에서 실행된 특정 상가 매물 탐색(AI 상권 분석)의 상세 결과 및 매물 추천 목록을 조회합니다.
+     *     - 상점 탐색 목록(`GET /api/store-search/list`)에서 특정 카드를 클릭했을 때 전달되는 `uid`를 파라미터로 사용합니다.
+     *     - 탐색 실행 시 설정된 조건(`search_condition`)과 발굴된 추천 매물 목록(`result`)을 단일 호출로 반환합니다.
+     *
+     *     ---
+     *
+     *     ### 📝 최근 업데이트 이력 (2026.10.27)
+     *     - **신규 API 추가**: 상가 매물 탐색 상세 조회 엔드포인트(`GET /api/store-search/detail/:uid`) 신설
+     *       - **식별자 파라미터**: 상점 탐색 목록의 고유 식별자 `uid`를 경로 파라미터(Path Parameter)로 전달받아 조회
+     *       - **워크스페이스 권한 격리**: 해당 탐색 이력이 속한 워크스페이스의 활성 멤버만 접근할 수 있도록 보안 격리 적용
+     *       - **상점 탐색 조건 (`data.search_condition`)**:
+     *         - 검색 대상 국가(`country`) 및 도시(`city`)
+     *         - 타겟 층수(`target_floor`): `'지하1층'`, `'1층'`, `'2층'`, `'그외'`
+     *         - 면적 범위(`area_min`, `area_max`, `area_unit`)
+     *         - 임대료 범위(`rent_fee_min`, `rent_fee_max`, `rent_currency`)
+     *         - 적용 환율(`exchange_rate`, 1,000 KRW 기준) 및 현지 통화 환산 임대료(`converted_rent_fee_min`, `converted_rent_fee_max`)
+     *       - **추천 매물 결과 목록 (`data.result`)**:
+     *         - 원본/한국어 명칭(`title`, `title_ko`), 이미지 목록(`image_list`)
+     *         - 월 임대료(`rent_fee`), 보증금(`deposit`), 통화(`rent_currency`)
+     *         - 전용 면적(`area` ㎡ 및 `area_pyeong` 평수), 층수(`floor`)
+     *         - 원본/한국어 주소(`address`, `address_ko`), 연락처/이메일(`tel`, `email`), 상세 페이지 출처(`site_url`)
+     *
+     *     ---
+     *
+     *     ### 💡 파라미터 및 프론트엔드 연동 가이드
+     *     1. **요청 파라미터 (Path Parameter)**:
+     *        - `uid` (number, 필수): 상점 탐색 목록에서 수신한 `uid` 전달
+     *     2. **응답 데이터 구조 및 화면 바인딩**:
+     *        - **상단 헤더 타이틀**: `${data.search_condition.country} · ${data.search_condition.city} | ${data.created_time}` 형태로 화면 요구사항에 맞게 조합하여 바인딩
+     *        - **조건 패널**: `data.search_condition` 객체의 평형, 임대료, 통화, 환산 금액 등을 직관적으로 표시
+     *        - **매물 결과 목록**: `data.result` 배열을 순회하여 추천 매물 카드 컴포넌트 렌더링
+     *        - **층수 표시**: `floor < 0 ? `지하 ${Math.abs(floor)}층` : `${floor}층`` 형태로 프론트엔드 포맷팅 권장
+     */
+    get: operations["GetStoreSearchDetailController_getDetail"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -8574,6 +8735,553 @@ export interface components {
       /** @description 수정된 CRM 단계 정보 */
       data: components["schemas"]["UpdateCrmStageDataDto"];
     };
+    ExecuteStoreSearchDto: {
+      /**
+       * @description 워크스페이스 식별자 (필수)
+       * @example 1
+       */
+      workspace_uid: number;
+      /**
+       * @description 검색 국가 (필수)
+       * @example 일본
+       */
+      country: string;
+      /**
+       * @description 검색 도시 (필수)
+       * @example 도쿄
+       */
+      city: string;
+      /**
+       * @description 타겟 층수 옵션 (지하1층, 1층, 2층, 그외)
+       * @example 1층
+       * @enum {string}
+       */
+      target_floor?: "지하1층" | "1층" | "2층" | "그외";
+      /**
+       * @description 매물 최소 면적
+       * @example 20
+       */
+      area_min?: number;
+      /**
+       * @description 매물 최대 면적
+       * @example 50
+       */
+      area_max?: number;
+      /**
+       * @description 면적 단위 (`m2` 또는 `pyeong`)
+       * @default m2
+       * @example m2
+       * @enum {string}
+       */
+      area_unit: "m2" | "pyeong";
+      /**
+       * @description 월 최소 임대료
+       * @example 50000
+       */
+      rent_fee_min?: number;
+      /**
+       * @description 월 최대 임대료
+       * @example 200000
+       */
+      rent_fee_max?: number;
+      /**
+       * @description 임대료 통화 코드 (기본값: KRW). KRW 입력 시 대상 국가 현지 통화(일본의 경우 JPY) 실시간 환율로 자동 환산되어 검색됩니다. (직접 현지 통화 지정도 가능: JPY, HKD, USD 등)
+       * @default KRW
+       * @example KRW
+       */
+      rent_currency: string;
+    };
+    StoreSearchResultItemDto: {
+      /**
+       * @description 매물 원본 명칭
+       * @example 東急池上線久が原駅より徒歩4分
+       */
+      title: string | null;
+      /**
+       * @description 매물 한국어 명칭
+       * @example 도큐 이케가미선 구가하라역 도보 4분
+       */
+      title_ko: string | null;
+      /**
+       * @description 매물 이미지 URL 목록
+       * @example [
+       *       "https://www.athome.co.jp/image_files/path/sample1.jpg",
+       *       "https://www.athome.co.jp/image_files/path/sample2.jpg"
+       *     ]
+       */
+      image_list: string[];
+      /**
+       * @description 월 임대료 (현지 통화 기준)
+       * @example 71000
+       */
+      rent_fee: number | null;
+      /**
+       * @description 보증금 (현지 통화 기준)
+       * @example 213000
+       */
+      deposit: number | null;
+      /**
+       * @description 면적 (제곱미터, ㎡)
+       * @example 20
+       */
+      area: number | null;
+      /**
+       * @description 층수 (지하 1층: -1, 지상 1층: 1, 지상 2층: 2 등)
+       * @example 1
+       */
+      floor: number | null;
+      /**
+       * @description 매물 원본 상세 주소
+       * @example 東京都大田区東雪谷２丁目
+       */
+      address: string | null;
+      /**
+       * @description 매물 한국어 상세 주소
+       * @example 도쿄도 오타구 히가시유키가야 2가
+       */
+      address_ko: string | null;
+      /**
+       * @description 매물 문의 연락처
+       * @example +81-3-1234-5678
+       */
+      tel: string | null;
+      /**
+       * @description 매물 문의 이메일
+       * @example contact@athome.co.jp
+       */
+      email: string | null;
+      /**
+       * @description 매물 사이트 상세 페이지 URL
+       * @example https://www.athome.co.jp/rent_store/6992580246/
+       */
+      site_url: string | null;
+    };
+    StoreSearchRecordDto: {
+      /**
+       * @description 상가 매물 탐색 레코드 고유 식별자 (uid)
+       * @example 1
+       */
+      uid: number;
+      /**
+       * @description 연결된 워크스페이스 고유 식별자 (workspace_uid)
+       * @example 1
+       */
+      workspace_uid: number | null;
+      /**
+       * @description 분석을 실행한 계정 고유 식별자 (account_uid)
+       * @example 1
+       */
+      account_uid: number | null;
+      /**
+       * @description 상점 매물 탐색 상태 (분석중, 분석완료)
+       * @example 분석완료
+       */
+      status: string;
+      /**
+       * @description 검색 국가
+       * @example 일본
+       */
+      country: string;
+      /**
+       * @description 검색 도시
+       * @example 도쿄
+       */
+      city: string;
+      /**
+       * @description 타겟 층수 옵션
+       * @example 1층
+       * @enum {string|null}
+       */
+      target_floor: "지하1층" | "1층" | "2층" | "그외" | null;
+      /**
+       * @description 매물 최소 면적
+       * @example 20
+       */
+      area_min: number | null;
+      /**
+       * @description 매물 최대 면적
+       * @example 50
+       */
+      area_max: number | null;
+      /**
+       * @description 면적 단위 (`m2` 또는 `pyeong`)
+       * @example m2
+       * @enum {string|null}
+       */
+      area_unit: "m2" | "pyeong" | null;
+      /**
+       * @description 월 최소 임대료
+       * @example 50000
+       */
+      rent_fee_min: number | null;
+      /**
+       * @description 월 최대 임대료
+       * @example 200000
+       */
+      rent_fee_max: number | null;
+      /**
+       * @description 입력된 임대료 통화 코드
+       * @example KRW
+       */
+      rent_currency: string | null;
+      /**
+       * @description 적용된 환율 (1,000원(KRW) 기준 현지 통화 환율, 예: 1,000 KRW = 110.2 JPY)
+       * @example 110.2
+       */
+      exchange_rate: number | null;
+      /**
+       * @description 환산에 적용된 대상 국가 현지 통화 코드
+       * @example JPY
+       */
+      converted_rent_currency: string | null;
+      /**
+       * @description 현지 통화로 환산된 월 최소 임대료
+       * @example 110200
+       */
+      converted_rent_fee_min: number | null;
+      /**
+       * @description 현지 통화로 환산된 월 최대 임대료
+       * @example 330600
+       */
+      converted_rent_fee_max: number | null;
+      /** @description 탐색 매물 결과 목록 (최대 10개) */
+      result: components["schemas"]["StoreSearchResultItemDto"][];
+      /**
+       * Format: date-time
+       * @description 탐색 분석 실행 일시
+       * @example 2026-10-27T00:52:06.000Z
+       */
+      created_time: string;
+      /**
+       * Format: date-time
+       * @description 수정 일시
+       * @example 2026-10-27T00:52:06.000Z
+       */
+      updated_time: string | null;
+    };
+    ExecuteStoreSearchResponseDto: {
+      /**
+       * @description HTTP 상태 코드
+       * @example 201
+       */
+      statusCode: number;
+      /**
+       * @description 응답 메시지
+       * @example 상가 매물 탐색 상권 분석이 성공적으로 실행되었습니다.
+       */
+      message: string;
+      /** @description 생성된 상가 매물 탐색 레코드 정보 (최대 10건의 결과 포함) */
+      data: components["schemas"]["StoreSearchRecordDto"];
+    };
+    StoreSearchListItemDto: {
+      /**
+       * @description 상가 매물 탐색 레코드 고유 식별자 (uid)
+       * @example 1
+       */
+      uid: number;
+      /**
+       * @description 연결된 워크스페이스 고유 식별자 (workspace_uid)
+       * @example 1
+       */
+      workspace_uid: number;
+      /**
+       * @description 분석을 실행한 계정 고유 식별자 (account_uid)
+       * @example 10
+       */
+      account_uid: number | null;
+      /**
+       * @description 상가 매물 탐색 상태 (분석중, 분석완료)
+       * @example 분석완료
+       */
+      status: string;
+      /**
+       * @description 검색 국가
+       * @example 일본
+       */
+      country: string | null;
+      /**
+       * @description 검색 도시
+       * @example 도쿄
+       */
+      city: string | null;
+      /**
+       * @description 국가 및 도시 표기 문구 (프로토타입 테이블 2번째 컬럼)
+       * @example 일본 · 도쿄
+       */
+      location_title: string;
+      /**
+       * @description 타겟 층수 옵션
+       * @example 1층
+       * @enum {string|null}
+       */
+      target_floor: "지하1층" | "1층" | "2층" | "그외" | null;
+      /**
+       * @description 매물 최소 면적
+       * @example 40
+       */
+      area_min: number | null;
+      /**
+       * @description 매물 최대 면적
+       * @example 60
+       */
+      area_max: number | null;
+      /**
+       * @description 면적 단위 (`m2` 또는 `pyeong`)
+       * @example pyeong
+       * @enum {string|null}
+       */
+      area_unit: "m2" | "pyeong" | null;
+      /**
+       * @description 월 최소 임대료 (원래 입력값)
+       * @example 2000000
+       */
+      rent_fee_min: number | null;
+      /**
+       * @description 월 최대 임대료 (원래 입력값)
+       * @example 4000000
+       */
+      rent_fee_max: number | null;
+      /**
+       * @description 입력된 임대료 통화 코드
+       * @example KRW
+       */
+      rent_currency: string | null;
+      /**
+       * @description 탐색된 추천 매물 결과 건수
+       * @example 8
+       */
+      result_count: number;
+      /**
+       * Format: date-time
+       * @description 분석 일시 (ISO 8601)
+       * @example 2026-03-18T01:20:00.000Z
+       */
+      created_time: string | null;
+    };
+    GetStoreSearchListResponseDto: {
+      /**
+       * @description HTTP 응답 상태 코드
+       * @example 200
+       */
+      statusCode: number;
+      /**
+       * @description 응답 메시지
+       * @example 상가 매물 탐색 목록을 성공적으로 조회하였습니다.
+       */
+      message: string;
+      /** @description 상가 매물 탐색 목록 */
+      items: components["schemas"]["StoreSearchListItemDto"][];
+      /**
+       * @description 전체 검색 결과 수
+       * @example 8
+       */
+      total: number;
+      /**
+       * @description 현재 페이지 번호
+       * @example 1
+       */
+      page: number;
+      /**
+       * @description 페이지당 표시 개수
+       * @example 20
+       */
+      limit: number;
+      /**
+       * @description 총 페이지 수
+       * @example 1
+       */
+      total_pages: number;
+    };
+    StoreSearchConditionDto: {
+      /**
+       * @description 검색 대상 국가
+       * @example 일본
+       */
+      country: string;
+      /**
+       * @description 검색 대상 도시
+       * @example 도쿄
+       */
+      city: string;
+      /**
+       * @description 타겟 층수 옵션
+       * @example 지하1층
+       * @enum {string|null}
+       */
+      target_floor: "지하1층" | "1층" | "2층" | "그외" | null;
+      /**
+       * @description 매물 최소 면적
+       * @example 40
+       */
+      area_min: number | null;
+      /**
+       * @description 매물 최대 면적
+       * @example 60
+       */
+      area_max: number | null;
+      /**
+       * @description 면적 단위 (`m2` 또는 `pyeong`)
+       * @example pyeong
+       * @enum {string|null}
+       */
+      area_unit: "m2" | "pyeong" | null;
+      /**
+       * @description 월 최소 임대료
+       * @example 2000000
+       */
+      rent_fee_min: number | null;
+      /**
+       * @description 월 최대 임대료
+       * @example 4000000
+       */
+      rent_fee_max: number | null;
+      /**
+       * @description 입력된 임대료 통화 코드
+       * @example KRW
+       */
+      rent_currency: string | null;
+      /**
+       * @description 적용된 환율 (1,000 KRW 기준 현지 통화 환율)
+       * @example 108.5
+       */
+      exchange_rate: number | null;
+      /**
+       * @description 환산에 적용된 대상 국가 현지 통화 코드
+       * @example JPY
+       */
+      converted_rent_currency: string | null;
+      /**
+       * @description 현지 통화로 환산된 월 최소 임대료
+       * @example 217000
+       */
+      converted_rent_fee_min: number | null;
+      /**
+       * @description 현지 통화로 환산된 월 최대 임대료
+       * @example 434000
+       */
+      converted_rent_fee_max: number | null;
+    };
+    StoreSearchDetailItemDto: {
+      /**
+       * @description 매물 원본 명칭
+       * @example 東急池上線久が原駅より徒歩4分
+       */
+      title: string | null;
+      /**
+       * @description 매물 한국어 명칭/역명
+       * @example 도립대학역
+       */
+      title_ko: string | null;
+      /**
+       * @description 매물 이미지 URL 목록
+       * @example [
+       *       "https://www.athome.co.jp/image_files/path/sample1.jpg",
+       *       "https://www.athome.co.jp/image_files/path/sample2.jpg"
+       *     ]
+       */
+      image_list: string[];
+      /**
+       * @description 월 임대료 (현지 통화 기준 원본 수치)
+       * @example 777480
+       */
+      rent_fee: number | null;
+      /**
+       * @description 보증금 (현지 통화 기준 원본 수치)
+       * @example 3800000
+       */
+      deposit: number | null;
+      /**
+       * @description 임대료 통화 코드
+       * @example JPY
+       */
+      rent_currency: string | null;
+      /**
+       * @description 면적 (제곱미터, ㎡)
+       * @example 194.55
+       */
+      area: number | null;
+      /**
+       * @description 전용 면적 (평수 단위 환산 수치)
+       * @example 58.85
+       */
+      area_pyeong: number | null;
+      /**
+       * @description 층수 (지하 1층: -1, 지상 1층: 1, 지상 2층: 2 등)
+       * @example -1
+       */
+      floor: number | null;
+      /**
+       * @description 매물 원본 상세 주소
+       * @example 東京都目黒区八雲一丁目4-3
+       */
+      address: string | null;
+      /**
+       * @description 매물 한국어 상세 주소
+       * @example 도쿄도 메구로구 야쿠모 1초메 4-3
+       */
+      address_ko: string | null;
+      /**
+       * @description 매물 문의 연락처
+       * @example +81-3-1234-5678
+       */
+      tel: string | null;
+      /**
+       * @description 매물 문의 이메일
+       * @example contact@athome.co.jp
+       */
+      email: string | null;
+      /**
+       * @description 매물 상세 출처 페이지 URL
+       * @example https://www.athome.co.jp/rent_store/6992580246/
+       */
+      site_url: string | null;
+    };
+    StoreSearchDetailDataDto: {
+      /**
+       * @description 상가 매물 탐색 레코드 고유 식별자 (uid)
+       * @example 1
+       */
+      uid: number;
+      /**
+       * @description 연결된 워크스페이스 고유 식별자 (workspace_uid)
+       * @example 1
+       */
+      workspace_uid: number | null;
+      /**
+       * @description 분석을 실행한 계정 고유 식별자 (account_uid)
+       * @example 10
+       */
+      account_uid: number | null;
+      /**
+       * @description 상점 매물 탐색 상태 (분석 진행 중, 분석완료)
+       * @example 분석완료
+       */
+      status: string;
+      /**
+       * Format: date-time
+       * @description 탐색 분석 일시
+       * @example 2026-03-18T01:20:00.000Z
+       */
+      created_time: string | null;
+      /** @description 상점 탐색 조건 (search_condition) */
+      search_condition: components["schemas"]["StoreSearchConditionDto"];
+      /** @description 탐색 발굴 매물 결과 목록 (result) */
+      result: components["schemas"]["StoreSearchDetailItemDto"][];
+    };
+    GetStoreSearchDetailResponseDto: {
+      /**
+       * @description HTTP 상태 코드
+       * @example 200
+       */
+      statusCode: number;
+      /**
+       * @description 응답 메시지
+       * @example 상가 매물 탐색 상세 정보를 성공적으로 조회하였습니다.
+       */
+      message: string;
+      /** @description 상가 매물 탐색 상세 데이터 (조건 + 결과 목록) */
+      data: components["schemas"]["StoreSearchDetailDataDto"];
+    };
   };
   responses: never;
   parameters: never;
@@ -11619,6 +12327,88 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+    };
+  };
+  ExecuteStoreSearchController_execute: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ExecuteStoreSearchDto"];
+      };
+    };
+    responses: {
+      /** @description 상가 매물 탐색 상권 분석이 성공적으로 실행 및 저장되었습니다. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ExecuteStoreSearchResponseDto"];
+        };
+      };
+    };
+  };
+  GetStoreSearchListController_getList: {
+    parameters: {
+      query?: {
+        /** @description 워크스페이스 식별자 (미입력 시 본인이 속한 활성 워크스페이스 목록 기준 조회) */
+        workspace_uid?: number;
+        /** @description 국가 필터 (예: "전체", "일본", "대만", "홍콩" 등). 미입력 또는 "전체" 전달 시 모든 국가 대상 검색 */
+        country?: string;
+        /** @description 도시 필터 (예: "전체", "도쿄", "타이베이", "홍콩" 등). 미입력 또는 "전체" 전달 시 모든 도시 대상 검색 */
+        city?: string;
+        /** @description 검색 시작 일자 (YYYY-MM-DD, 미입력 시 전체 기간) */
+        start_date?: string;
+        /** @description 검색 종료 일자 (YYYY-MM-DD, 미입력 시 전체 기간) */
+        end_date?: string;
+        /** @description 페이지 번호 (1부터 시작, 기본값: 1) */
+        page?: number;
+        /** @description 한 페이지당 표시 개수 (기본값: 20, 최대: 100) */
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 상가 매물 탐색 목록을 성공적으로 조회하였습니다. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["GetStoreSearchListResponseDto"];
+        };
+      };
+    };
+  };
+  GetStoreSearchDetailController_getDetail: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 상가 매물 탐색 레코드 고유 식별자 (uid) */
+        uid: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 상가 매물 탐색 상세 정보를 성공적으로 조회하였습니다. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["GetStoreSearchDetailResponseDto"];
+        };
       };
     };
   };
