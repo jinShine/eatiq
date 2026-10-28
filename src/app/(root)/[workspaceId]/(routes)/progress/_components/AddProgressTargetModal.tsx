@@ -74,6 +74,8 @@ type AddProgressTargetModalProps = {
   isPending: boolean;
   /** 서버가 거절한 사유. 모달을 닫지 않고 그대로 보여준다 */
   errorMessage?: string;
+  /** 탭·상대를 바꾸면 지난 거절 사유는 더 맞지 않는다 — 부모가 들고 있는 오류를 비운다 */
+  onClearError: () => void;
   onSubmit: (body: Omit<CreateCrmRequest, "source_workspace_uid">) => void;
 };
 
@@ -93,6 +95,7 @@ export default function AddProgressTargetModal({
   options,
   isPending,
   errorMessage,
+  onClearError,
   onSubmit,
 }: AddProgressTargetModalProps) {
   // React Compiler 제외 — register 폼은 reset 뒤 입력칸이 갱신되지 않는다(BasicInfoSection 주석 참고)
@@ -130,21 +133,32 @@ export default function AddProgressTargetModal({
     { key: "manual", label: "직접 입력" },
   ];
 
-  /** 탭을 바꾸면 고른 상대를 놓는다 — 직접 입력한 건이 다른 워크스페이스와 연결되면 안 된다 */
-  const changeTab = (tab: TabKey) => {
-    setActiveTab(tab);
-    setPartner(null);
-    clearErrors();
-  };
-
   /** 상대를 고르면 이름·국가·담당자를 채운다. 고르기를 취소하면 그 값들을 비운다 */
   const handleSelectPartner = (option: PartnerOption | null) => {
     setPartner(option);
     clearErrors("company_name");
+    onClearError();
     setValue("company_name", option?.name ?? "");
     setValue("country", option?.country ?? "");
     setValue("contact_name", option?.contactName ?? "");
     setValue("contact_email", option?.contactEmail ?? "");
+  };
+
+  /**
+   * 탭을 바꾸면 고른 상대를 놓는다 — 직접 입력한 건이 다른 워크스페이스와 연결되면 안 된다.
+   * 상대에게서 채운 이름·국가·담당자도 함께 비운다. 남겨 두면 그 회사 이름으로 연결 없는 건이 따로 만들어진다
+   */
+  const changeTab = (tab: TabKey) => {
+    // 이미 보고 있는 탭을 다시 누르면 고른 상대를 놓지 않는다
+    if (tab === activeTab) {
+      return;
+    }
+    if (partner) {
+      handleSelectPartner(null);
+    }
+    setActiveTab(tab);
+    clearErrors();
+    onClearError();
   };
 
   const handleManualAdd = (keyword: string) => {

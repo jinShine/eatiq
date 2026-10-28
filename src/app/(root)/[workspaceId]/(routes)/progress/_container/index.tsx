@@ -149,6 +149,7 @@ export default function ProgressContainer({ workspaceId }: ProgressContainerProp
             options={filterOptions}
             isPending={isCreating}
             errorMessage={createError?.message}
+            onClearError={clearCreateError}
             onSubmit={handleCreate}
           />
 
