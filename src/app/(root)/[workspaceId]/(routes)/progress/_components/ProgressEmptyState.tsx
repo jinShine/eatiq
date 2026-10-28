@@ -68,7 +68,7 @@ export default function ProgressEmptyState({
 
       {variant === "no-data" && onAdd && (
         <Button size="sm" className="mt-6" onClick={onAdd}>
-          {partnerLabel} 추가
+          관리 {partnerLabel} 추가
         </Button>
       )}
     </div>
