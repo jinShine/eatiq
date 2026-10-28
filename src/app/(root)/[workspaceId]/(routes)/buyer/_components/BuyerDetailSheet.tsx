@@ -107,11 +107,23 @@ export default function BuyerDetailSheet({ detail, isLoading, isOpen, onOpenChan
                     {brand.meta && (
                       <span className="text-text-tertiary text-sm font-medium tracking-[-0.7px]">{brand.meta}</span>
                     )}
-                    {brand.source && (
-                      <span className="text-text-disabled text-[11px] font-medium tracking-[-0.55px]">
-                        {brand.source}
-                      </span>
-                    )}
+                    {/* 출처 주소가 있으면 눌러서 확인할 수 있게 한다 — 배치·크기는 그대로, 밑줄로만 링크임을 알린다 */}
+                    {brand.source &&
+                      (brand.sourceUrl ? (
+                        <a
+                          href={brand.sourceUrl}
+                          target="_blank"
+                          rel="noreferrer noopener"
+                          aria-label={`${brand.name} ${brand.source} (새 창)`}
+                          className="text-text-disabled hover:text-primary focus-visible:ring-ring w-fit rounded text-[11px] font-medium tracking-[-0.55px] underline underline-offset-2 transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                        >
+                          {brand.source}
+                        </a>
+                      ) : (
+                        <span className="text-text-disabled text-[11px] font-medium tracking-[-0.55px]">
+                          {brand.source}
+                        </span>
+                      ))}
                   </li>
                 ))}
               </ul>

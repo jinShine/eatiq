@@ -40,7 +40,8 @@ export type BuyerDetailView = {
   initial: string;
   websiteUrl: string | null;
   brandSummary: string | null;
-  operatingBrands: { name: string; meta: string; source: string | null }[];
+  /** sourceUrl — 「공개 자료에서 확인」을 눌러 열 출처 페이지. 없으면 글자만 보인다 */
+  operatingBrands: { name: string; meta: string; source: string | null; sourceUrl: string | null }[];
   partnershipTerms: DetailRow[];
   intro: string | null;
   companyFacts: DetailRow[];
@@ -84,6 +85,7 @@ export const toBuyerDetailView = (detail: BuyerDetailResponse): BuyerDetailView 
     name: brand.brand_name,
     meta: toBrandMeta(brand),
     source: brand.source,
+    sourceUrl: toExternalUrl(brand.source_url),
   })),
   // 시안의 라벨·순서 그대로 (피그마 961:11467)
   partnershipTerms: [
