@@ -22,6 +22,7 @@ import { CreateWorkspaceModal, ReceivedInvitesModal } from "@components/custom/w
 import { useAuthUser, useLogoutMutation } from "@services/api/auth/auth.query";
 import { useInvitedWorkspaces, useMyWorkspaces } from "@services/api/workspace/workspace.query";
 
+import { useUnsavedChangesStore } from "@stores/useUnsavedChangesStore";
 import { useUserSettingsStore } from "@stores/useUserSettingsStore";
 
 import { cn } from "@utils/shadcn";
@@ -76,12 +77,15 @@ export default function GlobalSideNav() {
   // URL 경로에서 현재 섹션 추출: /workspace/:workspaceId/:section -> section
   const currentSection = pathname.split("/")[2] ?? "";
 
+  // 사이드바는 버튼으로 이동한다. 링크가 아니라 UnsavedChangesGuard가 가로채지 못하니 여기서 확인을 거친다
+  const requestLeave = useUnsavedChangesStore(state => state.requestLeave);
+
   const handleSwitchWorkspace = (id: string) => {
-    startTransition(() => router.push(`/${id}/${currentSection}`));
+    requestLeave(() => startTransition(() => router.push(`/${id}/${currentSection}`)));
   };
 
   const handleNavToSection = (section: string) => {
-    startTransition(() => router.push(`/${workspaceId}/${section}`));
+    requestLeave(() => startTransition(() => router.push(`/${workspaceId}/${section}`)));
   };
 
   return (
@@ -152,7 +156,7 @@ export default function GlobalSideNav() {
           }}
           collapsed={collapsed}
           isLoading={isMeLoading}
-          onLogout={() => logoutUser()}
+          onLogout={() => requestLeave(() => logoutUser())}
           isLoggingOut={isLoggingOut}
         />
       </div>

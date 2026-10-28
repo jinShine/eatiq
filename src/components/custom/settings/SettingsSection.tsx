@@ -1,4 +1,10 @@
+"use client";
+
+import { useEffect, useId } from "react";
+
 import { Button } from "@components/ui";
+
+import { useUnsavedChangesStore } from "@stores/useUnsavedChangesStore";
 
 type SettingsSectionProps = {
   title: string;
@@ -24,6 +30,14 @@ export default function SettingsSection({
   onSubmit,
   children,
 }: SettingsSectionProps) {
+  // 저장하지 않은 변경을 화면 밖(UnsavedChangesGuard)에 알린다 — 떠날 때 확인을 받기 위해서다
+  const sectionId = useId();
+  const setDirty = useUnsavedChangesStore(state => state.setDirty);
+  useEffect(() => {
+    setDirty(sectionId, isDirty);
+    return () => setDirty(sectionId, false);
+  }, [sectionId, isDirty, setDirty]);
+
   // 검증 실패 시 화면 순서상 첫 오류 칸으로 포커스를 맞춘다.
   // RHF는 등록 순서로 첫 오류에 포커스하는데, register 칸과 Controller 칸(쉼표 입력·선택 박스)이 섞이면
   // Controller가 나중에 등록돼 화면 순서와 달라진다(가맹비보다 로열티 비율로 먼저 간다)

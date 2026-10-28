@@ -1,3 +1,4 @@
+import { UnsavedChangesGuard } from "@components/custom/settings";
 import { BaseRootLayout, GlobalFooter, GlobalSideNav } from "@components/layout";
 
 import WorkspaceGuard from "./_components/WorkspaceGuard";
@@ -18,6 +19,8 @@ export default function WorkspaceLayout({ children }: WorkspaceLayoutProps) {
         content={<WorkspaceGuard>{children}</WorkspaceGuard>}
         footer={<GlobalFooter />}
       />
+      {/* 설정 화면에서 저장하지 않은 채 떠나면 확인을 받는다 */}
+      <UnsavedChangesGuard />
     </main>
   );
 }
