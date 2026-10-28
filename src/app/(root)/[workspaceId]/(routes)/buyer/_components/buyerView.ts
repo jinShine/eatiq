@@ -1,5 +1,7 @@
 import { type BuyerDetailResponse, type BuyerListItem } from "@services/api/buyer/buyer.type";
 
+import { toExternalUrl } from "@utils/functions";
+
 import {
   BUSINESS_TYPE_OPTIONS,
   CONTRACT_TYPE_VALUES,
@@ -59,7 +61,7 @@ export const toBuyerCard = (item: BuyerListItem): BuyerCardView => ({
   brandSummary: item.brand_summary,
   meta: item.meta_text,
   hasKoreanBrandExperience: item.korean_brand_experience === true,
-  websiteUrl: item.homepage_url,
+  websiteUrl: toExternalUrl(item.homepage_url),
 });
 
 /** 운영 브랜드 메타 — 있는 값만 이어 붙인다: 「마스터 프랜차이즈 · 매장 12개 · 2016년 시작」 */
@@ -76,7 +78,7 @@ export const toBuyerDetailView = (detail: BuyerDetailResponse): BuyerDetailView 
   id: String(detail.uid),
   name: detail.company_name,
   initial: detail.initial || toInitial(detail.company_name),
-  websiteUrl: detail.homepage_url,
+  websiteUrl: toExternalUrl(detail.homepage_url),
   brandSummary: detail.brand_summary,
   operatingBrands: detail.brands.map(brand => ({
     name: brand.brand_name,

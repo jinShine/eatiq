@@ -173,6 +173,25 @@ export const isUrl = (value: string): boolean => {
 };
 
 /**
+ * 사용자가 입력한 주소를 링크로 쓸 수 있게 바꾼다 (isUrl과 같은 규칙)
+ *
+ * 입력은 프로토콜 없이도 받는다(isUrl). 그대로 href에 넣으면 「buzzbrand.ai」가
+ * 우리 사이트 안의 상대 경로가 된다. 프로토콜이 없으면 https://를 붙이고, 주소가 아니면 null.
+ *
+ * @example
+ * toExternalUrl("buzzbrand.ai") // "https://buzzbrand.ai"
+ * toExternalUrl("https://www.wdi.co.jp/") // "https://www.wdi.co.jp/"
+ * toExternalUrl("javascript:alert(1)") // null
+ */
+export const toExternalUrl = (value: string | null | undefined): string | null => {
+  const trimmed = value?.trim();
+  if (!trimmed || !isUrl(trimmed)) {
+    return null;
+  }
+  return /^[a-z][a-z\d+.-]*:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+};
+
+/**
  * 전화번호 형식이 유효한지 검증 (하이픈 포함/미포함 모두 가능)
  * @param phone - 확인할 전화번호 문자열
  * @returns 유효한 전화번호이면 true, 아니면 false

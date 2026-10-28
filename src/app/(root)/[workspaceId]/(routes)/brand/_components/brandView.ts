@@ -1,5 +1,7 @@
 import { type BrandDetail, type BrandListItem } from "@services/api/brand/brand.type";
 
+import { toExternalUrl } from "@utils/functions";
+
 import { CATEGORY_VALUES } from "../../company-settings/_components/sections/IntroOptions";
 import { CONTRACT_TYPE_VALUES, TARGET_COUNTRY_VALUES } from "../../company-settings/_components/sections/policyOptions";
 
@@ -74,7 +76,7 @@ export const toBrandDetailView = (detail: BrandDetail): BrandDetailView => {
     initial: detail.brand_name_ko.trim().charAt(0).toUpperCase(),
     imageUrl: detail.featured_image,
     logoUrl: detail.logo_image,
-    websiteUrl: detail.homepage_url,
+    websiteUrl: toExternalUrl(detail.homepage_url),
     meta: detail.meta_text,
     shortIntro: detail.short_intro,
     detailIntro: detail.detail_intro,
