@@ -62,6 +62,8 @@ export default function BuyerListItem({ buyer, onOpenDetail }: BuyerListItemProp
         <Button
           variant="outline"
           onClick={() => onOpenDetail(buyer.id)}
+          // 카드마다 같은 글자라 어느 회사 버튼인지 이름으로 구분한다 (BrandCard와 같은 방식)
+          aria-label={`${buyer.name} 상세 보기`}
           className="border-primary text-primary hover:bg-primary-50 h-[38px] shrink-0 px-5 text-[13px]"
         >
           상세 보기
