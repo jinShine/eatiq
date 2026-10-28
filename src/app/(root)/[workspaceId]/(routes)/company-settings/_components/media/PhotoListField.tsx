@@ -48,9 +48,15 @@ export default function PhotoListField({ label, name, urls, max, onAdd, onRemove
         <MediaUploadTile kind="image" name={name} multiple disabled={room <= 0} onSelect={handleSelect} />
         {(urls.length > 0 || pending.length > 0) && (
           <ul className="flex flex-wrap gap-5" aria-label={`${label} 목록`}>
-            {urls.map(url => (
+            {urls.map((url, index) => (
               <li key={url}>
-                <MediaThumbnail kind="image" src={url} label={label} onRemove={() => onRemove(url)} />
+                {/* 여러 장이면 번호를 붙인다 — 삭제 버튼 이름이 모두 같으면 화면 낭독기로 어느 사진인지 알 수 없다 */}
+                <MediaThumbnail
+                  kind="image"
+                  src={url}
+                  label={urls.length > 1 ? `${label} ${index + 1}` : label}
+                  onRemove={() => onRemove(url)}
+                />
               </li>
             ))}
             {pending.map(item => (

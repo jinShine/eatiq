@@ -127,13 +127,14 @@ export default function VisualAssetCard({
         />
         {(shown.length > 0 || pending.length > 0) && (
           <ul className="flex flex-wrap gap-5" aria-label={`${title} 목록`}>
-            {shown.map(url => (
+            {shown.map((url, index) => (
               <li key={url}>
+                {/* 여러 장이면 번호를 붙인다 — 삭제 버튼 이름이 모두 같으면 어느 파일인지 알 수 없다 */}
                 <MediaThumbnail
                   kind={kind}
                   shape={shape}
                   src={url}
-                  label={title}
+                  label={shown.length > 1 ? `${title} ${index + 1}` : title}
                   onRemove={isBusy ? undefined : () => setRemoveTarget(url)}
                 />
               </li>
