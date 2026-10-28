@@ -7,7 +7,7 @@ import BaseContentLayout from "@components/layout/base/BaseContentLayout";
 import PageHeader from "@components/layout/header/PageHeader";
 import { Toast } from "@components/ui";
 
-import { type CrmListFilters, useCreateCrm, useDeleteCrm } from "@services/api/crm/crm.query";
+import { type CrmListFilters, useCreateCrm, useDeleteCrm, useManagedPartnerIds } from "@services/api/crm/crm.query";
 import { type CreateCrmRequest } from "@services/api/crm/crm.type";
 import { useCurrentWorkspace } from "@services/api/workspace/workspace.query";
 
@@ -56,6 +56,8 @@ export default function ProgressContainer({ workspaceId }: ProgressContainerProp
     error: createError,
     reset: clearCreateError,
   } = useCreateCrm(workspaceId);
+  // 추가 모달을 열었을 때만 받는다 — 검색 결과에 「관리 중」을 표시하는 데만 쓴다
+  const { data: managedPartnerIds } = useManagedPartnerIds(workspaceId, isAddOpen);
 
   const handleAddOpenChange = (open: boolean) => {
     if (isCreating) {
@@ -149,6 +151,7 @@ export default function ProgressContainer({ workspaceId }: ProgressContainerProp
             options={filterOptions}
             isPending={isCreating}
             errorMessage={createError?.message}
+            managedPartnerIds={managedPartnerIds}
             onClearError={clearCreateError}
             onSubmit={handleCreate}
           />

@@ -39,6 +39,8 @@ export const crmKeys = {
   all: ["crm"] as const,
   lists: (workspaceId: string) => [...crmKeys.all, "list", workspaceId] as const,
   list: (workspaceId: string, filters: CrmListFilters) => [...crmKeys.lists(workspaceId), filters] as const,
+  /** lists 아래에 둔다 — 추가·삭제가 lists를 무효화하면 함께 다시 받는다 */
+  managedPartnerIds: (workspaceId: string) => [...crmKeys.lists(workspaceId), "managed-partner-ids"] as const,
   detail: (crmId: string) => [...crmKeys.all, "detail", crmId] as const,
   partnerSearch: (partnerType: CrmPartnerType, keyword: string) =>
     [...crmKeys.all, "partner-search", partnerType, keyword] as const,
@@ -53,6 +55,39 @@ const dashboardKeys = (workspaceId: string) => [brandKeys.dashboard(workspaceId)
 
 /** 한 번에 받는 개수 — 서버 기본값. 「더 보기」를 누르면 다음 페이지를 이어 붙인다 */
 const CRM_PAGE_SIZE = 20;
+
+/** 서버가 허용하는 한 페이지 최대 개수 */
+const CRM_MAX_PAGE_SIZE = 100;
+
+/**
+ * 이미 관리 중인 상대의 워크스페이스 uid — 추가 모달의 검색 결과에 「관리 중」을 표시한다.
+ * 검색(자동완성) 응답에 등록 여부가 없고, 목록 화면의 쿼리는 필터·페이지 단위라 쓸 수 없어 필터 없이 따로 모은다.
+ * 직접 입력한 상대(target_workspace_uid 없음)는 검색 결과와 겹치지 않아 뺀다.
+ */
+export function useManagedPartnerIds(workspaceId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: crmKeys.managedPartnerIds(workspaceId),
+    queryFn: async () => {
+      const fetchPage = (page: number) =>
+        getCrmList({ workspace_uid: Number(workspaceId), page, limit: CRM_MAX_PAGE_SIZE });
+      // 첫 페이지로 전체 페이지 수를 알고, 나머지는 한꺼번에 받는다(보통 한 페이지로 끝난다)
+      const first = await fetchPage(1);
+      const rest = await Promise.all(
+        Array.from({ length: Math.max(first.total_pages - 1, 0) }, (_, index) => fetchPage(index + 2)),
+      );
+      const ids = new Set<number>();
+      [first, ...rest].forEach(res =>
+        res.items.forEach(item => {
+          if (item.target_workspace_uid != null) {
+            ids.add(item.target_workspace_uid);
+          }
+        }),
+      );
+      return ids;
+    },
+    enabled: enabled && Boolean(workspaceId) && !IS_MOCK,
+  });
+}
 
 /**
  * 진행 관리 목록 — 페이지를 이어 붙인다(「더 보기」).

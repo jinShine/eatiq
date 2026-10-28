@@ -74,6 +74,8 @@ type AddProgressTargetModalProps = {
   isPending: boolean;
   /** 서버가 거절한 사유. 모달을 닫지 않고 그대로 보여준다 */
   errorMessage?: string;
+  /** 이미 관리 중인 상대의 워크스페이스 uid — 검색 결과에서 고를 수 없게 표시한다 */
+  managedPartnerIds?: Set<number>;
   /** 탭·상대를 바꾸면 지난 거절 사유는 더 맞지 않는다 — 부모가 들고 있는 오류를 비운다 */
   onClearError: () => void;
   onSubmit: (body: Omit<CreateCrmRequest, "source_workspace_uid">) => void;
@@ -95,6 +97,7 @@ export default function AddProgressTargetModal({
   options,
   isPending,
   errorMessage,
+  managedPartnerIds,
   onClearError,
   onSubmit,
 }: AddProgressTargetModalProps) {
@@ -214,6 +217,7 @@ export default function AddProgressTargetModal({
               partnerType={partnerType}
               partnerLabel={partnerLabel}
               selected={partner}
+              managedPartnerIds={managedPartnerIds}
               onSelect={handleSelectPartner}
               onManualAdd={handleManualAdd}
               errorText={searchError}

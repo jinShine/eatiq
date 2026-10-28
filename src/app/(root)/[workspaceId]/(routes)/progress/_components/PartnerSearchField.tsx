@@ -47,6 +47,8 @@ type PartnerSearchFieldProps = {
   /** 「바이어」 또는 「브랜드」 */
   partnerLabel: string;
   selected: PartnerOption | null;
+  /** 이미 관리 중인 상대 — 목록에 「관리 중」을 붙이고 고를 수 없게 한다(고르면 서버가 409로 거절한다) */
+  managedPartnerIds?: Set<number>;
   onSelect: (option: PartnerOption | null) => void;
   /** 「목록에 없는 바이어 직접 추가」 — 지금까지 친 검색어를 넘긴다 */
   onManualAdd: (keyword: string) => void;
@@ -62,6 +64,7 @@ export default function PartnerSearchField({
   partnerType,
   partnerLabel,
   selected,
+  managedPartnerIds,
   onSelect,
   onManualAdd,
   errorText,
@@ -90,7 +93,10 @@ export default function PartnerSearchField({
 
   // 방향키로 움직이는 강조 항목 — 결과가 바뀌면 첫 결과로 옮긴다.
   // 그대로 두면 결과가 오기 전 유일했던 「직접 추가」에 강조가 남아, 엔터 한 번에 직접 입력으로 넘어간다
-  const firstValue = options[0] ? String(options[0].workspaceUid) : MANUAL_VALUE;
+  const isManaged = (option: PartnerOption) => managedPartnerIds?.has(option.workspaceUid) ?? false;
+  // 고를 수 없는(관리 중) 항목은 건너뛴다 — 강조가 거기 머물면 엔터가 아무 일도 하지 않는다
+  const firstSelectable = options.find(option => !isManaged(option));
+  const firstValue = firstSelectable ? String(firstSelectable.workspaceUid) : MANUAL_VALUE;
   const [activeValue, setActiveValue] = useState(firstValue);
   const [seenFirstValue, setSeenFirstValue] = useState(firstValue);
   if (firstValue !== seenFirstValue) {
@@ -161,16 +167,25 @@ export default function PartnerSearchField({
                 <p className="text-error px-3 py-2.5 text-sm">{error.message}</p>
               ) : (
                 <>
-                  {options.map(option => (
-                    <CommandPrimitive.Item
-                      key={option.workspaceUid}
-                      value={String(option.workspaceUid)}
-                      onSelect={() => onSelect(option)}
-                      className="data-[selected=true]:bg-secondary-background cursor-pointer px-3 py-2.5"
-                    >
-                      <PartnerOptionContent option={option} />
-                    </CommandPrimitive.Item>
-                  ))}
+                  {options.map(option => {
+                    const managed = isManaged(option);
+                    return (
+                      <CommandPrimitive.Item
+                        key={option.workspaceUid}
+                        value={String(option.workspaceUid)}
+                        disabled={managed}
+                        onSelect={() => onSelect(option)}
+                        className="data-[selected=true]:bg-secondary-background flex cursor-pointer items-center justify-between gap-3 px-3 py-2.5 data-[disabled=true]:cursor-default data-[disabled=true]:opacity-60"
+                      >
+                        <PartnerOptionContent option={option} />
+                        {managed && (
+                          <span className="border-border text-text-tertiary shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-medium">
+                            관리 중
+                          </span>
+                        )}
+                      </CommandPrimitive.Item>
+                    );
+                  })}
 
                   {options.length === 0 && (
                     <p className="text-text-tertiary px-3 py-2.5 text-sm">
