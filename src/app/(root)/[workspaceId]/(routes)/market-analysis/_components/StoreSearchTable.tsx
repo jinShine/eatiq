@@ -25,8 +25,19 @@ function StoreSearchTableRow({ row }: { row: StoreSearchRow }) {
       <div role="cell" className="text-text-primary font-semibold tabular-nums">
         {row.searchedAt}
       </div>
-      <div role="cell" className="truncate text-[#6b7280]">
-        {row.location}
+      <div role="cell" className="flex min-w-0 items-center gap-1.5 text-[#6b7280]">
+        <span className="truncate">{row.location}</span>
+        {/* 결과가 0건인 기록을 열어보기 전에 알 수 있게 매물 수를 붙인다. 진행 중이면 아직 의미가 없어 숨긴다 */}
+        {row.isCompleted && (
+          <span
+            className={cn(
+              "shrink-0 text-xs font-semibold tabular-nums",
+              row.resultCount === 0 ? "text-text-disabled" : "text-text-tertiary",
+            )}
+          >
+            {row.resultCount}건
+          </span>
+        )}
       </div>
       <div role="cell" className="truncate text-[#6b7280]">
         {row.area}
