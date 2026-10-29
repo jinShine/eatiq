@@ -22,6 +22,8 @@ type Props = {
   initialIndex?: number;
   isOpen: boolean;
   onClose: () => void;
+  /** 닫을 때 마지막으로 보던 이미지 — 바깥 갤러리를 같은 이미지로 맞출 때 쓴다 */
+  onIndexChange?: (index: number) => void;
 };
 
 // ============================================================
@@ -98,7 +100,7 @@ function PaginationDots({ total, current, onSelect }: PaginationDotsProps) {
 // Main Component
 // ============================================================
 
-export default function ImagePreviewModal({ images, initialIndex = 0, isOpen, onClose }: Props) {
+export default function ImagePreviewModal({ images, initialIndex = 0, isOpen, onClose, onIndexChange }: Props) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [direction, setDirection] = useState(0);
   const [scale, setScale] = useState(1);
@@ -132,6 +134,13 @@ export default function ImagePreviewModal({ images, initialIndex = 0, isOpen, on
   useEffect(() => {
     resetZoom();
   }, [currentIndex, resetZoom]);
+
+  // 이미지가 바뀔 때마다 알리면 열리는 순간 이전 index가 바깥 initialIndex를 덮어써 서로 번갈아 바뀐다.
+  // 그래서 닫을 때 한 번만 알린다
+  const handleClose = useCallback(() => {
+    onIndexChange?.(currentIndex);
+    onClose();
+  }, [currentIndex, onIndexChange, onClose]);
 
   // Navigation
   const goToPrevious = useCallback(() => {
@@ -257,7 +266,7 @@ export default function ImagePreviewModal({ images, initialIndex = 0, isOpen, on
           goToNext();
           break;
         case "Escape":
-          isZoomed ? resetZoom() : onClose();
+          isZoomed ? resetZoom() : handleClose();
           break;
         case "+":
         case "=":
@@ -273,14 +282,14 @@ export default function ImagePreviewModal({ images, initialIndex = 0, isOpen, on
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, goToPrevious, goToNext, onClose, isZoomed, resetZoom, handleZoomIn, handleZoomOut]);
+  }, [isOpen, goToPrevious, goToNext, handleClose, isZoomed, resetZoom, handleZoomIn, handleZoomOut]);
 
   if (!currentImage) {
     return null;
   }
 
   return (
-    <DialogPrimitive.Root open={isOpen} onOpenChange={open => !open && onClose()}>
+    <DialogPrimitive.Root open={isOpen} onOpenChange={open => !open && handleClose()}>
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/90 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
 
@@ -317,7 +326,7 @@ export default function ImagePreviewModal({ images, initialIndex = 0, isOpen, on
               >
                 <ZoomInIcon className="size-5" />
               </button>
-              <button type="button" onClick={onClose} className={CONTROL_BUTTON_CLASS} aria-label="닫기">
+              <button type="button" onClick={handleClose} className={CONTROL_BUTTON_CLASS} aria-label="닫기">
                 <XIcon className="size-6" />
               </button>
             </div>

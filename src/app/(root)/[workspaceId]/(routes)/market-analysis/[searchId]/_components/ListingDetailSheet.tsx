@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 
-import { ChevronLeft, ChevronRight, ExternalLink, Mail, MapPin, Phone } from "lucide-react";
+import { ArrowUpRight, ChevronLeft, ChevronRight, Expand, Mail, MapPin, Phone } from "lucide-react";
 
-import { Button, Sheet } from "@components/ui";
+import { Button, ImagePreviewModal, Sheet } from "@components/ui";
 
 import { cn } from "@utils/shadcn";
 
@@ -44,6 +44,7 @@ type ListingDetailSheetProps = {
  */
 export default function ListingDetailSheet({ listing, isOpen, onOpenChange }: ListingDetailSheetProps) {
   const [activeImage, setActiveImage] = useState(0);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   const images = listing?.images ?? [];
   const hasContact = Boolean(listing?.tel || listing?.email);
@@ -108,7 +109,7 @@ export default function ListingDetailSheet({ listing, isOpen, onOpenChange }: Li
         <div className="flex flex-col gap-6 px-3 py-4">
           {/* 갤러리 */}
           <section className="flex flex-col gap-2" aria-label="매물 사진">
-            <div className="relative overflow-hidden rounded-xl">
+            <div className="group relative overflow-hidden rounded-xl">
               {/* key — 사진을 넘기면 깨짐 상태를 새로 판단한다.
                   평면도·지도 이미지가 섞여 있어 잘리지 않게 전체를 보여준다(object-contain) */}
               <ListingImage
@@ -116,6 +117,20 @@ export default function ListingDetailSheet({ listing, isOpen, onOpenChange }: Li
                 src={images[activeImage]}
                 className="h-[280px] w-full object-contain"
               />
+
+              {images.length > 0 && (
+                // 평면도 글씨가 280px에선 읽히지 않아 크게 보기를 연다. 화살표 버튼보다 아래에 깔아 둘이 겹치지 않게 한다
+                <button
+                  type="button"
+                  aria-label="사진 크게 보기"
+                  onClick={() => setIsPreviewOpen(true)}
+                  className="focus-visible:ring-ring absolute inset-0 cursor-zoom-in focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset"
+                >
+                  <span className="absolute top-3 right-3 flex size-8 items-center justify-center rounded-full bg-black/40 text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+                    <Expand className="size-4" />
+                  </span>
+                </button>
+              )}
 
               {images.length > 1 && (
                 <>
@@ -135,7 +150,7 @@ export default function ListingDetailSheet({ listing, isOpen, onOpenChange }: Li
                   >
                     <ChevronRight className="size-4" />
                   </button>
-                  <span className="absolute right-3 bottom-3 rounded-full bg-black/50 px-2 py-0.5 text-[11px] text-white tabular-nums">
+                  <span className="pointer-events-none absolute right-3 bottom-3 rounded-full bg-black/50 px-2 py-0.5 text-[11px] text-white tabular-nums">
                     {activeImage + 1} / {images.length}
                   </span>
                 </>
@@ -187,6 +202,7 @@ export default function ListingDetailSheet({ listing, isOpen, onOpenChange }: Li
               <a href={listing.mapUrl} target="_blank" rel="noreferrer noopener" className={linkClassName}>
                 <MapPin className="size-3.5" />
                 구글 지도에서 보기
+                <ArrowUpRight className="size-3.5" aria-hidden />
                 <span className="sr-only">(새 창)</span>
               </a>
             )}
@@ -197,14 +213,22 @@ export default function ListingDetailSheet({ listing, isOpen, onOpenChange }: Li
             <section className="flex flex-col gap-2">
               <SectionTitle>출처</SectionTitle>
               <a href={listing.sourceUrl} target="_blank" rel="noreferrer noopener" className={linkClassName}>
-                <ExternalLink className="size-3.5" />
                 {listing.sourceLabel ?? "매물 원문 보기"}
+                <ArrowUpRight className="size-3.5" aria-hidden />
                 <span className="sr-only">(새 창)</span>
               </a>
             </section>
           )}
         </div>
       )}
+
+      <ImagePreviewModal
+        images={images.map(src => ({ src }))}
+        initialIndex={activeImage}
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        onIndexChange={setActiveImage}
+      />
     </Sheet>
   );
 }
