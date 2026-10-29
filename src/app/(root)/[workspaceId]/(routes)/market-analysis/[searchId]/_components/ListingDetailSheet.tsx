@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 
-import { ArrowUpRight, ChevronLeft, ChevronRight, Expand, Mail, MapPin, Phone } from "lucide-react";
+import { ArrowUpRight, ChevronLeft, ChevronRight, Copy, Expand, Mail, MapPin, Phone } from "lucide-react";
 
-import { Button, ImagePreviewModal, Sheet } from "@components/ui";
+import { Button, ImagePreviewModal, Sheet, Toast } from "@components/ui";
 
+import { copyToClipboard } from "@utils/functions";
 import { cn } from "@utils/shadcn";
 
 import { type StoreListingView } from "../../_components/storeSearchView";
@@ -48,6 +49,14 @@ export default function ListingDetailSheet({ listing, isOpen, onOpenChange }: Li
 
   const images = listing?.images ?? [];
   const hasContact = Boolean(listing?.tel || listing?.email);
+  const copyTel = async (tel: string) => {
+    const isCopied = await copyToClipboard(tel);
+    if (isCopied) {
+      Toast.success("번호를 복사했어요");
+    } else {
+      Toast.error("번호를 복사하지 못했어요. 직접 선택해 복사해주세요.");
+    }
+  };
   const move = (step: number) => setActiveImage(index => (index + step + images.length) % images.length);
 
   return (
@@ -79,13 +88,24 @@ export default function ListingDetailSheet({ listing, isOpen, onOpenChange }: Li
 
             {hasContact && (
               <div className="flex gap-2">
+                {/* tel:은 휴대폰에서만 바로 걸린다. 마우스를 쓰는 기기(PC)에선 아무 일도 없어 번호 복사로 대신한다 */}
                 {listing.tel && (
-                  <Button asChild className="flex-1 gap-1.5">
-                    <a href={`tel:${listing.tel}`}>
-                      <Phone className="size-4" />
-                      전화하기
-                    </a>
-                  </Button>
+                  <>
+                    <Button asChild className="flex-1 gap-1.5 pointer-fine:hidden">
+                      <a href={`tel:${listing.tel}`}>
+                        <Phone className="size-4" />
+                        전화하기
+                      </a>
+                    </Button>
+                    <Button
+                      type="button"
+                      className="hidden flex-1 gap-1.5 pointer-fine:inline-flex"
+                      onClick={() => listing.tel && copyTel(listing.tel)}
+                    >
+                      <Copy className="size-4" />
+                      번호 복사
+                    </Button>
+                  </>
                 )}
                 {listing.email && (
                   <Button asChild variant="outline" className="flex-1 gap-1.5">

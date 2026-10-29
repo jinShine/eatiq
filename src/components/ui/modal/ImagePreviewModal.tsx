@@ -361,7 +361,8 @@ export default function ImagePreviewModal({ images, initialIndex = 0, isOpen, on
                   src={currentImage.src}
                   alt={currentImage.alt ?? `이미지 ${currentIndex + 1}`}
                   className={cn(
-                    "max-w-full max-h-full object-contain select-none touch-none",
+                    // 원본이 작은 사진도 화면에 맞게 키운다(비율 유지)
+                    "h-full w-full object-contain select-none touch-none",
                     isZoomed ? "cursor-move" : "cursor-zoom-in",
                   )}
                   draggable={false}
