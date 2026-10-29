@@ -29,7 +29,7 @@ import {
   updateBrandStatus,
   updateBrandStore,
 } from "./brand.api";
-import { mockBrandCompletion, mockBrandSettings } from "./brand.mock";
+import { mockBrandCompletion } from "./brand.mock";
 import {
   type BrandCompletion,
   type BrandCompletionResponse,
@@ -51,7 +51,6 @@ export type BrandSettingsTab = keyof typeof COMPLETION_SCOPE_BY_TAB;
 export const brandKeys = {
   all: ["brands"] as const,
   list: () => [...brandKeys.all, "list"] as const,
-  settings: (workspaceId: string) => [...brandKeys.all, "settings", workspaceId] as const,
   explore: (filters: BrandListFilters) => [...brandKeys.all, "explore", filters] as const,
   exploreDetail: (brandId: string) => [...brandKeys.all, "explore-detail", brandId] as const,
   dashboard: (workspaceId: string) => [...brandKeys.all, "dashboard", workspaceId] as const,
@@ -95,25 +94,6 @@ export function useBrandExploreDetail(brandId: string | null) {
 /************************************
  * 브랜드 정보 설정
  ************************************/
-
-/**
- * 설정 화면용 조회.
- *
- * TODO(API): 새 백엔드는 `GET /api/workspace/brand/{brand_uid}`로 조회하는데,
- * 화면이 아는 값은 workspace_uid뿐이라 brand_uid를 얻는 경로가 필요하다.
- * 또 응답(BrandDetailResponseDto)이 설정 화면의 섹션 구조와 맞지 않는다.
- * 매핑이 확정되기 전까지는 목 데이터로만 동작한다.
- *
- * 회사 정보 설정 탭은 모두 실제 API(useBrandSection)로 옮겼다. 지금은 AI 상권분석 시작 모달의
- * 입력칸 미리 채우기(useAnalysisConditionForm)만 쓴다. TODO(API): 로드맵 5번 때 함께 옮기고 삭제
- */
-export function useBrandSettings(workspaceId: string) {
-  return useQuery({
-    queryKey: brandKeys.settings(workspaceId),
-    queryFn: () => mockResolve(mockBrandSettings),
-    enabled: Boolean(workspaceId),
-  });
-}
 
 type CompletionTaskDto = NonNullable<BrandCompletionResponse["next_task"]>;
 

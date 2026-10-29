@@ -10,8 +10,8 @@ import {
   Compass,
   FileText,
   LayoutDashboard,
+  MapPinned,
   PanelLeft,
-  Sparkles,
   Store,
   User,
   Users,
@@ -42,8 +42,9 @@ const NAV_SECTIONS = [
       { icon: FileText, label: "회사 문서 작성", href: "brand-documents" },
       { icon: Users, label: "바이어 탐색", href: "buyer" },
       { icon: Compass, label: "브랜드 탐색", href: "brand" },
+      // 시안(961:12290) 순서 — 상가 매물 탐색이 진행 관리 위에 온다
+      { icon: MapPinned, label: "상가 매물 탐색", href: "market-analysis" },
       { icon: BarChart3, label: "진행 관리", href: "progress" },
-      { icon: Sparkles, label: "AI 상권분석", href: "market-analysis" },
     ],
   },
   {

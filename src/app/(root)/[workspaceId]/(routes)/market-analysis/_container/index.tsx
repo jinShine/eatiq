@@ -2,125 +2,111 @@
 
 import { useState } from "react";
 
-import dayjs from "dayjs";
-import { Radar } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 import BaseContainerLayout from "@components/layout/base/BaseContainerLayout";
 import BaseContentLayout from "@components/layout/base/BaseContentLayout";
 import PageHeader from "@components/layout/header/PageHeader";
-import { Button, Toast } from "@components/ui";
+import { Toast } from "@components/ui";
 
-import AnalysisResultView from "../_components/AnalysisResultView";
-import PropertyDetailSheet from "../_components/PropertyDetailSheet";
-import StartAnalysisModal from "../_components/StartAnalysisModal";
-import { type AnalysisConditionFormValues } from "../_components/analysisConditionSchema";
-import { PROPERTY_DETAIL_MOCK, buildFallbackPropertyDetail } from "../_components/analysisDetailMock";
-import { ANALYSIS_CITY_OPTIONS, ANALYSIS_COUNTRY_OPTIONS } from "../_components/analysisOptions";
-import { ANALYSIS_PROPERTIES } from "../_components/analysisResultMock";
+import {
+  type StoreSearchListFilters,
+  useExecuteStoreSearch,
+  useStoreSearchList,
+} from "@services/api/store-search/store-search.query";
 
-/** 실행한 분석 1회차 */
-type AnalysisResult = {
-  condition: AnalysisConditionFormValues;
-  analyzedAt: string;
-  title: string;
-};
+import StartStoreSearchModal from "../_components/StartStoreSearchModal";
+import StoreSearchEmptyState from "../_components/StoreSearchEmptyState";
+import StoreSearchFilterBar, { EMPTY_FILTERS, type StoreSearchFilters } from "../_components/StoreSearchFilterBar";
+import StoreSearchTable from "../_components/StoreSearchTable";
+import StoreSearchTableSkeleton from "../_components/StoreSearchTableSkeleton";
+import { type toExecuteRequest } from "../_components/storeSearchSchema";
+import {
+  STORE_SEARCH_DESCRIPTION,
+  STORE_SEARCH_TITLE,
+  toPeriodRange,
+  toStoreSearchRow,
+} from "../_components/storeSearchView";
 
-const findLabel = (options: { value: string; label: string }[], value: string) =>
-  options.find(option => option.value === value)?.label ?? "-";
+/** 필터 → 목록 API 파라미터. 「전체」(빈 값)는 보내지 않는다 */
+const toListFilters = (filters: StoreSearchFilters): StoreSearchListFilters => ({
+  country: filters.country || undefined,
+  city: filters.city || undefined,
+  ...toPeriodRange(filters.period),
+});
 
 type MarketAnalysisContainerProps = {
   workspaceId: string;
 };
 
 export default function MarketAnalysisContainer({ workspaceId }: MarketAnalysisContainerProps) {
-  const [isStartModalOpen, setIsStartModalOpen] = useState(false);
-  const [result, setResult] = useState<AnalysisResult | null>(null);
+  const router = useRouter();
 
-  // TODO(API): 분석 실행 API가 연결되면 응답으로 결과를 채운다. 지금은 입력 조건 + 목업 매물로 결과 화면을 구성한다.
-  const handleSubmitted = (condition: AnalysisConditionFormValues) => {
-    const now = dayjs();
-    const countryLabel = findLabel(ANALYSIS_COUNTRY_OPTIONS, condition.country);
-    const cityLabel = findLabel(ANALYSIS_CITY_OPTIONS[condition.country] ?? [], condition.city);
+  const [filters, setFilters] = useState<StoreSearchFilters>(EMPTY_FILTERS);
+  const listFilters = toListFilters(filters);
+  const isFiltered = Object.values(listFilters).some(Boolean);
+  const { data, isLoading, isPlaceholderData, error, hasNextPage, isFetchingNextPage, fetchNextPage, refetch } =
+    useStoreSearchList(workspaceId, listFilters);
+  const rows = data?.pages.flatMap(page => page.items.map(toStoreSearchRow)) ?? [];
 
-    setResult({
-      condition,
-      analyzedAt: now.format("YYYY.MM.DD HH시 mm분"),
-      title: `${countryLabel} · ${cityLabel} | ${now.format("YYYY.MM.DD")}`,
+  const [isStartOpen, setIsStartOpen] = useState(false);
+  const { mutate: execute, isPending: isExecuting } = useExecuteStoreSearch(workspaceId);
+
+  const handleReset = () => setFilters(EMPTY_FILTERS);
+
+  const handleExecute = (body: ReturnType<typeof toExecuteRequest>) => {
+    execute(body, {
+      // 결과는 리포트 화면에서 본다 — 모달은 이동과 함께 사라진다
+      onSuccess: response => router.push(`/${workspaceId}/market-analysis/${response.data.uid}`),
+      onError: executeError => Toast.error(executeError.message || "탐색을 시작하지 못했어요. 다시 시도해주세요."),
     });
-    setIsStartModalOpen(false);
   };
 
-  // TODO(API): 리포트 생성 API 연결
-  const handleDownloadReport = () => {
-    Toast.success("리포트 다운로드는 API 연결 후 동작합니다.");
-  };
-
-  // 드로어는 선택된 id만 들고 있고, 상세는 목업에서 찾는다
-  const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
-
-  // TODO(API): 매물 상세 API가 준비되면 useQuery(propertyId)로 교체한다
-  const selectedDetail = (() => {
-    if (!selectedPropertyId) {
-      return null;
+  const renderContent = () => {
+    if (isLoading) {
+      return <StoreSearchTableSkeleton />;
     }
-    const property = ANALYSIS_PROPERTIES.find(item => item.id === selectedPropertyId);
+    if (error) {
+      return <StoreSearchEmptyState variant="error" errorMessage={error.message} onRetry={() => refetch()} />;
+    }
+    if (rows.length === 0) {
+      return isFiltered ? (
+        <StoreSearchEmptyState variant="no-result" onResetFilters={handleReset} />
+      ) : (
+        <StoreSearchEmptyState variant="no-data" onStart={() => setIsStartOpen(true)} />
+      );
+    }
     return (
-      PROPERTY_DETAIL_MOCK[selectedPropertyId] ?? buildFallbackPropertyDetail(selectedPropertyId, property?.name ?? "")
+      <StoreSearchTable
+        rows={rows}
+        hasMore={hasNextPage}
+        isLoadingMore={isFetchingNextPage}
+        isRefetching={isPlaceholderData}
+        onLoadMore={() => fetchNextPage()}
+      />
     );
-  })();
-
-  // TODO(API): 중개인 연락처가 응답에 포함되면 tel:·sms:로 연결한다
-  const handleContact = (method: "call" | "message") => {
-    Toast.success(`${method === "call" ? "전화" : "메시지"} 연결은 연락처 API 연결 후 동작합니다.`);
   };
 
   return (
     <BaseContainerLayout
-      header={
-        <PageHeader title="AI 상권 분석" description="국가·도시와 매장 조건을 입력해 AI 상권분석을 실행합니다." />
-      }
+      header={<PageHeader title={STORE_SEARCH_TITLE} description={STORE_SEARCH_DESCRIPTION} />}
       content={
         <BaseContentLayout>
-          {result ? (
-            <AnalysisResultView
-              title={result.title}
-              condition={result.condition}
-              analyzedAt={result.analyzedAt}
-              properties={ANALYSIS_PROPERTIES}
-              onDownloadReport={handleDownloadReport}
-              onOpenDetail={setSelectedPropertyId}
-            />
-          ) : (
-            <div className="flex flex-1 items-center justify-center p-8">
-              <div className="border-border flex flex-col items-center rounded-2xl border border-dashed bg-white px-6 py-20 text-center">
-                <div className="bg-secondary-background text-text-disabled flex size-12 items-center justify-center rounded-2xl">
-                  <Radar className="size-5" strokeWidth={1.5} />
-                </div>
-
-                <p className="text-text-primary mt-5 text-sm font-semibold">아직 실행한 상권 분석이 없어요</p>
-                <p className="text-text-tertiary mt-1.5 max-w-[38ch] text-xs leading-relaxed">
-                  진출하려는 국가·도시와 매장 조건을 입력하면 AI가 후보 매물을 찾아 분석해드려요.
-                </p>
-
-                <Button size="sm" className="mt-6" onClick={() => setIsStartModalOpen(true)}>
-                  AI 상권분석 시작
-                </Button>
-              </div>
-            </div>
-          )}
-
-          <PropertyDetailSheet
-            detail={selectedDetail}
-            isOpen={selectedPropertyId !== null}
-            onOpenChange={open => !open && setSelectedPropertyId(null)}
-            onContact={handleContact}
+          {/* 필터가 바뀌면 목록 queryKey가 바뀌어 첫 페이지부터 다시 받는다 */}
+          <StoreSearchFilterBar
+            filters={filters}
+            onChange={setFilters}
+            onReset={handleReset}
+            onStart={() => setIsStartOpen(true)}
           />
 
-          <StartAnalysisModal
-            workspaceId={workspaceId}
-            isOpen={isStartModalOpen}
-            onOpenChange={setIsStartModalOpen}
-            onSubmitted={handleSubmitted}
+          <div className="px-6 py-6">{renderContent()}</div>
+
+          <StartStoreSearchModal
+            isOpen={isStartOpen}
+            onOpenChange={setIsStartOpen}
+            isPending={isExecuting}
+            onSubmit={handleExecute}
           />
         </BaseContentLayout>
       }
