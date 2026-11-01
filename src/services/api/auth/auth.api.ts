@@ -16,7 +16,8 @@ const ENDPOINTS = {
   magicLink: `${BASE_PATH}/magic-link`,
   verify: `${BASE_PATH}/verify`,
   register: `${BASE_PATH}/register`,
-  logout: `${BASE_PATH}/logout`,
+  // 로그아웃만 계정 도메인으로 이전됐다(10-30)
+  logout: "/api/account/logout",
 };
 
 // 새 백엔드는 공통 래퍼(ApiResponse) 없이 DTO를 그대로 내려준다
