@@ -14,7 +14,8 @@ import {
 } from "@components/custom/workspace";
 import { Button } from "@components/ui";
 
-import { useAuthUser, useLogoutMutation } from "@services/api/auth/auth.query";
+import { useLogoutMutation } from "@services/api/account/account.query";
+import { useAuthUser } from "@services/api/auth/auth.query";
 import { type InvitedWorkspace } from "@services/api/workspace/workspace.type";
 
 type WorkspaceEmptyStateProps = {

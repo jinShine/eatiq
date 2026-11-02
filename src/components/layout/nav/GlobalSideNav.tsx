@@ -19,7 +19,8 @@ import {
 
 import { CreateWorkspaceModal, ReceivedInvitesModal } from "@components/custom/workspace";
 
-import { useAuthUser, useLogoutMutation } from "@services/api/auth/auth.query";
+import { useLogoutMutation } from "@services/api/account/account.query";
+import { useAuthUser } from "@services/api/auth/auth.query";
 import { useInvitedWorkspaces, useMyWorkspaces } from "@services/api/workspace/workspace.query";
 
 import { useUnsavedChangesStore } from "@stores/useUnsavedChangesStore";

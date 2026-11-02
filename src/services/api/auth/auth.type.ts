@@ -14,7 +14,5 @@ export type VerifyMagicLinkResponse = components["schemas"]["VerifyMagicLinkResp
 export type RegisterRequest = components["schemas"]["RegisterDto"];
 export type RegisterResponse = components["schemas"]["RegisterResponseDto"];
 
-export type LogoutResponse = components["schemas"]["LogoutResponseDto"];
-
 /** 로그인한 사용자 */
 export type AuthUser = components["schemas"]["AuthUserResponseDto"];

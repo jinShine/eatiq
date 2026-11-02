@@ -16,6 +16,7 @@ import {
   updateMemberGrade,
   updateMemberStatus,
   updateWorkspaceName,
+  withdrawWorkspace,
 } from "./workspace.api";
 import {
   buildMockInviteResult,
@@ -126,6 +127,26 @@ export function useDeleteWorkspaceMutation(workspaceId: string) {
 
   return useMutation({
     mutationFn: IS_MOCK ? () => mockResolve({ message: "삭제되었습니다." }) : () => deleteWorkspace(workspaceId),
+    onSuccess: () => invalidateQueries.single(workspaceKeys.my()),
+  });
+}
+
+/** 워크스페이스 자진 탈퇴. 이동(남은 워크스페이스로)은 화면에서 정한다 */
+export function useWithdrawWorkspaceMutation(workspaceId: string) {
+  const invalidateQueries = useInvalidateQueries();
+
+  return useMutation({
+    mutationFn: IS_MOCK
+      ? () =>
+          mockResolve({
+            message: "워크스페이스에서 성공적으로 탈퇴하였습니다.",
+            workspace_uid: Number(workspaceId),
+            member_uid: 1,
+            status: "탈퇴",
+            is_workspace_deleted: false,
+            withdrawn_time: new Date().toISOString(),
+          })
+      : () => withdrawWorkspace(workspaceId),
     onSuccess: () => invalidateQueries.single(workspaceKeys.my()),
   });
 }

@@ -1,7 +1,6 @@
 import axiosClientInstance from "@services/axios.client";
 
 import {
-  type LogoutResponse,
   type RegisterRequest,
   type RegisterResponse,
   type SendMagicLinkRequest,
@@ -16,8 +15,6 @@ const ENDPOINTS = {
   magicLink: `${BASE_PATH}/magic-link`,
   verify: `${BASE_PATH}/verify`,
   register: `${BASE_PATH}/register`,
-  // 로그아웃만 계정 도메인으로 이전됐다(10-30)
-  logout: "/api/account/logout",
 };
 
 // 새 백엔드는 공통 래퍼(ApiResponse) 없이 DTO를 그대로 내려준다
@@ -36,10 +33,5 @@ export async function verifyMagicLink(body: VerifyMagicLinkRequest): Promise<Ver
 
 export async function register(body: RegisterRequest): Promise<RegisterResponse> {
   const res = await axiosClientInstance.post<RegisterResponse>(ENDPOINTS.register, body);
-  return res.data;
-}
-
-export async function logout(): Promise<LogoutResponse> {
-  const res = await axiosClientInstance.post<LogoutResponse>(ENDPOINTS.logout);
   return res.data;
 }

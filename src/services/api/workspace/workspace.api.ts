@@ -17,6 +17,7 @@ import {
   type UpdateMemberStatusResponse,
   type UpdateWorkspaceNameRequest,
   type UpdateWorkspaceNameResponse,
+  type WithdrawWorkspaceResponse,
   type WorkspaceDetailResponse,
   type WorkspaceMembersResponse,
 } from "./workspace.type";
@@ -35,6 +36,7 @@ const ENDPOINTS = {
   memberGrade: (workspaceId: string, memberId: string) => `${BASE_PATH}/${workspaceId}/member/${memberId}/grade`,
   memberStatus: (workspaceId: string, memberId: string) => `${BASE_PATH}/${workspaceId}/member/${memberId}/status`,
   memberRemove: (workspaceId: string, memberId: string) => `${BASE_PATH}/${workspaceId}/member/${memberId}/remove`,
+  withdraw: (workspaceId: string) => `${BASE_PATH}/${workspaceId}/member/withdraw`,
 };
 
 /** 내가 속한 워크스페이스 목록 */
@@ -126,5 +128,14 @@ export async function removeRejectedMember(
   const res = await axiosClientInstance.delete<RemoveRejectedMemberResponse>(
     ENDPOINTS.memberRemove(workspaceId, memberId),
   );
+  return res.data;
+}
+
+/**
+ * 워크스페이스 자진 탈퇴.
+ * 관리자인데 일반 멤버만 남아 있으면 400으로 거절된다(권한 위임 또는 멤버 정리 필요).
+ */
+export async function withdrawWorkspace(workspaceId: string): Promise<WithdrawWorkspaceResponse> {
+  const res = await axiosClientInstance.post<WithdrawWorkspaceResponse>(ENDPOINTS.withdraw(workspaceId));
   return res.data;
 }
