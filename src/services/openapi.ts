@@ -64,7 +64,88 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/auth/logout": {
+  "/api/account/me": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * 🔥 [NEW 26.10.30] 내 계정 정보 조회
+     * @description ### 📌 상세 역할 및 개요
+     *     - 현재 로그인된 인증 사용자의 계정 기본 프로필 정보(식별자, 이메일, 이름, 가입일시)를 조회합니다.
+     *     - JWT 인증 토큰의 세션 정보로부터 본인 계정을 식별하여 안전하게 반환합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 로그인 직후 사용자 프로필 초기화 시점
+     *        - 헤더/사이드바 등 글로벌 UI의 사용자 이름 및 이메일 표시 영역 렌더링 시
+     *        - 내 계정 설정 및 프로필 관리 화면 진입 시
+     *     2. **요청 헤더**:
+     *        - `Authorization: Bearer <access_token>`
+     *     3. **엔드포인트 경로**:
+     *        - `GET /api/account/me`
+     *     4. **응답 활용**:
+     *        - `account_uid`: 계정 고유 식별자 (전역 상태에 보관)
+     *        - `email`: 가입 이메일 주소
+     *        - `name`: 사용자 이름/닉네임 (미등록 시 `null` 반환)
+     *        - `created_time`: ISO 8601 형식의 가입 일시
+     *     5. **에러 핸들링**:
+     *        - `401 Unauthorized`: 인증 토큰이 없거나 만료된 세션 환경 (로그인 화면으로 리다이렉트)
+     *        - `404 Not Found`: 계정 정보를 찾을 수 없는 경우
+     */
+    get: operations["GetAccountMeController_getMe"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/account": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * 🔥 [NEW 26.10.30] 계정 탈퇴
+     * @description ### 📌 상세 역할 및 개요
+     *     - 현재 로그인한 사용자의 회원 계정을 탈퇴(소프트 삭제) 처리합니다.
+     *     - 탈퇴 시 연관된 워크스페이스 멤버십 정리, 활성 세션 일괄 종료 및 자동 로그아웃 처리가 함께 수행됩니다.
+     *     - **단독 관리자 안전장치**: 관리자로 소속된 워크스페이스 중 본인 외 다른 멤버(활성 또는 초대중)가 남아있는 경우, 데이터 방치 방지를 위해 탈퇴가 제한됩니다 (사전 권한 위임 또는 멤버 정리 필요).
+     *     - **1인 워크스페이스 자동 정리**: 본인 혼자만 소속된 워크스페이스는 계정 탈퇴 시 함께 소프트 삭제 처리됩니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 내 계정 설정 화면의 [회원 탈퇴] 또는 [계정 삭제] 버튼 클릭 후 최종 컨펌 모달 승인 시
+     *     2. **요청 정보**:
+     *        - HTTP Method: `DELETE /api/account`
+     *        - 헤더: `Authorization: Bearer <access_token>`
+     *     3. **응답 및 후속 UX 처리**:
+     *        - 성공 시 클라이언트 로컬 스토리지의 토큰 및 사용자 세션 상태를 완전히 초기화(Clear)합니다.
+     *        - 탈퇴 완료 안내 메시지 노출 후 서비스 랜딩/로그인 화면으로 리다이렉트합니다.
+     *     4. **에러 핸들링**:
+     *        - `400 Bad Request`: "다른 멤버가 남아있어 관리자는 탈퇴할 수 없습니다" 오류 발생 시, 해당 워크스페이스의 멤버 관리 화면으로 안내하여 관리자 권한 위임 후 다시 탈퇴하도록 유도합니다.
+     *        - `401 Unauthorized`: 세션 만료 시 로그인 화면으로 이동합니다.
+     */
+    delete: operations["DeleteAccountController_deleteAccount"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/account/logout": {
     parameters: {
       query?: never;
       header?: never;
@@ -74,8 +155,25 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * 계정 로그아웃
-     * @description 현재 로그인된 사용자의 세션을 종료(Soft Delete)하고 로그아웃 처리합니다.<br/><br/><b>[상세 역할 및 프론트엔드 연동 가이드]</b><br/>• <b>호출 시점</b>: 사용자가 [로그아웃] 버튼을 클릭했을 때 호출합니다.<br/>• <b>요청 헤더</b>: <code>Authorization: Bearer &lt;access_token&gt;</code> (필수)<br/>• <b>백엔드 동작</b>: 현재 기기의 로그인 세션을 만료 처리하여 토큰을 무효화합니다.<br/>• <b>프론트엔드 후속 처리</b>: API 응답 성공 후 로컬 스토리지/세션 스토리지/쿠키에 저장된 JWT <code>access_token</code> 및 사용자 정보를 모두 삭제하고 로그인 화면(<code>/auth/login</code>)으로 리다이렉트합니다.
+     * 🔄 [UPDATE 26.10.30] 계정 로그아웃 (엔드포인트 /api/account/logout 이전)
+     * @description ### 📝 최근 업데이트 이력 (2026.10.30)
+     *     - **엔드포인트 경로 이전**: 계정 관련 도메인 통일성을 위해 기존 `/api/auth/logout`에서 `POST /api/account/logout`으로 경로가 이전되었습니다.
+     *
+     *     ---
+     *
+     *     ### 📌 상세 역할 및 개요
+     *     - 현재 로그인된 사용자의 세션을 종료(Soft Delete)하고 로그아웃 처리합니다.
+     *     - 현재 기기/브라우저 환경의 활성 세션을 만료 처리하여 전송된 토큰을 즉시 무효화합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**: 사용자가 [로그아웃] 버튼을 클릭했을 때 호출합니다.
+     *     2. **요청 헤더**: `Authorization: Bearer <access_token>` (필수)
+     *     3. **엔드포인트**: `POST /api/account/logout`
+     *     4. **프론트엔드 후속 처리**:
+     *        - API 응답 성공 후 로컬 스토리지/세션 스토리지/쿠키에 저장된 JWT `access_token` 및 전역 상태(사용자 정보 등)를 모두 삭제합니다.
+     *        - 로그인 화면(`/auth/login`)으로 리다이렉트합니다.
      */
     post: operations["LogoutController_handle"];
     delete?: never;
@@ -2831,6 +2929,184 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/document/crm-summary/list": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * 🔄 [UPDATE 26.10.30] 회사 문서 작성용 진행 기록(CRM) 요약 목록 조회 (문서 종류/언어별 상세 객체 제공)
+     * @description ### 📝 최근 업데이트 이력 (2026.10.30)
+     *     - **문서 종류(mou/loi)·언어(ko/en)별 상세 객체(`documents`) 제공**:
+     *       - 각 진행 기록 항목에 이미 생성된 문서들의 상세 정보를 문서 종류 및 언어별로 구조화한 `documents` 객체가 제공됩니다.
+     *       - 응답 구조:
+     *         ```json
+     *         {
+     *           "mou": {
+     *             "ko": { "document_uid": 10, "pdf_url": "https://...", "updated_time": "2026-10-29T15:30:00.000Z" },
+     *             "en": null
+     *           },
+     *           "loi": {
+     *             "ko": null,
+     *             "en": null
+     *           }
+     *         }
+     *         ```
+     *       - 제공 필드:
+     *         - `document_uid`: 문서 고유 식별자 (재내보내기/상세 조회 시 활용)
+     *         - `pdf_url`: 해당 문서의 PDF S3 URL (미생성 시 `null`)
+     *         - `updated_time`: 해당 문서의 최종 생성/수정 일시 (ISO 8601 형식)
+     *       - **프론트엔드 활용법**: 배열 루프나 탐색 없이 `item.documents.mou.ko?.pdf_url` 또는 `item.documents[tab][lang]` 과 같이 $O(1)$ 키 접근으로 문서 존재 여부 및 미리보기 URL을 직관적으로 바인딩할 수 있습니다.
+     *
+     *     ---
+     *
+     *     ### 📌 상세 역할 및 개요
+     *     - 회사 문서 초안 작성(MOU, LOI 초안 탭) 화면에서 **진행 기록 선택 셀렉트 박스 및 주요 요약 카드**에 바인딩할 진행 기록(CRM) 요약 목록을 최신 수정된 순으로 조회합니다.
+     *     - JWT 인증 토큰(`access_token`)이 필요하며, 요청자 본인이 소속된 활성 워크스페이스의 데이터만 안전하게 격리 조회됩니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - '회사 문서 작성' 페이지 진입 시 또는 'MOU 초안', 'LOI 초안' 탭 활성화 시 즉시 호출.
+     *     2. **요청 파라미터 (Query)**:
+     *        - `workspace_uid` (number, 필수): 현재 접속 중인 활성 워크스페이스 식별자.
+     *        - `limit` (number, 선택): 조회할 최대 건수 (기본값: 50, 최대: 100). 드롭다운 렌더링 성능 최적화를 위해 기본 50건으로 제한되며, 최신 수정된 순으로 정렬되어 반환됩니다.
+     *     3. **화면 렌더링 및 UI 매핑 가이드**:
+     *        - **진행 기록 선택 셀렉트 박스**:
+     *          - 라벨 표시 예: `${company_name} | ${country} ・ ${city} | ${contract_type}`
+     *          - 선택 값(Value): `crm_uid`
+     *        - **주요 요약 카드 및 문서 초안 연동**:
+     *          - 사용자가 드롭다운에서 특정 항목을 선택했을 때, 해당 항목의 필드를 아래와 같이 카드에 직접 바인딩하거나 문서 생성 API 호출 시 파라미터로 활용합니다.
+     *          - **대상 식별자**: `workspace_uid` (플랫폼 내 등록된 워크스페이스인 경우 UID, 수기 등록인 경우 `null`)
+     *          - **대상 타입**: `type` (`'buyer'` 또는 `'brand'`)
+     *          - **파트너**: `company_name`
+     *          - **국가 및 도시**: `country` 및 `city` (예: `${country} ・ ${city}`)
+     *          - **계약 방식**: `contract_type`
+     *          - **마지막 협의일**: `last_date` (완료된 다음 액션들의 마감일 중 가장 최신 일자, `YYYY-MM-DD` 포맷. 완료 이력이 없으면 `null`)
+     *        - **문서 종류(MOU/LOI) 및 언어(ko/en)별 문서 상태 및 미리보기 영역**:
+     *          - 현재 활성화된 탭(`currentDocType`: `'mou' | 'loi'`) 및 언어(`currentLang`: `'ko' | 'en'`)에 해당하는 문서 객체를 조회합니다:
+     *            `const doc = item.documents[currentDocType]?.[currentLang];`
+     *          - 문서가 존재하는 경우 (`doc !== null`):
+     *            - `doc.pdf_url`을 활용하여 `<iframe src="${doc.pdf_url}#toolbar=1&navpanes=0" className="w-full h-full" />` 로 즉시 A4 종이 서류 뷰어 표시.
+     *            - `doc.updated_time`을 활용하여 '최종 작성일시' 표시.
+     *            - `doc.document_uid`를 활용하여 다운로드/내보내기 API 호출.
+     *          - 문서가 없는 경우 (`doc === null`):
+     *            - '문서 생성' 유도 버튼 노출.
+     *
+     *     4. **후속 연계 API (문서 초안 신규/재생성)**:
+     *        - 문서가 없거나 다시 생성하고자 할 때는 **[회사 문서 초안 생성 API (POST /api/document/draft)](#/Document/CreateDocumentDraftController_execute)**에 해당 항목의 `crm_uid`를 전달하여 호출합니다.
+     */
+    get: operations["GetDocumentCrmSummaryListController_execute"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/document/draft": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * 🔥 [NEW 26.10.29] 회사 문서(MOU/LOI) 초안 생성 및 S3 PDF 프리뷰 URL 발급
+     * @description ### 📌 상세 역할 및 개요
+     *     - 회사 문서 작성 화면의 **MOU 초안** 및 **LOI 초안** 탭에서 [생성하기] 또는 [다시 생성하기] 버튼 클릭 시 호출되는 API입니다.
+     *     - 선택한 진행 기록(`crm_uid`)과 내 워크스페이스 정보를 기반으로 템플릿 변수를 자동 매핑하고, 비어있는 값은 `{{한글설명}}` 형태로 보존하여 마크다운 본문을 완성합니다.
+     *     - 완성된 마크다운을 고품질 A4 서식 PDF로 자동 변환하여 AWS S3에 안전하게 업로드하고, 영구 프리뷰 URL(`pdf_url`)과 문서 메타데이터를 반환합니다.
+     *     - **표준 S3 프리뷰 파일명 규칙**: `{crm_uid}_{document_uid}_{상대회사명}_{doc_type}_{language}_{YYYYMMDD}.pdf`
+     *       - 모든 공백(빈칸) 및 파일 시스템 금지 특수문자가 제거된 안전한 파일명으로 생성됩니다.
+     *       - 상대회사명은 `language`가 `ko`일 경우 한글 브랜드/기업명, `en`일 경우 영문 브랜드/기업명이 자동으로 반영됩니다.
+     *       - 예시: `12_34_스타벅스코리아_mou_ko_20261031.pdf` (한국어), `12_34_StarbucksCoffee_mou_en_20261031.pdf` (영어)
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **사전 준비 (진행 기록 목록 연동)**:
+     *        - 문서 초안 작성 페이지 진입 시, 상단 '진행 기록 선택' 드롭다운 셀렉트 박스 및 파트너 요약 카드를 렌더링하기 위해 먼저 **[회사 문서 작성용 진행 기록 요약 목록 조회 API (GET /api/document/crm-summary/list)](#/Document/GetDocumentCrmSummaryListController_execute)**를 호출합니다.
+     *        - 해당 API에서 반환된 요약 목록 중 사용자가 선택한 대상의 `crm_uid`를 추출하여 본 API 요청 Body의 `crm_uid` 파라미터로 전달합니다.
+     *     2. **호출 시점**:
+     *        - MOU 초안 또는 LOI 초안 탭에서 진행 기록 선택 후 **[생성하기]** 또는 **[다시 생성하기]** 버튼 클릭 시 호출.
+     *     3. **요청 Body (JSON)**:
+     *        - `workspace_uid` (number, 필수): 현재 접속 중인 활성 워크스페이스 식별자.
+     *        - `crm_uid` (number, 필수): 사전 조회한 진행 기록 요약 목록에서 선택한 대상 진행 기록 식별자.
+     *        - `doc_type` (string, 필수): `'mou'` 또는 `'loi'`.
+     *        - `language` (string, 선택): `'ko'` (기본값) 또는 `'en'`.
+     *     4. **화면 렌더링 및 UI 매핑 가이드**:
+     *        - **미리보기 영역**: 반환된 `data.pdf_url`을 활용하여 `<iframe src="${pdf_url}#toolbar=1&navpanes=0" className="w-full h-full" />` 로 즉시 A4 종이 서류 뷰어 표시.
+     *        - **문서 정보 및 설정 영역**:
+     *          - 문서 언어 드롭다운: `data.meta_data.language`와 동기화
+     *          - 마지막 생성 일시: `data.updated_time` 표시
+     */
+    post: operations["CreateDocumentDraftController_execute"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/document/{document_uid}/export": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * 🔥 [NEW 26.10.29] 문서 파일 내보내기/다운로드 (실시간 스트림)
+     * @description 저장된 문서(MOU, LOI 등)의 최신 마크다운 내용을 지정한 파일 포맷(기본값: docx)의 바이너리로 실시간 변환하여 다운로드 스트림으로 반환합니다.
+     *
+     *     ### 📌 주요 특징
+     *     - **실시간 메모리 변환**: 서버 디스크나 S3에 임시 파일을 남기지 않고 메모리에서 즉시 변환하여 클라이언트 브라우저로 전송합니다.
+     *     - **포맷 확장 지원**: `format` 쿼리 파라미터를 통해 `docx`, `pdf` 포맷을 지원합니다. (PDF는 순차 지원 예정)
+     *     - **파일명 표준화**: `{crm_uid}_{document_uid}_{상대회사명}_{doc_type}_{language}_{YYYYMMDD}.{docx|pdf}`
+     *       - 모든 공백(빈칸) 및 파일 시스템 금지 특수문자가 제거된 안전한 파일명으로 다운로드 스트림이 반환됩니다.
+     *       - 상대회사명은 `language`가 `ko`일 경우 한글 브랜드/기업명, `en`일 경우 영문 브랜드/기업명이 자동으로 반영됩니다.
+     *       - 예시: `12_34_스타벅스코리아_mou_ko_20261031.docx`, `12_34_StarbucksCoffee_mou_en_20261031.pdf`
+     *
+     *     ---
+     *
+     *     ### 💻 파일 다운로드 연동 프로세스
+     *     1. **API 요청**: 헤더에 JWT 인증(`Authorization: Bearer <token>`)을 포함하고, 바이너리 수신을 위해 `responseType: 'blob'`으로 요청합니다.
+     *     2. **파일명 추출**: 응답 헤더 `Content-Disposition`에서 서버가 지정한 파일명을 파싱합니다.
+     *     3. **다운로드 실행**: 수신한 `Blob` 데이터로 브라우저 다운로드를 트리거합니다.
+     *
+     *     ```typescript
+     *     // 1. API 요청 (바이너리 Blob 스트림 수신)
+     *     const res = await api.get(`/api/document/${document_uid}/export`, {
+     *       params: { workspace_uid, format: 'docx' },
+     *       responseType: 'blob',
+     *     });
+     *
+     *     // 2. 응답 헤더에서 파일명 파싱
+     *     const match = res.headers['content-disposition']?.match(/filename\*=UTF-8''([^;]+)|filename="?([^";]+)"?/i);
+     *     const filename = decodeURIComponent(match?.[1] || match?.[2] || 'document.docx');
+     *
+     *     // 3. 브라우저 다운로드 실행
+     *     const url = window.URL.createObjectURL(new Blob([res.data]));
+     *     const a = Object.assign(document.createElement('a'), { href: url, download: filename });
+     *     a.click();
+     *     window.URL.revokeObjectURL(url);
+     *     ```
+     */
+    get: operations["ExportDocumentController_exportDocument"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2937,6 +3213,51 @@ export interface components {
       access_token: string;
       /** @description 생성된 계정 기본 프로필 정보 */
       user: components["schemas"]["AuthUserResponseDto"];
+    };
+    GetAccountMeResponseDto: {
+      /**
+       * @description 계정 고유 식별자
+       * @example 1
+       */
+      account_uid: number;
+      /**
+       * @description 계정 이메일
+       * @example user@example.com
+       */
+      email: string;
+      /**
+       * @description 계정 이름/닉네임
+       * @example 홍길동
+       */
+      name: string | null;
+      /**
+       * Format: date-time
+       * @description 가입 일시
+       * @example 2026-06-24T10:00:00.000Z
+       */
+      created_time: string | null;
+    };
+    DeleteAccountResponseDto: {
+      /**
+       * @description 성공 여부
+       * @example true
+       */
+      success: boolean;
+      /**
+       * @description 결과 메시지
+       * @example 계정이 성공적으로 탈퇴 처리되었습니다.
+       */
+      message: string;
+      /**
+       * @description 탈퇴 처리된 계정 식별자
+       * @example 1
+       */
+      account_uid: number;
+      /**
+       * @description 탈퇴 처리 일시
+       * @example 2026-10-30T15:40:00.000Z
+       */
+      deleted_time: string;
     };
     LogoutResponseDto: {
       /**
@@ -9282,6 +9603,189 @@ export interface components {
       /** @description 상가 매물 탐색 상세 데이터 (조건 + 결과 목록) */
       data: components["schemas"]["StoreSearchDetailDataDto"];
     };
+    CrmDocumentSummaryDetailDto: {
+      /**
+       * @description 문서 고유 식별자
+       * @example 10
+       */
+      document_uid: number;
+      /**
+       * @description PDF S3 미리보기/다운로드 URL (미생성 시 null)
+       * @example https://eatiqlink-s3.s3.ap-northeast-2.amazonaws.com/documents/1/10_Antenna_Bridge_ko_mou.pdf
+       */
+      pdf_url: string | null;
+      /**
+       * Format: date-time
+       * @description 문서 최종 수정/생성 일시 (ISO 8601 형식)
+       * @example 2026-10-29T15:30:00.000Z
+       */
+      updated_time: string | null;
+    };
+    CrmDocumentLanguageGroupDto: {
+      /** @description 한국어(ko) 문서 상세 정보 (미작성 시 null) */
+      ko: components["schemas"]["CrmDocumentSummaryDetailDto"] | null;
+      /** @description 영어(en) 문서 상세 정보 (미작성 시 null) */
+      en: components["schemas"]["CrmDocumentSummaryDetailDto"] | null;
+    };
+    CrmDocumentSummaryDto: {
+      /** @description MOU 문서 (ko / en) */
+      mou: components["schemas"]["CrmDocumentLanguageGroupDto"];
+      /** @description LOI 문서 (ko / en) */
+      loi: components["schemas"]["CrmDocumentLanguageGroupDto"];
+    };
+    CrmSummaryItemDto: {
+      /**
+       * @description 진행 관리 레코드 고유 식별자
+       * @example 1
+       */
+      crm_uid: number;
+      /**
+       * @description 대상 워크스페이스 식별자 (`workspace_uid`, 수기 등록 시 null)
+       * @example 2
+       */
+      workspace_uid: number | null;
+      /**
+       * @description 대상 워크스페이스 타입 (`buyer` 또는 `brand`)
+       * @example buyer
+       * @enum {string|null}
+       */
+      type: "buyer" | "brand" | null;
+      /**
+       * @description 파트너(업체명)
+       * @example Antenna Bridge
+       */
+      company_name: string;
+      /**
+       * @description 국가
+       * @example USA
+       */
+      country: string | null;
+      /**
+       * @description 도시
+       * @example LA
+       */
+      city: string | null;
+      /**
+       * @description 계약 방식 (마스터 프랜차이즈, 직영 등)
+       * @example 마스터 프랜차이즈
+       */
+      contract_type: string | null;
+      /**
+       * @description 마지막 협의일 (완료된 다음 액션들의 마감일 중 가장 최신 일자, YYYY-MM-DD 형식. 없으면 null)
+       * @example 2026-04-30
+       */
+      last_date: string | null;
+      /** @description 해당 진행 기록에 생성된 문서 종류(mou/loi)·언어(ko/en)별 상세 정보 객체 */
+      documents: components["schemas"]["CrmDocumentSummaryDto"];
+    };
+    GetDocumentCrmSummaryListResponseDto: {
+      /**
+       * @description HTTP 상태 코드
+       * @example 200
+       */
+      statusCode: number;
+      /**
+       * @description 응답 메시지
+       * @example 회사 문서 작성용 진행 기록 요약 목록을 성공적으로 조회하였습니다.
+       */
+      message: string;
+      /** @description 문서 작성용 진행 기록 요약 목록 */
+      items: components["schemas"]["CrmSummaryItemDto"][];
+      /**
+       * @description 조회된 결과 건수
+       * @example 3
+       */
+      total: number;
+    };
+    CreateDocumentDraftDto: {
+      /**
+       * @description 내 워크스페이스 고유 식별자 (workspace_uid)
+       * @example 1
+       */
+      workspace_uid: number;
+      /**
+       * @description 선택한 진행 기록 고유 식별자 (crm_uid)
+       * @example 1
+       */
+      crm_uid: number;
+      /**
+       * @description 생성할 문서 종류 (mou: MOU 초안, loi: LOI 초안)
+       * @example mou
+       * @enum {string}
+       */
+      doc_type: "mou" | "loi";
+      /**
+       * @description 문서 언어 (기본값: ko)
+       * @default ko
+       * @example ko
+       * @enum {string}
+       */
+      language: "ko" | "en";
+    };
+    DocumentMetaDataDto: {
+      /**
+       * @description 문서 종류
+       * @example mou
+       * @enum {string}
+       */
+      doc_type: "mou" | "loi";
+      /**
+       * @description 문서 언어
+       * @example ko
+       * @enum {string}
+       */
+      language: "ko" | "en";
+    };
+    DocumentDraftDetailDto: {
+      /**
+       * @description 문서 레코드 식별자 (`etq_document.uid`)
+       * @example 1
+       */
+      document_uid: number;
+      /**
+       * @description 내 워크스페이스 식별자 (`workspace_uid`)
+       * @example 1
+       */
+      workspace_uid: number;
+      /**
+       * @description 선택한 진행 기록 식별자 (`crm_uid`)
+       * @example 1
+       */
+      crm_uid: number;
+      /**
+       * @description S3에 업로드된 PDF 프리뷰 및 다운로드 URL ({document_uid}_{파트너명}_{language}_{doc_type}.pdf)
+       * @example https://cdn.eatiqlink.com/documents/1/12_CJ푸드빌_ko_mou.pdf
+       */
+      pdf_url: string | null;
+      /** @description 문서 메타데이터 (문서 종류 및 언어) */
+      meta_data: components["schemas"]["DocumentMetaDataDto"];
+      /**
+       * Format: date-time
+       * @description 최초 생성 일시
+       * @example 2026-10-28T15:50:00.000Z
+       */
+      created_time: string;
+      /**
+       * Format: date-time
+       * @description 마지막 업데이트(생성) 일시
+       * @example 2026-10-28T15:50:00.000Z
+       */
+      updated_time: string;
+    };
+    CreateDocumentDraftResponseDto: {
+      /**
+       * @description HTTP 상태 코드
+       * @example 200
+       */
+      statusCode: number;
+      /**
+       * @description 응답 메시지
+       * @example 문서 초안 마크다운이 성공적으로 생성되었습니다.
+       */
+      message: string;
+      /** @description 생성된 문서 초안 상세 데이터 */
+      data: components["schemas"]["DocumentDraftDetailDto"];
+    };
   };
   responses: never;
   parameters: never;
@@ -9401,6 +9905,81 @@ export interface operations {
         content: {
           "application/json": unknown;
         };
+      };
+    };
+  };
+  GetAccountMeController_getMe: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 계정 정보 조회 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["GetAccountMeResponseDto"];
+        };
+      };
+      /** @description 유효하지 않거나 만료된 토큰 */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 계정 정보를 찾을 수 없음 */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  DeleteAccountController_deleteAccount: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 계정 탈퇴 완료 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DeleteAccountResponseDto"];
+        };
+      };
+      /** @description 다른 멤버가 남아있는 관리자 워크스페이스가 존재하여 탈퇴 불가 */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 인증 토큰 누락 또는 유효하지 않은 세션 */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 계정 정보를 찾을 수 없음 */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };
@@ -12409,6 +12988,153 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["GetStoreSearchDetailResponseDto"];
         };
+      };
+    };
+  };
+  GetDocumentCrmSummaryListController_execute: {
+    parameters: {
+      query: {
+        /** @description 조회 대상 워크스페이스 식별자 (workspace_uid) */
+        workspace_uid: number;
+        /** @description 조회 건수 제한 (기본값: 50, 최대: 100) */
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 회사 문서 작성용 진행 기록 요약 목록 조회 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["GetDocumentCrmSummaryListResponseDto"];
+        };
+      };
+      /** @description 잘못된 요청 (필수 파라미터 누락 등) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 토큰 또는 미제공) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 접근 권한 없음 (해당 워크스페이스의 멤버가 아닌 경우) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  CreateDocumentDraftController_execute: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateDocumentDraftDto"];
+      };
+    };
+    responses: {
+      /** @description 문서 초안 생성 및 PDF 프리뷰 URL 발급 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CreateDocumentDraftResponseDto"];
+        };
+      };
+      /** @description 잘못된 요청 (필수 파라미터 누락 또는 유효하지 않은 doc_type/language) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 토큰 또는 미제공) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 접근 권한 없음 (해당 워크스페이스의 멤버가 아닌 경우) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 진행 기록(CRM) 또는 템플릿 파일을 찾을 수 없는 경우 */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  ExportDocumentController_exportDocument: {
+    parameters: {
+      query: {
+        /** @description 접근 권한을 검증할 워크스페이스 고유 식별자 (etq_workspace.uid) */
+        workspace_uid: number;
+        /** @description 내보낼 파일 포맷 (기본값: docx) */
+        format?: "docx" | "pdf";
+      };
+      header?: never;
+      path: {
+        /** @description 문서 고유 식별자 (etq_document.uid) */
+        document_uid: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 파일 다운로드 스트림 성공 (Word DOCX / PDF 바이너리) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": string;
+        };
+      };
+      /** @description 유효하지 않은 요청 파라미터 또는 내용이 비어있는 문서 */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 해당 워크스페이스에 대한 접근/다운로드 권한 없음 */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 문서를 찾을 수 없음 */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };
