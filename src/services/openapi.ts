@@ -438,7 +438,7 @@ export interface paths {
      *        - 워크스페이스 설정 내 [멤버 관리] 페이지/모달 진입 시.
      *     2. **테이블/리스트 UI 구성 팁**:
      *        - `status === '초대중'`: '초대 취소' 액션 버튼 노출 (관리자만 클릭 가능).
-     *        - `status === '초대거절'`: '목록에서 제거' 액션 버튼 노출 (`DELETE /api/workspace/:workspace_uid/member/:member_uid/remove` 호출, 관리자 전용).
+     *        - `status in ('초대거절', '초대취소', '강제탈퇴')`: '목록에서 제거' 액션 버튼 노출 (`DELETE /api/workspace/:workspace_uid/member/:member_uid/remove` 호출, 관리자 전용).
      *        - `status === '활성'`: 등급 변경(관리자/사용자 드롭다운) 및 '강제 탈퇴' 액션 버튼 노출.
      *        - 요청자 본인 행: 본인의 등급 변경/강제 탈퇴 버튼은 비활성화 처리.
      *     3. **권한별 UI 제어**:
@@ -640,9 +640,14 @@ export interface paths {
     put?: never;
     post?: never;
     /**
-     * 🆕 [NEW 26.09.28] 초대거절 멤버 목록에서 제거
-     * @description ### 📌 상세 역할 및 개요
-     *     - 워크스페이스 초대를 거절(`status = "초대거절"`)한 멤버를 관리자가 멤버 목록에서 제거(Soft Delete)합니다.
+     * 🔄 [UPDATE 26.11.03] 워크스페이스 비활성 멤버 목록에서 제거 (초대거절/초대취소/강제탈퇴)
+     * @description ### 📝 최근 업데이트 이력 (2026.11.03)
+     *     - **제거 가능 상태 확장**: 기존 `초대거절` 상태 멤버뿐만 아니라 `초대취소`, `강제탈퇴` 상태인 비활성 멤버도 목록에서 제거(Soft Delete)할 수 있도록 대상을 확장했습니다.
+     *
+     *     ---
+     *
+     *     ### 📌 상세 역할 및 개요
+     *     - 워크스페이스 비활성 멤버(`status`가 `"초대거절"`, `"초대취소"`, `"강제탈퇴"` 중 하나)를 관리자가 멤버 목록에서 제거(Soft Delete)합니다.
      *     - 테이블의 `deleted_time` 컬럼을 현재 일시로 갱신하여 목록 조회(`GET /api/workspace/:workspace_uid/members`)에서 더 이상 노출되지 않도록 처리합니다.
      *     - **요청 권한**: 해당 워크스페이스의 **'관리자'** 등급 멤버만 호출 가능합니다.
      *
@@ -650,7 +655,7 @@ export interface paths {
      *
      *     ### 💻 프론트엔드 연동 가이드
      *     1. **호출 시점**:
-     *        - 워크스페이스 설정 내 [멤버 관리] 목록에서 상태가 `초대거절`인 행의 [목록에서 제거] 또는 [삭제] 버튼 클릭 시.
+     *        - 워크스페이스 설정 내 [멤버 관리] 목록에서 상태가 `초대거절`, `초대취소`, `강제탈퇴`인 행의 [목록에서 제거] 또는 [삭제] 버튼 클릭 시.
      *     2. **요청 파라미터**:
      *        - `workspace_uid`: 워크스페이스 식별자
      *        - `member_uid`: 제거할 멤버 레코드 식별자 (`etq_workspace_member.uid`)
@@ -1607,6 +1612,282 @@ export interface paths {
      *        - `image_list` (string[], 선택): 대표 매장 사진 S3 URL 배열 (빈 배열 [] 전송 시 기존 사진 삭제)
      */
     put: operations["UpdateBrandStoreController_updateBrandStore"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/document/crm-summary/list": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * 🔄 [UPDATE 26.10.30] 회사 문서 작성용 진행 기록(CRM) 요약 목록 조회 (문서 종류/언어별 상세 객체 제공)
+     * @description ### 📝 최근 업데이트 이력 (2026.10.30)
+     *     - **문서 종류(mou/loi)·언어(ko/en)별 상세 객체(`documents`) 제공**:
+     *       - 각 진행 기록 항목에 이미 생성된 문서들의 상세 정보를 문서 종류 및 언어별로 구조화한 `documents` 객체가 제공됩니다.
+     *       - 응답 구조:
+     *         ```json
+     *         {
+     *           "mou": {
+     *             "ko": { "document_uid": 10, "pdf_url": "https://...", "updated_time": "2026-10-29T15:30:00.000Z" },
+     *             "en": null
+     *           },
+     *           "loi": {
+     *             "ko": null,
+     *             "en": null
+     *           }
+     *         }
+     *         ```
+     *       - 제공 필드:
+     *         - `document_uid`: 문서 고유 식별자 (재내보내기/상세 조회 시 활용)
+     *         - `pdf_url`: 해당 문서의 PDF S3 URL (미생성 시 `null`)
+     *         - `updated_time`: 해당 문서의 최종 생성/수정 일시 (ISO 8601 형식)
+     *       - **프론트엔드 활용법**: 배열 루프나 탐색 없이 `item.documents.mou.ko?.pdf_url` 또는 `item.documents[tab][lang]` 과 같이 $O(1)$ 키 접근으로 문서 존재 여부 및 미리보기 URL을 직관적으로 바인딩할 수 있습니다.
+     *
+     *     ---
+     *
+     *     ### 📌 상세 역할 및 개요
+     *     - 회사 문서 초안 작성(MOU, LOI 초안 탭) 화면에서 **진행 기록 선택 셀렉트 박스 및 주요 요약 카드**에 바인딩할 진행 기록(CRM) 요약 목록을 최신 수정된 순으로 조회합니다.
+     *     - JWT 인증 토큰(`access_token`)이 필요하며, 요청자 본인이 소속된 활성 워크스페이스의 데이터만 안전하게 격리 조회됩니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - '회사 문서 작성' 페이지 진입 시 또는 'MOU 초안', 'LOI 초안' 탭 활성화 시 즉시 호출.
+     *     2. **요청 파라미터 (Query)**:
+     *        - `workspace_uid` (number, 필수): 현재 접속 중인 활성 워크스페이스 식별자.
+     *        - `limit` (number, 선택): 조회할 최대 건수 (기본값: 50, 최대: 100). 드롭다운 렌더링 성능 최적화를 위해 기본 50건으로 제한되며, 최신 수정된 순으로 정렬되어 반환됩니다.
+     *     3. **화면 렌더링 및 UI 매핑 가이드**:
+     *        - **진행 기록 선택 셀렉트 박스**:
+     *          - 라벨 표시 예: `${company_name} | ${country} ・ ${city} | ${contract_type}`
+     *          - 선택 값(Value): `crm_uid`
+     *        - **주요 요약 카드 및 문서 초안 연동**:
+     *          - 사용자가 드롭다운에서 특정 항목을 선택했을 때, 해당 항목의 필드를 아래와 같이 카드에 직접 바인딩하거나 문서 생성 API 호출 시 파라미터로 활용합니다.
+     *          - **대상 식별자**: `workspace_uid` (플랫폼 내 등록된 워크스페이스인 경우 UID, 수기 등록인 경우 `null`)
+     *          - **대상 타입**: `type` (`'buyer'` 또는 `'brand'`)
+     *          - **파트너**: `company_name`
+     *          - **국가 및 도시**: `country` 및 `city` (예: `${country} ・ ${city}`)
+     *          - **계약 방식**: `contract_type`
+     *          - **마지막 협의일**: `last_date` (완료된 다음 액션들의 마감일 중 가장 최신 일자, `YYYY-MM-DD` 포맷. 완료 이력이 없으면 `null`)
+     *        - **문서 종류(MOU/LOI) 및 언어(ko/en)별 문서 상태 및 미리보기 영역**:
+     *          - 현재 활성화된 탭(`currentDocType`: `'mou' | 'loi'`) 및 언어(`currentLang`: `'ko' | 'en'`)에 해당하는 문서 객체를 조회합니다:
+     *            `const doc = item.documents[currentDocType]?.[currentLang];`
+     *          - 문서가 존재하는 경우 (`doc !== null`):
+     *            - `doc.pdf_url`을 활용하여 `<iframe src="${doc.pdf_url}#toolbar=1&navpanes=0" className="w-full h-full" />` 로 즉시 A4 종이 서류 뷰어 표시.
+     *            - `doc.updated_time`을 활용하여 '최종 작성일시' 표시.
+     *            - `doc.document_uid`를 활용하여 다운로드/내보내기 API 호출.
+     *          - 문서가 없는 경우 (`doc === null`):
+     *            - '문서 생성' 유도 버튼 노출.
+     *
+     *     4. **후속 연계 API (문서 초안 신규/재생성)**:
+     *        - 문서가 없거나 다시 생성하고자 할 때는 **[회사 문서 초안 생성 API (POST /api/document/draft)](#/Document/CreateDocumentDraftController_execute)**에 해당 항목의 `crm_uid`를 전달하여 호출합니다.
+     */
+    get: operations["GetDocumentCrmSummaryListController_execute"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/document/draft": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * 🔥 [NEW 26.10.29] 회사 문서(MOU/LOI) 초안 생성 및 S3 PDF 프리뷰 URL 발급
+     * @description ### 📌 상세 역할 및 개요
+     *     - 회사 문서 작성 화면의 **MOU 초안** 및 **LOI 초안** 탭에서 [생성하기] 또는 [다시 생성하기] 버튼 클릭 시 호출되는 API입니다.
+     *     - 선택한 진행 기록(`crm_uid`)과 내 워크스페이스 정보를 기반으로 템플릿 변수를 자동 매핑하고, 비어있는 값은 `{{한글설명}}` 형태로 보존하여 마크다운 본문을 완성합니다.
+     *     - 완성된 마크다운을 고품질 A4 서식 PDF로 자동 변환하여 AWS S3에 안전하게 업로드하고, 영구 프리뷰 URL(`pdf_url`)과 문서 메타데이터를 반환합니다.
+     *     - **표준 S3 프리뷰 파일명 규칙**: `{crm_uid}_{document_uid}_{상대회사명}_{doc_type}_{language}_{YYYYMMDD}.pdf`
+     *       - 모든 공백(빈칸) 및 파일 시스템 금지 특수문자가 제거된 안전한 파일명으로 생성됩니다.
+     *       - 상대회사명은 `language`가 `ko`일 경우 한글 브랜드/기업명, `en`일 경우 영문 브랜드/기업명이 자동으로 반영됩니다.
+     *       - 예시: `12_34_스타벅스코리아_mou_ko_20261031.pdf` (한국어), `12_34_StarbucksCoffee_mou_en_20261031.pdf` (영어)
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **사전 준비 (진행 기록 목록 연동)**:
+     *        - 문서 초안 작성 페이지 진입 시, 상단 '진행 기록 선택' 드롭다운 셀렉트 박스 및 파트너 요약 카드를 렌더링하기 위해 먼저 **[회사 문서 작성용 진행 기록 요약 목록 조회 API (GET /api/document/crm-summary/list)](#/Document/GetDocumentCrmSummaryListController_execute)**를 호출합니다.
+     *        - 해당 API에서 반환된 요약 목록 중 사용자가 선택한 대상의 `crm_uid`를 추출하여 본 API 요청 Body의 `crm_uid` 파라미터로 전달합니다.
+     *     2. **호출 시점**:
+     *        - MOU 초안 또는 LOI 초안 탭에서 진행 기록 선택 후 **[생성하기]** 또는 **[다시 생성하기]** 버튼 클릭 시 호출.
+     *     3. **요청 Body (JSON)**:
+     *        - `workspace_uid` (number, 필수): 현재 접속 중인 활성 워크스페이스 식별자.
+     *        - `crm_uid` (number, 필수): 사전 조회한 진행 기록 요약 목록에서 선택한 대상 진행 기록 식별자.
+     *        - `doc_type` (string, 필수): `'mou'` 또는 `'loi'`.
+     *        - `language` (string, 선택): `'ko'` (기본값) 또는 `'en'`.
+     *     4. **화면 렌더링 및 UI 매핑 가이드**:
+     *        - **미리보기 영역**: 반환된 `data.pdf_url`을 활용하여 `<iframe src="${pdf_url}#toolbar=1&navpanes=0" className="w-full h-full" />` 로 즉시 A4 종이 서류 뷰어 표시.
+     *        - **문서 정보 및 설정 영역**:
+     *          - 문서 언어 드롭다운: `data.meta_data.language`와 동기화
+     *          - 마지막 생성 일시: `data.updated_time` 표시
+     */
+    post: operations["CreateDocumentDraftController_execute"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/document/{document_uid}/export": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * 🔄 [UPDATE 26.11.05] 문서 파일 내보내기/다운로드 (회사소개서 16:9 PDF 추가)
+     * @description ### 📝 최근 업데이트 이력 (2026.11.05)
+     *     - **회사소개서 다운로드 지원 추가**: 기존 MOU/LOI 외에 회사소개 문서(`doc_type: 'company_intro'`)도 동일한 스트림 인터페이스로 다운로드할 수 있도록 확장했습니다.
+     *     - **16:9 고화질 무손실 스트림 전송**: 회사소개서는 S3에 저장된 원본 16:9 고화질 PDF를 브라우저 다운로드 스트림으로 즉시 전달합니다.
+     *     - **회사소개서 파일명 표준화**: `company_intro_{workspace_uid}_{document_uid}_{내브랜드명}_{YYYYMMDD}.pdf`
+     *
+     *     ---
+     *
+     *     ### 📌 상세 역할 및 개요
+     *     저장된 문서(MOU, LOI, 회사소개서 등)의 최신 내용을 지정한 파일 포맷(`docx`, `pdf`)의 바이너리로 실시간 변환하거나 S3 저장본을 다운로드 스트림으로 반환합니다.
+     *
+     *     ### 📌 문서별 지원 포맷 및 파일명 표준화
+     *     - **회사소개서 (`company_intro`)**:
+     *       - 지원 포맷: `pdf` (16:9 규격 고화질 PDF)
+     *       - 파일명: `company_intro_{workspace_uid}_{document_uid}_{내브랜드명}_{YYYYMMDD}.pdf`
+     *       - 예시: `company_intro_4_15_본수원갈비_20261105.pdf`
+     *     - **MOU / LOI 초안**:
+     *       - 지원 포맷: `docx`, `pdf`
+     *       - 파일명: `{crm_uid}_{document_uid}_{상대회사명}_{doc_type}_{language}_{YYYYMMDD}.{docx|pdf}`
+     *       - 예시: `12_34_스타벅스코리아_mou_ko_20261031.docx`, `12_34_StarbucksCoffee_mou_en_20261031.pdf`
+     *
+     *     ---
+     *
+     *     ### 💻 파일 다운로드 연동 프로세스
+     *     1. **API 요청**: 헤더에 JWT 인증(`Authorization: Bearer <token>`)을 포함하고, 바이너리 수신을 위해 `responseType: 'blob'`으로 요청합니다.
+     *     2. **파일명 추출**: 응답 헤더 `Content-Disposition`에서 서버가 지정한 한글/영문 파일명을 파싱합니다.
+     *     3. **다운로드 실행**: 수신한 `Blob` 데이터로 브라우저 가상 다운로드를 트리거합니다.
+     *
+     *     ```typescript
+     *     // 1. API 요청 (바이너리 Blob 스트림 수신)
+     *     const res = await api.get(`/api/document/${document_uid}/export`, {
+     *       params: {
+     *         workspace_uid: 4,
+     *         format: 'pdf' // 회사소개서는 pdf, MOU/LOI는 docx 또는 pdf
+     *       },
+     *       responseType: 'blob',
+     *     });
+     *
+     *     // 2. 응답 헤더에서 파일명 파싱
+     *     const match = res.headers['content-disposition']?.match(/filename\*=UTF-8''([^;]+)|filename="?([^";]+)"?/i);
+     *     const filename = decodeURIComponent(match?.[1] || match?.[2] || 'document.pdf');
+     *
+     *     // 3. 브라우저 다운로드 실행
+     *     const url = window.URL.createObjectURL(new Blob([res.data]));
+     *     const a = Object.assign(document.createElement('a'), { href: url, download: filename });
+     *     a.click();
+     *     window.URL.revokeObjectURL(url);
+     *     ```
+     */
+    get: operations["ExportDocumentController_exportDocument"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/document/generate/company-intro": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * 🔥 [NEW 26.11.05] 회사소개 문서 자동 생성 (S3 PDF 프리뷰 및 다운로드 URL 발급)
+     * @description ### 📌 상세 역할 및 개요
+     *     - 대상 브랜드 워크스페이스 식별자(`workspace_uid`)와 문서 종류(`doc_type: 'pdf'`)를 전달하면 해당 브랜드의 등록 데이터(기본 정보, 가맹/매출 지표, 메뉴, 매장 사진, 연혁 등)를 바탕으로 **16:9 규격의 고화질 브랜드 소개서 PDF**를 자동 생성합니다.
+     *     - 데이터나 사진 재료가 부족한 슬라이드는 표준 규칙에 따라 자동 제외(Skip)되며, 번호가 1번부터 자동으로 재부여됩니다.
+     *     - 생성된 PDF는 AWS S3에 안전하게 업로드되며, 브라우저 iframe 미리보기 및 원클릭 다운로드가 가능한 퍼블릭 URL(`pdf_url`)과 문서 메타데이터를 즉시 반환합니다.
+     *     - 백엔드에서 지속적으로 템플릿 디자인과 문서 퀄리티를 고도화하더라도, 프론트엔드는 동일한 응답 인터페이스로 항상 최신 고화질 문서를 수신합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **요청 Body (JSON)**:
+     *        - `workspace_uid` (number, 필수): 대상 브랜드 워크스페이스 고유 식별자.
+     *        - `doc_type` (string, 필수): `'pdf'` 고정.
+     *     2. **화면 렌더링 및 UI 매핑 가이드**:
+     *        - **미리보기 영역 (Preview)**:
+     *          - 반환된 `data.pdf_url`을 활용하여 `<iframe src="${pdf_url}#toolbar=1&navpanes=0" className="w-full h-full" />` 로 즉시 16:9 슬라이드 서류 뷰어 표시.
+     *        - **다운로드 (Download)**:
+     *          - `data.pdf_url` 링크를 직접 새 창으로 열거나, 다운로드 버튼(`<a href="${pdf_url}" download>`)에 연결하여 즉시 다운로드 실행.
+     *        - **문서 정보 영역**:
+     *          - 문서 제목: `data.meta_data.title`
+     *          - 총 슬라이드 페이지: `data.meta_data.total_pages`
+     *          - 마지막 생성 일시: `data.updated_time`
+     */
+    post: operations["GenerateCompanyIntroDocumentController_execute"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/document/company-intro": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * 🔥 [NEW 26.11.05] 회사소개 문서 조회
+     * @description ### 📌 상세 역할 및 개요
+     *     - 회사 문서 메뉴 진입 시 현재 워크스페이스에 이미 생성된 **회사소개 문서(16:9 규격 PDF)**의 존재 여부 및 최신 상세 데이터를 조회하는 API입니다.
+     *     - 아직 생성된 문서가 없는 경우 `data: null`을 반환하여 프론트엔드가 [회사소개서 생성하기] 유도 화면을 렌더링할 수 있도록 지원합니다.
+     *     - 이미 생성된 문서가 있는 경우 생성 API(`POST /api/document/generate/company-intro`)와 **동일한 규격의 `data` 객체**(`document_uid`, `pdf_url`, `meta_data` 등)를 반환하므로 상태 관리를 1:1로 재사용할 수 있습니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 회사소개서 탭 또는 메뉴 진입 시 마운트 단계에서 호출.
+     *     2. **요청 Query 파라미터**:
+     *        - `workspace_uid` (number, 필수): 현재 접속 중인 활성 브랜드 워크스페이스 식별자.
+     *     3. **화면 렌더링 분기 처리 가이드**:
+     *        - **`data === null` (문서 미생성 상태)**:
+     *          - [회사소개서 생성하기] 안내 카드 및 생성 트리거 버튼 표시.
+     *        - **`data !== null` (문서 존재 상태)**:
+     *          - **문서 상태 배지 (`data.meta_data.document_status`)**:
+     *            - `'최신'`: 원본 브랜드 정보와 일치함 (초록색 배지)
+     *            - `'업데이트필요'`: 소개서 생성 이후 브랜드 정보(기본정보/메뉴/매장 등)가 수정됨 (주황색 배지 및 [다시 생성하기] 안내)
+     *            - `data.meta_data.data_modified_time`: 마지막 정보 수정 일시 (업데이트필요 상태 시 노출)
+     *          - **미리보기 영역 (Preview)**:
+     *            - `<iframe src="${data.pdf_url}#toolbar=1&navpanes=0" className="w-full h-full" />`
+     *          - **다운로드 버튼 (Download)**:
+     *            - 단일 표준 내보내기 API(`GET /api/document/${data.document_uid}/export?workspace_uid=${workspace_uid}&format=pdf`) 호출 또는 `data.pdf_url` 직통 다운로드 링크 바인딩.
+     *          - **다시 생성하기 버튼**:
+     *            - `POST /api/document/generate/company-intro` 호출 후 반환된 `data`로 상태 즉시 갱신 (생성 성공 시 `document_status`가 자동으로 `'최신'`으로 복구됨).
+     */
+    get: operations["GetCompanyIntroDocumentController_execute"];
+    put?: never;
     post?: never;
     delete?: never;
     options?: never;
@@ -2921,184 +3202,6 @@ export interface paths {
      *        - **층수 표시**: `floor < 0 ? `지하 ${Math.abs(floor)}층` : `${floor}층`` 형태로 프론트엔드 포맷팅 권장
      */
     get: operations["GetStoreSearchDetailController_getDetail"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/document/crm-summary/list": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * 🔄 [UPDATE 26.10.30] 회사 문서 작성용 진행 기록(CRM) 요약 목록 조회 (문서 종류/언어별 상세 객체 제공)
-     * @description ### 📝 최근 업데이트 이력 (2026.10.30)
-     *     - **문서 종류(mou/loi)·언어(ko/en)별 상세 객체(`documents`) 제공**:
-     *       - 각 진행 기록 항목에 이미 생성된 문서들의 상세 정보를 문서 종류 및 언어별로 구조화한 `documents` 객체가 제공됩니다.
-     *       - 응답 구조:
-     *         ```json
-     *         {
-     *           "mou": {
-     *             "ko": { "document_uid": 10, "pdf_url": "https://...", "updated_time": "2026-10-29T15:30:00.000Z" },
-     *             "en": null
-     *           },
-     *           "loi": {
-     *             "ko": null,
-     *             "en": null
-     *           }
-     *         }
-     *         ```
-     *       - 제공 필드:
-     *         - `document_uid`: 문서 고유 식별자 (재내보내기/상세 조회 시 활용)
-     *         - `pdf_url`: 해당 문서의 PDF S3 URL (미생성 시 `null`)
-     *         - `updated_time`: 해당 문서의 최종 생성/수정 일시 (ISO 8601 형식)
-     *       - **프론트엔드 활용법**: 배열 루프나 탐색 없이 `item.documents.mou.ko?.pdf_url` 또는 `item.documents[tab][lang]` 과 같이 $O(1)$ 키 접근으로 문서 존재 여부 및 미리보기 URL을 직관적으로 바인딩할 수 있습니다.
-     *
-     *     ---
-     *
-     *     ### 📌 상세 역할 및 개요
-     *     - 회사 문서 초안 작성(MOU, LOI 초안 탭) 화면에서 **진행 기록 선택 셀렉트 박스 및 주요 요약 카드**에 바인딩할 진행 기록(CRM) 요약 목록을 최신 수정된 순으로 조회합니다.
-     *     - JWT 인증 토큰(`access_token`)이 필요하며, 요청자 본인이 소속된 활성 워크스페이스의 데이터만 안전하게 격리 조회됩니다.
-     *
-     *     ---
-     *
-     *     ### 💻 프론트엔드 연동 가이드
-     *     1. **호출 시점**:
-     *        - '회사 문서 작성' 페이지 진입 시 또는 'MOU 초안', 'LOI 초안' 탭 활성화 시 즉시 호출.
-     *     2. **요청 파라미터 (Query)**:
-     *        - `workspace_uid` (number, 필수): 현재 접속 중인 활성 워크스페이스 식별자.
-     *        - `limit` (number, 선택): 조회할 최대 건수 (기본값: 50, 최대: 100). 드롭다운 렌더링 성능 최적화를 위해 기본 50건으로 제한되며, 최신 수정된 순으로 정렬되어 반환됩니다.
-     *     3. **화면 렌더링 및 UI 매핑 가이드**:
-     *        - **진행 기록 선택 셀렉트 박스**:
-     *          - 라벨 표시 예: `${company_name} | ${country} ・ ${city} | ${contract_type}`
-     *          - 선택 값(Value): `crm_uid`
-     *        - **주요 요약 카드 및 문서 초안 연동**:
-     *          - 사용자가 드롭다운에서 특정 항목을 선택했을 때, 해당 항목의 필드를 아래와 같이 카드에 직접 바인딩하거나 문서 생성 API 호출 시 파라미터로 활용합니다.
-     *          - **대상 식별자**: `workspace_uid` (플랫폼 내 등록된 워크스페이스인 경우 UID, 수기 등록인 경우 `null`)
-     *          - **대상 타입**: `type` (`'buyer'` 또는 `'brand'`)
-     *          - **파트너**: `company_name`
-     *          - **국가 및 도시**: `country` 및 `city` (예: `${country} ・ ${city}`)
-     *          - **계약 방식**: `contract_type`
-     *          - **마지막 협의일**: `last_date` (완료된 다음 액션들의 마감일 중 가장 최신 일자, `YYYY-MM-DD` 포맷. 완료 이력이 없으면 `null`)
-     *        - **문서 종류(MOU/LOI) 및 언어(ko/en)별 문서 상태 및 미리보기 영역**:
-     *          - 현재 활성화된 탭(`currentDocType`: `'mou' | 'loi'`) 및 언어(`currentLang`: `'ko' | 'en'`)에 해당하는 문서 객체를 조회합니다:
-     *            `const doc = item.documents[currentDocType]?.[currentLang];`
-     *          - 문서가 존재하는 경우 (`doc !== null`):
-     *            - `doc.pdf_url`을 활용하여 `<iframe src="${doc.pdf_url}#toolbar=1&navpanes=0" className="w-full h-full" />` 로 즉시 A4 종이 서류 뷰어 표시.
-     *            - `doc.updated_time`을 활용하여 '최종 작성일시' 표시.
-     *            - `doc.document_uid`를 활용하여 다운로드/내보내기 API 호출.
-     *          - 문서가 없는 경우 (`doc === null`):
-     *            - '문서 생성' 유도 버튼 노출.
-     *
-     *     4. **후속 연계 API (문서 초안 신규/재생성)**:
-     *        - 문서가 없거나 다시 생성하고자 할 때는 **[회사 문서 초안 생성 API (POST /api/document/draft)](#/Document/CreateDocumentDraftController_execute)**에 해당 항목의 `crm_uid`를 전달하여 호출합니다.
-     */
-    get: operations["GetDocumentCrmSummaryListController_execute"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/document/draft": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * 🔥 [NEW 26.10.29] 회사 문서(MOU/LOI) 초안 생성 및 S3 PDF 프리뷰 URL 발급
-     * @description ### 📌 상세 역할 및 개요
-     *     - 회사 문서 작성 화면의 **MOU 초안** 및 **LOI 초안** 탭에서 [생성하기] 또는 [다시 생성하기] 버튼 클릭 시 호출되는 API입니다.
-     *     - 선택한 진행 기록(`crm_uid`)과 내 워크스페이스 정보를 기반으로 템플릿 변수를 자동 매핑하고, 비어있는 값은 `{{한글설명}}` 형태로 보존하여 마크다운 본문을 완성합니다.
-     *     - 완성된 마크다운을 고품질 A4 서식 PDF로 자동 변환하여 AWS S3에 안전하게 업로드하고, 영구 프리뷰 URL(`pdf_url`)과 문서 메타데이터를 반환합니다.
-     *     - **표준 S3 프리뷰 파일명 규칙**: `{crm_uid}_{document_uid}_{상대회사명}_{doc_type}_{language}_{YYYYMMDD}.pdf`
-     *       - 모든 공백(빈칸) 및 파일 시스템 금지 특수문자가 제거된 안전한 파일명으로 생성됩니다.
-     *       - 상대회사명은 `language`가 `ko`일 경우 한글 브랜드/기업명, `en`일 경우 영문 브랜드/기업명이 자동으로 반영됩니다.
-     *       - 예시: `12_34_스타벅스코리아_mou_ko_20261031.pdf` (한국어), `12_34_StarbucksCoffee_mou_en_20261031.pdf` (영어)
-     *
-     *     ---
-     *
-     *     ### 💻 프론트엔드 연동 가이드
-     *     1. **사전 준비 (진행 기록 목록 연동)**:
-     *        - 문서 초안 작성 페이지 진입 시, 상단 '진행 기록 선택' 드롭다운 셀렉트 박스 및 파트너 요약 카드를 렌더링하기 위해 먼저 **[회사 문서 작성용 진행 기록 요약 목록 조회 API (GET /api/document/crm-summary/list)](#/Document/GetDocumentCrmSummaryListController_execute)**를 호출합니다.
-     *        - 해당 API에서 반환된 요약 목록 중 사용자가 선택한 대상의 `crm_uid`를 추출하여 본 API 요청 Body의 `crm_uid` 파라미터로 전달합니다.
-     *     2. **호출 시점**:
-     *        - MOU 초안 또는 LOI 초안 탭에서 진행 기록 선택 후 **[생성하기]** 또는 **[다시 생성하기]** 버튼 클릭 시 호출.
-     *     3. **요청 Body (JSON)**:
-     *        - `workspace_uid` (number, 필수): 현재 접속 중인 활성 워크스페이스 식별자.
-     *        - `crm_uid` (number, 필수): 사전 조회한 진행 기록 요약 목록에서 선택한 대상 진행 기록 식별자.
-     *        - `doc_type` (string, 필수): `'mou'` 또는 `'loi'`.
-     *        - `language` (string, 선택): `'ko'` (기본값) 또는 `'en'`.
-     *     4. **화면 렌더링 및 UI 매핑 가이드**:
-     *        - **미리보기 영역**: 반환된 `data.pdf_url`을 활용하여 `<iframe src="${pdf_url}#toolbar=1&navpanes=0" className="w-full h-full" />` 로 즉시 A4 종이 서류 뷰어 표시.
-     *        - **문서 정보 및 설정 영역**:
-     *          - 문서 언어 드롭다운: `data.meta_data.language`와 동기화
-     *          - 마지막 생성 일시: `data.updated_time` 표시
-     */
-    post: operations["CreateDocumentDraftController_execute"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/document/{document_uid}/export": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * 🔥 [NEW 26.10.29] 문서 파일 내보내기/다운로드 (실시간 스트림)
-     * @description 저장된 문서(MOU, LOI 등)의 최신 마크다운 내용을 지정한 파일 포맷(기본값: docx)의 바이너리로 실시간 변환하여 다운로드 스트림으로 반환합니다.
-     *
-     *     ### 📌 주요 특징
-     *     - **실시간 메모리 변환**: 서버 디스크나 S3에 임시 파일을 남기지 않고 메모리에서 즉시 변환하여 클라이언트 브라우저로 전송합니다.
-     *     - **포맷 확장 지원**: `format` 쿼리 파라미터를 통해 `docx`, `pdf` 포맷을 지원합니다. (PDF는 순차 지원 예정)
-     *     - **파일명 표준화**: `{crm_uid}_{document_uid}_{상대회사명}_{doc_type}_{language}_{YYYYMMDD}.{docx|pdf}`
-     *       - 모든 공백(빈칸) 및 파일 시스템 금지 특수문자가 제거된 안전한 파일명으로 다운로드 스트림이 반환됩니다.
-     *       - 상대회사명은 `language`가 `ko`일 경우 한글 브랜드/기업명, `en`일 경우 영문 브랜드/기업명이 자동으로 반영됩니다.
-     *       - 예시: `12_34_스타벅스코리아_mou_ko_20261031.docx`, `12_34_StarbucksCoffee_mou_en_20261031.pdf`
-     *
-     *     ---
-     *
-     *     ### 💻 파일 다운로드 연동 프로세스
-     *     1. **API 요청**: 헤더에 JWT 인증(`Authorization: Bearer <token>`)을 포함하고, 바이너리 수신을 위해 `responseType: 'blob'`으로 요청합니다.
-     *     2. **파일명 추출**: 응답 헤더 `Content-Disposition`에서 서버가 지정한 파일명을 파싱합니다.
-     *     3. **다운로드 실행**: 수신한 `Blob` 데이터로 브라우저 다운로드를 트리거합니다.
-     *
-     *     ```typescript
-     *     // 1. API 요청 (바이너리 Blob 스트림 수신)
-     *     const res = await api.get(`/api/document/${document_uid}/export`, {
-     *       params: { workspace_uid, format: 'docx' },
-     *       responseType: 'blob',
-     *     });
-     *
-     *     // 2. 응답 헤더에서 파일명 파싱
-     *     const match = res.headers['content-disposition']?.match(/filename\*=UTF-8''([^;]+)|filename="?([^";]+)"?/i);
-     *     const filename = decodeURIComponent(match?.[1] || match?.[2] || 'document.docx');
-     *
-     *     // 3. 브라우저 다운로드 실행
-     *     const url = window.URL.createObjectURL(new Blob([res.data]));
-     *     const a = Object.assign(document.createElement('a'), { href: url, download: filename });
-     *     a.click();
-     *     window.URL.revokeObjectURL(url);
-     *     ```
-     */
-    get: operations["ExportDocumentController_exportDocument"];
     put?: never;
     post?: never;
     delete?: never;
@@ -4581,7 +4684,7 @@ export interface components {
     RemoveWorkspaceRejectedMemberResponseDto: {
       /**
        * @description 처리 결과 메시지
-       * @example 초대거절된 멤버를 목록에서 성공적으로 제거했습니다.
+       * @example 초대취소 상태의 멤버를 목록에서 성공적으로 제거했습니다.
        */
       message: string;
       /**
@@ -6923,6 +7026,302 @@ export interface components {
       workspace_uid: number;
       /** @description 저장된 브랜드 대표 매장 정보 */
       brand_store: components["schemas"]["BrandStoreDataDto"];
+    };
+    CrmDocumentSummaryDetailDto: {
+      /**
+       * @description 문서 고유 식별자
+       * @example 10
+       */
+      document_uid: number;
+      /**
+       * @description PDF S3 미리보기/다운로드 URL (미생성 시 null)
+       * @example https://eatiqlink-s3.s3.ap-northeast-2.amazonaws.com/documents/1/10_Antenna_Bridge_ko_mou.pdf
+       */
+      pdf_url: string | null;
+      /**
+       * Format: date-time
+       * @description 문서 최종 수정/생성 일시 (ISO 8601 형식)
+       * @example 2026-10-29T15:30:00.000Z
+       */
+      updated_time: string | null;
+    };
+    CrmDocumentLanguageGroupDto: {
+      /** @description 한국어(ko) 문서 상세 정보 (미작성 시 null) */
+      ko: components["schemas"]["CrmDocumentSummaryDetailDto"] | null;
+      /** @description 영어(en) 문서 상세 정보 (미작성 시 null) */
+      en: components["schemas"]["CrmDocumentSummaryDetailDto"] | null;
+    };
+    CrmDocumentSummaryDto: {
+      /** @description MOU 문서 (ko / en) */
+      mou: components["schemas"]["CrmDocumentLanguageGroupDto"];
+      /** @description LOI 문서 (ko / en) */
+      loi: components["schemas"]["CrmDocumentLanguageGroupDto"];
+    };
+    CrmSummaryItemDto: {
+      /**
+       * @description 진행 관리 레코드 고유 식별자
+       * @example 1
+       */
+      crm_uid: number;
+      /**
+       * @description 대상 워크스페이스 식별자 (`workspace_uid`, 수기 등록 시 null)
+       * @example 2
+       */
+      workspace_uid: number | null;
+      /**
+       * @description 대상 워크스페이스 타입 (`buyer` 또는 `brand`)
+       * @example buyer
+       * @enum {string|null}
+       */
+      type: "buyer" | "brand" | null;
+      /**
+       * @description 파트너(업체명)
+       * @example Antenna Bridge
+       */
+      company_name: string;
+      /**
+       * @description 국가
+       * @example USA
+       */
+      country: string | null;
+      /**
+       * @description 도시
+       * @example LA
+       */
+      city: string | null;
+      /**
+       * @description 계약 방식 (마스터 프랜차이즈, 직영 등)
+       * @example 마스터 프랜차이즈
+       */
+      contract_type: string | null;
+      /**
+       * @description 마지막 협의일 (완료된 다음 액션들의 마감일 중 가장 최신 일자, YYYY-MM-DD 형식. 없으면 null)
+       * @example 2026-04-30
+       */
+      last_date: string | null;
+      /** @description 해당 진행 기록에 생성된 문서 종류(mou/loi)·언어(ko/en)별 상세 정보 객체 */
+      documents: components["schemas"]["CrmDocumentSummaryDto"];
+    };
+    GetDocumentCrmSummaryListResponseDto: {
+      /**
+       * @description HTTP 상태 코드
+       * @example 200
+       */
+      statusCode: number;
+      /**
+       * @description 응답 메시지
+       * @example 회사 문서 작성용 진행 기록 요약 목록을 성공적으로 조회하였습니다.
+       */
+      message: string;
+      /** @description 문서 작성용 진행 기록 요약 목록 */
+      items: components["schemas"]["CrmSummaryItemDto"][];
+      /**
+       * @description 조회된 결과 건수
+       * @example 3
+       */
+      total: number;
+    };
+    CreateDocumentDraftDto: {
+      /**
+       * @description 내 워크스페이스 고유 식별자 (workspace_uid)
+       * @example 1
+       */
+      workspace_uid: number;
+      /**
+       * @description 선택한 진행 기록 고유 식별자 (crm_uid)
+       * @example 1
+       */
+      crm_uid: number;
+      /**
+       * @description 생성할 문서 종류 (mou: MOU 초안, loi: LOI 초안)
+       * @example mou
+       * @enum {string}
+       */
+      doc_type: "mou" | "loi";
+      /**
+       * @description 문서 언어 (기본값: ko)
+       * @default ko
+       * @example ko
+       * @enum {string}
+       */
+      language: "ko" | "en";
+    };
+    DocumentMetaDataDto: {
+      /**
+       * @description 문서 종류
+       * @example mou
+       * @enum {string}
+       */
+      doc_type: "mou" | "loi";
+      /**
+       * @description 문서 언어
+       * @example ko
+       * @enum {string}
+       */
+      language: "ko" | "en";
+    };
+    DocumentDraftDetailDto: {
+      /**
+       * @description 문서 레코드 식별자 (`etq_document.uid`)
+       * @example 1
+       */
+      document_uid: number;
+      /**
+       * @description 내 워크스페이스 식별자 (`workspace_uid`)
+       * @example 1
+       */
+      workspace_uid: number;
+      /**
+       * @description 선택한 진행 기록 식별자 (`crm_uid`)
+       * @example 1
+       */
+      crm_uid: number;
+      /**
+       * @description S3에 업로드된 PDF 프리뷰 및 다운로드 URL ({document_uid}_{파트너명}_{language}_{doc_type}.pdf)
+       * @example https://cdn.eatiqlink.com/documents/1/12_CJ푸드빌_ko_mou.pdf
+       */
+      pdf_url: string | null;
+      /** @description 문서 메타데이터 (문서 종류 및 언어) */
+      meta_data: components["schemas"]["DocumentMetaDataDto"];
+      /**
+       * Format: date-time
+       * @description 최초 생성 일시
+       * @example 2026-10-28T15:50:00.000Z
+       */
+      created_time: string;
+      /**
+       * Format: date-time
+       * @description 마지막 업데이트(생성) 일시
+       * @example 2026-10-28T15:50:00.000Z
+       */
+      updated_time: string;
+    };
+    CreateDocumentDraftResponseDto: {
+      /**
+       * @description HTTP 상태 코드
+       * @example 200
+       */
+      statusCode: number;
+      /**
+       * @description 응답 메시지
+       * @example 문서 초안 마크다운이 성공적으로 생성되었습니다.
+       */
+      message: string;
+      /** @description 생성된 문서 초안 상세 데이터 */
+      data: components["schemas"]["DocumentDraftDetailDto"];
+    };
+    GenerateCompanyIntroDocumentDto: {
+      /**
+       * @description 브랜드 워크스페이스 고유 식별자
+       * @example 4
+       */
+      workspace_uid: number;
+      /**
+       * @description 생성할 문서 종류 (회사소개서는 pdf 고정)
+       * @example pdf
+       * @enum {string}
+       */
+      doc_type: "pdf";
+    };
+    CompanyIntroMetaDataDto: {
+      /**
+       * @description 문서 종류
+       * @example pdf
+       * @enum {string}
+       */
+      doc_type: "pdf";
+      /**
+       * @description 문서 언어
+       * @example ko
+       * @enum {string}
+       */
+      language: "ko" | "en";
+      /**
+       * @description 문서 제목
+       * @example 본수원갈비 회사소개서
+       */
+      title?: string;
+      /**
+       * @description 브랜드 명칭
+       * @example 본수원갈비
+       */
+      brand_name?: string;
+      /**
+       * @description 슬라이드 총 페이지 수
+       * @example 11
+       */
+      total_pages?: number;
+      /**
+       * @description 회사소개 문서 상태 (최신: 원본 데이터와 일치 / 업데이트필요: 소개서 생성 후 브랜드 정보 수정됨)
+       * @example 최신
+       * @enum {string}
+       */
+      document_status: "최신" | "업데이트필요";
+      /**
+       * Format: date-time
+       * @description 회사소개 관련 정보가 마지막으로 수정된 일시 (최신 상태일 경우 null)
+       * @example null
+       */
+      data_modified_time: string | null;
+    };
+    CompanyIntroDocumentDetailDto: {
+      /**
+       * @description 문서 레코드 고유 식별자
+       * @example 1
+       */
+      document_uid: number;
+      /**
+       * @description 내 워크스페이스 고유 식별자
+       * @example 4
+       */
+      workspace_uid: number;
+      /**
+       * @description S3에 업로드된 PDF 프리뷰 및 다운로드 URL ({workspace_uid}_{document_uid}_{브랜드명}_pdf_{YYYYMMDD}.pdf)
+       * @example https://cdn.eatiqlink.com/documents/4/company_intro_4_1_본수원갈비_pdf_20261105.pdf
+       */
+      pdf_url: string | null;
+      /** @description 문서 메타데이터 (문서 종류, 언어, 제목 등) */
+      meta_data: components["schemas"]["CompanyIntroMetaDataDto"];
+      /**
+       * Format: date-time
+       * @description 최초 생성 일시
+       * @example 2026-11-05T14:15:00.000Z
+       */
+      created_time: string;
+      /**
+       * Format: date-time
+       * @description 마지막 업데이트(생성) 일시
+       * @example 2026-11-05T14:15:00.000Z
+       */
+      updated_time: string;
+    };
+    GenerateCompanyIntroDocumentResponseDto: {
+      /**
+       * @description HTTP 상태 코드
+       * @example 200
+       */
+      statusCode: number;
+      /**
+       * @description 응답 메시지
+       * @example 회사소개 문서(PDF)가 성공적으로 생성되었습니다.
+       */
+      message: string;
+      /** @description 생성된 회사소개 문서 상세 데이터 */
+      data: components["schemas"]["CompanyIntroDocumentDetailDto"];
+    };
+    GetCompanyIntroDocumentResponseDto: {
+      /**
+       * @description HTTP 상태 코드
+       * @example 200
+       */
+      statusCode: number;
+      /**
+       * @description 응답 메시지
+       * @example 회사소개 문서를 성공적으로 조회했습니다.
+       */
+      message: string;
+      /** @description 생성된 회사소개 문서 상세 데이터 (문서가 아직 생성되지 않은 경우 null 반환) */
+      data: components["schemas"]["CompanyIntroDocumentDetailDto"] | null;
     };
     BuyerDashboardStageDto: {
       /**
@@ -9603,189 +10002,6 @@ export interface components {
       /** @description 상가 매물 탐색 상세 데이터 (조건 + 결과 목록) */
       data: components["schemas"]["StoreSearchDetailDataDto"];
     };
-    CrmDocumentSummaryDetailDto: {
-      /**
-       * @description 문서 고유 식별자
-       * @example 10
-       */
-      document_uid: number;
-      /**
-       * @description PDF S3 미리보기/다운로드 URL (미생성 시 null)
-       * @example https://eatiqlink-s3.s3.ap-northeast-2.amazonaws.com/documents/1/10_Antenna_Bridge_ko_mou.pdf
-       */
-      pdf_url: string | null;
-      /**
-       * Format: date-time
-       * @description 문서 최종 수정/생성 일시 (ISO 8601 형식)
-       * @example 2026-10-29T15:30:00.000Z
-       */
-      updated_time: string | null;
-    };
-    CrmDocumentLanguageGroupDto: {
-      /** @description 한국어(ko) 문서 상세 정보 (미작성 시 null) */
-      ko: components["schemas"]["CrmDocumentSummaryDetailDto"] | null;
-      /** @description 영어(en) 문서 상세 정보 (미작성 시 null) */
-      en: components["schemas"]["CrmDocumentSummaryDetailDto"] | null;
-    };
-    CrmDocumentSummaryDto: {
-      /** @description MOU 문서 (ko / en) */
-      mou: components["schemas"]["CrmDocumentLanguageGroupDto"];
-      /** @description LOI 문서 (ko / en) */
-      loi: components["schemas"]["CrmDocumentLanguageGroupDto"];
-    };
-    CrmSummaryItemDto: {
-      /**
-       * @description 진행 관리 레코드 고유 식별자
-       * @example 1
-       */
-      crm_uid: number;
-      /**
-       * @description 대상 워크스페이스 식별자 (`workspace_uid`, 수기 등록 시 null)
-       * @example 2
-       */
-      workspace_uid: number | null;
-      /**
-       * @description 대상 워크스페이스 타입 (`buyer` 또는 `brand`)
-       * @example buyer
-       * @enum {string|null}
-       */
-      type: "buyer" | "brand" | null;
-      /**
-       * @description 파트너(업체명)
-       * @example Antenna Bridge
-       */
-      company_name: string;
-      /**
-       * @description 국가
-       * @example USA
-       */
-      country: string | null;
-      /**
-       * @description 도시
-       * @example LA
-       */
-      city: string | null;
-      /**
-       * @description 계약 방식 (마스터 프랜차이즈, 직영 등)
-       * @example 마스터 프랜차이즈
-       */
-      contract_type: string | null;
-      /**
-       * @description 마지막 협의일 (완료된 다음 액션들의 마감일 중 가장 최신 일자, YYYY-MM-DD 형식. 없으면 null)
-       * @example 2026-04-30
-       */
-      last_date: string | null;
-      /** @description 해당 진행 기록에 생성된 문서 종류(mou/loi)·언어(ko/en)별 상세 정보 객체 */
-      documents: components["schemas"]["CrmDocumentSummaryDto"];
-    };
-    GetDocumentCrmSummaryListResponseDto: {
-      /**
-       * @description HTTP 상태 코드
-       * @example 200
-       */
-      statusCode: number;
-      /**
-       * @description 응답 메시지
-       * @example 회사 문서 작성용 진행 기록 요약 목록을 성공적으로 조회하였습니다.
-       */
-      message: string;
-      /** @description 문서 작성용 진행 기록 요약 목록 */
-      items: components["schemas"]["CrmSummaryItemDto"][];
-      /**
-       * @description 조회된 결과 건수
-       * @example 3
-       */
-      total: number;
-    };
-    CreateDocumentDraftDto: {
-      /**
-       * @description 내 워크스페이스 고유 식별자 (workspace_uid)
-       * @example 1
-       */
-      workspace_uid: number;
-      /**
-       * @description 선택한 진행 기록 고유 식별자 (crm_uid)
-       * @example 1
-       */
-      crm_uid: number;
-      /**
-       * @description 생성할 문서 종류 (mou: MOU 초안, loi: LOI 초안)
-       * @example mou
-       * @enum {string}
-       */
-      doc_type: "mou" | "loi";
-      /**
-       * @description 문서 언어 (기본값: ko)
-       * @default ko
-       * @example ko
-       * @enum {string}
-       */
-      language: "ko" | "en";
-    };
-    DocumentMetaDataDto: {
-      /**
-       * @description 문서 종류
-       * @example mou
-       * @enum {string}
-       */
-      doc_type: "mou" | "loi";
-      /**
-       * @description 문서 언어
-       * @example ko
-       * @enum {string}
-       */
-      language: "ko" | "en";
-    };
-    DocumentDraftDetailDto: {
-      /**
-       * @description 문서 레코드 식별자 (`etq_document.uid`)
-       * @example 1
-       */
-      document_uid: number;
-      /**
-       * @description 내 워크스페이스 식별자 (`workspace_uid`)
-       * @example 1
-       */
-      workspace_uid: number;
-      /**
-       * @description 선택한 진행 기록 식별자 (`crm_uid`)
-       * @example 1
-       */
-      crm_uid: number;
-      /**
-       * @description S3에 업로드된 PDF 프리뷰 및 다운로드 URL ({document_uid}_{파트너명}_{language}_{doc_type}.pdf)
-       * @example https://cdn.eatiqlink.com/documents/1/12_CJ푸드빌_ko_mou.pdf
-       */
-      pdf_url: string | null;
-      /** @description 문서 메타데이터 (문서 종류 및 언어) */
-      meta_data: components["schemas"]["DocumentMetaDataDto"];
-      /**
-       * Format: date-time
-       * @description 최초 생성 일시
-       * @example 2026-10-28T15:50:00.000Z
-       */
-      created_time: string;
-      /**
-       * Format: date-time
-       * @description 마지막 업데이트(생성) 일시
-       * @example 2026-10-28T15:50:00.000Z
-       */
-      updated_time: string;
-    };
-    CreateDocumentDraftResponseDto: {
-      /**
-       * @description HTTP 상태 코드
-       * @example 200
-       */
-      statusCode: number;
-      /**
-       * @description 응답 메시지
-       * @example 문서 초안 마크다운이 성공적으로 생성되었습니다.
-       */
-      message: string;
-      /** @description 생성된 문서 초안 상세 데이터 */
-      data: components["schemas"]["DocumentDraftDetailDto"];
-    };
   };
   responses: never;
   parameters: never;
@@ -10585,7 +10801,7 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description 초대거절 멤버 목록 제거 성공 */
+      /** @description 비활성 멤버 목록 제거 성공 */
       200: {
         headers: {
           [name: string]: unknown;
@@ -10594,7 +10810,7 @@ export interface operations {
           "application/json": components["schemas"]["RemoveWorkspaceRejectedMemberResponseDto"];
         };
       };
-      /** @description 초대거절 상태가 아닌 멤버를 제거하려고 시도한 경우 */
+      /** @description 제거 가능한 상태(초대거절, 초대취소, 강제탈퇴)가 아닌 멤버를 제거하려고 시도한 경우 */
       400: {
         headers: {
           [name: string]: unknown;
@@ -11754,6 +11970,249 @@ export interface operations {
       };
       /** @description 워크스페이스를 찾을 수 없음 */
       404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  GetDocumentCrmSummaryListController_execute: {
+    parameters: {
+      query: {
+        /** @description 조회 대상 워크스페이스 식별자 (workspace_uid) */
+        workspace_uid: number;
+        /** @description 조회 건수 제한 (기본값: 50, 최대: 100) */
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 회사 문서 작성용 진행 기록 요약 목록 조회 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["GetDocumentCrmSummaryListResponseDto"];
+        };
+      };
+      /** @description 잘못된 요청 (필수 파라미터 누락 등) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 토큰 또는 미제공) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 접근 권한 없음 (해당 워크스페이스의 멤버가 아닌 경우) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  CreateDocumentDraftController_execute: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateDocumentDraftDto"];
+      };
+    };
+    responses: {
+      /** @description 문서 초안 생성 및 PDF 프리뷰 URL 발급 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CreateDocumentDraftResponseDto"];
+        };
+      };
+      /** @description 잘못된 요청 (필수 파라미터 누락 또는 유효하지 않은 doc_type/language) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 토큰 또는 미제공) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 접근 권한 없음 (해당 워크스페이스의 멤버가 아닌 경우) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 진행 기록(CRM) 또는 템플릿 파일을 찾을 수 없는 경우 */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  ExportDocumentController_exportDocument: {
+    parameters: {
+      query: {
+        /** @description 접근 권한을 검증할 워크스페이스 고유 식별자 (etq_workspace.uid) */
+        workspace_uid: number;
+        /** @description 내보낼 파일 포맷 (기본값: docx) */
+        format?: "docx" | "pdf";
+      };
+      header?: never;
+      path: {
+        /** @description 문서 고유 식별자 (etq_document.uid) */
+        document_uid: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 파일 다운로드 스트림 성공 (Word DOCX / PDF 바이너리) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": string;
+        };
+      };
+      /** @description 유효하지 않은 요청 파라미터 또는 내용이 비어있는 문서 */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 해당 워크스페이스에 대한 접근/다운로드 권한 없음 */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 문서를 찾을 수 없음 */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  GenerateCompanyIntroDocumentController_execute: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["GenerateCompanyIntroDocumentDto"];
+      };
+    };
+    responses: {
+      /** @description 회사소개 문서(PDF)가 성공적으로 생성되었습니다. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["GenerateCompanyIntroDocumentResponseDto"];
+        };
+      };
+      /** @description 잘못된 요청 (필수 파라미터 누락 또는 유효하지 않은 doc_type) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 토큰 또는 미제공) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 접근 권한 없음 (해당 워크스페이스에 대한 접근 권한 부재) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 대상 워크스페이스를 찾을 수 없음 */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  GetCompanyIntroDocumentController_execute: {
+    parameters: {
+      query: {
+        /** @description 브랜드 워크스페이스 고유 식별자 */
+        workspace_uid: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 회사소개 문서 조회 성공 (문서 미존재 시 data는 null) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["GetCompanyIntroDocumentResponseDto"];
+        };
+      };
+      /** @description 잘못된 요청 (필수 파라미터 workspace_uid 누락) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 인증 실패 (유효하지 않거나 만료된 토큰 또는 미제공) */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 접근 권한 없음 (해당 워크스페이스에 대한 접근 권한 부재) */
+      403: {
         headers: {
           [name: string]: unknown;
         };
@@ -12988,153 +13447,6 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["GetStoreSearchDetailResponseDto"];
         };
-      };
-    };
-  };
-  GetDocumentCrmSummaryListController_execute: {
-    parameters: {
-      query: {
-        /** @description 조회 대상 워크스페이스 식별자 (workspace_uid) */
-        workspace_uid: number;
-        /** @description 조회 건수 제한 (기본값: 50, 최대: 100) */
-        limit?: number;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description 회사 문서 작성용 진행 기록 요약 목록 조회 성공 */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["GetDocumentCrmSummaryListResponseDto"];
-        };
-      };
-      /** @description 잘못된 요청 (필수 파라미터 누락 등) */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description 인증 실패 (유효하지 않거나 만료된 토큰 또는 미제공) */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description 접근 권한 없음 (해당 워크스페이스의 멤버가 아닌 경우) */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-    };
-  };
-  CreateDocumentDraftController_execute: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["CreateDocumentDraftDto"];
-      };
-    };
-    responses: {
-      /** @description 문서 초안 생성 및 PDF 프리뷰 URL 발급 성공 */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["CreateDocumentDraftResponseDto"];
-        };
-      };
-      /** @description 잘못된 요청 (필수 파라미터 누락 또는 유효하지 않은 doc_type/language) */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description 인증 실패 (유효하지 않거나 만료된 토큰 또는 미제공) */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description 접근 권한 없음 (해당 워크스페이스의 멤버가 아닌 경우) */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description 진행 기록(CRM) 또는 템플릿 파일을 찾을 수 없는 경우 */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-    };
-  };
-  ExportDocumentController_exportDocument: {
-    parameters: {
-      query: {
-        /** @description 접근 권한을 검증할 워크스페이스 고유 식별자 (etq_workspace.uid) */
-        workspace_uid: number;
-        /** @description 내보낼 파일 포맷 (기본값: docx) */
-        format?: "docx" | "pdf";
-      };
-      header?: never;
-      path: {
-        /** @description 문서 고유 식별자 (etq_document.uid) */
-        document_uid: number;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description 파일 다운로드 스트림 성공 (Word DOCX / PDF 바이너리) */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": string;
-        };
-      };
-      /** @description 유효하지 않은 요청 파라미터 또는 내용이 비어있는 문서 */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description 해당 워크스페이스에 대한 접근/다운로드 권한 없음 */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description 문서를 찾을 수 없음 */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
       };
     };
   };
