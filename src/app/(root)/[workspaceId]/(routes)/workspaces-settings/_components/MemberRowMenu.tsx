@@ -27,13 +27,18 @@ const MENU_ITEMS: Partial<Record<string, MenuItem[]>> = {
     { action: "deleteFromList", label: "목록에서 삭제", isDestructive: true },
   ],
   /**
-   * 취소된 초대는 같은 주소로 다시 초대할 수 있지만 목록에서 지울 수는 없다.
-   * remove API가 "초대거절 상태인 멤버만" 허용한다(실측 400).
-   * TODO(백엔드): 초대취소 멤버도 제거할 수 있어야 목록이 정리된다.
+   * 비활성 멤버는 자동으로 사라지지 않고 관리자가 직접 지운다(기획 결정).
+   * remove API가 초대거절·초대취소·강제탈퇴를 모두 받는다(11-03 확장).
    */
-  초대취소: [{ action: "resendInvite", label: "다시 초대" }],
+  초대취소: [
+    { action: "resendInvite", label: "다시 초대" },
+    { action: "deleteFromList", label: "목록에서 삭제", isDestructive: true },
+  ],
   /** 내보낸 멤버도 같은 주소로 다시 초대할 수 있다(실측 201 → 초대중). 확인 모달 문구도 "다시 초대 받아야"라고 안내한다 */
-  강제탈퇴: [{ action: "resendInvite", label: "다시 초대" }],
+  강제탈퇴: [
+    { action: "resendInvite", label: "다시 초대" },
+    { action: "deleteFromList", label: "목록에서 삭제", isDestructive: true },
+  ],
 };
 
 type MemberRowMenuProps = {

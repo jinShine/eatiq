@@ -103,7 +103,7 @@ export type UpdateMemberStatusRequest = components["schemas"]["UpdateWorkspaceMe
 export type UpdateMemberStatusResponse = components["schemas"]["UpdateWorkspaceMemberStatusResponseDto"];
 
 /** 초대거절 멤버를 목록에서 제거 (소프트 삭제) */
-export type RemoveRejectedMemberResponse = components["schemas"]["RemoveWorkspaceRejectedMemberResponseDto"];
+export type RemoveInactiveMemberResponse = components["schemas"]["RemoveWorkspaceRejectedMemberResponseDto"];
 
 /** 내가 워크스페이스에서 나간다. 혼자 남은 관리자면 워크스페이스가 함께 삭제된다(is_workspace_deleted) */
 export type WithdrawWorkspaceResponse = components["schemas"]["WithdrawWorkspaceMemberResponseDto"];

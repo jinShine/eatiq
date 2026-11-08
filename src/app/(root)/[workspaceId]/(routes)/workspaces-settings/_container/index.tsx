@@ -13,7 +13,7 @@ import {
   useDeleteWorkspaceMutation,
   useInviteMembersMutation,
   useMyWorkspaces,
-  useRemoveRejectedMemberMutation,
+  useRemoveInactiveMemberMutation,
   useUpdateMemberGradeMutation,
   useUpdateMemberStatusMutation,
   useUpdateWorkspaceNameMutation,
@@ -46,7 +46,7 @@ export default function WorkspacesSettingsContainer({ workspaceId }: { workspace
   const { mutate: invite, isPending: isInviting } = useInviteMembersMutation(workspaceId);
   const { mutate: updateGrade, isPending: isUpdatingGrade } = useUpdateMemberGradeMutation(workspaceId);
   const { mutate: updateStatus, isPending: isUpdatingStatus } = useUpdateMemberStatusMutation(workspaceId);
-  const { mutate: removeRejected, isPending: isRemoving } = useRemoveRejectedMemberMutation(workspaceId);
+  const { mutate: removeInactive, isPending: isRemoving } = useRemoveInactiveMemberMutation(workspaceId);
 
   /** 처리 중에는 모든 행 메뉴를 잠근다. 목록이 갱신되기 전에 같은 대상을 또 누를 수 있다 */
   const isMemberActionPending = isUpdatingGrade || isUpdatingStatus || isRemoving || isInviting;
@@ -116,7 +116,7 @@ export default function WorkspacesSettingsContainer({ workspaceId }: { workspace
     }
 
     if (action === "deleteFromList") {
-      removeRejected(member.id, {
+      removeInactive(member.id, {
         onSuccess: () => Toast.success("목록에서 삭제했어요."),
         onError: error => toastError(error, "삭제에 실패했어요."),
       });

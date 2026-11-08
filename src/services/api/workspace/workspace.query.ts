@@ -11,7 +11,7 @@ import {
   getWorkspaceDetail,
   getWorkspaceMembers,
   inviteMembers,
-  removeRejectedMember,
+  removeInactiveMember,
   respondWorkspaceInvite,
   updateMemberGrade,
   updateMemberStatus,
@@ -269,11 +269,11 @@ export function useUpdateMemberStatusMutation(workspaceId: string) {
   });
 }
 
-export function useRemoveRejectedMemberMutation(workspaceId: string) {
+export function useRemoveInactiveMemberMutation(workspaceId: string) {
   const invalidateQueries = useInvalidateQueries();
 
   return useMutation({
-    mutationFn: (memberId: string) => removeRejectedMember(workspaceId, memberId),
+    mutationFn: (memberId: string) => removeInactiveMember(workspaceId, memberId),
     onSuccess: () => invalidateQueries.single(workspaceKeys.members(workspaceId)),
   });
 }

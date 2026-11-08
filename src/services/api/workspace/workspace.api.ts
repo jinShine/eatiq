@@ -8,7 +8,7 @@ import {
   type InviteMembersResponse,
   type InvitedWorkspacesResponse,
   type MyWorkspacesResponse,
-  type RemoveRejectedMemberResponse,
+  type RemoveInactiveMemberResponse,
   type RespondInviteRequest,
   type RespondInviteResponse,
   type UpdateMemberGradeRequest,
@@ -120,12 +120,12 @@ export async function updateMemberStatus(
   return res.data;
 }
 
-/** 초대거절 멤버를 목록에서 제거 */
-export async function removeRejectedMember(
+/** 비활성 멤버(초대거절·초대취소·강제탈퇴)를 목록에서 제거 */
+export async function removeInactiveMember(
   workspaceId: string,
   memberId: string,
-): Promise<RemoveRejectedMemberResponse> {
-  const res = await axiosClientInstance.delete<RemoveRejectedMemberResponse>(
+): Promise<RemoveInactiveMemberResponse> {
+  const res = await axiosClientInstance.delete<RemoveInactiveMemberResponse>(
     ENDPOINTS.memberRemove(workspaceId, memberId),
   );
   return res.data;
