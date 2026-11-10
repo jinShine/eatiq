@@ -7,6 +7,7 @@ import PageHeader from "@components/layout/header/PageHeader";
 import ComingSoonTab from "../_components/ComingSoonTab";
 import DocumentsTabNav from "../_components/DocumentsTabNav";
 import { DOCUMENTS_TABS, type DocumentsTabKey } from "../_components/documentsTabs";
+import DraftTab from "../_components/draft/DraftTab";
 
 type BrandDocumentsContainerProps = {
   workspaceId: string;
@@ -23,7 +24,12 @@ export default function BrandDocumentsContainer({ workspaceId, activeTab }: Bran
       content={
         <BaseContentLayout>
           <DocumentsTabNav workspaceId={workspaceId} activeTab={activeTab} />
-          <ComingSoonTab label={activeLabel} />
+          {activeTab === "mou" || activeTab === "loi" ? (
+            // key — 탭을 바꾸면 고른 진행 건을 초기화한다
+            <DraftTab key={activeTab} workspaceId={workspaceId} docType={activeTab} />
+          ) : (
+            <ComingSoonTab label={activeLabel} />
+          )}
         </BaseContentLayout>
       }
     />
