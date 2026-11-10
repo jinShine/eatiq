@@ -287,6 +287,26 @@ export async function downloadFromUrl(
  * });
  * downloadFromResponse(response); // 서버에서 제공하는 파일명 사용
  */
+/**
+ * Content-Disposition에서 파일명을 꺼낸다.
+ * `filename*=UTF-8''…`(한글 등 인코딩된 이름)을 먼저 보고, 없으면 `filename="…"`을 쓴다.
+ * 둘이 함께 오는 헤더(`filename="a.docx"; filename*=UTF-8''a.docx`)에서 앞쪽을 통째로 자르면
+ * 파일명 뒤에 `; filename*`가 붙어 버린다
+ */
+export function parseContentDispositionFileName(header: string | undefined | null): string | null {
+  if (!header) {
+    return null;
+  }
+
+  const encoded = header.match(/filename\*\s*=\s*(?:UTF-8|utf-8)''([^;]+)/)?.[1];
+  if (encoded) {
+    return decodeURIComponent(encoded.trim());
+  }
+
+  const plain = header.match(/filename\s*=\s*"?([^";]+)"?/)?.[1];
+  return plain ? decodeURIComponent(plain.trim()) : null;
+}
+
 export function downloadFromResponse(
   response: AxiosResponse<Blob>,
   options: {
@@ -299,10 +319,7 @@ export function downloadFromResponse(
   const { fileName, onError } = options;
 
   try {
-    const contentDisposition = response.headers["content-disposition"];
-    const serverFileName = contentDisposition
-      ? decodeURIComponent(contentDisposition.split("filename=")[1]?.replace(/['"]/g, ""))
-      : null;
+    const serverFileName = parseContentDispositionFileName(response.headers["content-disposition"]);
 
     const finalFileName = fileName || serverFileName || "file";
     downloadFromBlob(response.data, finalFileName);
