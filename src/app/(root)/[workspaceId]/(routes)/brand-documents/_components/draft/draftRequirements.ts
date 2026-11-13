@@ -13,8 +13,11 @@ type BrandSections = NonNullable<WorkspaceDetailResponse["brand"]>;
 type BrandBasic = BrandSections["brand_basic"];
 type BrandSignature = BrandSections["brand_signature"];
 
-/** 보유 — 값이 있다 / 미보유 — 채우러 갈 곳이 있다 / 문서에서 — 화면에서 채울 곳이 없어 DOCX에서 쓴다 */
-export type RequirementStatus = "have" | "missing" | "document";
+/**
+ * 보유 — 값이 있다 / 미보유 — 채우러 갈 곳이 있다 / 문서에서 — 화면에서 채울 곳이 없어 DOCX에서 쓴다 /
+ * 자동 — 사용자가 채우는 칸 없이 서버가 모은다(소개 문서 연혁)
+ */
+export type RequirementStatus = "have" | "missing" | "document" | "auto";
 
 export type RequirementRow = {
   key: string;

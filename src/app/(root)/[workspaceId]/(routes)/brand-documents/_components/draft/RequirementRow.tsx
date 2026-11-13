@@ -14,7 +14,7 @@ type RequirementRowProps = {
 
 /**
  * 자료 한 행 (피그마 「행 상태 안내 — 개발용」 2291:1182).
- * 보유 — 파란 배지 / 미보유 — 「입력」 테두리 배지(필수는 빨강) / 문서에서 — 회색 테두리.
+ * 보유 — 파란 배지 / 미보유 — 「입력」 테두리 배지(필수는 빨강) / 문서에서 · 자동 — 회색 테두리.
  * 「입력」은 지금은 값을 채우는 화면으로 보낸다. 행 안에서 바로 입력하는 건 다음 단계
  */
 export default function RequirementRow({ row, isRequired }: RequirementRowProps) {
@@ -29,8 +29,10 @@ export default function RequirementRow({ row, isRequired }: RequirementRowProps)
         </p>
 
         {row.status === "have" && <span className={cn(BADGE_BASE, "bg-info text-white")}>보유</span>}
-        {row.status === "document" && (
-          <span className={cn(BADGE_BASE, "border-border text-text-secondary border")}>문서에서</span>
+        {(row.status === "document" || row.status === "auto") && (
+          <span className={cn(BADGE_BASE, "border-border text-text-secondary border")}>
+            {row.status === "document" ? "문서에서" : "자동"}
+          </span>
         )}
         {isMissing && row.fillHref && (
           <Link

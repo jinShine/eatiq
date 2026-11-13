@@ -6,7 +6,7 @@ import { type CrmSummaryItem, type DraftDocType } from "@services/api/document/d
 
 import { formatDate } from "@utils/functions";
 
-import RequirementRow from "./RequirementRow";
+import RequirementGroup from "./RequirementGroup";
 import { type DraftRequirements } from "./draftRequirements";
 
 /** 문서 종류별 화면 문구 */
@@ -147,28 +147,5 @@ export default function DraftPanel({
         </p>
       </section>
     </div>
-  );
-}
-
-type RequirementGroupProps = {
-  title: string;
-  description: string;
-  rows: DraftRequirements["required"];
-  isRequired: boolean;
-};
-
-function RequirementGroup({ title, description, rows, isRequired }: RequirementGroupProps) {
-  return (
-    <section className="border-border flex flex-col gap-4 border-t pt-5">
-      <div className="flex flex-col gap-0.5">
-        <h2 className="text-text-primary text-lg font-bold">{title}</h2>
-        <p className="text-text-tertiary text-xs">{description}</p>
-      </div>
-      <ul className="flex flex-col gap-2.5">
-        {rows.map(row => (
-          <RequirementRow key={row.key} row={row} isRequired={isRequired} />
-        ))}
-      </ul>
-    </section>
   );
 }

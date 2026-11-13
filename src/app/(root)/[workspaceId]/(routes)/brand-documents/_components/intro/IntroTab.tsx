@@ -2,6 +2,7 @@
 
 import { Toast } from "@components/ui";
 
+import { useBrandSection } from "@services/api/brand/brand.query";
 import {
   useCompanyIntro,
   useExportDocumentMutation,
@@ -10,6 +11,7 @@ import {
 
 import IntroPanel from "./IntroPanel";
 import IntroPreview from "./IntroPreview";
+import { buildIntroRequirements } from "./introRequirements";
 
 type IntroTabProps = {
   workspaceId: string;
@@ -24,6 +26,18 @@ export default function IntroTab({ workspaceId }: IntroTabProps) {
     error: generateError,
   } = useGenerateCompanyIntroMutation(workspaceId);
   const { mutate: download, isPending: isDownloading } = useExportDocumentMutation(workspaceId);
+
+  // 같은 워크스페이스 상세 한 번을 섹션별로 나눠 읽는다(요청은 하나)
+  const { data: visual, isSuccess: isBrandLoaded } = useBrandSection(workspaceId, "brand_visual");
+  const { data: menu } = useBrandSection(workspaceId, "brand_menu");
+  const { data: status } = useBrandSection(workspaceId, "brand_status");
+  const { data: contractPolicy } = useBrandSection(workspaceId, "brand_contract_policy");
+  const { data: intro } = useBrandSection(workspaceId, "brand_intro");
+  const { data: store } = useBrandSection(workspaceId, "brand_store");
+
+  const requirements = isBrandLoaded
+    ? buildIntroRequirements({ workspaceId, visual, menu, status, contractPolicy, intro, store })
+    : null;
 
   const handleGenerate = () => {
     generate(undefined, {
@@ -43,7 +57,13 @@ export default function IntroTab({ workspaceId }: IntroTabProps) {
     // MOU·LOI와 같은 틀 — 왼쪽 패널 고정 폭(피그마 354px), 오른쪽 미리보기. 좁은 화면에선 위아래로 쌓는다
     <div className="flex flex-1 flex-col lg:flex-row">
       <aside className="border-border w-full shrink-0 border-b lg:w-[354px] lg:border-r lg:border-b-0">
-        <IntroPanel document={document} isLoading={isLoading} isGenerating={isGenerating} onGenerate={handleGenerate} />
+        <IntroPanel
+          document={document}
+          isLoading={isLoading}
+          requirements={requirements}
+          isGenerating={isGenerating}
+          onGenerate={handleGenerate}
+        />
       </aside>
 
       <IntroPreview
