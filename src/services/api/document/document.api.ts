@@ -3,10 +3,12 @@ import { type AxiosResponse } from "axios";
 import axiosClientInstance from "@services/axios.client";
 
 import {
+  type CompanyIntroResponse,
   type CreateDocumentDraftRequest,
   type CreateDocumentDraftResponse,
   type CrmSummaryListResponse,
   type ExportDocumentFormat,
+  type GenerateCompanyIntroResponse,
 } from "./document.type";
 
 const BASE_PATH = "/api/document";
@@ -15,6 +17,8 @@ const ENDPOINTS = {
   crmSummaryList: `${BASE_PATH}/crm-summary/list`,
   draft: `${BASE_PATH}/draft`,
   export: (documentId: number) => `${BASE_PATH}/${documentId}/export`,
+  companyIntro: `${BASE_PATH}/company-intro`,
+  generateCompanyIntro: `${BASE_PATH}/generate/company-intro`,
 };
 
 /** 서버 최대치 — 진행 기록 선택 드롭다운에 한 번에 다 담는다 */
@@ -50,4 +54,21 @@ export async function exportDocument(
     params: { workspace_uid: Number(workspaceId), format },
     responseType: "blob",
   });
+}
+
+/** 회사 소개 문서 조회 — 아직 만들지 않았으면 data가 null */
+export async function getCompanyIntro(workspaceId: string): Promise<CompanyIntroResponse> {
+  const res = await axiosClientInstance.get<CompanyIntroResponse>(ENDPOINTS.companyIntro, {
+    params: { workspace_uid: Number(workspaceId) },
+  });
+  return res.data;
+}
+
+/** 회사 소개 문서 생성 — 동기 처리라 20초 안팎 걸린다. 다시 만들면 덮어쓴다 */
+export async function generateCompanyIntro(workspaceId: string): Promise<GenerateCompanyIntroResponse> {
+  const res = await axiosClientInstance.post<GenerateCompanyIntroResponse>(ENDPOINTS.generateCompanyIntro, {
+    workspace_uid: Number(workspaceId),
+    doc_type: "pdf",
+  });
+  return res.data;
 }

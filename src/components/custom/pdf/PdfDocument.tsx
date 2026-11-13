@@ -21,6 +21,8 @@ export type PdfDocumentProps = {
   url: string;
   /** 페이지 최대 폭(px). 영역이 더 좁으면 영역에 맞춘다 */
   maxPageWidth: number;
+  /** 쪽 폭 / 높이 — 받는 동안 보이는 빈 쪽 모양. 기본 A4 세로 */
+  aspectRatio?: number;
 };
 
 /**
@@ -28,7 +30,7 @@ export type PdfDocumentProps = {
  * pdf.js가 브라우저 전용 API를 써서 서버에서 그릴 수 없다. PdfPreview가 dynamic(ssr:false)으로 불러온다.
  * 글자 선택·링크 층은 그리지 않는다 — 미리보기라 필요 없고, 층마다 CSS와 렌더 비용이 붙는다
  */
-export default function PdfDocument({ url, maxPageWidth }: PdfDocumentProps) {
+export default function PdfDocument({ url, maxPageWidth, aspectRatio }: PdfDocumentProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { width = 0 } = useResizeObserver({ ref: containerRef as React.RefObject<HTMLDivElement> });
   const [pageCount, setPageCount] = useState(0);
@@ -53,7 +55,7 @@ export default function PdfDocument({ url, maxPageWidth }: PdfDocumentProps) {
       {pageWidth > 0 && (
         <Document
           file={url}
-          loading={<PdfSkeleton width={pageWidth} />}
+          loading={<PdfSkeleton width={pageWidth} aspectRatio={aspectRatio} />}
           onLoadSuccess={({ numPages }) => {
             setPageCount(numPages);
             setPage(1);
@@ -65,7 +67,7 @@ export default function PdfDocument({ url, maxPageWidth }: PdfDocumentProps) {
             width={pageWidth}
             renderTextLayer={false}
             renderAnnotationLayer={false}
-            loading={<PdfSkeleton width={pageWidth} />}
+            loading={<PdfSkeleton width={pageWidth} aspectRatio={aspectRatio} />}
             className="border-border overflow-hidden rounded-sm border shadow-sm"
           />
         </Document>

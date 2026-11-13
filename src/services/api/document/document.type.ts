@@ -22,3 +22,15 @@ export type DocumentLanguage = CreateDocumentDraftRequest["language"];
 export type ExportDocumentFormat = NonNullable<
   operations["ExportDocumentController_exportDocument"]["parameters"]["query"]["format"]
 >;
+
+/************************************
+ * 회사 소개 문서 — 워크스페이스당 하나, 다시 만들면 덮어쓴다
+ ************************************/
+
+/** 조회 — 아직 만들지 않았으면 data가 null */
+export type CompanyIntroResponse = components["schemas"]["GetCompanyIntroDocumentResponseDto"];
+/** 생성 — 20초 안팎 걸리는 동기 처리, 조회와 같은 모양의 data가 온다 */
+export type GenerateCompanyIntroResponse = components["schemas"]["GenerateCompanyIntroDocumentResponseDto"];
+export type CompanyIntroDocument = components["schemas"]["CompanyIntroDocumentDetailDto"];
+/** 최신 · 업데이트필요 — 만든 뒤 회사 정보가 바뀌면 업데이트필요 */
+export type CompanyIntroStatus = CompanyIntroDocument["meta_data"]["document_status"];
