@@ -821,10 +821,18 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * 🔄 [UPDATE 26.10.12] 브랜드 탐색 상세 정보 조회 (featured_image_list 추가 및 비주얼 이미지 파싱 수정)
-     * @description ### 📝 최근 업데이트 이력 (2026.10.12)
+     * 🔄 [UPDATE 26.11.13] 브랜드 탐색 상세 정보 조회 (비주얼 미디어 전체 필드 추가)
+     * @description ### 📝 최근 업데이트 이력 (2026.11.13)
+     *     - **비주얼 미디어 5개 필드 추가**: 브랜드 대표 영상(`featured_video_list`), 매장 및 인테리어 사진/영상(`store_image_list`, `store_video_list`), 조리 사진/영상(`cooking_image_list`, `cooking_video_list`) 필드를 응답 스펙에 추가하여 상세 화면에서 다채로운 미디어를 렌더링할 수 있도록 지원합니다.
+     *
+     *     <details>
+     *     <summary><b>📂 이전 업데이트 이력 보기 (클릭하여 펼치기)</b></summary>
+     *
+     *     ### 📝 이전 업데이트 이력 (2026.10.12)
      *     - **비주얼 이미지 파싱 정상화**: DB 내 `brand_visual` 컬럼 매핑 오류를 수정하여 `logo_image` 및 `featured_image`가 null로 반환되던 문제를 해결했습니다.
      *     - **`featured_image_list` 응답 필드 추가**: 상세 페이지/캐러셀 뷰에서 전체 비주얼 이미지를 렌더링할 수 있도록 `featured_image_list`(전체 대표 이미지 URL 배열, `string[]`) 필드를 응답 스펙에 추가했습니다. (기존 `featured_image` 단일 URL 필드는 첫 번째 대표 이미지로 하위 호환성을 완벽히 유지합니다.)
+     *
+     *     </details>
      *
      *     ---
      *
@@ -840,7 +848,7 @@ export interface paths {
      *     2. **경로 파라미터**:
      *        - `brand_uid`: 조회할 브랜드의 식별자(PK).
      *     3. **화면 렌더링 활용**:
-     *        - 헤더/비주얼: `brand_name_ko`, `brand_name_en`, `logo_image`, `featured_image` (단일 대표), `featured_image_list` (전체 갤러리/캐러셀 배열).
+     *        - 헤더/비주얼: `brand_name_ko`, `brand_name_en`, `logo_image`, `featured_image` (단일 대표), `featured_image_list` (전체 갤러리/캐러셀 배열), `featured_video_list` (대표 영상 목록), `store_image_list` / `store_video_list` (매장 비주얼), `cooking_image_list` / `cooking_video_list` (조리 비주얼).
      *        - 파트너십 조건: 선호 계약 방식(`preferred_contract_type`), 독점권 요구 수준(`exclusivity_level`), 메뉴 현지화(`menu_localization`), 로열티 요약(`royalty`), 식자재 공급망(`supply_chain`), 인테리어 기준(`interior_criteria`), 상표 준수(`trademark_standard`), 운영 매뉴얼 준수(`manual_compliance`).
      *        - 보안 유의사항: 본사 공식 이메일 등 민감 정보는 마스킹되거나 응답에서 제외되어 있습니다.
      */
@@ -1451,8 +1459,12 @@ export interface paths {
     };
     get?: never;
     /**
-     * 브랜드 대표 로고 등록 및 수정/제거
-     * @description ### 📌 상세 역할 및 개요
+     * ⚠️ [DEPRECATED 26.11.13] 브랜드 대표 로고 등록 및 수정/제거 (통합 API 사용 권장)
+     * @deprecated
+     * @description > ⚠️ **[삭제 예정 / Deprecated 안내]**
+     *     > 본 API는 향후 삭제될 예정입니다. 로고를 포함한 모든 브랜드 미디어를 한 번에 또는 부분 수정할 수 있는 **[통합 비주얼 미디어 API (PUT /api/workspace/:workspace_uid/brand/visual/media)](#/Workspace%20Brand/UpdateBrandVisualMediaController_execute)**를 사용해 주시기 바랍니다.
+     *
+     *     ### 📌 상세 역할 및 개요
      *     - 브랜드 워크스페이스의 대표 로고(`logo_image`)를 등록, 변경하거나 제거합니다.
      *     - 기존의 대표 이미지 및 영상 정보는 유지되며 로고 필드만 안전하게 갱신됩니다.
      *     - 요청자는 해당 워크스페이스에 소속된 **활성 멤버**여야 합니다.
@@ -1484,8 +1496,12 @@ export interface paths {
     };
     get?: never;
     /**
-     * 브랜드 대표 이미지 목록 등록 및 수정/제거
-     * @description ### 📌 상세 역할 및 개요
+     * ⚠️ [DEPRECATED 26.11.13] 브랜드 대표 이미지 목록 등록 및 수정/제거 (통합 API 사용 권장)
+     * @deprecated
+     * @description > ⚠️ **[삭제 예정 / Deprecated 안내]**
+     *     > 본 API는 향후 삭제될 예정입니다. 대표 이미지를 포함한 모든 브랜드 미디어를 한 번에 또는 부분 수정할 수 있는 **[통합 비주얼 미디어 API (PUT /api/workspace/:workspace_uid/brand/visual/media)](#/Workspace%20Brand/UpdateBrandVisualMediaController_execute)**를 사용해 주시기 바랍니다.
+     *
+     *     ### 📌 상세 역할 및 개요
      *     - 브랜드 워크스페이스의 대표 이미지 목록(`featured_image_list`, 최대 10개)을 등록, 순서 변경, 또는 전체 갱신합니다.
      *     - 기존의 로고 및 영상 정보는 유지되며 대표 이미지 목록만 안전하게 갱신됩니다.
      *     - 요청자는 해당 워크스페이스에 소속된 **활성 멤버**여야 합니다.
@@ -1517,8 +1533,12 @@ export interface paths {
     };
     get?: never;
     /**
-     * 브랜드 대표 영상 목록 등록 및 수정/제거
-     * @description ### 📌 상세 역할 및 개요
+     * ⚠️ [DEPRECATED 26.11.13] 브랜드 대표 영상 목록 등록 및 수정/제거 (통합 API 사용 권장)
+     * @deprecated
+     * @description > ⚠️ **[삭제 예정 / Deprecated 안내]**
+     *     > 본 API는 향후 삭제될 예정입니다. 대표 영상을 포함한 모든 브랜드 미디어를 한 번에 또는 부분 수정할 수 있는 **[통합 비주얼 미디어 API (PUT /api/workspace/:workspace_uid/brand/visual/media)](#/Workspace%20Brand/UpdateBrandVisualMediaController_execute)**를 사용해 주시기 바랍니다.
+     *
+     *     ### 📌 상세 역할 및 개요
      *     - 브랜드 워크스페이스의 대표 영상 목록(`featured_video_list`, 최대 5개)을 등록, 순서 변경, 또는 전체 갱신합니다.
      *     - 기존의 로고 및 대표 이미지 정보는 유지되며 영상 목록만 안전하게 갱신됩니다.
      *     - 요청자는 해당 워크스페이스에 소속된 **활성 멤버**여야 합니다.
@@ -1534,6 +1554,50 @@ export interface paths {
      *        - `featured_video_list` (string[] | null): S3 URL 배열 (최대 5개, 빈 배열 `[]` 또는 `null` 전달 시 전체 제거)
      */
     put: operations["UpdateBrandFeaturedVideosController_handle"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/workspace/{workspace_uid}/brand/visual/media": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * 🔥 [NEW 26.11.12] 브랜드 비주얼 미디어(로고·사진·영상) 통합 등록 및 수정
+     * @description ### 📌 상세 역할 및 개요
+     *     - 브랜드 워크스페이스의 대표 로고, 대표 사진/영상, 매장/인테리어 사진/영상, 조리 사진/영상을 **하나의 엔드포인트에서 통합 등록·수정**합니다.
+     *     - **부분 업데이트(Partial Update) 완벽 지원**:
+     *       - 요청 Body에 포함되지 않은 필드(미전송)는 기존 값을 그대로 안전하게 유지합니다.
+     *       - 특정 미디어 목록을 삭제(비우기)하려면 빈 배열(`[]`)을 전송하고, 로고를 제거하려면 `null` 또는 빈 문자열을 전송합니다.
+     *     - **업로드 개수 규격 제한**:
+     *       1. `logo_image`: 단일 이미지 URL (`string | null`)
+     *       2. `featured_image_list`: 브랜드 대표 이미지 URL 목록 (최대 10개)
+     *       3. `featured_video_list`: 브랜드 대표 영상 URL 목록 (최대 5개)
+     *       4. `store_image_list`: 매장 및 인테리어 이미지 URL 목록 (최대 10개)
+     *       5. `store_video_list`: 매장 및 인테리어 영상 URL 목록 (최대 5개)
+     *       6. `cooking_image_list`: 조리 사진 URL 목록 (최대 10개)
+     *       7. `cooking_video_list`: 조리 영상 URL 목록 (최대 5개)
+     *     - 데이터 저장 후 기존 회사소개서 문서가 있을 경우 정합성을 위해 자동으로 `'업데이트필요'` 상태로 동기화됩니다.
+     *     - 요청자는 해당 워크스페이스에 소속된 **활성 멤버**여야 합니다.
+     *
+     *     ---
+     *
+     *     ### 💻 프론트엔드 연동 가이드
+     *     1. **호출 시점**:
+     *        - 브랜드 프로필 > 비주얼 관리 탭에서 전체 저장 시 또는 각 미디어 섹션(대표/매장/조리)별 저장 시.
+     *     2. **사전 작업 (업로드 플로우)**:
+     *        - 신규 이미지는 `POST /api/upload/image`로 개별 업로드 후 반환된 S3 URL을 획득합니다.
+     *        - 신규 비디오는 `POST /api/upload/video`로 개별 업로드 후 반환된 S3 URL을 획득합니다.
+     *        - 업로드된 S3 URL들을 배열로 구성하여 본 API의 Body에 전달합니다.
+     */
+    put: operations["UpdateBrandVisualMediaController_updateBrandVisualMedia"];
     post?: never;
     delete?: never;
     options?: never;
@@ -1612,6 +1676,134 @@ export interface paths {
      *        - `image_list` (string[], 선택): 대표 매장 사진 S3 URL 배열 (빈 배열 [] 전송 시 기존 사진 삭제)
      */
     put: operations["UpdateBrandStoreController_updateBrandStore"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/workspace/{workspace_uid}/brand/video/generate": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * 🔥 [NEW 26.11.13] 브랜드 쇼츠 영상 생성
+     * @description ### 📌 개요
+     *     - **자동 파이프라인**: 별도의 Request Body 없이 URL 경로의 `workspace_uid`만 전달하면, 기등록된 브랜드 프로필(매장, 메뉴, 조리, 로고) 데이터를 기반으로 20초 분량의 고화질 세로형(9:16) 시네마틱 쇼츠 영상을 자동 생성합니다.
+     *     - **진행 이력 관리**: 생성 요청 시 비디오 상태가 `status = 'PROCESSING'`으로 즉시 기록되며 작업 고유 식별자(`video_uid` 및 `task_id`)가 발급됩니다. 기존에 생성된 비디오가 있다면 자동으로 정리 후 신규 발급됩니다.
+     *
+     *     ### 🖼️ 이미지 자동 추출 파이프라인 순서
+     *     비디오 생성 엔진(Kling 4.0 Image-to-Video)에 전달되는 시퀀스 이미지는 아래 순서대로 자동 수집되며, 등록되지 않은 이미지는 자동으로 제외됩니다:
+     *     1. **매장/인테리어 1번째 사진** ➔ 첫 번째 프레임 (스마트폰 9:16 규격으로 자동 Center Crop)
+     *     2. **매장/인테리어 2번째 사진** ➔ 중간 프레임
+     *     3. **대표 메뉴 1번째 사진** ➔ 중간 프레임
+     *     4. **조리 1번째 사진** ➔ 중간 프레임
+     *     5. **조리 2번째 사진** ➔ 중간 프레임
+     *     6. **브랜드 로고 사진** ➔ 마지막 엔딩 프레임
+     *
+     *     > ⚠️ **주의사항**:
+     *     > 1. 위 항목 중 등록된 유효 이미지가 **최소 4장 이상**이어야 영상 생성이 가능합니다. (4장 미만 등록 시 `400 Bad Request` 예외 발생)
+     *     > 2. **현재 영상 생성 템플릿은 '목구멍' 브랜드(솥뚜껑 삼겹살/미나리 등)에 맞추어 연출 프롬프트가 최적화**되어 있습니다. 다른 브랜드로 호출하더라도 목구멍 6단계 템플릿 기반으로 영상이 생성되므로 테스트 시 유의해 주시기 바랍니다.
+     *
+     *     ### 🎬 프론트엔드 연동 시퀀스 다이어그램 (생성 및 확인 흐름)
+     *
+     *     ```text
+     *     [1. 페이지 진입 / 영상 생성 가능 여부 사전 확인]
+     *        GET /api/workspace/:workspace_uid/brand/video
+     *          ├─► media_counts: 이미지 등록 수량 확인 (최소 4장 이상 시 생성 버튼 활성화)
+     *          └─► video_info.status: 기존 영상 상태 확인 ('NONE' | 'PROCESSING' | 'COMPLETED' | 'FAILED')
+     *                │
+     *                ▼ (사용자가 [영상 생성] 버튼 클릭)
+     *     [2. 쇼츠 영상 생성 요청 (비동기 접수)]
+     *        POST /api/workspace/:workspace_uid/brand/video/generate
+     *          └─► 응답 수신: status = 'PROCESSING', video_uid, task_id 즉시 반환
+     *                │
+     *                ▼ (화면: "영상 생성 중..." 로딩 UI 표시 & 3~5초 간격 폴링 시작)
+     *     [3. 영상 완료 상태 주기적 확인 (Polling)]
+     *        GET /api/workspace/:workspace_uid/brand/video (3~5초 간격 반복 호출)
+     *          ├─► status === 'PROCESSING' ──► 폴링 유지 (렌더링 약 1~3분 소요)
+     *          ├─► status === 'COMPLETED'  ──► 폴링 중단 & video_info.video_url 플레이어 재생!
+     *          └─► status === 'FAILED'     ──► 폴링 중단 & 실패 안내 및 재시도 UI 노출
+     *     ```
+     *
+     *     1. **사전 확인**: [브랜드 영상 및 미디어 등록 현황 조회 (GET /api/workspace/:workspace_uid/brand/video)](#/Workspace%20Brand/GetBrandVideoController_execute)를 먼저 호출하여 이미지 조건(최소 4장 이상)과 현재 영상 상태를 확인합니다.
+     *     2. **생성 요청**: 본 API(`POST`)를 호출하면 즉시 `status: 'PROCESSING'`과 `video_uid`를 반환합니다.
+     *     3. **완료 확인 (Polling)**: 생성에는 약 1~3분가량 소요되므로, 3~5초 간격으로 현황 조회 API(`GET`)를 호출하여 `video_info.status`가 `'COMPLETED'`로 변경되었을 때 `video_info.video_url`을 화면에 재생합니다. (페이지를 벗어났다가 다시 진입해도 `GET` API를 통해 진행 상태나 완성된 영상을 그대로 이어서 확인할 수 있습니다.)
+     */
+    post: operations["GenerateBrandVideoController_execute"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/workspace/{workspace_uid}/brand/video": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * 🔥 [NEW 26.11.13] 브랜드 영상 및 미디어 등록 현황 조회
+     * @description ### 📌 개요
+     *     - **영상 상태 확인 (Polling 지원)**: 영상 생성 요청(`POST /api/workspace/:workspace_uid/brand/video/generate`) 후, 본 API를 3~5초 간격으로 폴링하여 영상 생성 상태(`NONE` | `PROCESSING` | `COMPLETED` | `FAILED`) 및 완료된 비디오 영구 재생 S3 URL(`video_url`)을 확인할 수 있습니다.
+     *     - **미디어 등록 카운트 제공**: 영상 생성 조건(최소 4장 이상) 충족 여부를 화면에서 즉시 파악할 수 있도록 대표 메뉴, 매장/인테리어, 로고, 조리 사진/영상 등록 개수를 실시간으로 집계하여 함께 반환합니다.
+     *
+     *     ### 📊 응답 데이터 상세
+     *     1. **video_info (영상 정보)**:
+     *        - `video_uid`: 비디오 고유 식별자 (미생성 시 `null`)
+     *        - `status`: 영상 상태 (`NONE`: 미생성, `PROCESSING`: 렌더링 중, `COMPLETED`: 완료, `FAILED`: 실패)
+     *        - `video_url`: 생성 완료된 비디오 영구 S3 URL (완료 시에만 반환)
+     *        - `completed_time`: 비디오 생성 완료 일시 (ISO 8601)
+     *        - `created_time`: 영상 생성 요청 일시 (ISO 8601)
+     *     2. **media_counts (미디어 등록 카운트)**:
+     *        - `menu_image_count`: 대표 메뉴 등록된 사진 카운트
+     *        - `menu_video_count`: 대표 메뉴 등록된 영상 카운트
+     *        - `store_image_count`: 매장 및 인테리어 등록된 사진 카운트
+     *        - `store_video_count`: 매장 및 인테리어 등록된 영상 카운트
+     *        - `logo_image_count`: 브랜드 로고 등록 개수 (0 또는 1)
+     *        - `cooking_image_count`: 조리 사진 카운트
+     *        - `cooking_video_count`: 조리 영상 카운트
+     *
+     *     ### 🎬 프론트엔드 영상 상태별 처리 흐름 (Polling & UI)
+     *
+     *     ```text
+     *     [페이지 진입 / 폴링 주기(3~5초) 도래]
+     *        │
+     *        ▼
+     *     GET /api/workspace/:workspace_uid/brand/video
+     *        │
+     *        ├─► status === 'NONE'
+     *        │     ├─► 유효 이미지 4장 미만 ➔ 사진/영상 추가 등록 화면 노출
+     *        │     │     └─► [🔥 신규 API] PUT /api/workspace/:workspace_uid/brand/visual/media 호출하여 미디어 업로드
+     *        │     └─► 유효 이미지 4장 이상 ➔ [영상 생성] 버튼 활성화
+     *        │           └─► 클릭 시 POST /api/workspace/:workspace_uid/brand/video/generate 호출
+     *        │
+     *        ├─► status === 'PROCESSING'
+     *        │     └─► 영상 생성 진행 중 ➔ 로딩 UI 유지 & 3~5초 후 본 GET API 재호출 (Polling)
+     *        │
+     *        ├─► status === 'COMPLETED'
+     *        │     └─► 영상 생성 완료 ➔ Polling 중단 & video_info.video_url 비디오 플레이어 렌더링
+     *        │
+     *        └─► status === 'FAILED'
+     *              └─► 영상 생성 실패 ➔ Polling 중단 & 실패 안내 및 [다시 생성하기] 버튼 노출
+     *     ```
+     *
+     *     > 💡 **사진이나 영상이 등록되어 있지 않은 경우**:
+     *     > [🔥 [신규 API] 브랜드 비주얼 미디어(로고·사진·영상) 통합 등록 및 수정 (PUT /api/workspace/:workspace_uid/brand/visual/media)](#/Workspace%20Brand/UpdateBrandVisualMediaController_execute)를 사용하여 매장·조리 사진 및 로고, 영상을 한 번에 업로드하실 수 있습니다. (기존 개별 로고/대표 이미지/영상 API 대신 **신규 통합 API** 사용을 권장합니다.)
+     *
+     *     - **연계 생성 API**: [브랜드 쇼츠 영상 생성 (POST /api/workspace/:workspace_uid/brand/video/generate)](#/Workspace%20Brand/GenerateBrandVideoController_execute)
+     *     - **연계 미디어 등록 API (🔥 신규)**: [브랜드 비주얼 미디어(로고·사진·영상) 통합 등록 및 수정 (PUT /api/workspace/:workspace_uid/brand/visual/media)](#/Workspace%20Brand/UpdateBrandVisualMediaController_execute)
+     */
+    get: operations["GetBrandVideoController_execute"];
+    put?: never;
     post?: never;
     delete?: never;
     options?: never;
@@ -3852,7 +4044,14 @@ export interface components {
        * @enum {string|null}
        */
       preferred_contract_type?:
-        "마스터 프랜차이즈" | "지역 개발권" | "직영" | "합작법인" | "라이선스" | "유통" | "미정" | null;
+        | "마스터 프랜차이즈"
+        | "지역 개발권"
+        | "직영"
+        | "합작법인"
+        | "라이선스"
+        | "유통"
+        | "미정"
+        | null;
       /**
        * @description 독점권 요구 수준 (선택지: 불가, 협의 필요, 가능)
        * @example 협의 필요
@@ -4212,7 +4411,15 @@ export interface components {
        * @enum {string}
        */
       current_industry:
-        "양식" | "한식" | "일식" | "중식" | "카페/베이커리" | "패스트푸드" | "주점" | "식음료 유통/도소매" | "기타";
+        | "양식"
+        | "한식"
+        | "일식"
+        | "중식"
+        | "카페/베이커리"
+        | "패스트푸드"
+        | "주점"
+        | "식음료 유통/도소매"
+        | "기타";
       /**
        * @description 운영 매장 수 (개)
        * @example 5
@@ -4257,14 +4464,29 @@ export interface components {
        * @enum {string}
        */
       target_industry:
-        "양식" | "한식" | "일식" | "중식" | "카페/베이커리" | "패스트푸드" | "주점" | "식음료 유통/도소매" | "기타";
+        | "양식"
+        | "한식"
+        | "일식"
+        | "중식"
+        | "카페/베이커리"
+        | "패스트푸드"
+        | "주점"
+        | "식음료 유통/도소매"
+        | "기타";
       /**
        * @description 선호 계약 방식 (선택지: 마스터 프랜차이즈, 지역 개발권, 직영, 합작법인, 라이선스, 유통, 미정)
        * @example 마스터 프랜차이즈
        * @enum {string|null}
        */
       preferred_contract_type?:
-        "마스터 프랜차이즈" | "지역 개발권" | "직영" | "합작법인" | "라이선스" | "유통" | "미정" | null;
+        | "마스터 프랜차이즈"
+        | "지역 개발권"
+        | "직영"
+        | "합작법인"
+        | "라이선스"
+        | "유통"
+        | "미정"
+        | null;
       /**
        * @description 희망 파트너 역할
        * @example 총판/마스터 파트너
@@ -4301,7 +4523,11 @@ export interface components {
        * @enum {string}
        */
       localization_requirement:
-        "할랄 인증 필수" | "비건/채식 메뉴 필수" | "현지 입맛 조정 필수" | "원작 유지 선호" | "협의 가능";
+        | "할랄 인증 필수"
+        | "비건/채식 메뉴 필수"
+        | "현지 입맛 조정 필수"
+        | "원작 유지 선호"
+        | "협의 가능";
       /**
        * @description 인테리어 시공/구매 방식 선호
        * @example 현지 직접 조달 희망
@@ -5115,7 +5341,14 @@ export interface components {
        * @enum {string|null}
        */
       preferred_contract_type:
-        "마스터 프랜차이즈" | "지역 개발권" | "직영" | "합작법인" | "라이선스" | "유통" | "미정" | null;
+        | "마스터 프랜차이즈"
+        | "지역 개발권"
+        | "직영"
+        | "합작법인"
+        | "라이선스"
+        | "유통"
+        | "미정"
+        | null;
       /**
        * @description 독점권 요구 수준 (필수/협의 필요/가능/불가)
        * @example 필수
@@ -5223,6 +5456,43 @@ export interface components {
        *     ]
        */
       featured_image_list: string[];
+      /**
+       * @description 브랜드 대표 영상 URL 목록 (최대 5개)
+       * @example [
+       *       "https://eatiqlink-s3-bucket.s3.ap-northeast-2.amazonaws.com/uploads/videos/2026/11/feat_video1.mp4"
+       *     ]
+       */
+      featured_video_list: string[];
+      /**
+       * @description 매장 및 인테리어 사진 URL 목록 (최대 10개)
+       * @example [
+       *       "https://eatiqlink-s3-bucket.s3.ap-northeast-2.amazonaws.com/uploads/images/2026/11/store1.png",
+       *       "https://eatiqlink-s3-bucket.s3.ap-northeast-2.amazonaws.com/uploads/images/2026/11/store2.png"
+       *     ]
+       */
+      store_image_list: string[];
+      /**
+       * @description 매장 및 인테리어 영상 URL 목록 (최대 5개)
+       * @example [
+       *       "https://eatiqlink-s3-bucket.s3.ap-northeast-2.amazonaws.com/uploads/videos/2026/11/store_video1.mp4"
+       *     ]
+       */
+      store_video_list: string[];
+      /**
+       * @description 조리 사진 URL 목록 (최대 10개)
+       * @example [
+       *       "https://eatiqlink-s3-bucket.s3.ap-northeast-2.amazonaws.com/uploads/images/2026/11/cook1.png",
+       *       "https://eatiqlink-s3-bucket.s3.ap-northeast-2.amazonaws.com/uploads/images/2026/11/cook2.png"
+       *     ]
+       */
+      cooking_image_list: string[];
+      /**
+       * @description 조리 영상 URL 목록 (최대 5개)
+       * @example [
+       *       "https://eatiqlink-s3-bucket.s3.ap-northeast-2.amazonaws.com/uploads/videos/2026/11/cook_video1.mp4"
+       *     ]
+       */
+      cooking_video_list: string[];
       /**
        * @description 카테고리 / 업종
        * @example 디저트
@@ -6587,7 +6857,13 @@ export interface components {
        * @enum {string}
        */
       preferred_contract_type?:
-        "마스터 프랜차이즈" | "지역 개발권" | "직영" | "합작법인" | "라이선스" | "유통" | "미정";
+        | "마스터 프랜차이즈"
+        | "지역 개발권"
+        | "직영"
+        | "합작법인"
+        | "라이선스"
+        | "유통"
+        | "미정";
       /**
        * @description 독점권 요구 수준 (선택지: 불가, 협의 필요, 가능)
        * @example 협의 필요
@@ -6642,7 +6918,14 @@ export interface components {
        * @enum {string|null}
        */
       preferred_contract_type?:
-        "마스터 프랜차이즈" | "지역 개발권" | "직영" | "합작법인" | "라이선스" | "유통" | "미정" | null;
+        | "마스터 프랜차이즈"
+        | "지역 개발권"
+        | "직영"
+        | "합작법인"
+        | "라이선스"
+        | "유통"
+        | "미정"
+        | null;
       /**
        * @description 진출 목표 국가 컬럼 값
        * @example 일본
@@ -6940,6 +7223,121 @@ export interface components {
       /** @description 업데이트 후 최신 브랜드 비주얼 정보 */
       brand_visual: components["schemas"]["BrandVisualDataDto"];
     };
+    UpdateBrandVisualMediaDto: {
+      /**
+       * @description 브랜드 대표 로고 이미지 URL (/api/upload/image 로 업로드 후 반환된 S3 URL). null 또는 빈 문자열 전달 시 기존 로고 제거, 필드 생략 시 기존 값 유지
+       * @example https://eatiqlink-s3-bucket.s3.ap-northeast-2.amazonaws.com/uploads/images/2026/09/logo-uuid.png
+       */
+      logo_image?: string | null;
+      /**
+       * @description 브랜드 대표 이미지 URL 배열 (최대 10개, /api/upload/image 업로드 후 반환된 S3 URL). 빈 배열 [] 전달 시 목록 전체 제거, 필드 생략 시 기존 값 유지
+       * @example [
+       *       "https://eatiqlink-s3-bucket.s3.ap-northeast-2.amazonaws.com/uploads/images/2026/11/feat1.png",
+       *       "https://eatiqlink-s3-bucket.s3.ap-northeast-2.amazonaws.com/uploads/images/2026/11/feat2.png"
+       *     ]
+       */
+      featured_image_list?: string[];
+      /**
+       * @description 브랜드 대표 영상 URL 배열 (최대 5개, /api/upload/video 업로드 후 반환된 S3 URL). 빈 배열 [] 전달 시 목록 전체 제거, 필드 생략 시 기존 값 유지
+       * @example [
+       *       "https://eatiqlink-s3-bucket.s3.ap-northeast-2.amazonaws.com/uploads/videos/2026/11/feat_video1.mp4"
+       *     ]
+       */
+      featured_video_list?: string[];
+      /**
+       * @description 매장 및 인테리어 이미지 URL 배열 (최대 10개, /api/upload/image 업로드 후 반환된 S3 URL). 빈 배열 [] 전달 시 목록 전체 제거, 필드 생략 시 기존 값 유지
+       * @example [
+       *       "https://eatiqlink-s3-bucket.s3.ap-northeast-2.amazonaws.com/uploads/images/2026/11/store1.png",
+       *       "https://eatiqlink-s3-bucket.s3.ap-northeast-2.amazonaws.com/uploads/images/2026/11/store2.png"
+       *     ]
+       */
+      store_image_list?: string[];
+      /**
+       * @description 매장 및 인테리어 영상 URL 배열 (최대 5개, /api/upload/video 업로드 후 반환된 S3 URL). 빈 배열 [] 전달 시 목록 전체 제거, 필드 생략 시 기존 값 유지
+       * @example [
+       *       "https://eatiqlink-s3-bucket.s3.ap-northeast-2.amazonaws.com/uploads/videos/2026/11/store_video1.mp4"
+       *     ]
+       */
+      store_video_list?: string[];
+      /**
+       * @description 조리 사진 URL 배열 (최대 10개, /api/upload/image 업로드 후 반환된 S3 URL). 빈 배열 [] 전달 시 목록 전체 제거, 필드 생략 시 기존 값 유지
+       * @example [
+       *       "https://eatiqlink-s3-bucket.s3.ap-northeast-2.amazonaws.com/uploads/images/2026/11/cook1.png",
+       *       "https://eatiqlink-s3-bucket.s3.ap-northeast-2.amazonaws.com/uploads/images/2026/11/cook2.png"
+       *     ]
+       */
+      cooking_image_list?: string[];
+      /**
+       * @description 조리 영상 URL 배열 (최대 5개, /api/upload/video 업로드 후 반환된 S3 URL). 빈 배열 [] 전달 시 목록 전체 제거, 필드 생략 시 기존 값 유지
+       * @example [
+       *       "https://eatiqlink-s3-bucket.s3.ap-northeast-2.amazonaws.com/uploads/videos/2026/11/cook_video1.mp4"
+       *     ]
+       */
+      cooking_video_list?: string[];
+    };
+    BrandVisualMediaDataDto: {
+      /**
+       * @description 브랜드 대표 로고 이미지 URL
+       * @example https://eatiqlink-s3-bucket.s3.ap-northeast-2.amazonaws.com/uploads/images/2026/09/logo-uuid.png
+       */
+      logo_image?: string | null;
+      /**
+       * @description 브랜드 대표 이미지 URL 목록 (최대 10개)
+       * @example [
+       *       "https://eatiqlink-s3-bucket.s3.ap-northeast-2.amazonaws.com/uploads/images/2026/11/feat1.png"
+       *     ]
+       */
+      featured_image_list?: string[];
+      /**
+       * @description 브랜드 대표 영상 URL 목록 (최대 5개)
+       * @example [
+       *       "https://eatiqlink-s3-bucket.s3.ap-northeast-2.amazonaws.com/uploads/videos/2026/11/feat_video1.mp4"
+       *     ]
+       */
+      featured_video_list?: string[];
+      /**
+       * @description 매장 및 인테리어 이미지 URL 목록 (최대 10개)
+       * @example [
+       *       "https://eatiqlink-s3-bucket.s3.ap-northeast-2.amazonaws.com/uploads/images/2026/11/store1.png"
+       *     ]
+       */
+      store_image_list?: string[];
+      /**
+       * @description 매장 및 인테리어 영상 URL 목록 (최대 5개)
+       * @example [
+       *       "https://eatiqlink-s3-bucket.s3.ap-northeast-2.amazonaws.com/uploads/videos/2026/11/store_video1.mp4"
+       *     ]
+       */
+      store_video_list?: string[];
+      /**
+       * @description 조리 사진 URL 목록 (최대 10개)
+       * @example [
+       *       "https://eatiqlink-s3-bucket.s3.ap-northeast-2.amazonaws.com/uploads/images/2026/11/cook1.png"
+       *     ]
+       */
+      cooking_image_list?: string[];
+      /**
+       * @description 조리 영상 URL 목록 (최대 5개)
+       * @example [
+       *       "https://eatiqlink-s3-bucket.s3.ap-northeast-2.amazonaws.com/uploads/videos/2026/11/cook_video1.mp4"
+       *     ]
+       */
+      cooking_video_list?: string[];
+    };
+    UpdateBrandVisualMediaResponseDto: {
+      /**
+       * @description 처리 결과 메시지
+       * @example 브랜드 비주얼 미디어가 성공적으로 등록/수정되었습니다.
+       */
+      message: string;
+      /**
+       * @description 워크스페이스 식별자
+       * @example 1
+       */
+      workspace_uid: number;
+      /** @description 최신 브랜드 비주얼 미디어 데이터 */
+      brand_visual: components["schemas"]["BrandVisualMediaDataDto"];
+    };
     MenuItemDto: {
       /**
        * @description 메뉴 이름 (한국어)
@@ -7026,6 +7424,140 @@ export interface components {
       workspace_uid: number;
       /** @description 저장된 브랜드 대표 매장 정보 */
       brand_store: components["schemas"]["BrandStoreDataDto"];
+    };
+    GenerateBrandVideoDataDto: {
+      /**
+       * @description 생성된 비디오 레코드 고유 식별자
+       * @example 1
+       */
+      video_uid: number;
+      /**
+       * @description 외부 AI 비디오 엔진(Higgsfield/Kling)의 작업 고유 ID
+       * @example hf_task_abc123456789
+       */
+      task_id?: string | null;
+      /**
+       * @description 영상 생성 진행 상태
+       * @example PROCESSING
+       * @enum {string}
+       */
+      status: "QUEUED" | "PROCESSING" | "COMPLETED" | "FAILED";
+      /**
+       * @description 영상 재생 길이 (초 단위: 20초)
+       * @example 20
+       */
+      duration: number;
+      /**
+       * @description 영상 해상도 (720p)
+       * @example 720p
+       */
+      resolution: string;
+      /**
+       * @description 생성 요청 일시 (ISO 8601)
+       * @example 2026-11-13T10:30:00.000Z
+       */
+      created_time: string;
+    };
+    GenerateBrandVideoResponseDto: {
+      /**
+       * @description 응답 상태 코드
+       * @example 200
+       */
+      code: number;
+      /**
+       * @description 응답 메시지
+       * @example 브랜드 쇼츠 영상 생성 요청 성공
+       */
+      message: string;
+      /** @description 응답 데이터 */
+      data: components["schemas"]["GenerateBrandVideoDataDto"];
+    };
+    BrandVideoInfoDto: {
+      /**
+       * @description 비디오 고유 식별자 (미생성 시 null)
+       * @example 15
+       */
+      video_uid: number | null;
+      /**
+       * @description 영상 생성 상태 (NONE: 미생성, QUEUED: 대기중, PROCESSING: 렌더링중, COMPLETED: 완료, FAILED: 생성실패)
+       * @example COMPLETED
+       * @enum {string}
+       */
+      status: "NONE" | "QUEUED" | "PROCESSING" | "COMPLETED" | "FAILED";
+      /**
+       * @description 생성 완료된 비디오 영구 재생 S3 URL (완료 전에는 null)
+       * @example https://eatiqlink-s3-bucket.s3.ap-northeast-2.amazonaws.com/videos/brands/4/task_uuid.mp4
+       */
+      video_url: string | null;
+      /**
+       * Format: date-time
+       * @description 비디오 생성 완료 또는 실패 처리 일시 (ISO 8601)
+       * @example 2026-11-13T09:45:34.000Z
+       */
+      completed_time: string | null;
+      /**
+       * Format: date-time
+       * @description 비디오 생성 최초 요청 일시 (ISO 8601)
+       * @example 2026-11-13T09:43:10.000Z
+       */
+      created_time: string | null;
+    };
+    BrandMediaCountsDto: {
+      /**
+       * @description 대표 메뉴에 등록된 사진 총 개수
+       * @example 4
+       */
+      menu_image_count: number;
+      /**
+       * @description 대표 메뉴에 등록된 영상 총 개수
+       * @example 0
+       */
+      menu_video_count: number;
+      /**
+       * @description 매장 및 인테리어 등록된 사진 개수
+       * @example 2
+       */
+      store_image_count: number;
+      /**
+       * @description 매장 및 인테리어 등록된 영상 개수
+       * @example 1
+       */
+      store_video_count: number;
+      /**
+       * @description 브랜드 대표 로고 등록 개수 (0 또는 1)
+       * @example 1
+       */
+      logo_image_count: number;
+      /**
+       * @description 조리 사진 등록 개수
+       * @example 3
+       */
+      cooking_image_count: number;
+      /**
+       * @description 조리 영상 등록 개수
+       * @example 1
+       */
+      cooking_video_count: number;
+    };
+    GetBrandVideoDataDto: {
+      /** @description 브랜드 영상 생성 및 진행 정보 */
+      video_info: components["schemas"]["BrandVideoInfoDto"];
+      /** @description 사진 및 영상 미디어 등록 현황 카운트 */
+      media_counts: components["schemas"]["BrandMediaCountsDto"];
+    };
+    GetBrandVideoResponseDto: {
+      /**
+       * @description HTTP 상태 코드
+       * @example 200
+       */
+      code: number;
+      /**
+       * @description 응답 메시지
+       * @example 브랜드 영상 및 미디어 등록 현황 조회 성공
+       */
+      message: string;
+      /** @description 응답 데이터 본문 */
+      data: components["schemas"]["GetBrandVideoDataDto"];
     };
     CrmDocumentSummaryDetailDto: {
       /**
@@ -8301,7 +8833,15 @@ export interface components {
        * @enum {string}
        */
       current_industry:
-        "양식" | "한식" | "일식" | "중식" | "카페/베이커리" | "패스트푸드" | "주점" | "식음료 유통/도소매" | "기타";
+        | "양식"
+        | "한식"
+        | "일식"
+        | "중식"
+        | "카페/베이커리"
+        | "패스트푸드"
+        | "주점"
+        | "식음료 유통/도소매"
+        | "기타";
       /**
        * @description 운영 매장 수 (개)
        * @example 5
@@ -8396,14 +8936,28 @@ export interface components {
        * @enum {string}
        */
       target_industry:
-        "양식" | "한식" | "일식" | "중식" | "카페/베이커리" | "패스트푸드" | "주점" | "식음료 유통/도소매" | "기타";
+        | "양식"
+        | "한식"
+        | "일식"
+        | "중식"
+        | "카페/베이커리"
+        | "패스트푸드"
+        | "주점"
+        | "식음료 유통/도소매"
+        | "기타";
       /**
        * @description 선호 계약 방식 (선택지: 마스터 프랜차이즈, 지역 개발권, 직영, 합작법인, 라이선스, 유통, 미정)
        * @example 마스터 프랜차이즈
        * @enum {string}
        */
       preferred_contract_type?:
-        "마스터 프랜차이즈" | "지역 개발권" | "직영" | "합작법인" | "라이선스" | "유통" | "미정";
+        | "마스터 프랜차이즈"
+        | "지역 개발권"
+        | "직영"
+        | "합작법인"
+        | "라이선스"
+        | "유통"
+        | "미정";
       /**
        * @description 희망 파트너 역할 (선택지: 총판/마스터 파트너, 합작투자(JV) 파트너, 단일/복수 가맹점주, 유통/공급 대행)
        * @example 총판/마스터 파트너
@@ -8440,7 +8994,11 @@ export interface components {
        * @enum {string}
        */
       localization_requirement:
-        "할랄 인증 필수" | "비건/채식 메뉴 필수" | "현지 입맛 조정 필수" | "원작 유지 선호" | "협의 가능";
+        | "할랄 인증 필수"
+        | "비건/채식 메뉴 필수"
+        | "현지 입맛 조정 필수"
+        | "원작 유지 선호"
+        | "협의 가능";
       /**
        * @description 인테리어 시공/구매 방식 선호 (선택지: 현지 직접 조달 희망, 본사 지정 감리/구매 수용, 협의 가능)
        * @example 현지 직접 조달 희망
@@ -11867,6 +12425,33 @@ export interface operations {
       };
     };
   };
+  UpdateBrandVisualMediaController_updateBrandVisualMedia: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 브랜드 워크스페이스 고유 식별자 */
+        workspace_uid: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateBrandVisualMediaDto"];
+      };
+    };
+    responses: {
+      /** @description 브랜드 비주얼 미디어 통합 등록 및 수정 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UpdateBrandVisualMediaResponseDto"];
+        };
+      };
+    };
+  };
   UpdateBrandMenuController_handle: {
     parameters: {
       query?: never;
@@ -11962,6 +12547,87 @@ export interface operations {
         content?: never;
       };
       /** @description 해당 워크스페이스에 대한 접근 권한이 없거나 활성 멤버가 아님 */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 워크스페이스를 찾을 수 없음 */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  GenerateBrandVideoController_execute: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 브랜드 워크스페이스 고유 식별자 */
+        workspace_uid: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 쇼츠 영상 생성 요청 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["GenerateBrandVideoResponseDto"];
+        };
+      };
+      /** @description 브랜드 프로필에 등록된 이미지가 4장 미만이어서 영상 생성이 불가능한 경우 */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 브랜드 워크스페이스가 아니거나 관리자 등급이 아닌 경우 */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description 워크스페이스를 찾을 수 없거나 접근 권한이 없는 경우 */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  GetBrandVideoController_execute: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description 브랜드 워크스페이스 고유 식별자 */
+        workspace_uid: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description 브랜드 영상 및 미디어 등록 현황 조회 성공 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["GetBrandVideoResponseDto"];
+        };
+      };
+      /** @description 브랜드 워크스페이스가 아니거나 접근 권한 없음 */
       403: {
         headers: {
           [name: string]: unknown;
