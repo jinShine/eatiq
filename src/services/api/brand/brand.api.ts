@@ -8,6 +8,8 @@ import {
   type BrandDetail,
   type BrandListQuery,
   type BrandListResponse,
+  type BrandVideoResponse,
+  type GenerateBrandVideoResponse,
   type UpdateBrandBasicRequest,
   type UpdateBrandBasicResponse,
   type UpdateBrandCommissionRequest,
@@ -71,6 +73,8 @@ const ENDPOINTS = {
   dashboard: (workspaceId: string) => `${buildBrandPath(workspaceId)}/dashboard`,
   completion: (workspaceId: string, scope: BrandCompletionScope) =>
     `${buildBrandPath(workspaceId)}/completion/${scope}`,
+  video: (workspaceId: string) => `${buildBrandPath(workspaceId)}/video`,
+  generateVideo: (workspaceId: string) => `${buildBrandPath(workspaceId)}/video/generate`,
 };
 
 /************************************
@@ -208,5 +212,23 @@ export async function getBrandCompletion(
   scope: BrandCompletionScope,
 ): Promise<BrandCompletionResponse> {
   const res = await axiosClientInstance.get<BrandCompletionResponse>(ENDPOINTS.completion(workspaceId, scope));
+  return res.data;
+}
+
+/************************************
+ * 소개 영상
+ ************************************/
+/** 영상 상태와 재료 개수 — 만드는 중이면 다시 불러 완료를 확인한다 */
+export async function getBrandVideo(workspaceId: string): Promise<BrandVideoResponse> {
+  const res = await axiosClientInstance.get<BrandVideoResponse>(ENDPOINTS.video(workspaceId));
+  return res.data;
+}
+
+/**
+ * 영상 생성 요청 — 본문 없이 보내고 바로 대기 상태로 돌아온다(완성까지 1~3분).
+ * 다시 요청하면 이전 영상은 서버가 지운다. 쓸 수 있는 사진이 4장 미만이면 400
+ */
+export async function generateBrandVideo(workspaceId: string): Promise<GenerateBrandVideoResponse> {
+  const res = await axiosClientInstance.post<GenerateBrandVideoResponse>(ENDPOINTS.generateVideo(workspaceId));
   return res.data;
 }

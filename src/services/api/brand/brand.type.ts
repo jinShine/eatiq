@@ -148,3 +148,16 @@ export type BrandDashboardResponse = components["schemas"]["GetBrandDashboardRes
 /** 자동완성 — 진행 관리 「검색해서 추가」. 2글자 이상부터(미만은 400) */
 export type BrandAutocompleteResponse = components["schemas"]["AutocompleteBrandResponseDto"];
 export type BrandAutocompleteItem = components["schemas"]["BrandAutocompleteItemDto"];
+
+/************************************
+ * 브랜드 소개 영상 — 비동기 생성. 생성 요청 뒤 조회로 상태를 확인한다
+ * 응답은 { code, message, data }로 감싸져 온다(문서 API의 statusCode와 다르다)
+ ************************************/
+export type BrandVideoResponse = components["schemas"]["GetBrandVideoResponseDto"];
+export type BrandVideoData = components["schemas"]["GetBrandVideoDataDto"];
+export type BrandVideoInfo = components["schemas"]["BrandVideoInfoDto"];
+/** NONE(미생성) · QUEUED · PROCESSING · COMPLETED · FAILED */
+export type BrandVideoStatus = BrandVideoInfo["status"];
+/** 영상 재료 사진·영상 등록 개수 — 메뉴 개수는 모든 메뉴의 합이다 */
+export type BrandMediaCounts = components["schemas"]["BrandMediaCountsDto"];
+export type GenerateBrandVideoResponse = components["schemas"]["GenerateBrandVideoResponseDto"];

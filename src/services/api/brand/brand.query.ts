@@ -8,10 +8,12 @@ import { mockWorkspaceDetail } from "../workspace/workspace.mock";
 import { workspaceKeys } from "../workspace/workspace.query";
 import { type WorkspaceDetailResponse } from "../workspace/workspace.type";
 import {
+  generateBrandVideo,
   getBrandCompletion,
   getBrandDashboard,
   getBrandDetail,
   getBrandList,
+  getBrandVideo,
   updateBrandBasic,
   updateBrandCommission,
   updateBrandContact,
@@ -36,6 +38,7 @@ import {
   type BrandCompletionScope,
   type BrandCompletionTask,
   type BrandListQuery,
+  type BrandVideoStatus,
 } from "./brand.type";
 
 /** 화면 탭 → 완성도 API 범위. 탭 이름(policy·area)과 API 이름(contract·commercial)이 다르다 */
@@ -54,6 +57,7 @@ export const brandKeys = {
   explore: (filters: BrandListFilters) => [...brandKeys.all, "explore", filters] as const,
   exploreDetail: (brandId: string) => [...brandKeys.all, "explore-detail", brandId] as const,
   dashboard: (workspaceId: string) => [...brandKeys.all, "dashboard", workspaceId] as const,
+  video: (workspaceId: string) => [...brandKeys.all, "video", workspaceId] as const,
   /** 탭별 완성도의 상위 키 — 섹션을 저장하면 탭 구분 없이 한 번에 무효화한다 */
   completionAll: (workspaceId: string) => [...brandKeys.all, "completion", workspaceId] as const,
   completion: (workspaceId: string, scope: BrandCompletionScope) =>
@@ -220,5 +224,41 @@ export function useBrandDashboard(workspaceId: string, enabled: boolean) {
     queryKey: brandKeys.dashboard(workspaceId),
     queryFn: () => getBrandDashboard(workspaceId),
     enabled: enabled && Boolean(workspaceId) && !IS_MOCK,
+  });
+}
+
+/************************************
+ * 소개 영상
+ ************************************/
+
+/** 만드는 중일 때 상태를 다시 묻는 간격 — 서버 안내 3~5초 */
+const VIDEO_POLL_INTERVAL = 4000;
+
+const isVideoInProgress = (status: BrandVideoStatus | undefined) => status === "QUEUED" || status === "PROCESSING";
+
+/**
+ * 영상 상태와 재료 개수.
+ * - 회사 정보 설정에서 사진을 바꾸고 돌아오면 개수가 달라지므로 탭에 들어올 때마다 다시 받는다
+ * - 대기·만드는 중이면 끝날 때까지 주기적으로 다시 받는다. 상태가 서버에 있어 탭을 떠났다 와도 이어진다
+ */
+export function useBrandVideo(workspaceId: string) {
+  return useQuery({
+    queryKey: brandKeys.video(workspaceId),
+    queryFn: () => getBrandVideo(workspaceId),
+    select: response => response.data,
+    staleTime: 0,
+    refetchInterval: query =>
+      isVideoInProgress(query.state.data?.data.video_info.status) ? VIDEO_POLL_INTERVAL : false,
+    enabled: Boolean(workspaceId) && !IS_MOCK,
+  });
+}
+
+/** 영상 생성 요청 — 끝나면 조회를 다시 받아 대기 상태로 바꾸고, 그때부터 주기 조회가 돈다 */
+export function useGenerateBrandVideoMutation(workspaceId: string) {
+  const invalidateQueries = useInvalidateQueries();
+
+  return useMutation({
+    mutationFn: () => generateBrandVideo(workspaceId),
+    onSuccess: () => invalidateQueries.single(brandKeys.video(workspaceId)),
   });
 }
