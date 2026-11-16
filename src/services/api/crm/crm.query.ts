@@ -6,6 +6,7 @@ import { getBrandAutocomplete } from "../brand/brand.api";
 import { brandKeys } from "../brand/brand.query";
 import { getBuyerAutocomplete } from "../buyer/buyer.api";
 import { buyerKeys } from "../buyer/buyer.query";
+import { documentKeys } from "../document/document.query";
 import { IS_MOCK } from "../mock";
 import {
   createCrm,
@@ -51,7 +52,15 @@ export const crmKeys = {
  * 진행 관리에서 무엇이든 바뀌면 함께 다시 받는다 — 안 그러면 캐시 유효 시간(1분) 동안 옛 숫자가 보인다.
  * 워크스페이스 유형을 몰라도 되도록 브랜드·바이어 키를 모두 넘긴다(없는 쪽은 아무 일도 없다)
  */
-const dashboardKeys = (workspaceId: string) => [brandKeys.dashboard(workspaceId), buyerKeys.dashboard(workspaceId)];
+/**
+ * 진행 기록이 바뀌면 함께 다시 받아야 하는 다른 화면의 캐시 —
+ * 대시보드 요약과 회사 문서 작성(MOU·LOI)의 「진행 기록 선택」 목록
+ */
+const crmDependentKeys = (workspaceId: string) => [
+  brandKeys.dashboard(workspaceId),
+  buyerKeys.dashboard(workspaceId),
+  documentKeys.crmSummaryList(workspaceId),
+];
 
 /** 한 번에 받는 개수 — 서버 기본값. 「더 보기」를 누르면 다음 페이지를 이어 붙인다 */
 const CRM_PAGE_SIZE = 20;
@@ -117,7 +126,7 @@ export function useCreateCrm(workspaceId: string) {
   return useMutation({
     mutationFn: (body: Omit<CreateCrmRequest, "source_workspace_uid">) =>
       createCrm({ ...body, source_workspace_uid: Number(workspaceId) }),
-    onSuccess: () => invalidateQueries.multiple([crmKeys.lists(workspaceId), ...dashboardKeys(workspaceId)]),
+    onSuccess: () => invalidateQueries.multiple([crmKeys.lists(workspaceId), ...crmDependentKeys(workspaceId)]),
   });
 }
 
@@ -127,7 +136,7 @@ export function useDeleteCrm(workspaceId: string) {
 
   return useMutation({
     mutationFn: (crmId: string) => deleteCrm(crmId),
-    onSuccess: () => invalidateQueries.multiple([crmKeys.lists(workspaceId), ...dashboardKeys(workspaceId)]),
+    onSuccess: () => invalidateQueries.multiple([crmKeys.lists(workspaceId), ...crmDependentKeys(workspaceId)]),
   });
 }
 
@@ -154,7 +163,7 @@ function useInvalidateCrm(workspaceId: string, crmId: string) {
   const invalidateQueries = useInvalidateQueries();
 
   return () => {
-    invalidateQueries.multiple([crmKeys.lists(workspaceId), ...dashboardKeys(workspaceId)]);
+    invalidateQueries.multiple([crmKeys.lists(workspaceId), ...crmDependentKeys(workspaceId)]);
     return invalidateQueries.single(crmKeys.detail(crmId));
   };
 }
