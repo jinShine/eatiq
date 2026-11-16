@@ -22,7 +22,7 @@ export default function VideoPanel({ requirements, hasVideo, isGenerating, onGen
   const canGenerate = Boolean(requirements?.hasEnoughImages) && missingCount === 0 && !isGenerating;
 
   const guide = isGenerating
-    ? "영상을 만들고 있어요.\n1~3분 걸려요. 이 화면을 떠나도 계속 만들어요."
+    ? "영상을 만들고 있어요.\n몇 분 걸려요. 이 화면을 떠나도 계속 만들어요."
     : !requirements
       ? ""
       : missingCount > 0

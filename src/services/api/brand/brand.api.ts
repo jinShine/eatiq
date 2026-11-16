@@ -225,7 +225,7 @@ export async function getBrandVideo(workspaceId: string): Promise<BrandVideoResp
 }
 
 /**
- * 영상 생성 요청 — 본문 없이 보내고 바로 대기 상태로 돌아온다(완성까지 1~3분).
+ * 영상 생성 요청 — 본문 없이 보내고 바로 대기 상태로 돌아온다(완성까지 몇 분 — 스펙은 1~3분, 127 실측 약 5분 40초).
  * 다시 요청하면 이전 영상은 서버가 지운다. 쓸 수 있는 사진이 4장 미만이면 400
  */
 export async function generateBrandVideo(workspaceId: string): Promise<GenerateBrandVideoResponse> {

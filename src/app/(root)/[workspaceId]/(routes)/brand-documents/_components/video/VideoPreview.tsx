@@ -102,7 +102,7 @@ function GeneratingCard({ isGenerating }: { isGenerating: boolean }) {
       <Skeleton className="absolute inset-0 rounded-none" />
       {isGenerating && (
         <p className="text-text-secondary absolute inset-x-0 top-1/2 -translate-y-1/2 px-6 text-center text-sm break-keep">
-          영상을 만들고 있어요. 1~3분 걸려요.
+          영상을 만들고 있어요. 몇 분 걸려요.
         </p>
       )}
     </div>

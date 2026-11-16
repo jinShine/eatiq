@@ -31,7 +31,7 @@ export default function VideoTab({ workspaceId }: VideoTabProps) {
 
   const handleGenerate = () => {
     generate(undefined, {
-      onSuccess: () => Toast.success("영상을 만들기 시작했어요. 1~3분 걸려요."),
+      onSuccess: () => Toast.success("영상을 만들기 시작했어요. 몇 분 걸려요."),
       onError: error => Toast.error(error.message || "영상을 만들지 못했어요. 다시 시도해주세요."),
     });
   };
