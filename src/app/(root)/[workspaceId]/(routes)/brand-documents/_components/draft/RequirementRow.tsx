@@ -48,6 +48,18 @@ export default function RequirementRow({ row, isRequired }: RequirementRowProps)
             입력
           </Link>
         )}
+        {/* 채울 화면이 아직 없는 자료(소개 영상의 매장·조리 사진) — 누를 곳 없이 상태만 알린다 */}
+        {isMissing && !row.fillHref && (
+          <span
+            className={cn(
+              BADGE_BASE,
+              "border bg-white",
+              isRequired ? "border-primary text-primary" : "border-border text-text-secondary",
+            )}
+          >
+            준비 중
+          </span>
+        )}
       </div>
 
       {row.message && (
