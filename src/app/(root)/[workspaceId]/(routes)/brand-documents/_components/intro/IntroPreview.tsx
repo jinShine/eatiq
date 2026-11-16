@@ -1,4 +1,4 @@
-import { PdfPreview, PdfSkeleton } from "@components/custom/pdf";
+import { PdfPreview, PdfSkeleton, toVersionedPdfUrl } from "@components/custom/pdf";
 import { Button } from "@components/ui";
 
 import { type CompanyIntroDocument } from "@services/api/document/document.type";
@@ -16,13 +16,6 @@ type IntroPreviewProps = {
   isDownloading: boolean;
   onDownload: (documentId: number) => void;
 };
-
-/**
- * 같은 날 다시 만들면 PDF 주소가 그대로라 브라우저·CDN에 남은 이전 파일이 보일 수 있다.
- * 생성 시각을 붙여 다시 만들 때마다 다른 주소로 받는다
- */
-const toVersionedUrl = (document: CompanyIntroDocument) =>
-  `${document.pdf_url}?v=${encodeURIComponent(document.updated_time)}`;
 
 /** 소개 문서 오른쪽 — 미리보기와 PDF 다운로드 (피그마 2262:10083 · 10089) */
 export default function IntroPreview({
@@ -58,7 +51,11 @@ export default function IntroPreview({
               <p className="text-text-tertiary">왼쪽의 생성하기로 다시 시도해 주세요.</p>
             </EmptyPage>
           ) : document?.pdf_url ? (
-            <PdfPreview url={toVersionedUrl(document)} maxPageWidth={PAGE_MAX_WIDTH} aspectRatio={PAGE_ASPECT_RATIO} />
+            <PdfPreview
+              url={toVersionedPdfUrl(document.pdf_url, document.updated_time)}
+              maxPageWidth={PAGE_MAX_WIDTH}
+              aspectRatio={PAGE_ASPECT_RATIO}
+            />
           ) : (
             <EmptyPage>
               <p className="text-text-primary">

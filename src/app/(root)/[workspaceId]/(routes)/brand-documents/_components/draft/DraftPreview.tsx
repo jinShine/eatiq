@@ -1,4 +1,4 @@
-import { PdfPreview, PdfSkeleton } from "@components/custom/pdf";
+import { PdfPreview, PdfSkeleton, toVersionedPdfUrl } from "@components/custom/pdf";
 import { Button } from "@components/ui";
 
 import { type CrmDocumentSummary } from "@services/api/document/document.type";
@@ -46,7 +46,11 @@ export default function DraftPreview({
             // 생성은 1~2초 걸린다. 이전 문서를 그대로 두면 바뀐 줄 모르고 받을 수 있어 비운다
             <PdfSkeleton />
           ) : document?.pdf_url ? (
-            <PdfPreview url={document.pdf_url} maxPageWidth={PAGE_MAX_WIDTH} />
+            // 다시 생성해도 주소가 같아 이전 파일이 보이지 않게 생성 시각을 붙인다
+            <PdfPreview
+              url={toVersionedPdfUrl(document.pdf_url, document.updated_time)}
+              maxPageWidth={PAGE_MAX_WIDTH}
+            />
           ) : (
             <div className="border-border text-text-primary flex aspect-[1/1.414] w-full items-center justify-center rounded-sm border bg-white p-6 text-center text-sm break-keep shadow-sm">
               {document ? `${docLabel} 미리보기를 만들지 못했어요. DOCX로 받아 확인해 주세요.` : emptyMessage}

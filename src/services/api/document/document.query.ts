@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useIsMutating, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useInvalidateQueries } from "@hooks/commons";
 
@@ -18,6 +18,7 @@ export const documentKeys = {
   all: ["document"] as const,
   crmSummaryList: (workspaceId: string) => [...documentKeys.all, "crm-summary", workspaceId] as const,
   companyIntro: (workspaceId: string) => [...documentKeys.all, "company-intro", workspaceId] as const,
+  generateCompanyIntro: (workspaceId: string) => [...documentKeys.all, "generate-company-intro", workspaceId] as const,
 };
 
 /** MOU·LOI 작성용 진행 기록 목록 — 진행 기록마다 이미 만든 문서가 함께 온다 */
@@ -73,6 +74,8 @@ export function useGenerateCompanyIntroMutation(workspaceId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
+    // 탭을 떠났다 돌아와도 진행 중인 생성을 찾을 수 있게 이름을 붙인다(useIsGeneratingCompanyIntro)
+    mutationKey: documentKeys.generateCompanyIntro(workspaceId),
     mutationFn: () => generateCompanyIntro(workspaceId),
     onSuccess: response =>
       queryClient.setQueryData<CompanyIntroResponse>(documentKeys.companyIntro(workspaceId), {
@@ -81,4 +84,12 @@ export function useGenerateCompanyIntroMutation(workspaceId: string) {
         data: response.data,
       }),
   });
+}
+
+/**
+ * 소개 문서를 만드는 중인지 — 이 화면에서 누른 것뿐 아니라, 누르고 떠났다 돌아온 경우도 잡는다.
+ * 생성은 20초쯤 걸리고 화면을 떠나도 요청은 계속되므로, 돌아와서 또 누르면 같은 생성이 두 번 돈다
+ */
+export function useIsGeneratingCompanyIntro(workspaceId: string) {
+  return useIsMutating({ mutationKey: documentKeys.generateCompanyIntro(workspaceId) }) > 0;
 }
