@@ -94,5 +94,6 @@ export const SALES_IMPORTANCE_VALUES = [
 ] as const satisfies readonly Location["lunch_imp"][];
 /** 필요 여부(주차·대기공간, 설비 5종) */
 export const REQUIREMENT_VALUES = ["필수", "선호", "불필요"] as const satisfies readonly (
-  Location["parking_req"] | Facility["gas_req"]
+  | Location["parking_req"]
+  | Facility["gas_req"]
 )[];
