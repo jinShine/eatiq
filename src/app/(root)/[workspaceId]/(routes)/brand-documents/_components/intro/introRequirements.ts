@@ -23,7 +23,9 @@ type Sources = {
   store: BrandSections["brand_store"] | undefined;
 };
 
-const hasText = (value: string | null | undefined) => Boolean(value?.trim());
+// 스펙과 다른 모양(예: 127의 target_country 배열)이 와도 화면이 죽지 않게 문자열만 값으로 본다.
+// 회사 정보 설정도 문자열이 아니면 빈 값으로 보여주므로 판정이 같아진다.
+const hasText = (value: unknown) => typeof value === "string" && value.trim() !== "";
 
 export function buildIntroRequirements({
   workspaceId,
