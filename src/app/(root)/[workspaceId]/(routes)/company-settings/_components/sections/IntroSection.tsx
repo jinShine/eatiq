@@ -122,7 +122,7 @@ export default function IntroSection({ workspaceId }: IntroSectionProps) {
         labelClassName="text-xs"
         label="한줄 소개 (100자 이내)"
         required
-        placeholder="예: 롤링 파스타"
+        placeholder="예: 건강한 재료와 합리적인 가격의 파스타 전문 브랜드"
         error={Boolean(errors.short_intro)}
         errorText={errors.short_intro?.message}
         {...register("short_intro")}

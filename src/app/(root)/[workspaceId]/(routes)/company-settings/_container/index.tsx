@@ -5,11 +5,22 @@ import BaseContentLayout from "@components/layout/base/BaseContentLayout";
 import PageHeader from "@components/layout/header/PageHeader";
 
 import { useCurrentWorkspace } from "@services/api/workspace/workspace.query";
+import { type WorkspaceType } from "@services/api/workspace/workspace.type";
 
 import CompanySettingsSkeleton from "../_components/CompanySettingsSkeleton";
 import { type SettingsTabKey } from "../_components/SettingsTabNav";
 import BrandSettings from "./BrandSettings";
 import BuyerSettings from "./BuyerSettings";
+
+/**
+ * 화면 설명 — 우리 정보를 읽는 상대가 워크스페이스 종류에 따라 반대다.
+ * 피그마 바이어 시안(961:10441)은 브랜드 문구를 그대로 복사해 둔 것이라 따르지 않는다.
+ * 종류를 모르는 로딩 골격(CompanySettingsSkeleton)은 브랜드 문구를 쓴다 — 두 문구의 글자 수가 같아 바뀌어도 자리가 밀리지 않는다
+ */
+const DESCRIPTION_BY_TYPE: Record<WorkspaceType, string> = {
+  brand: "회사의 매력을 AI와 바이어가 더 잘 이해할 수 있도록 정보를 입력해주세요",
+  buyer: "회사의 매력을 AI와 브랜드가 더 잘 이해할 수 있도록 정보를 입력해주세요",
+};
 
 type CompanySettingsContainerProps = {
   workspaceId: string;
@@ -31,12 +42,7 @@ export default function CompanySettingsContainer({ workspaceId, activeTab }: Com
 
   return (
     <BaseContainerLayout
-      header={
-        <PageHeader
-          title="회사 정보 설정"
-          description="회사의 매력을 AI와 바이어가 더 잘 이해할 수 있도록 정보를 입력해주세요"
-        />
-      }
+      header={<PageHeader title="회사 정보 설정" description={DESCRIPTION_BY_TYPE[workspace.type]} />}
       content={
         <BaseContentLayout>
           {workspace.type === "buyer" ? (
