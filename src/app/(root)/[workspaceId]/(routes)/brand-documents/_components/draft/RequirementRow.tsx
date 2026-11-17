@@ -48,7 +48,7 @@ export default function RequirementRow({ row, isRequired }: RequirementRowProps)
             입력
           </Link>
         )}
-        {/* 채울 화면이 아직 없는 자료(소개 영상의 매장·조리 사진) — 누를 곳 없이 상태만 알린다 */}
+        {/* 채울 화면이 아직 없는 자료(소개 영상의 매장·조리 사진, 진행 건에서 오는 값) — 누를 곳 없이 상태만 알린다 */}
         {isMissing && !row.fillHref && (
           <span
             className={cn(

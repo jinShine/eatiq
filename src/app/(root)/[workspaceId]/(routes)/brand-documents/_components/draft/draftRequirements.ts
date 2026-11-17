@@ -7,6 +7,9 @@ import { type WorkspaceDetailResponse } from "@services/api/workspace/workspace.
  * 판정은 지금 있는 값으로 화면이 한다. 서버는 빈 값을 거절하지 않고 문서에 빈칸으로 넣으므로
  * 화면 판정과 서버가 어긋나 생성이 실패하는 일은 없다.
  * 본사 상호는 저장할 칸이 없어 뺐다(회사 정보 설정에 칸이 생기면 필수로 추가).
+ *
+ * 진행 건에서 오는 값(상대 법인명·국가·도시·계약 방식)은 「입력」 링크를 걸지 않는다 —
+ * 진행 건은 만든 뒤 고칠 화면이 없다(수정 API 없음). API가 생기면 진행 건 상세로 다시 건다.
  */
 
 type BrandSections = NonNullable<WorkspaceDetailResponse["brand"]>;
@@ -14,7 +17,7 @@ type BrandBasic = BrandSections["brand_basic"];
 type BrandSignature = BrandSections["brand_signature"];
 
 /**
- * 보유 — 값이 있다 / 미보유 — 채우러 갈 곳이 있다 / 문서에서 — 화면에서 채울 곳이 없어 DOCX에서 쓴다 /
+ * 보유 — 값이 있다 / 미보유 — 채우러 갈 곳이 있으면 「입력」, 아직 없으면 「준비 중」 / 문서에서 — 화면에서 채울 곳이 없어 DOCX에서 쓴다 /
  * 자동 — 사용자가 채우는 칸 없이 서버가 모은다(소개 문서 연혁)
  */
 export type RequirementStatus = "have" | "missing" | "document" | "auto";
@@ -25,7 +28,7 @@ export type RequirementRow = {
   /** 문서 속 쓰이는 곳 */
   usedIn: string;
   status: RequirementStatus;
-  /** 미보유일 때 채우러 갈 주소 */
+  /** 미보유일 때 채우러 갈 주소 — 채울 화면이 아직 없으면 비운다(「준비 중」으로 보인다) */
   fillHref?: string;
   /** 행 아래 안내 — 미보유 이유 또는 빠졌을 때 결과 */
   message?: string;
@@ -49,7 +52,6 @@ const hasText = (value: string | null | undefined) => Boolean(value?.trim());
 
 export function buildDraftRequirements({ workspaceId, docType, crm, basic, signature }: Sources): DraftRequirements {
   const signatureHref = `/${workspaceId}/company-settings?tab=policy#signature_manager/name_ko`;
-  const crmHref = `/${workspaceId}/progress/${crm.crm_uid}`;
   const basicHref = (field: "official_address" | "official_email") =>
     `/${workspaceId}/company-settings?tab=basic#brand_basic/${field}`;
 
@@ -71,7 +73,6 @@ export function buildDraftRequirements({ workspaceId, docType, crm, basic, signa
     usedIn,
     // 진행 기록은 이름 없이 만들 수 없다
     status: hasText(crm.company_name) ? "have" : "missing",
-    fillHref: crmHref,
   });
 
   const targetCountry = (usedIn: string): RequirementRow => {
@@ -81,8 +82,7 @@ export function buildDraftRequirements({ workspaceId, docType, crm, basic, signa
       label: "대상 국가",
       usedIn,
       status: isHave ? "have" : "missing",
-      fillHref: crmHref,
-      message: isHave ? undefined : "진행 관리에서 상대 국가를 넣어 주세요",
+      message: isHave ? undefined : "국가를 넣어 진행 건을 다시 추가해 주세요",
     };
   };
 
@@ -93,8 +93,8 @@ export function buildDraftRequirements({ workspaceId, docType, crm, basic, signa
       label: "대상 도시 · 계약 방식",
       usedIn,
       status: isHave ? "have" : "missing",
-      fillHref: crmHref,
-      message: isHave ? undefined : "비어 있으면 「추후 협의」로 들어가요",
+      // 서버는 빈 값을 「추후 협의」로 바꾸지 않고 `{{대상 도시·지역}}` 같은 빈칸으로 둔다(11-17 문서 실측)
+      message: isHave ? undefined : "진행 건을 추가할 때 넣는 값이에요 · 없으면 빈칸으로 남겨요",
     };
   };
 
