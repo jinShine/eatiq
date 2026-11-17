@@ -3,8 +3,9 @@
 import { useState } from "react";
 
 import dayjs from "dayjs";
+import { TriangleAlert } from "lucide-react";
 
-import { Toast } from "@components/ui";
+import { Button, Toast } from "@components/ui";
 
 import { useBrandVideo, useGenerateBrandVideoMutation } from "@services/api/brand/brand.query";
 
@@ -20,7 +21,7 @@ type VideoTabProps = {
 
 /** 소개 영상 생성 탭 — 워크스페이스당 영상 하나, 다시 만들면 이전 영상을 서버가 지운다 */
 export default function VideoTab({ workspaceId }: VideoTabProps) {
-  const { data, isLoading } = useBrandVideo(workspaceId);
+  const { data, isLoading, isLoadingError, error, refetch } = useBrandVideo(workspaceId);
   const { mutate: generate, isPending: isRequesting } = useGenerateBrandVideoMutation(workspaceId);
 
   const status = data?.video_info.status;
@@ -48,6 +49,24 @@ export default function VideoTab({ workspaceId }: VideoTabProps) {
       setIsDownloading(false);
     }
   };
+
+  // 처음 조회부터 실패하면 자료 판정도 미리보기도 그릴 수 없다 — 빈 패널 대신 사유와 다시 시도를 보여준다.
+  // 한 번이라도 받았으면(생성 중 주기 조회가 한 번 실패한 경우 등) 직전 값을 그대로 둔다.
+  // 다시 시도를 누르면 받은 값이 없는 조회라 대기 상태로 돌아가 아래 로딩 화면이 보인다
+  if (isLoadingError) {
+    return (
+      <div className="flex flex-1 flex-col items-center py-20 text-center">
+        <div className="bg-secondary-background text-text-disabled flex size-12 items-center justify-center rounded-2xl">
+          <TriangleAlert className="size-5" strokeWidth={1.5} />
+        </div>
+        <p className="text-text-primary mt-5 text-sm font-semibold">영상 정보를 불러오지 못했어요</p>
+        <p className="text-text-tertiary mt-1.5 text-xs">{error.message || "잠시 후 다시 시도해주세요."}</p>
+        <Button variant="outline" size="sm" className="mt-6" onClick={() => refetch()}>
+          다시 시도
+        </Button>
+      </div>
+    );
+  }
 
   return (
     // 소개 문서·MOU·LOI와 같은 틀 — 왼쪽 패널 고정 폭(피그마 354px), 오른쪽 미리보기
