@@ -83,7 +83,7 @@ export default function VideoTab({ workspaceId }: VideoTabProps) {
         videoInfo={data?.video_info ?? null}
         isLoading={isLoading}
         isGenerating={isGenerating}
-        isReady={Boolean(requirements?.hasEnoughImages) && requirements?.missingRequiredCount === 0}
+        isReady={requirements?.missingRequiredCount === 0}
         isDownloading={isDownloading}
         onDownload={handleDownload}
       />
