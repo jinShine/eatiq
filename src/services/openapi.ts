@@ -1693,8 +1693,11 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * 🔥 [NEW 26.11.13] 브랜드 쇼츠 영상 생성
-     * @description ### 📌 개요
+     * 🔄 [UPDATE 26.11.16] 브랜드 쇼츠 영상 생성 (필수 이미지 조건 변경)
+     * @description ### 📝 최근 업데이트 이력 (2026.11.16)
+     *     - **필수 이미지 조건 변경**: 영상 생성 시 요구되는 최소 이미지 기준이 단순 4장 이상에서 **대표 메뉴 사진 1장 이상, 매장/인테리어 사진 2장 이상, 브랜드 로고 1장 이상**으로 변경되었습니다.
+     *
+     *     ### 📌 개요
      *     - **자동 파이프라인**: 별도의 Request Body 없이 URL 경로의 `workspace_uid`만 전달하면, 기등록된 브랜드 프로필(매장, 메뉴, 조리, 로고) 데이터를 기반으로 20초 분량의 고화질 세로형(9:16) 시네마틱 쇼츠 영상을 자동 생성합니다.
      *     - **진행 이력 관리**: 생성 요청 시 비디오 상태가 `status = 'PROCESSING'`으로 즉시 기록되며 작업 고유 식별자(`video_uid` 및 `task_id`)가 발급됩니다. 기존에 생성된 비디오가 있다면 자동으로 정리 후 신규 발급됩니다.
      *
@@ -1708,7 +1711,10 @@ export interface paths {
      *     6. **브랜드 로고 사진** ➔ 마지막 엔딩 프레임
      *
      *     > ⚠️ **주의사항**:
-     *     > 1. 위 항목 중 등록된 유효 이미지가 **최소 4장 이상**이어야 영상 생성이 가능합니다. (4장 미만 등록 시 `400 Bad Request` 예외 발생)
+     *     > 1. 아래 필수 이미지 조건을 모두 충족해야 영상 생성이 가능합니다. (미충족 시 `400 Bad Request` 예외 발생)
+     *     >    - **대표 메뉴 사진**: 1장 이상
+     *     >    - **매장/인테리어 사진**: 2장 이상
+     *     >    - **브랜드 로고**: 1장 이상
      *     > 2. **현재 영상 생성 템플릿은 '목구멍' 브랜드(솥뚜껑 삼겹살/미나리 등)에 맞추어 연출 프롬프트가 최적화**되어 있습니다. 다른 브랜드로 호출하더라도 목구멍 6단계 템플릿 기반으로 영상이 생성되므로 테스트 시 유의해 주시기 바랍니다.
      *
      *     ### 🎬 프론트엔드 연동 시퀀스 다이어그램 (생성 및 확인 흐름)
@@ -1716,7 +1722,7 @@ export interface paths {
      *     ```text
      *     [1. 페이지 진입 / 영상 생성 가능 여부 사전 확인]
      *        GET /api/workspace/:workspace_uid/brand/video
-     *          ├─► media_counts: 이미지 등록 수량 확인 (최소 4장 이상 시 생성 버튼 활성화)
+     *          ├─► media_counts: 필수 이미지 조건 충족 여부 확인 (대표 메뉴 사진 ≥ 1, 매장/인테리어 사진 ≥ 2, 로고 ≥ 1 시 생성 버튼 활성화)
      *          └─► video_info.status: 기존 영상 상태 확인 ('NONE' | 'PROCESSING' | 'COMPLETED' | 'FAILED')
      *                │
      *                ▼ (사용자가 [영상 생성] 버튼 클릭)
@@ -1732,7 +1738,7 @@ export interface paths {
      *          └─► status === 'FAILED'     ──► 폴링 중단 & 실패 안내 및 재시도 UI 노출
      *     ```
      *
-     *     1. **사전 확인**: [브랜드 영상 및 미디어 등록 현황 조회 (GET /api/workspace/:workspace_uid/brand/video)](#/Workspace%20Brand/GetBrandVideoController_execute)를 먼저 호출하여 이미지 조건(최소 4장 이상)과 현재 영상 상태를 확인합니다.
+     *     1. **사전 확인**: [브랜드 영상 및 미디어 등록 현황 조회 (GET /api/workspace/:workspace_uid/brand/video)](#/Workspace%20Brand/GetBrandVideoController_execute)를 먼저 호출하여 필수 이미지 조건(대표 메뉴 사진 1장 이상, 매장/인테리어 사진 2장 이상, 브랜드 로고 1장 이상)과 현재 영상 상태를 확인합니다.
      *     2. **생성 요청**: 본 API(`POST`)를 호출하면 즉시 `status: 'PROCESSING'`과 `video_uid`를 반환합니다.
      *     3. **완료 확인 (Polling)**: 생성에는 약 1~3분가량 소요되므로, 3~5초 간격으로 현황 조회 API(`GET`)를 호출하여 `video_info.status`가 `'COMPLETED'`로 변경되었을 때 `video_info.video_url`을 화면에 재생합니다. (페이지를 벗어났다가 다시 진입해도 `GET` API를 통해 진행 상태나 완성된 영상을 그대로 이어서 확인할 수 있습니다.)
      */
@@ -1751,10 +1757,13 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * 🔥 [NEW 26.11.13] 브랜드 영상 및 미디어 등록 현황 조회
-     * @description ### 📌 개요
+     * 🔄 [UPDATE 26.11.16] 브랜드 영상 및 미디어 등록 현황 조회 (필수 이미지 조건 안내 변경)
+     * @description ### 📝 최근 업데이트 이력 (2026.11.16)
+     *     - **영상 생성 필수 이미지 조건 안내 변경**: 영상 생성 버튼 활성화 조건이 단순 4장 이상에서 **대표 메뉴 사진 1장 이상, 매장/인테리어 사진 2장 이상, 브랜드 로고 1장 이상**으로 변경되었습니다.
+     *
+     *     ### 📌 개요
      *     - **영상 상태 확인 (Polling 지원)**: 영상 생성 요청(`POST /api/workspace/:workspace_uid/brand/video/generate`) 후, 본 API를 3~5초 간격으로 폴링하여 영상 생성 상태(`NONE` | `PROCESSING` | `COMPLETED` | `FAILED`) 및 완료된 비디오 영구 재생 S3 URL(`video_url`)을 확인할 수 있습니다.
-     *     - **미디어 등록 카운트 제공**: 영상 생성 조건(최소 4장 이상) 충족 여부를 화면에서 즉시 파악할 수 있도록 대표 메뉴, 매장/인테리어, 로고, 조리 사진/영상 등록 개수를 실시간으로 집계하여 함께 반환합니다.
+     *     - **미디어 등록 카운트 제공**: 영상 생성 필수 조건(대표 메뉴 사진 1장 이상, 매장/인테리어 사진 2장 이상, 브랜드 로고 1장 이상) 충족 여부를 화면에서 즉시 파악할 수 있도록 대표 메뉴, 매장/인테리어, 로고, 조리 사진/영상 등록 개수를 실시간으로 집계하여 함께 반환합니다.
      *
      *     ### 📊 응답 데이터 상세
      *     1. **video_info (영상 정보)**:
@@ -1781,9 +1790,9 @@ export interface paths {
      *     GET /api/workspace/:workspace_uid/brand/video
      *        │
      *        ├─► status === 'NONE'
-     *        │     ├─► 유효 이미지 4장 미만 ➔ 사진/영상 추가 등록 화면 노출
+     *        │     ├─► 필수 이미지 조건 미충족 (메뉴 사진 < 1 또는 매장 사진 < 2 또는 로고 < 1) ➔ 사진/영상 추가 등록 화면 노출
      *        │     │     └─► [🔥 신규 API] PUT /api/workspace/:workspace_uid/brand/visual/media 호출하여 미디어 업로드
-     *        │     └─► 유효 이미지 4장 이상 ➔ [영상 생성] 버튼 활성화
+     *        │     └─► 필수 이미지 조건 충족 (메뉴 사진 ≥ 1, 매장 사진 ≥ 2, 로고 ≥ 1) ➔ [영상 생성] 버튼 활성화
      *        │           └─► 클릭 시 POST /api/workspace/:workspace_uid/brand/video/generate 호출
      *        │
      *        ├─► status === 'PROCESSING'
@@ -12583,7 +12592,7 @@ export interface operations {
           "application/json": components["schemas"]["GenerateBrandVideoResponseDto"];
         };
       };
-      /** @description 브랜드 프로필에 등록된 이미지가 4장 미만이어서 영상 생성이 불가능한 경우 */
+      /** @description 필수 이미지 조건(대표 메뉴 사진 1장 이상, 매장/인테리어 사진 2장 이상, 브랜드 로고 1장 이상)을 충족하지 못해 영상 생성이 불가능한 경우 */
       400: {
         headers: {
           [name: string]: unknown;
