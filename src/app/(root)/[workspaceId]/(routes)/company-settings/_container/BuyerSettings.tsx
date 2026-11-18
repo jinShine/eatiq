@@ -35,7 +35,7 @@ export default function BuyerSettings({ workspaceId }: BuyerSettingsProps) {
       <BuyerCompletionCard workspaceId={workspaceId} />
       <div className="space-y-6 px-6 py-6">
         {BUYER_SECTIONS.map(({ id, Section }) => (
-          <section key={id} id={id} className="scroll-mt-24">
+          <section key={id} id={id} className="scroll-mt-settings">
             <Section workspaceId={workspaceId} />
           </section>
         ))}

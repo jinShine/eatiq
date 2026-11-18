@@ -45,6 +45,8 @@ export default function CompletionStatusCard({ workspaceId, tab, tabLabel }: Com
       completion={completion}
       stages={BRAND_JOURNEY_STAGES}
       progressLabel={`${tabLabel} 완성률`}
+      // 모든 탭을 채웠을 때만 접는다 — 이 탭만 끝났으면 다음 탭 안내를 보여야 한다
+      isCollapsed={isTabDone && isAllTabsDone}
       doneContent={
         <>
           <div className="flex-1 space-y-1">

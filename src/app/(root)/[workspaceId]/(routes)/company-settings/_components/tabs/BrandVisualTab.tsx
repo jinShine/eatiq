@@ -14,13 +14,13 @@ export default function BrandVisualTab({ workspaceId }: BrandVisualTabProps) {
       {/* id = 완성도 API의 section_key. 저니 패널의 「입력」이 이 id로 섹션을 찾아 이동한다.
           순서는 시안(769:3837)대로 이미지 자산 → 대표 매장 → 대표 메뉴 */}
       <div className="space-y-6 px-6 py-6">
-        <section id="visual_identity" className="scroll-mt-24">
+        <section id="visual_identity" className="scroll-mt-settings">
           <VisualIdentitySection workspaceId={workspaceId} />
         </section>
-        <section id="visual_store" className="scroll-mt-24">
+        <section id="visual_store" className="scroll-mt-settings">
           <StoreSection workspaceId={workspaceId} />
         </section>
-        <section id="visual_menu" className="scroll-mt-24">
+        <section id="visual_menu" className="scroll-mt-settings">
           <MenuSection workspaceId={workspaceId} />
         </section>
       </div>

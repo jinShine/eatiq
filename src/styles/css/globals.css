@@ -200,6 +200,12 @@
     --ring: var(--primary-500);
     --radius: 0.75rem; /* 12px — 버튼·입력 기준. 카드는 컴포넌트에서 rounded-2xl로 별도 */
 
+    /* --- Layout offsets --- */
+    /* 위에 붙는 PageHeader 실제 높이 — 부제 유무로 달라져 PageHeaderHeightSync가 재서 덮어쓴다 */
+    --page-header-h: 4rem;
+    /* 회사 정보 설정 저니 패널의 스크롤 바 높이(피그마 769:4487 — 108px) */
+    --journey-bar-h: 6.75rem;
+
     /* --- Text --- */
     --text-primary: #1d1d1f;
     --text-secondary: #3a3a3c;
@@ -285,6 +291,11 @@
  * ========================================================================= */
 
 @layer utilities {
+  /* 회사 정보 설정 섹션 — 「입력」으로 스크롤해 왔을 때 헤더와 저니 패널 스크롤 바에 제목이 가리지 않게 */
+  .scroll-mt-settings {
+    scroll-margin-top: calc(var(--page-header-h) + var(--journey-bar-h) + 0.5rem);
+  }
+
   .scrollbar-hidden {
     &::-webkit-scrollbar {
       display: none;

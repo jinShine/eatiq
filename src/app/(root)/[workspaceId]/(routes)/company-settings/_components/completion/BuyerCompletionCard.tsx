@@ -26,6 +26,7 @@ export default function BuyerCompletionCard({ workspaceId }: BuyerCompletionCard
       completion={completion}
       stages={BUYER_JOURNEY_STAGES}
       progressLabel="회사 정보 완성률"
+      isCollapsed={!completion.nextTask}
       doneContent={
         <div className="flex-1 space-y-1">
           <p className="text-text-primary text-base font-bold">회사 정보 입력을 마쳤어요</p>

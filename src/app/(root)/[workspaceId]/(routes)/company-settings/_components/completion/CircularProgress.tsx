@@ -9,6 +9,8 @@ type CircularProgressProps = {
   size?: number;
   strokeWidth?: number;
   label?: string; // 스크린리더용 설명
+  /** 가운데 % 숫자 — 작은 원(스크롤 바 32px)엔 들어가지 않아 끈다 */
+  showValue?: boolean;
 };
 
 export default function CircularProgress({
@@ -16,6 +18,7 @@ export default function CircularProgress({
   size = 80,
   strokeWidth = 8,
   label = "완성률",
+  showValue = true,
 }: CircularProgressProps) {
   const shouldReduceMotion = useReducedMotion();
   const [scope, animateScope] = useAnimate();
@@ -86,11 +89,13 @@ export default function CircularProgress({
       </svg>
 
       {/* 중앙 숫자 — 실제 값은 aria-valuetext가 전달하므로 시각 전용 */}
-      <div className="absolute inset-0 flex items-center justify-center" aria-hidden="true">
-        <span className="text-text-primary text-lg font-bold">
-          <motion.span>{displayRate}</motion.span>%
-        </span>
-      </div>
+      {showValue && (
+        <div className="absolute inset-0 flex items-center justify-center" aria-hidden="true">
+          <span className="text-text-primary text-lg font-bold">
+            <motion.span>{displayRate}</motion.span>%
+          </span>
+        </div>
+      )}
     </div>
   );
 }
