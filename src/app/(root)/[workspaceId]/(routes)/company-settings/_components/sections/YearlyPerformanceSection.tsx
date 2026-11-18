@@ -1,24 +1,28 @@
 import { useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, type FieldErrors, useForm } from "react-hook-form";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import z from "zod";
 
 import { SettingsSection } from "@components/custom/settings";
-import { CommaNumberInput } from "@components/ui";
+import { CommaNumberInput, Toast } from "@components/ui";
 
-import { useBrandSection } from "@services/api/brand/brand.query";
-import { type BrandStatusData } from "@services/api/brand/brand.type";
+import { useBrandSection, useUpdateBrandStatus } from "@services/api/brand/brand.query";
+import { type BrandStatusData, type UpdateBrandStatusRequest } from "@services/api/brand/brand.type";
 
 import { cn } from "@utils/shadcn";
+
+import useClearOnFormChange from "../../_hooks/useClearOnFormChange";
+import { toNumberText } from "./numberText";
 
 /**
  * 연도별 실적 (피그마 「Card · 연도별 실적」 2419:1040).
  *
- * 저장은 PUT …/brand/status의 yearly_sales로 한다. 지금 스펙은 한 해의 8개 항목이 모두 필수라
- * (신규 개점·계약 종료·계약 해지 포함) 이 카드의 3개 항목만으로는 저장할 수 없다.
- * 백엔드가 선택 입력으로 바꿔 주기로 해서(2026-11-18) 그 전까지 저장 버튼을 꺼 둔다.
+ * 저장은 운영 현황과 같은 PUT …/brand/status의 yearly_sales로 한다(기획 합의: 가맹점 수·연평균 매출·평당 연매출만).
+ * PUT이라 운영 현황 필수값을 저장된 그대로 함께 보낸다. 운영 현황을 한 번도 저장하지 않았으면 이 카드도 저장할 수 없다.
+ * yearly_sales가 통째로 바뀌는지 연도별로 합쳐지는지 스펙에 없어서, 어느 쪽이든 기존 값이 지워지지 않게
+ * 이 카드에 없는 항목(신규 개점·계약 종료·계약 해지)과 범위 밖 연도는 저장된 값을 그대로 실어 보낸다.
  * 공정위 정보공개서 값 자동 채움·잠금도 나중 작업이다 — 지금은 모든 칸을 직접 입력한다.
  */
 
@@ -101,8 +105,72 @@ type YearValues = z.infer<typeof yearSchema>;
 
 const EMPTY_YEAR: YearValues = { franchise_count: "", avg_annual_sales: "", sales_per_area: "" };
 
-/** 원 → 만 원 문자열. 화면은 정수만 받아 반올림한다(저장 연결 때 바뀌지 않은 칸은 원래 원 값을 보낸다) */
+/** 원 → 만 원 문자열. 화면은 정수만 받아 반올림한다(저장할 때 바뀌지 않은 칸은 원래 원 값을 보낸다) */
 const toManwonText = (won: number) => String(Math.round(won / MANWON));
+
+/** 만 원 문자열 → 원. 반올림해 보여 준 값을 그대로 두었으면 원래 값을 보내 원 단위 끝자리를 지키지 않는다 */
+const toWon = (text: string, original?: number | null) =>
+  original !== undefined && original !== null && toManwonText(original) === text ? original : Number(text) * MANWON;
+
+type SavedYearly = NonNullable<BrandStatusData["yearly_sales"]>[number];
+type YearlyRequest = NonNullable<UpdateBrandStatusRequest["yearly_sales"]>[number];
+
+/** 이 카드에 없는 항목 — 저장된 값이 있으면 그대로 실어 보낸다(null은 서버가 받지 않아 뺀다) */
+const keepOtherFields = (item?: SavedYearly) => ({
+  ...(item?.new_open != null && { new_open: item.new_open }),
+  ...(item?.contract_end != null && { contract_end: item.contract_end }),
+  ...(item?.contract_cancel != null && { contract_cancel: item.contract_cancel }),
+});
+
+const toYearlyRequest = (values: YearlyFormValues, saved: BrandStatusData): YearlyRequest[] => {
+  const savedItems = saved.yearly_sales ?? [];
+  const byYear = new Map(savedItems.map(item => [item.year, item]));
+
+  const inRange = YEARS.flatMap(year => {
+    const row = values.years[yearKey(year)];
+    // 세 칸이 모두 비면 그해는 보내지 않는다
+    if (ROWS.every(({ name }) => row[name] === "")) {
+      return [];
+    }
+    const prev = byYear.get(year);
+    return [
+      {
+        year,
+        avg_annual_sales: toWon(row.avg_annual_sales, prev?.avg_annual_sales),
+        sales_per_area: toWon(row.sales_per_area, prev?.sales_per_area),
+        ...(row.franchise_count !== "" && { franchise_count: Number(row.franchise_count) }),
+        ...keepOtherFields(prev),
+      },
+    ];
+  });
+
+  // 2020년 이전처럼 화면에 없는 연도는 손대지 않고 그대로 보낸다
+  const outOfRange = savedItems
+    .filter(item => !YEARS.includes(item.year))
+    .map(item => ({
+      year: item.year,
+      avg_annual_sales: item.avg_annual_sales,
+      sales_per_area: item.sales_per_area,
+      ...(item.franchise_count != null && { franchise_count: item.franchise_count }),
+      ...keepOtherFields(item),
+    }));
+
+  return [...outOfRange, ...inRange].sort((a, b) => a.year - b.year);
+};
+
+/** 운영 현황 필수값은 저장된 그대로 — 이 카드는 yearly_sales만 바꾼다 */
+const toRequest = (values: YearlyFormValues, saved: BrandStatusData): UpdateBrandStatusRequest => ({
+  domestic_store_total_cnt: saved.domestic_store_total_cnt,
+  domestic_store_direct_cnt: saved.domestic_store_direct_cnt,
+  overseas_store_total_cnt: saved.overseas_store_total_cnt,
+  avg_monthly_sales: saved.avg_monthly_sales,
+  avg_cost_per_customer: saved.avg_cost_per_customer,
+  avg_store_area: saved.avg_store_area,
+  avg_seat_cnt: saved.avg_seat_cnt,
+  ...(saved.target_audience && { target_audience: saved.target_audience }),
+  ...(saved.usage_context && { usage_context: saved.usage_context }),
+  yearly_sales: toYearlyRequest(values, saved),
+});
 
 const toFormValues = (saved?: BrandStatusData | null): YearlyFormValues => {
   const byYear = new Map((saved?.yearly_sales ?? []).map(item => [item.year, item]));
@@ -112,7 +180,8 @@ const toFormValues = (saved?: BrandStatusData | null): YearlyFormValues => {
         const item = byYear.get(year);
         const values: YearValues = item
           ? {
-              franchise_count: String(item.franchise_count),
+              // 가맹점 수는 선택 항목이라 비어(null) 올 수 있다
+              franchise_count: toNumberText(item.franchise_count),
               avg_annual_sales: toManwonText(item.avg_annual_sales),
               sales_per_area: toManwonText(item.sales_per_area),
             }
@@ -162,35 +231,68 @@ export default function YearlyPerformanceSection({ workspaceId }: YearlyPerforma
 
   const { data: saved } = useBrandSection(workspaceId, "brand_status");
 
+  const { mutate: updateBrandStatus, isPending, error, reset: clearSaveError } = useUpdateBrandStatus(workspaceId);
+
   const {
     control,
     trigger,
-    formState: { errors },
+    reset,
+    watch,
+    handleSubmit,
+    formState: { errors, isDirty },
   } = useForm<YearlyFormValues>({
     resolver: zodResolver(yearlySchema),
-    // 저장 버튼이 꺼져 있어 입력하면서 바로 검사한다
+    // 칸마다 오류 문구 자리가 없어, 고치는 즉시 빨간 표시가 풀리게 입력하면서 검사한다
     mode: "onChange",
     values: toFormValues(saved),
   });
+
+  useClearOnFormChange(watch, clearSaveError);
+
+  // 운영 현황 필수값이 없으면 PUT을 만들 수 없다 — 운영 현황을 먼저 저장해야 한다
+  // (불러오는 중엔 undefined라 문구를 띄우지 않는다. null이면 저장된 적이 없다)
+  const missingStatusMessage = saved === null ? "운영 현황을 먼저 저장해 주세요" : null;
+
+  const onSubmit = (values: YearlyFormValues) => {
+    if (!saved) {
+      return;
+    }
+    updateBrandStatus(toRequest(values, saved), {
+      onSuccess: response => {
+        // 서버가 저장한 모양으로 폼을 맞춘다(목 모드는 보낸 값). 이걸 해야 dirty가 풀린다
+        reset(response ? toFormValues(response.brand_status) : values, { keepFieldsRef: true });
+        Toast.success("연도별 실적을 저장했어요.");
+      },
+    });
+  };
 
   // 처음엔 올해가 오른쪽 끝에 오게 최근 6년을 보여준다
   const lastStart = Math.max(0, YEARS.length - VISIBLE_YEARS);
   const [start, setStart] = useState(lastStart);
   const visibleYears = YEARS.slice(start, start + VISIBLE_YEARS);
 
-  // 칸 안에 문구를 넣을 자리가 없어 표 아래에 모아 보여준다 — 화면 순서상 첫 오류 하나
-  const firstError = visibleYears
-    .flatMap(year => ROWS.map(row => ({ year, row, message: errors.years?.[yearKey(year)]?.[row.name]?.message })))
-    .find(item => item.message);
+  // 저장 때 화면 밖 연도에 오류가 있으면 그해가 보이게 옮긴다 — 그래야 빨간 칸에 포커스가 간다
+  const onInvalid = (invalid: FieldErrors<YearlyFormValues>) => {
+    const index = YEARS.findIndex(year => invalid.years?.[yearKey(year)]);
+    if (index !== -1 && (index < start || index >= start + VISIBLE_YEARS)) {
+      setStart(Math.min(Math.max(0, index - VISIBLE_YEARS + 1), lastStart));
+    }
+  };
+
+  // 칸 안에 문구를 넣을 자리가 없어 표 아래에 모아 보여준다 — 첫 오류 하나.
+  // 화면 밖 연도의 오류도 알 수 있게 전체 연도에서 찾는다(문구에 연도가 들어간다)
+  const firstError = YEARS.flatMap(year =>
+    ROWS.map(row => ({ year, row, message: errors.years?.[yearKey(year)]?.[row.name]?.message })),
+  ).find(item => item.message);
 
   return (
     <SettingsSection
       title="연도별 실적"
       description="가맹점 수와 가맹점 한 곳의 연평균 매출을 연도별로 적어 주세요"
-      // 저장 연결 대기(yearly_sales): 새 스펙(신규 개점·계약 종료·계약 해지 선택 입력)이 오면 저장을 연결한다.
-      // 그 전엔 dirty를 알리지 않는다 — 저장할 수 없는 변경으로 페이지 이탈을 막지 않기 위해서다
-      isDirty={false}
-      onSubmit={event => event.preventDefault()}
+      isDirty={isDirty && !missingStatusMessage}
+      isPending={isPending}
+      errorMessage={missingStatusMessage ?? error?.message}
+      onSubmit={handleSubmit(onSubmit, onInvalid)}
     >
       {/* 좁은 화면에선 표를 옆으로 넘겨 본다. 항목 이름 칸은 왼쪽에 붙여 둔다.
           넘기는 영역을 카드 여백까지 넓히면(-mx px) 고정된 이름 칸 왼쪽 여백으로 지나가는 칸이 비쳐 보여서, 본문 폭 안에서만 넘긴다 */}
