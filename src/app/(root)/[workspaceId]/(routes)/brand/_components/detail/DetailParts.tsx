@@ -50,7 +50,13 @@ export function YearBarChart({ bars, label }: { bars: YearBar[]; label: string }
   const max = Math.max(...bars.map(bar => bar.value ?? 0));
 
   return (
-    <ol aria-label={label} className="flex items-end justify-between px-2">
+    // 연도마다 같은 폭 — 금액 길이(「—」 · 「27억 7,399만」)가 달라도 막대 간격이 고르다.
+    // 좁은 화면에서 5칸에 금액이 안 들어가면 띄어쓰기에서 두 줄로 접는다
+    <ol
+      aria-label={label}
+      className="grid items-end gap-1 px-1"
+      style={{ gridTemplateColumns: `repeat(${bars.length}, minmax(0, 1fr))` }}
+    >
       {bars.map((bar, index) => {
         const isLatest = index === bars.length - 1;
         const hasValue = bar.value !== null;
@@ -58,7 +64,7 @@ export function YearBarChart({ bars, label }: { bars: YearBar[]; label: string }
           <li key={bar.year} className="flex flex-col items-center gap-1">
             <span
               className={cn(
-                "text-xs font-semibold tracking-[-0.6px]",
+                "text-center text-xs leading-tight font-semibold tracking-[-0.6px] break-keep",
                 hasValue ? "text-text-primary" : "text-text-disabled",
               )}
             >

@@ -48,11 +48,11 @@ export type YearBar = {
   label: string;
 };
 
-/** 그래프에 그리는 최대 연도 수 — 스펙 「최근 5년」 */
+/** 그래프에 그리는 연도 수 — 기획 「항상 5개」(2026-11-18) */
 const MAX_CHART_YEARS = 5;
 
 /**
- * 두 그래프(매출 · 가맹점 수)가 함께 쓰는 연도 — 둘 중 가장 이른 해부터 가장 최근 해까지, 최근 5년만.
+ * 두 그래프(매출 · 가맹점 수)가 함께 쓰는 연도 — 둘 중 가장 최근 해까지 5년.
  * 값이 빠진 해를 지우면 그래프마다 연도가 달라지고 중간이 비어도 티가 안 나서, 빈 해도 자리를 둔다
  */
 const toChartYears = (detail: BrandDetail) => {
@@ -67,9 +67,9 @@ const toChartYears = (detail: BrandDetail) => {
   if (years.length === 0) {
     return [];
   }
+  // 기획: 연도는 항상 5개 — 가장 최근 해에서 거꾸로 5년. 값이 없는 해는 빈 막대로 둔다
   const last = Math.max(...years);
-  const first = Math.max(Math.min(...years), last - MAX_CHART_YEARS + 1);
-  return Array.from({ length: last - first + 1 }, (_, i) => first + i);
+  return Array.from({ length: MAX_CHART_YEARS }, (_, i) => last - MAX_CHART_YEARS + 1 + i);
 };
 
 /** 연도마다 값을 찾아 막대로 — 없거나 0이면 빈 막대 */
