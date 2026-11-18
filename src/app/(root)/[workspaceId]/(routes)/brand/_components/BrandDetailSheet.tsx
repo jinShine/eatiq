@@ -1,29 +1,18 @@
 "use client";
 
+import { useState } from "react";
+
 import { ExternalLink, ImageIcon } from "lucide-react";
 
-import { Sheet, Skeleton } from "@components/ui";
+import { ImagePreviewModal, Sheet, Skeleton } from "@components/ui";
 
-import { type BrandDetailView, type DetailRow } from "./brandView";
-
-/** 라벨 - 값 한 줄. 값이 없으면 시안대로 "-"를 보여준다 */
-function TermRow({ row }: { row: DetailRow }) {
-  return (
-    <div className="border-border flex items-start justify-between gap-5 border-b py-2.5">
-      <span className="text-text-tertiary shrink-0 text-sm font-medium tracking-[-0.7px]">{row.label}</span>
-      <span className="text-text-primary text-right text-sm font-medium tracking-[-0.7px]">{row.value ?? "-"}</span>
-    </div>
-  );
-}
-
-function SectionTitle({ children }: { children: React.ReactNode }) {
-  return <h3 className="text-text-primary text-sm font-bold tracking-[-0.7px]">{children}</h3>;
-}
+import { type BrandDetailView } from "./brandView";
+import { ExternalLinks, KpiCard, MenuCard, SectionTitle, TermRow, YearBarChart } from "./detail/DetailParts";
 
 function DetailSkeleton() {
   return (
     <div role="status" aria-label="브랜드 정보를 불러오는 중" className="flex flex-col gap-6">
-      <Skeleton className="-mx-3 -mt-3 h-[320px] rounded-none" />
+      <Skeleton className="-mx-3 -mt-3 aspect-[7/4] rounded-none" />
       <div className="flex items-start gap-4 px-2">
         <Skeleton className="size-[60px] shrink-0 rounded-lg" />
         <div className="flex flex-1 flex-col gap-2 pt-1">
@@ -49,12 +38,16 @@ type BrandDetailSheetProps = {
 };
 
 /**
- * 브랜드 상세 드로어 (피그마 961:11038 · 693:364).
+ * 브랜드 상세 드로어 v2 (피그마 2072:4921 「Drawer_브랜드상세_풀스펙_v2」).
  *
- * 시안의 「우선 연락 추천」·「우리 바이어와 잘 맞는 이유」·「확인이 필요한 조건」·「대표 주소로 메일 보내기」는
- * API가 없어 아직 그리지 않는다(기획 확인 요청). 「해외 진출 실적」은 국가별이 아니라 합계 한 줄로 보여준다.
+ * 대표 사진 → 머리 → 브랜드 소개 → 대표 메뉴 → 매장 · 인테리어 → 월평균 매출 추이 → 가맹점 수 추이 →
+ * 진출 희망 국가 → 파트너십 선호 조건 → 외부 링크 → 정보 출처.
+ * 데이터가 없는 섹션은 통째로 뺀다. 시안의 「파트너 역할」·「본사 정보」·「대표 주소로 메일 보내기」는 API가 없어 그리지 않는다.
+ * 시안에서 숨겨 둔(투명) 「전년 대비」·「3년 새」·「증가 추세」 문구도 그리지 않는다
  */
 export default function BrandDetailSheet({ detail, isLoading, isOpen, onOpenChange }: BrandDetailSheetProps) {
+  const [storePreviewIndex, setStorePreviewIndex] = useState<number | null>(null);
+
   return (
     <Sheet
       side="right"
@@ -68,8 +61,8 @@ export default function BrandDetailSheet({ detail, isLoading, isOpen, onOpenChan
 
       {detail && (
         <div className="flex flex-col gap-6 pb-4">
-          {/* 대표 이미지 — 시트 기본 여백(12px)을 상쇄해 폭 전체로 */}
-          <div className="bg-secondary-background -mx-3 -mt-3 h-[320px] shrink-0">
+          {/* 대표 사진 — 시안 700:400 비율. 시트 기본 여백(12px)을 상쇄해 폭 전체로 */}
+          <div className="bg-secondary-background -mx-3 -mt-3 aspect-[7/4] shrink-0">
             {detail.imageUrl ? (
               <img src={detail.imageUrl} alt="" className="size-full object-cover" />
             ) : (
@@ -81,7 +74,7 @@ export default function BrandDetailSheet({ detail, isLoading, isOpen, onOpenChan
 
           {/* px-2는 Sheet 기본 패딩 12px에 더해져 좌우 20px가 된다(바이어 상세와 같다) */}
           <div className="flex flex-col gap-6 px-2">
-            {/* 요약 — 로고(없으면 이니셜) · 이름 · 링크 · 메타 */}
+            {/* 머리 — 로고(없으면 이니셜) · 이름 · 링크 · 메타 */}
             <div className="flex items-start gap-4">
               <div className="border-border bg-accent flex size-[60px] shrink-0 items-center justify-center overflow-hidden rounded-lg border">
                 {detail.logoUrl ? (
@@ -115,32 +108,124 @@ export default function BrandDetailSheet({ detail, isLoading, isOpen, onOpenChan
             </div>
 
             {detail.shortIntro && (
-              <section className="flex flex-col gap-2">
+              <section className="flex flex-col gap-2.5">
                 <SectionTitle>브랜드 소개</SectionTitle>
-                <p className="text-text-secondary text-sm font-medium tracking-[-0.7px]">{detail.shortIntro}</p>
+                <p className="text-text-tertiary text-sm font-medium tracking-[-0.7px]">{detail.shortIntro}</p>
               </section>
             )}
 
-            {detail.overseasStoreCount !== null && detail.overseasStoreCount > 0 && (
-              <section className="flex flex-col gap-2">
-                <SectionTitle>해외 진출 실적</SectionTitle>
-                <div className="border-border flex items-center justify-between rounded-xl border px-4 py-3">
-                  <span className="text-text-tertiary text-sm font-medium tracking-[-0.7px]">해외 매장</span>
-                  <span className="text-text-primary text-sm font-medium tracking-[-0.7px]">
-                    {detail.overseasStoreCount.toLocaleString()}개 매장 운영
-                  </span>
+            {detail.menus.length > 0 && (
+              <section className="flex flex-col gap-2.5">
+                <SectionTitle>대표 메뉴</SectionTitle>
+                <ul className="flex flex-col gap-3">
+                  {detail.menus.map(menu => (
+                    <MenuCard key={menu.key} menu={menu} />
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            {detail.storeImages.length > 0 && (
+              <section className="flex flex-col gap-2.5">
+                <SectionTitle>매장 · 인테리어</SectionTitle>
+                {/* 시안은 300×200 사진을 가로로 잇는다 — 넘치면 옆으로 넘겨 본다. 누르면 크게 보기 */}
+                <ul className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1">
+                  {detail.storeImages.map((url, index) => (
+                    <li key={url} className="shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setStorePreviewIndex(index)}
+                        aria-label={`매장 사진 ${index + 1} 크게 보기`}
+                        className="bg-accent focus-visible:ring-ring block h-[200px] w-[300px] cursor-pointer overflow-hidden rounded-xl focus-visible:ring-2 focus-visible:outline-none"
+                      >
+                        <img
+                          src={url}
+                          alt=""
+                          className="size-full object-cover transition-transform hover:scale-[1.02]"
+                        />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            {detail.sales && (
+              <section className="flex flex-col gap-2.5">
+                <SectionTitle aside={`가맹점 평균 · ${detail.sales.latestYear}년 실적`}>월평균 매출 추이</SectionTitle>
+                <div className="flex gap-2">
+                  {detail.sales.monthlySalesText && (
+                    <KpiCard label="가맹점 월평균 매출" value={detail.sales.monthlySalesText} />
+                  )}
+                  {detail.sales.salesPerAreaText && (
+                    <KpiCard label="3.3㎡당 연 매출" value={detail.sales.salesPerAreaText} caption="가맹점 평균" />
+                  )}
                 </div>
+                {detail.sales.bars.length > 0 && (
+                  <div className="border-border flex flex-col gap-3 rounded-xl border bg-white p-4">
+                    <YearBarChart bars={detail.sales.bars} label="연도별 가맹점 월평균 매출" />
+                    <p className="text-text-disabled text-[11px] tracking-[-0.55px]">
+                      가맹점 한 곳의 연평균 매출 ÷ 12{detail.infoSource ? ` · ${detail.infoSource}` : ""}
+                    </p>
+                  </div>
+                )}
+              </section>
+            )}
+
+            {detail.franchise && (
+              <section className="flex flex-col gap-2.5">
+                <SectionTitle>가맹점 수 추이</SectionTitle>
+                <div className="flex gap-2">
+                  {detail.franchise.franchiseCount !== null && (
+                    <KpiCard label="가맹점" value={`${detail.franchise.franchiseCount.toLocaleString()}개`} />
+                  )}
+                  {detail.franchise.directCount !== null && (
+                    <KpiCard label="직영점" value={`${detail.franchise.directCount.toLocaleString()}개`} />
+                  )}
+                </div>
+                {detail.franchise.bars.length > 0 && (
+                  <div className="border-border rounded-xl border bg-white p-4">
+                    <YearBarChart bars={detail.franchise.bars} label="연도별 가맹점 수" />
+                  </div>
+                )}
+                {detail.franchise.contract && (
+                  <dl className="bg-accent flex items-center justify-between rounded-xl px-4 py-3">
+                    <div className="flex flex-col gap-0.5">
+                      <dt className="text-text-primary text-sm font-bold tracking-[-0.7px]">계약 현황</dt>
+                      <dd className="text-text-tertiary text-xs tracking-[-0.6px]">
+                        {detail.franchise.contract.year}년
+                      </dd>
+                    </div>
+                    {(
+                      [
+                        ["신규 개점", detail.franchise.contract.newOpen],
+                        ["계약 종료", detail.franchise.contract.contractEnd],
+                        ["계약 해지", detail.franchise.contract.contractCancel],
+                      ] as const
+                    ).map(([label, count]) => (
+                      <div key={label} className="flex flex-col-reverse items-center gap-0.5">
+                        <dt className="text-text-tertiary text-xs font-medium tracking-[-0.6px]">{label}</dt>
+                        <dd className="text-text-primary text-base font-bold tracking-[-0.8px]">
+                          {count.toLocaleString()}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                )}
+                {detail.infoSource && (
+                  <p className="text-text-disabled text-[11px] tracking-[-0.55px]">출처: {detail.infoSource}</p>
+                )}
               </section>
             )}
 
             {detail.targetCountries.length > 0 && (
-              <section className="flex flex-col gap-2">
+              <section className="flex flex-col gap-2.5">
                 <SectionTitle>진출 희망 국가</SectionTitle>
                 <ul className="flex flex-wrap gap-2">
                   {detail.targetCountries.map(country => (
                     <li
                       key={country}
-                      className="bg-secondary-background text-text-primary rounded-md px-2 py-1 text-sm font-medium tracking-[-0.7px]"
+                      className="border-border bg-accent text-text-tertiary rounded-full border px-2 py-1 text-sm font-medium tracking-[-0.7px]"
                     >
                       {country}
                     </li>
@@ -158,20 +243,34 @@ export default function BrandDetailSheet({ detail, isLoading, isOpen, onOpenChan
               </div>
             </section>
 
-            <section className="flex flex-col gap-1">
-              <SectionTitle>회사 소개</SectionTitle>
-              {detail.detailIntro && (
-                <p className="text-text-secondary py-2 text-sm leading-relaxed font-medium tracking-[-0.7px]">
-                  {detail.detailIntro}
-                </p>
-              )}
-              <div className="flex flex-col">
-                {detail.facts.map(row => (
-                  <TermRow key={row.label} row={row} />
-                ))}
-              </div>
-            </section>
+            {detail.links.length > 0 && (
+              <section className="flex flex-col gap-3">
+                <SectionTitle>외부 링크</SectionTitle>
+                <ExternalLinks links={detail.links} />
+              </section>
+            )}
+
+            {(detail.checkedDate || detail.infoSource) && (
+              <section className="flex flex-col gap-2.5">
+                <SectionTitle>정보 출처</SectionTitle>
+                <div className="bg-accent flex flex-col gap-1.5 rounded-lg p-3">
+                  {detail.checkedDate && (
+                    <p className="text-text-tertiary text-xs tracking-[-0.6px]">정보 확인 {detail.checkedDate}</p>
+                  )}
+                  {detail.infoSource && (
+                    <p className="text-text-tertiary text-xs tracking-[-0.6px]">{detail.infoSource}</p>
+                  )}
+                </div>
+              </section>
+            )}
           </div>
+
+          <ImagePreviewModal
+            images={detail.storeImages.map((src, index) => ({ src, alt: `매장 사진 ${index + 1}` }))}
+            initialIndex={storePreviewIndex ?? 0}
+            isOpen={storePreviewIndex !== null}
+            onClose={() => setStorePreviewIndex(null)}
+          />
         </div>
       )}
     </Sheet>
