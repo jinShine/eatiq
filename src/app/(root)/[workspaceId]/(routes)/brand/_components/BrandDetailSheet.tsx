@@ -163,7 +163,7 @@ export default function BrandDetailSheet({ detail, isLoading, isOpen, onOpenChan
                     <KpiCard label="3.3㎡당 연 매출" value={detail.sales.salesPerAreaText} caption="가맹점 평균" />
                   )}
                 </div>
-                {detail.sales.bars.length > 0 && (
+                {detail.sales.bars.some(bar => bar.value !== null) && (
                   <div className="border-border flex flex-col gap-3 rounded-xl border bg-white p-4">
                     <YearBarChart bars={detail.sales.bars} label="연도별 가맹점 연평균 매출" />
                     <p className="text-text-disabled text-[11px] tracking-[-0.55px]">
@@ -185,7 +185,7 @@ export default function BrandDetailSheet({ detail, isLoading, isOpen, onOpenChan
                     <KpiCard label="직영점" value={`${detail.franchise.directCount.toLocaleString()}개`} />
                   )}
                 </div>
-                {detail.franchise.bars.length > 0 && (
+                {detail.franchise.bars.some(bar => bar.value !== null) && (
                   <div className="border-border rounded-xl border bg-white p-4">
                     <YearBarChart bars={detail.franchise.bars} label="연도별 가맹점 수" />
                   </div>

@@ -40,13 +40,44 @@ export type MenuView = {
   imageUrl: string | null;
 };
 
-/** 연도별 막대 하나 — 값이 없는 해는 목록에서 뺀다 */
+/** 연도별 막대 하나 — 값이 없는 해도 연도는 보여준다(value null) */
 export type YearBar = {
   year: number;
-  value: number;
-  /** 막대 위 숫자 — 「3,508만」 · 「169」 */
+  value: number | null;
+  /** 막대 위 숫자 — 「3,508만」 · 「169」. 값이 없으면 「—」 */
   label: string;
 };
+
+/** 그래프에 그리는 최대 연도 수 — 스펙 「최근 5년」 */
+const MAX_CHART_YEARS = 5;
+
+/**
+ * 두 그래프(매출 · 가맹점 수)가 함께 쓰는 연도 — 둘 중 가장 이른 해부터 가장 최근 해까지, 최근 5년만.
+ * 값이 빠진 해를 지우면 그래프마다 연도가 달라지고 중간이 비어도 티가 안 나서, 빈 해도 자리를 둔다
+ */
+const toChartYears = (detail: BrandDetail) => {
+  const years = [
+    ...(detail.sales_summary?.yearly_sales ?? [])
+      .filter(item => positive(item.avg_annual_sales))
+      .map(item => item.year),
+    ...(detail.franchise_summary?.yearly_franchise_counts ?? [])
+      .filter(item => positive(item.franchise_count))
+      .map(item => item.year),
+  ];
+  if (years.length === 0) {
+    return [];
+  }
+  const last = Math.max(...years);
+  const first = Math.max(Math.min(...years), last - MAX_CHART_YEARS + 1);
+  return Array.from({ length: last - first + 1 }, (_, i) => first + i);
+};
+
+/** 연도마다 값을 찾아 막대로 — 없거나 0이면 빈 막대 */
+const toBars = (years: number[], valueOf: (year: number) => number | null | undefined, format: (v: number) => string) =>
+  years.map(year => {
+    const value = positive(valueOf(year));
+    return { year, value, label: value ? format(value) : "—" };
+  });
 
 export type SalesView = {
   latestYear: number;
@@ -125,7 +156,7 @@ const toManwon = (won: number) => {
 /** 0은 「입력 안 됨」으로 본다 — 서버가 빈 값을 0으로 보내는 해가 있다(유가네 2021 sales_per_area) */
 const positive = (value: number | null | undefined) => (value && value > 0 ? value : null);
 
-const toSalesView = (summary: BrandDetail["sales_summary"]): SalesView | null => {
+const toSalesView = (summary: BrandDetail["sales_summary"], years: number[]): SalesView | null => {
   if (!summary?.latest_year) {
     return null;
   }
@@ -136,13 +167,11 @@ const toSalesView = (summary: BrandDetail["sales_summary"]): SalesView | null =>
     latestYear: summary.latest_year,
     annualSalesText: annual ? `${toManwon(annual)} 원` : null,
     salesPerAreaText: perArea ? `${toManwon(perArea)} 원` : null,
-    bars: summary.yearly_sales
-      .filter(item => positive(item.avg_annual_sales))
-      .map(item => ({ year: item.year, value: item.avg_annual_sales, label: toManwon(item.avg_annual_sales) })),
+    bars: toBars(years, year => summary.yearly_sales.find(item => item.year === year)?.avg_annual_sales, toManwon),
   };
 };
 
-const toFranchiseView = (summary: BrandDetail["franchise_summary"]): FranchiseView | null => {
+const toFranchiseView = (summary: BrandDetail["franchise_summary"], years: number[]): FranchiseView | null => {
   if (!summary?.latest_year) {
     return null;
   }
@@ -151,9 +180,11 @@ const toFranchiseView = (summary: BrandDetail["franchise_summary"]): FranchiseVi
     latestYear: summary.latest_year,
     franchiseCount: summary.franchise_count,
     directCount: summary.direct_count,
-    bars: summary.yearly_franchise_counts
-      .filter(item => positive(item.franchise_count))
-      .map(item => ({ year: item.year, value: item.franchise_count, label: item.franchise_count.toLocaleString() })),
+    bars: toBars(
+      years,
+      year => summary.yearly_franchise_counts.find(item => item.year === year)?.franchise_count,
+      value => value.toLocaleString(),
+    ),
     contract: latestContract
       ? {
           year: latestContract.year,
@@ -179,6 +210,7 @@ const toLinks = (links: BrandDetail["external_links"]): ExternalLinkView[] => {
 
 export const toBrandDetailView = (detail: BrandDetail): BrandDetailView => {
   const terms = detail.partnership_conditions;
+  const chartYears = toChartYears(detail);
 
   return {
     id: String(detail.uid),
@@ -200,8 +232,8 @@ export const toBrandDetailView = (detail: BrandDetail): BrandDetailView => {
         imageUrl: menu.image_url ?? menu.image_list[0] ?? null,
       })),
     storeImages: detail.store_image_list,
-    sales: toSalesView(detail.sales_summary),
-    franchise: toFranchiseView(detail.franchise_summary),
+    sales: toSalesView(detail.sales_summary, chartYears),
+    franchise: toFranchiseView(detail.franchise_summary, chartYears),
     targetCountries: detail.target_country ?? [],
     // 시안 v2의 라벨·순서 그대로 (피그마 2072:4921). 「파트너 역할」은 API에 없어 뺀다
     partnershipTerms: [

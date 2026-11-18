@@ -43,22 +43,31 @@ const BAR_MAX_HEIGHT = 96;
 
 /**
  * 연도별 막대 — 마지막(최근) 해만 진한 색. 시안의 막대는 단순 도형이라 차트 라이브러리 없이 그린다.
- * 높이는 가장 큰 값 기준 비율(0부터 시작해 값 차이를 부풀리지 않는다)
+ * 높이는 가장 큰 값 기준 비율(0부터 시작해 값 차이를 부풀리지 않는다).
+ * 값이 없는 해도 연도 자리는 남기고 「—」와 바닥선만 그린다 — 두 그래프의 연도가 맞고, 빠진 해가 드러난다
  */
 export function YearBarChart({ bars, label }: { bars: YearBar[]; label: string }) {
-  const max = Math.max(...bars.map(bar => bar.value));
+  const max = Math.max(...bars.map(bar => bar.value ?? 0));
 
   return (
     <ol aria-label={label} className="flex items-end justify-between px-2">
       {bars.map((bar, index) => {
         const isLatest = index === bars.length - 1;
+        const hasValue = bar.value !== null;
         return (
           <li key={bar.year} className="flex flex-col items-center gap-1">
-            <span className="text-text-primary text-xs font-semibold tracking-[-0.6px]">{bar.label}</span>
+            <span
+              className={cn(
+                "text-xs font-semibold tracking-[-0.6px]",
+                hasValue ? "text-text-primary" : "text-text-disabled",
+              )}
+            >
+              {hasValue ? bar.label : <span aria-label="정보 없음">{bar.label}</span>}
+            </span>
             <span
               aria-hidden
-              className={cn("w-10 rounded-t", isLatest ? "bg-primary" : "bg-primary/25")}
-              style={{ height: Math.max(4, Math.round((bar.value / max) * BAR_MAX_HEIGHT)) }}
+              className={cn("w-10 rounded-t", !hasValue ? "bg-border" : isLatest ? "bg-primary" : "bg-primary/25")}
+              style={{ height: hasValue ? Math.max(4, Math.round((bar.value! / max) * BAR_MAX_HEIGHT)) : 2 }}
             />
             <span className="text-text-tertiary text-xs font-medium tracking-[-0.6px]">{bar.year}</span>
           </li>
