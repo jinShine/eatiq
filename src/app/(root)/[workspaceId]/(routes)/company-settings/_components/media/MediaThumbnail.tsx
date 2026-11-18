@@ -18,6 +18,8 @@ type MediaThumbnailProps = {
   /** 업로드 중이면 진행률(0~100). 없으면 업로드가 끝난 항목 */
   progress?: number;
   onRemove?: () => void;
+  /** 누르면 크게 보기를 연다(닫을 때 포커스를 돌려줄 버튼을 넘긴다). 업로드 중에는 열지 않는다 */
+  onPreview?: (trigger: HTMLElement) => void;
 };
 
 const formatDuration = (seconds: number) => {
@@ -28,6 +30,8 @@ const formatDuration = (seconds: number) => {
 /**
  * 업로드한 파일 미리보기. X로 지운다.
  * 영상은 첫 프레임을 보여주고 가운데 재생 표시와 왼쪽 아래 재생 시간을 얹는다(피그마 186:2169).
+ * 썸네일을 누르면 크게 보기(사진 확대 · 영상 재생)를 연다 — 시안에는 없고 앱의 사진 크게 보기 모양을 따른다.
+ * X는 썸네일 버튼 위에 따로 얹어 누르는 곳이 겹치지 않는다
  */
 export default function MediaThumbnail({
   kind,
@@ -36,6 +40,7 @@ export default function MediaThumbnail({
   label,
   progress,
   onRemove,
+  onPreview,
 }: MediaThumbnailProps) {
   const [duration, setDuration] = useState<number | null>(null);
   const isUploading = progress !== undefined;
@@ -75,6 +80,16 @@ export default function MediaThumbnail({
             </span>
           )}
         </>
+      )}
+
+      {onPreview && !isUploading && (
+        <button
+          type="button"
+          onClick={event => onPreview(event.currentTarget)}
+          aria-label={`${label} 크게 보기`}
+          // 위에 얹은 재생 표시·시간보다 위, X보다 아래. 마우스를 올리면 살짝 어두워져 누를 수 있음을 알린다
+          className="focus-visible:ring-primary absolute inset-0 cursor-pointer rounded-xl transition-colors hover:bg-black/15 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset"
+        />
       )}
 
       {isUploading && (

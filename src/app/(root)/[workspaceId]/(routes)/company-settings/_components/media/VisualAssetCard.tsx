@@ -7,6 +7,7 @@ import { Toast } from "@components/ui";
 import { withParticle } from "@utils/functions";
 
 import useMediaUpload from "../../_hooks/useMediaUpload";
+import MediaPreview, { useMediaPreview } from "./MediaPreview";
 import MediaRemoveModal from "./MediaRemoveModal";
 import MediaThumbnail from "./MediaThumbnail";
 import MediaUploadTile from "./MediaUploadTile";
@@ -50,6 +51,7 @@ export default function VisualAssetCard({
   const [optimistic, setOptimistic] = useState<string[] | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [removeTarget, setRemoveTarget] = useState<string | null>(null);
+  const preview = useMediaPreview();
 
   const shown = optimistic ?? urls;
   const isBusy = isUploading || isSaving;
@@ -136,6 +138,7 @@ export default function VisualAssetCard({
                   src={url}
                   label={shown.length > 1 ? `${title} ${index + 1}` : title}
                   onRemove={isBusy ? undefined : () => setRemoveTarget(url)}
+                  onPreview={trigger => preview.open(index, trigger)}
                 />
               </li>
             ))}
@@ -153,6 +156,8 @@ export default function VisualAssetCard({
           </ul>
         )}
       </div>
+
+      <MediaPreview kind={kind} urls={shown} index={preview.index} label={title} onClose={preview.close} />
 
       <MediaRemoveModal
         label={removeTarget ? title : null}

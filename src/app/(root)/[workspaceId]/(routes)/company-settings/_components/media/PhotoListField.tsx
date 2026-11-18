@@ -5,6 +5,7 @@ import { Toast } from "@components/ui";
 import { withParticle } from "@utils/functions";
 
 import useMediaUpload from "../../_hooks/useMediaUpload";
+import MediaPreview, { useMediaPreview } from "./MediaPreview";
 import MediaThumbnail from "./MediaThumbnail";
 import MediaUploadTile from "./MediaUploadTile";
 
@@ -30,6 +31,7 @@ type PhotoListFieldProps = {
 export default function PhotoListField({ label, name, urls, max, onAdd, onRemove }: PhotoListFieldProps) {
   const { pending, upload } = useMediaUpload("image");
   const room = max - urls.length - pending.length;
+  const preview = useMediaPreview();
 
   const handleSelect = async (files: File[]) => {
     if (files.length > room) {
@@ -56,6 +58,7 @@ export default function PhotoListField({ label, name, urls, max, onAdd, onRemove
                   src={url}
                   label={urls.length > 1 ? `${label} ${index + 1}` : label}
                   onRemove={() => onRemove(url)}
+                  onPreview={trigger => preview.open(index, trigger)}
                 />
               </li>
             ))}
@@ -72,6 +75,8 @@ export default function PhotoListField({ label, name, urls, max, onAdd, onRemove
           </ul>
         )}
       </div>
+
+      <MediaPreview kind="image" urls={urls} index={preview.index} label={label} onClose={preview.close} />
     </div>
   );
 }
