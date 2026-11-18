@@ -27,7 +27,7 @@ export function TermRow({ row }: { row: DetailRow }) {
   );
 }
 
-/** 회색 숫자 카드 — 「가맹점 월평균 매출 3,508만 원」 */
+/** 회색 숫자 카드 — 「가맹점 연평균 매출 4억 2,096만 원」 */
 export function KpiCard({ label, value, caption }: { label: string; value: string; caption?: string }) {
   return (
     <div className="bg-accent flex min-w-0 flex-1 flex-col gap-0.5 rounded-xl p-3">

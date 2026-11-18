@@ -40,7 +40,7 @@ type BrandDetailSheetProps = {
 /**
  * 브랜드 상세 드로어 v2 (피그마 2072:4921 「Drawer_브랜드상세_풀스펙_v2」).
  *
- * 대표 사진 → 머리 → 브랜드 소개 → 대표 메뉴 → 매장 · 인테리어 → 월평균 매출 추이 → 가맹점 수 추이 →
+ * 대표 사진 → 머리 → 브랜드 소개 → 대표 메뉴 → 매장 · 인테리어 → 연평균 매출 추이 → 가맹점 수 추이 →
  * 진출 희망 국가 → 파트너십 선호 조건 → 외부 링크 → 정보 출처.
  * 데이터가 없는 섹션은 통째로 뺀다. 시안의 「파트너 역할」·「본사 정보」·「대표 주소로 메일 보내기」는 API가 없어 그리지 않는다.
  * 시안에서 숨겨 둔(투명) 「전년 대비」·「3년 새」·「증가 추세」 문구도 그리지 않는다
@@ -153,10 +153,11 @@ export default function BrandDetailSheet({ detail, isLoading, isOpen, onOpenChan
 
             {detail.sales && (
               <section className="flex flex-col gap-2.5">
-                <SectionTitle aside={`가맹점 평균 · ${detail.sales.latestYear}년 실적`}>월평균 매출 추이</SectionTitle>
+                <SectionTitle aside={`가맹점 평균 · ${detail.sales.latestYear}년 실적`}>연평균 매출 추이</SectionTitle>
                 <div className="flex gap-2">
-                  {detail.sales.monthlySalesText && (
-                    <KpiCard label="가맹점 월평균 매출" value={detail.sales.monthlySalesText} />
+                  {/* 시안은 월평균이지만 기획 변경(11-18)으로 매출은 모두 연 기준이다 */}
+                  {detail.sales.annualSalesText && (
+                    <KpiCard label="가맹점 연평균 매출" value={detail.sales.annualSalesText} />
                   )}
                   {detail.sales.salesPerAreaText && (
                     <KpiCard label="3.3㎡당 연 매출" value={detail.sales.salesPerAreaText} caption="가맹점 평균" />
@@ -164,9 +165,9 @@ export default function BrandDetailSheet({ detail, isLoading, isOpen, onOpenChan
                 </div>
                 {detail.sales.bars.length > 0 && (
                   <div className="border-border flex flex-col gap-3 rounded-xl border bg-white p-4">
-                    <YearBarChart bars={detail.sales.bars} label="연도별 가맹점 월평균 매출" />
+                    <YearBarChart bars={detail.sales.bars} label="연도별 가맹점 연평균 매출" />
                     <p className="text-text-disabled text-[11px] tracking-[-0.55px]">
-                      가맹점 한 곳의 연평균 매출 ÷ 12{detail.infoSource ? ` · ${detail.infoSource}` : ""}
+                      가맹점 한 곳의 연평균 매출{detail.infoSource ? ` · ${detail.infoSource}` : ""}
                     </p>
                   </div>
                 )}

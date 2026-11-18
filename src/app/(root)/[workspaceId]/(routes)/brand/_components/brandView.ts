@@ -50,8 +50,8 @@ export type YearBar = {
 
 export type SalesView = {
   latestYear: number;
-  /** 「3,508만 원」 */
-  monthlySalesText: string | null;
+  /** 가맹점 연평균 매출 「4억 2,096만 원」 — 기획 변경(11-18)으로 월평균 대신 연평균 */
+  annualSalesText: string | null;
   /** 3.3㎡당 연 매출 「797만 원」 — 0이나 없음이면 null */
   salesPerAreaText: string | null;
   bars: YearBar[];
@@ -129,15 +129,16 @@ const toSalesView = (summary: BrandDetail["sales_summary"]): SalesView | null =>
   if (!summary?.latest_year) {
     return null;
   }
-  const monthly = positive(summary.avg_monthly_sales);
+  // 요약에는 최근 연도의 월평균만 있어서, 연평균은 연도 목록에서 최근 연도를 찾아 쓴다
+  const annual = positive(summary.yearly_sales.find(item => item.year === summary.latest_year)?.avg_annual_sales);
   const perArea = positive(summary.sales_per_area);
   return {
     latestYear: summary.latest_year,
-    monthlySalesText: monthly ? `${toManwon(monthly)} 원` : null,
+    annualSalesText: annual ? `${toManwon(annual)} 원` : null,
     salesPerAreaText: perArea ? `${toManwon(perArea)} 원` : null,
     bars: summary.yearly_sales
-      .filter(item => positive(item.avg_monthly_sales))
-      .map(item => ({ year: item.year, value: item.avg_monthly_sales, label: toManwon(item.avg_monthly_sales) })),
+      .filter(item => positive(item.avg_annual_sales))
+      .map(item => ({ year: item.year, value: item.avg_annual_sales, label: toManwon(item.avg_annual_sales) })),
   };
 };
 
