@@ -3,6 +3,7 @@ import BasicInfoSection from "../sections/BasicInfoSection";
 import ContactSection from "../sections/ContactSection";
 import IntroSection from "../sections/IntroSection";
 import OperationSection from "../sections/OperationSection";
+import YearlyPerformanceSection from "../sections/YearlyPerformanceSection";
 
 type BasicInfoTabProps = {
   workspaceId: string;
@@ -23,6 +24,9 @@ export default function BasicInfoTab({ workspaceId }: BasicInfoTabProps) {
         </div>
         <div id="brand_status" className="scroll-mt-24">
           <OperationSection workspaceId={workspaceId} />
+        </div>
+        <div id="brand_yearly" className="scroll-mt-24">
+          <YearlyPerformanceSection workspaceId={workspaceId} />
         </div>
         <div id="brand_contact" className="scroll-mt-24">
           <ContactSection workspaceId={workspaceId} />
