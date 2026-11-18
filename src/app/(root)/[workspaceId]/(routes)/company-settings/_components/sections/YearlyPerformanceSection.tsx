@@ -66,9 +66,25 @@ const cellField = ({ value, label }: (typeof ROWS)[number]["max"]) =>
     .refine(input => input === "" || INTEGER.test(input), "0 이상의 정수를 입력해주세요")
     .refine(input => !INTEGER.test(input) || Number(input) <= value, `${label} 이하로 입력해주세요`);
 
-const yearSchema = z.object(
-  Object.fromEntries(ROWS.map(row => [row.name, cellField(row.max)])) as Record<RowName, ReturnType<typeof cellField>>,
-);
+/** 서버는 한 해를 보낼 때 매출 두 칸을 필수로 받는다(가맹점 수만 선택, 2026-11-18). 그래서 화면에서 함께 채우게 막는다 */
+const SALES_FIELDS = ["avg_annual_sales", "sales_per_area"] as const satisfies readonly RowName[];
+
+const yearSchema = z
+  .object(
+    Object.fromEntries(ROWS.map(row => [row.name, cellField(row.max)])) as Record<
+      RowName,
+      ReturnType<typeof cellField>
+    >,
+  )
+  .superRefine((values, ctx) => {
+    // 세 칸이 모두 비면 「그해 값 없음」이라 보내지 않는다 — 하나라도 적었을 때만 검사한다
+    if (ROWS.every(row => values[row.name] === "")) {
+      return;
+    }
+    SALES_FIELDS.filter(field => values[field] === "").forEach(field =>
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: [field], message: "매출 두 칸은 함께 입력해 주세요" }),
+    );
+  });
 
 /** 키에 「y」를 붙인다 — 「2021」처럼 숫자만 있는 키는 RHF가 배열 위치로 읽는다 */
 const yearKey = (year: number) => `y${year}` as const;
@@ -148,6 +164,7 @@ export default function YearlyPerformanceSection({ workspaceId }: YearlyPerforma
 
   const {
     control,
+    trigger,
     formState: { errors },
   } = useForm<YearlyFormValues>({
     resolver: zodResolver(yearlySchema),
@@ -237,6 +254,12 @@ export default function YearlyPerformanceSection({ workspaceId }: YearlyPerforma
                             className="h-10 rounded-lg bg-white text-center font-medium tracking-[-0.7px] placeholder:text-gray-300"
                             error={Boolean(message)}
                             {...field}
+                            // 한 칸을 떠날 때 그해 세 칸을 함께 검사한다 — 가맹점 수만 적고 넘어가면 매출 칸에 바로 알린다.
+                            // 입력 중(onChange)에 하면 아직 안 적은 옆 칸까지 빨개져 성가시다
+                            onBlur={() => {
+                              field.onBlur();
+                              void trigger(ROWS.map(item => `years.${yearKey(year)}.${item.name}` as const));
+                            }}
                           />
                         )}
                       />
