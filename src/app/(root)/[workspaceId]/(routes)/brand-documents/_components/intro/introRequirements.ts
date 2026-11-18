@@ -8,8 +8,13 @@ import { type DraftRequirements, type RequirementRow } from "../draft/draftRequi
  * 판정은 회사 정보 설정의 저장값으로 화면이 한다. 서버도 생성 전에 같은 기준으로 다시 본다.
  * 시안과 다른 곳 —
  * - 본사 상호: 저장할 칸이 없어 뺐다(MOU·LOI와 같음)
- * - 가맹점 월평균 매출 · 가맹점 수: 시안은 「3개 연도 이상」인데 연도별 값이 없어 지금 값이 있는지만 본다
+ * - 매출은 기획 변경(2026-11-18)으로 월평균 대신 연평균이다
+ *
+ * 가맹점 연평균 매출 · 가맹점 수는 시안대로 「3개 연도 이상」 — 회사 정보 설정 › 기본 정보 › 연도별 실적(yearly_sales) 기준
  */
+
+/** 차트를 그리려면 연도가 이만큼은 있어야 한다(시안) */
+const MIN_YEARS = 3;
 
 type BrandSections = NonNullable<WorkspaceDetailResponse["brand"]>;
 
@@ -50,6 +55,11 @@ export function buildIntroRequirements({
     message: isHave ? undefined : missingMessage,
   });
 
+  // 0은 「입력 안 됨」으로 본다 — 서버가 빈 값을 0으로 보내는 해가 있다
+  const yearly = status?.yearly_sales ?? [];
+  const salesYears = yearly.filter(item => item.avg_annual_sales > 0).length;
+  const franchiseYears = yearly.filter(item => (item.franchise_count ?? 0) > 0).length;
+
   // 대표 메뉴는 이름 · 가격 · 사진이 다 있어야 메뉴 쪽에 실린다(쪽 구성 5)
   const hasCompleteMenu = (menu ?? []).some(
     item => hasText(item.name_ko) && item.price > 0 && item.image_list.length > 0,
@@ -78,13 +88,13 @@ export function buildIntroRequirements({
     ),
     row(
       {
-        key: "avg_monthly_sales",
-        label: "가맹점 월평균 매출",
+        key: "avg_annual_sales",
+        label: `가맹점 연평균 매출 (${MIN_YEARS}개 연도 이상)`,
         usedIn: "매출 차트",
-        fillHref: settingsHref("basic", "brand_status", "avg_monthly_sales"),
+        fillHref: settingsHref("basic", "brand_yearly"),
       },
-      (status?.avg_monthly_sales ?? 0) > 0,
-      "기본 정보에서 가맹점 월평균 매출을 넣어 주세요",
+      salesYears >= MIN_YEARS,
+      `기본 정보 › 연도별 실적에 ${MIN_YEARS}개 연도 이상 넣어 주세요 · 지금 ${salesYears}개 연도`,
     ),
     row(
       {
@@ -120,12 +130,12 @@ export function buildIntroRequirements({
     ),
     row(
       {
-        key: "domestic_store_cnt",
-        label: "가맹점 수",
+        key: "franchise_count",
+        label: `가맹점 수 (${MIN_YEARS}개 연도 이상)`,
         usedIn: "가맹 현황 차트",
-        fillHref: settingsHref("basic", "brand_status", "domestic_store_total_cnt"),
+        fillHref: settingsHref("basic", "brand_yearly"),
       },
-      (status?.domestic_store_total_cnt ?? 0) > 0,
+      franchiseYears >= MIN_YEARS,
     ),
     row(
       {
