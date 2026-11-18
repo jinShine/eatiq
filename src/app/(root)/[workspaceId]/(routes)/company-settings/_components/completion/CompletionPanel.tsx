@@ -3,7 +3,7 @@
 import { ArrowRightIcon } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 
-import { ScrollArea, Skeleton } from "@components/ui";
+import { Skeleton } from "@components/ui";
 
 import CircularProgress from "./CircularProgress";
 import JourneyStepper from "./JourneyStepper";
@@ -33,10 +33,8 @@ export type CompletionView = {
 // 피그마 기준 본문 높이 — 남은 항목이 늘어도 카드 높이를 고정하고 내부 스크롤
 const BODY_HEIGHT = 146;
 
-// 항목 56px + 간격 8px. 2.4개가 보이도록 잡아 다음 항목이 "반쯤 잘려" 스크롤을 암시
-const MISSING_ITEM_HEIGHT = 56;
-const MISSING_ITEM_GAP = 8;
-const SCROLL_HEIGHT = MISSING_ITEM_HEIGHT * 2 + MISSING_ITEM_GAP * 2 + Math.round(MISSING_ITEM_HEIGHT * 0.4);
+// 남은 주요 항목은 앞에서부터 3개만 스크롤 없이 보여준다(기획 2026-11-18). 하나를 채우면 다음 항목이 올라온다
+const VISIBLE_REMAINING = 3;
 
 export const focusRing =
   "focus-visible:ring-primary focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none";
@@ -92,7 +90,7 @@ export default function CompletionPanel({
   const toNextStage = countToNextStage(stages, stageIndex, completion.totalFields, completion.completedFields);
 
   // 스크롤 신호는 peek(다음 항목이 반쯤 잘림) + 상시 스크롤바로 충분 — 페이드는 텍스트 가독성을 해쳐 제외
-  const scrollAreaStyle: React.CSSProperties = { height: SCROLL_HEIGHT };
+  const visibleTasks = remainingTasks.slice(0, VISIBLE_REMAINING);
 
   return (
     <section className="border-border border-b px-6 py-6">
@@ -155,7 +153,7 @@ export default function CompletionPanel({
           )}
         </div>
 
-        {/* 열3 — 남은 주요 항목 (총 개수 노출 + 내부 스크롤) */}
+        {/* 열3 — 남은 주요 항목 (몇 개가 남아도 앞의 3개만) */}
         <div className="flex min-w-0 flex-col gap-2 xl:pl-6">
           <p className="text-text-tertiary text-xs">남은 주요 항목</p>
 
@@ -168,40 +166,34 @@ export default function CompletionPanel({
               </p>
             </div>
           ) : (
-            <ScrollArea
-              type="always" // 스크롤바 상시 노출 — hover 전에도 스크롤 가능함을 알림
-              style={scrollAreaStyle}
-              className="pr-3 [&_[data-slot=scroll-area-thumb]]:bg-text-disabled"
-            >
-              <ul className="space-y-2">
-                <AnimatePresence initial={false}>
-                  {remainingTasks.map((item, index) => (
-                    <motion.li
-                      key={`${item.sectionKey}.${item.fieldKey}`}
-                      layout
-                      initial={shouldReduceMotion ? false : { opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={shouldReduceMotion ? undefined : { opacity: 0, x: 12, height: 0, marginBottom: 0 }}
-                      transition={{ delay: shouldReduceMotion ? 0 : Math.min(index, 6) * 0.05, duration: 0.28 }}
-                      className="border-border flex items-center justify-between gap-3 overflow-hidden rounded-xl border px-4 py-3"
+            <ul className="space-y-2">
+              <AnimatePresence initial={false}>
+                {visibleTasks.map((item, index) => (
+                  <motion.li
+                    key={`${item.sectionKey}.${item.fieldKey}`}
+                    layout
+                    initial={shouldReduceMotion ? false : { opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={shouldReduceMotion ? undefined : { opacity: 0, x: 12, height: 0, marginBottom: 0 }}
+                    transition={{ delay: shouldReduceMotion ? 0 : Math.min(index, 6) * 0.05, duration: 0.28 }}
+                    className="border-border flex items-center justify-between gap-3 overflow-hidden rounded-xl border px-4 py-3"
+                  >
+                    <span className="text-text-primary min-w-0 truncate text-sm font-semibold" title={item.title}>
+                      {item.title}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => goToField(item)}
+                      aria-label={`${item.title} 입력하기`}
+                      className={`border-primary text-primary hover:bg-primary-background group inline-flex shrink-0 items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-colors ${focusRing}`}
                     >
-                      <span className="text-text-primary min-w-0 truncate text-sm font-semibold" title={item.title}>
-                        {item.title}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => goToField(item)}
-                        aria-label={`${item.title} 입력하기`}
-                        className={`border-primary text-primary hover:bg-primary-background group inline-flex shrink-0 items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-colors ${focusRing}`}
-                      >
-                        입력
-                        <ArrowRightIcon className="size-3.5 transition-transform group-hover:translate-x-0.5" />
-                      </button>
-                    </motion.li>
-                  ))}
-                </AnimatePresence>
-              </ul>
-            </ScrollArea>
+                      입력
+                      <ArrowRightIcon className="size-3.5 transition-transform group-hover:translate-x-0.5" />
+                    </button>
+                  </motion.li>
+                ))}
+              </AnimatePresence>
+            </ul>
           )}
         </div>
       </div>
