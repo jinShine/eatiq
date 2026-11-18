@@ -175,8 +175,9 @@ export default function YearlyPerformanceSection({ workspaceId }: YearlyPerforma
       isDirty={false}
       onSubmit={event => event.preventDefault()}
     >
-      {/* 좁은 화면에선 표를 옆으로 넘겨 본다. 항목 이름 칸은 왼쪽에 붙여 둔다 */}
-      <div className="-mx-6 overflow-x-auto px-6">
+      {/* 좁은 화면에선 표를 옆으로 넘겨 본다. 항목 이름 칸은 왼쪽에 붙여 둔다.
+          넘기는 영역을 카드 여백까지 넓히면(-mx px) 고정된 이름 칸 왼쪽 여백으로 지나가는 칸이 비쳐 보여서, 본문 폭 안에서만 넘긴다 */}
+      <div className="overflow-x-auto">
         <table className="w-full min-w-[960px] sm:min-w-[1040px] border-collapse">
           <caption className="sr-only">연도별 실적 입력 표</caption>
           <thead>
