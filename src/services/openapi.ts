@@ -821,8 +821,9 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * 🔄 [UPDATE 26.11.18] 브랜드 탐색 상세 정보 조회 (대표 메뉴·매출·가맹점·외부링크·정보출처 추가)
+     * 🔄 [UPDATE 26.11.18] 브랜드 탐색 상세 정보 조회 (대표 메뉴·매출·가맹점·본사정보·외부링크·정보출처 추가)
      * @description ### 📝 최근 업데이트 이력 (2026.11.18)
+     *     - **본사 정보(`brand_hq`) 필드 추가**: 본사 상호, 기업 규모, 사업자 등록일, 가맹사업 개시일, 보유 브랜드 수, 재무 매출/영업이익 범위 등 본사 상세 정보를 응답에 포함했습니다.
      *     - **브랜드 상세 페이지 핵심 정보 확장**:
      *       - **대표 메뉴(`signature_menus`, 최대 5개)**: 메뉴명(한/영), 메뉴 설명, 가격, 사진(`image_url`, `image_list`) 추가
      *       - **매장/인테리어 사진(`store_image_list`, 최대 10장)**: 매장 사진 목록을 최대 10장까지 통합 제공
@@ -857,7 +858,8 @@ export interface paths {
      *     2. **경로 파라미터**:
      *        - `brand_uid`: 조회할 브랜드의 식별자(PK).
      *     3. **화면 렌더링 활용**:
-     *        - 헤더/비주얼: `brand_name_ko`, `brand_name_en`, `logo_image`, `featured_image` (단일 대표), `featured_image_list` (전체 갤러리/캐러셀 배열), `featured_video_list` (대표 영상 목록), `store_image_list` / `store_video_list` (매장 비주얼), `cooking_image_list` / `cooking_video_list` (조리 비주얼).
+     *        - 헤더/비주얼: `brand_name_ko`, `brand_name_en`, `logo_image`, `featured_image` (단일 대표), `featured_image_list` (전체 갤러리/캐러셀 배열), `featured_video_list` (대표 영상 목록), `store_image_list` (매장 사진 최대 10장) / `store_video_list`, `cooking_image_list` / `cooking_video_list` (조리 비주얼).
+     *        - 메뉴·매출·가맹점·본사: `signature_menus` (대표 메뉴 최대 5개), `sales_summary` (최근 5년 매출 및 평당 연/월평균 매출), `franchise_summary` (최근 5년 가맹점 수·계약 현황), `brand_hq` (본사 상호·규모·재무 범위 등), `external_links` (홈페이지·인스타·유튜브), `info_source` (정보 출처).
      *        - 파트너십 조건: 선호 계약 방식(`preferred_contract_type`), 독점권 요구 수준(`exclusivity_level`), 메뉴 현지화(`menu_localization`), 로열티 요약(`royalty`), 식자재 공급망(`supply_chain`), 인테리어 기준(`interior_criteria`), 상표 준수(`trademark_standard`), 운영 매뉴얼 준수(`manual_compliance`).
      *        - 보안 유의사항: 본사 공식 이메일 등 민감 정보는 마스킹되거나 응답에서 제외되어 있습니다.
      */
@@ -5689,6 +5691,93 @@ export interface components {
        */
       youtube_url: string | null;
     };
+    BrandDetailHqDto: {
+      /**
+       * @description 본사 상호
+       * @example (주)팀브로
+       */
+      name: string | null;
+      /**
+       * @description 사업자 구분
+       * @example 법인
+       */
+      type: string | null;
+      /**
+       * @description 본사 지역 (시도)
+       * @example 경남
+       */
+      region: string | null;
+      /**
+       * @description 기업 규모
+       * @example 중소기업
+       */
+      enterprise_size: string | null;
+      /**
+       * @description 사업자 등록일 (YYYY-MM-DD)
+       * @example 2019-08-27
+       */
+      biz_reg_date: string | null;
+      /**
+       * @description 가맹사업 개시일 (YYYY-MM-DD)
+       * @example 2017-03-07
+       */
+      franchise_start_date: string | null;
+      /**
+       * @description 보유 브랜드 수
+       * @example 1
+       */
+      brand_count: number | null;
+      /**
+       * @description 계열사 수
+       * @example 0
+       */
+      affiliate_count: number | null;
+      /**
+       * @description 재무 회계연도
+       * @example 2025
+       */
+      fiscal_year: number | null;
+      /**
+       * @description 사업연도 끝 달 (1~12)
+       * @example 12
+       */
+      fiscal_year_end_month: number | null;
+      /**
+       * @description 본사 매출 최소 (원)
+       * @example 35000000000
+       */
+      sales_min: number | null;
+      /**
+       * @description 본사 매출 최대 (원)
+       * @example 39000000000
+       */
+      sales_max: number | null;
+      /**
+       * @description 본사 영업이익 최소 (원)
+       * @example 6200000000
+       */
+      op_profit_min: number | null;
+      /**
+       * @description 본사 영업이익 최대 (원)
+       * @example 6900000000
+       */
+      op_profit_max: number | null;
+      /**
+       * @description 본사 홈페이지 URL
+       * @example http://www.moggumung.com
+       */
+      website_url: string | null;
+      /**
+       * @description 정보공개서 기준년도
+       * @example 2026
+       */
+      base_year: number | null;
+      /**
+       * @description 메모
+       * @example null
+       */
+      note: string | null;
+    };
     BrandDetailResponseDto: {
       /**
        * @description 브랜드 고유 식별자 (uid)
@@ -5838,6 +5927,8 @@ export interface components {
        * @example 공정거래위원회 가맹사업정보제공시스템, 브랜드 공식 홈페이지
        */
       info_source: string | null;
+      /** @description 브랜드 본사 정보 */
+      brand_hq: components["schemas"]["BrandDetailHqDto"] | null;
       /**
        * @description 브랜드 데이터 생성 일시 (ISO-8601)
        * @example 2026-09-10T04:20:00.000Z
