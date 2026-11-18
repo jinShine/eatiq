@@ -169,7 +169,7 @@ export default function YearlyPerformanceSection({ workspaceId }: YearlyPerforma
   return (
     <SettingsSection
       title="연도별 실적"
-      description="가맹점 수와 가맹점 한 곳의 월평균 매출을 연도별로 적어 주세요"
+      description="가맹점 수와 가맹점 한 곳의 연평균 매출을 연도별로 적어 주세요"
       // 저장 연결 대기(yearly_sales): 새 스펙(신규 개점·계약 종료·계약 해지 선택 입력)이 오면 저장을 연결한다.
       // 그 전엔 dirty를 알리지 않는다 — 저장할 수 없는 변경으로 페이지 이탈을 막지 않기 위해서다
       isDirty={false}
