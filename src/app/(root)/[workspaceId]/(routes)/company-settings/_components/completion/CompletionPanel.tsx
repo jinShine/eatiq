@@ -113,28 +113,18 @@ type CompletionPanelProps = {
   stages: readonly JourneyStage[];
   /** 진행률 원의 접근성 이름 — "기본 정보 완성률" */
   progressLabel: string;
-  /** 다 채웠을 때 「다음으로 해야 할 일」 자리에 들어갈 내용 — 브랜드는 다음 탭 안내, 바이어는 완료 안내 */
-  doneContent: React.ReactNode;
-  /**
-   * 모든 패널 입력 완료 — 제목과 스테퍼만 남기고 본문을 접는다(피그마 769:4565).
-   * 브랜드는 그 탭, 바이어는 페이지 전체를 다 채웠을 때다
-   */
-  isCollapsed?: boolean;
 };
 
-/** 정보 완성 현황(저니 패널) 화면 — 진행률 · 다음으로 해야 할 일 · 남은 주요 항목 */
-export default function CompletionPanel({
-  title,
-  completion,
-  stages,
-  progressLabel,
-  doneContent,
-  isCollapsed = false,
-}: CompletionPanelProps) {
+/**
+ * 정보 완성 현황(저니 패널) 화면 — 진행률 · 다음으로 해야 할 일 · 남은 주요 항목.
+ * 다 채우면(다음으로 해야 할 일이 없으면) 제목과 스테퍼만 남기고 본문을 접는다(피그마 769:4565 「모든 패널 입력 완료 시」).
+ * 브랜드는 탭마다, 바이어는 페이지 전체 기준이다
+ */
+export default function CompletionPanel({ title, completion, stages, progressLabel }: CompletionPanelProps) {
   const shouldReduceMotion = useReducedMotion();
   const panelRef = useRef<HTMLElement>(null);
   // 할 일이 남았을 때만 스크롤 바를 띄운다 — 다 채웠으면 따라다닐 이유가 없다
-  const showStickyBar = useIsScrolledPast(panelRef, Boolean(completion.nextTask) && !isCollapsed);
+  const showStickyBar = useIsScrolledPast(panelRef, Boolean(completion.nextTask));
 
   const { rate, nextTask, remainingTasks } = completion;
   const stageIndex = toStageIndex(stages, completion.step);
@@ -146,7 +136,7 @@ export default function CompletionPanel({
   // 서버는 remaining_tasks를 최대 3개만 주므로 목록 길이로는 셀 수 없다 —
   // 전체 미입력 수(총 항목 − 입력한 항목)에서 다음으로 해야 할 일과 보이는 목록을 뺀다
   const missingCount = completion.totalFields - completion.completedFields;
-  const hiddenCount = Math.max(0, missingCount - (nextTask ? 1 : 0) - visibleTasks.length);
+  const hiddenCount = Math.max(0, missingCount - 1 - visibleTasks.length);
 
   return (
     <>
@@ -158,7 +148,7 @@ export default function CompletionPanel({
           <JourneyStepper stages={stages} currentIndex={stageIndex} />
         </div>
 
-        {!isCollapsed && (
+        {nextTask && (
           <>
             <div className="bg-border mt-4 h-px w-full" />
 
@@ -189,27 +179,21 @@ export default function CompletionPanel({
                 )}
               </div>
 
-              {/* 열2 — 다음으로 해야 할 일. 다 채웠으면 doneContent(열을 비우면 남은 주요 항목이 가운데로 밀린다) */}
+              {/* 열2 — 다음으로 해야 할 일 */}
               <div className="flex flex-col gap-3 xl:px-6">
                 <p className="text-text-tertiary text-xs">다음으로 해야 할 일</p>
-                {nextTask ? (
-                  <>
-                    <div className="flex-1 space-y-1">
-                      <p className="text-text-primary text-base font-bold">{nextTask.title}</p>
-                      <p className="text-text-tertiary text-xs leading-relaxed">{nextTask.description}</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => goToField(nextTask)}
-                      className={`bg-primary text-primary-foreground hover:bg-primary-emphasis group inline-flex w-fit items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${focusRing}`}
-                    >
-                      등록하기
-                      <ArrowRightIcon className="size-4 transition-transform group-hover:translate-x-0.5" />
-                    </button>
-                  </>
-                ) : (
-                  doneContent
-                )}
+                <div className="flex-1 space-y-1">
+                  <p className="text-text-primary text-base font-bold">{nextTask.title}</p>
+                  <p className="text-text-tertiary text-xs leading-relaxed">{nextTask.description}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => goToField(nextTask)}
+                  className={`bg-primary text-primary-foreground hover:bg-primary-emphasis group inline-flex w-fit items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${focusRing}`}
+                >
+                  등록하기
+                  <ArrowRightIcon className="size-4 transition-transform group-hover:translate-x-0.5" />
+                </button>
               </div>
 
               {/* 열3 — 남은 주요 항목 (몇 개가 남아도 앞의 3개만 + 나머지 개수) */}
@@ -219,13 +203,10 @@ export default function CompletionPanel({
                   {hiddenCount > 0 && <span className="text-text-disabled"> · 외 {hiddenCount}개</span>}
                 </p>
 
-                {/* remaining_tasks는 next_task를 뺀 목록이다. 비어 있어도 next_task가 남아 있을 수 있어
-              완료 문구는 둘 다 비었을 때만 보인다 */}
+                {/* remaining_tasks는 next_task를 뺀 목록이다. 비어 있으면 다음으로 해야 할 일 하나만 남은 것 */}
                 {remainingTasks.length === 0 ? (
                   <div className="flex flex-1 items-center justify-center">
-                    <p className="text-text-secondary text-sm font-semibold">
-                      {nextTask ? "다음으로 해야 할 일만 남았어요" : "모두 입력했어요 🎉"}
-                    </p>
+                    <p className="text-text-secondary text-sm font-semibold">다음으로 해야 할 일만 남았어요</p>
                   </div>
                 ) : (
                   <ul className="space-y-2">
