@@ -99,6 +99,15 @@ export type FranchiseView = {
 
 export type ExternalLinkView = { kind: "homepage" | "instagram" | "youtube"; label: string; url: string };
 
+/** 본사 정보 (피그마 2072:5216) — 요약 문장 · 라벨-값 줄 · 메모 */
+export type HqView = {
+  /** 「(주)팀브로는 2019년 사업자 등록 후 목구멍 1개 브랜드를 운영하는 가맹본부입니다.」 — 상호가 없으면 null */
+  summary: string | null;
+  rows: DetailRow[];
+  /** 서버 메모 — 「브랜드 10개 본사 — 매출 · 영업이익은 본사 전체」 */
+  note: string | null;
+};
+
 export type BrandDetailView = {
   id: string;
   name: string;
@@ -115,6 +124,7 @@ export type BrandDetailView = {
   targetCountries: string[];
   partnershipTerms: DetailRow[];
   links: ExternalLinkView[];
+  hq: HqView | null;
   /** 정보 출처 — 서버가 비워 두면 null(출처를 지어내지 않는다) */
   infoSource: string | null;
   /** 「2026. 10. 20」 — 상세 응답의 수정 시각 */
@@ -196,6 +206,84 @@ const toFranchiseView = (summary: BrandDetail["franchise_summary"], years: numbe
   };
 };
 
+/** 받침이 있으면 「은」, 없으면 「는」 — 한글이 아니면 받침 없는 쪽으로 본다 */
+const topicParticle = (word: string) => {
+  const code = word.charCodeAt(word.length - 1) - 0xac00;
+  return code >= 0 && code <= 11171 && code % 28 !== 0 ? "은" : "는";
+};
+
+/** 본사 금액 — 1억 이상은 억(소수 한 자리), 아래는 만. 영업이익은 적자(음수)도 온다 */
+const toCompactWon = (won: number) => {
+  const sign = won < 0 ? "-" : "";
+  const abs = Math.abs(won);
+  if (abs >= 100_000_000) {
+    const eok = Math.round(abs / 10_000_000) / 10;
+    return `${sign}${eok.toLocaleString()}억`;
+  }
+  return `${sign}${Math.round(abs / 10_000).toLocaleString()}만`;
+};
+
+/** 「350억~390억 원 (2025년)」 — 서버가 범위로 준다. 한쪽만 있으면 그 값만 */
+const toRangeText = (min: number | null, max: number | null, year: number | null) => {
+  const values = [min, max].filter((value): value is number => value !== null);
+  if (values.length === 0) {
+    return null;
+  }
+  const range =
+    min !== null && max !== null && min !== max ? `${toCompactWon(min)}~${toCompactWon(max)}` : toCompactWon(values[0]);
+  return `${range} 원${year ? ` (${year}년)` : ""}`;
+};
+
+/** 「2019-08-27」 → 「2019년 8월」 */
+const toYearMonth = (date: string | null) => {
+  const match = date?.match(/^(\d{4})-(\d{2})/);
+  return match ? `${match[1]}년 ${Number(match[2])}월` : null;
+};
+
+/** 홈페이지 표시용 — 프로토콜·www·끝 슬래시를 뗀다(시안 「sulbing.com」) */
+const toHostText = (url: string | null) =>
+  url
+    ?.replace(/^https?:\/\//, "")
+    .replace(/^www\./, "")
+    .replace(/\/$/, "") || null;
+
+const toHqView = (hq: BrandDetail["brand_hq"], brandName: string): HqView | null => {
+  if (!hq) {
+    return null;
+  }
+  const regYear = hq.biz_reg_date?.slice(0, 4);
+  const brandsText =
+    hq.brand_count === null
+      ? null
+      : hq.brand_count === 1
+        ? `1개 (${brandName})`
+        : `${hq.brand_count.toLocaleString()}개`;
+  const runs =
+    hq.brand_count === null
+      ? "브랜드를"
+      : hq.brand_count === 1
+        ? `${brandName} 1개 브랜드를`
+        : `브랜드 ${hq.brand_count.toLocaleString()}개를`;
+
+  return {
+    summary: hq.name
+      ? `${hq.name}${topicParticle(hq.name)} ${regYear ? `${regYear}년 사업자 등록 후 ` : ""}${runs} 운영하는 가맹본부입니다.`
+      : null,
+    // 시안의 라벨·순서 그대로. 값이 없으면 TermRow가 「-」
+    rows: [
+      { label: "사업 유형", value: hq.type ? `가맹본부 · ${hq.type}` : "가맹본부" },
+      { label: "사업자 등록", value: toYearMonth(hq.biz_reg_date) },
+      { label: "본사 위치", value: hq.region },
+      { label: "보유 브랜드", value: brandsText },
+      { label: "기업 규모", value: hq.enterprise_size },
+      { label: "본사 매출", value: toRangeText(hq.sales_min, hq.sales_max, hq.fiscal_year) },
+      { label: "영업이익", value: toRangeText(hq.op_profit_min, hq.op_profit_max, hq.fiscal_year) },
+      { label: "홈페이지", value: toHostText(hq.website_url) },
+    ],
+    note: hq.note,
+  };
+};
+
 const toLinks = (links: BrandDetail["external_links"]): ExternalLinkView[] => {
   const candidates: [ExternalLinkView["kind"], string, string | null][] = [
     ["homepage", "홈페이지", links.homepage_url],
@@ -243,6 +331,7 @@ export const toBrandDetailView = (detail: BrandDetail): BrandDetailView => {
       { label: "인테리어 기준", value: terms?.interior_criteria ?? null },
     ],
     links: toLinks(detail.external_links),
+    hq: toHqView(detail.brand_hq, detail.brand_name_ko),
     infoSource: detail.info_source,
     checkedDate: toDateText(detail.updated_time),
   };

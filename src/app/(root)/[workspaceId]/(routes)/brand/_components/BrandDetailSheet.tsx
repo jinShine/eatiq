@@ -41,8 +41,8 @@ type BrandDetailSheetProps = {
  * 브랜드 상세 드로어 v2 (피그마 2072:4921 「Drawer_브랜드상세_풀스펙_v2」).
  *
  * 대표 사진 → 머리 → 브랜드 소개 → 대표 메뉴 → 매장 · 인테리어 → 연평균 매출 추이 → 가맹점 수 추이 →
- * 진출 희망 국가 → 파트너십 선호 조건 → 외부 링크 → 정보 출처.
- * 데이터가 없는 섹션은 통째로 뺀다. 시안의 「파트너 역할」·「본사 정보」·「대표 주소로 메일 보내기」는 API가 없어 그리지 않는다.
+ * 진출 희망 국가 → 파트너십 선호 조건 → 외부 링크 → 본사 정보 → 정보 출처.
+ * 데이터가 없는 섹션은 통째로 뺀다. 시안의 「파트너 역할」·「대표 주소로 메일 보내기」는 API가 없어 그리지 않는다.
  * 시안에서 숨겨 둔(투명) 「전년 대비」·「3년 새」·「증가 추세」 문구도 그리지 않는다
  */
 export default function BrandDetailSheet({ detail, isLoading, isOpen, onOpenChange }: BrandDetailSheetProps) {
@@ -249,6 +249,23 @@ export default function BrandDetailSheet({ detail, isLoading, isOpen, onOpenChan
               <section className="flex flex-col gap-3">
                 <SectionTitle>외부 링크</SectionTitle>
                 <ExternalLinks links={detail.links} />
+              </section>
+            )}
+
+            {detail.hq && (
+              <section className="flex flex-col gap-1">
+                <SectionTitle>본사 정보</SectionTitle>
+                {detail.hq.summary && (
+                  <p className="text-text-tertiary pt-1 text-sm font-medium tracking-[-0.7px]">{detail.hq.summary}</p>
+                )}
+                <div className="flex flex-col">
+                  {detail.hq.rows.map(row => (
+                    <TermRow key={row.label} row={row} />
+                  ))}
+                </div>
+                {detail.hq.note && (
+                  <p className="text-text-disabled pt-1 text-[11px] tracking-[-0.55px]">{detail.hq.note}</p>
+                )}
               </section>
             )}
 
