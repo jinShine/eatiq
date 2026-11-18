@@ -821,12 +821,21 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * 🔄 [UPDATE 26.11.13] 브랜드 탐색 상세 정보 조회 (비주얼 미디어 전체 필드 추가)
-     * @description ### 📝 최근 업데이트 이력 (2026.11.13)
-     *     - **비주얼 미디어 5개 필드 추가**: 브랜드 대표 영상(`featured_video_list`), 매장 및 인테리어 사진/영상(`store_image_list`, `store_video_list`), 조리 사진/영상(`cooking_image_list`, `cooking_video_list`) 필드를 응답 스펙에 추가하여 상세 화면에서 다채로운 미디어를 렌더링할 수 있도록 지원합니다.
+     * 🔄 [UPDATE 26.11.18] 브랜드 탐색 상세 정보 조회 (대표 메뉴·매출·가맹점·외부링크·정보출처 추가)
+     * @description ### 📝 최근 업데이트 이력 (2026.11.18)
+     *     - **브랜드 상세 페이지 핵심 정보 확장**:
+     *       - **대표 메뉴(`signature_menus`, 최대 5개)**: 메뉴명(한/영), 메뉴 설명, 가격, 사진(`image_url`, `image_list`) 추가
+     *       - **매장/인테리어 사진(`store_image_list`, 최대 10장)**: 매장 사진 목록을 최대 10장까지 통합 제공
+     *       - **매출 요약(`sales_summary`)**: 최근 연도(`latest_year`), 월평균 매출(`avg_monthly_sales`), 평당 연/월평균 매출(`sales_per_area`, `monthly_sales_per_area`), 최근 5년 연간 매출 목록(`yearly_sales`) 추가
+     *       - **가맹점 요약(`franchise_summary`)**: 최근 연도(`latest_year`), 가맹점 수(`franchise_count`), 직영점 수(`direct_count`), 최근 5년 계약 현황(`contract_status`), 최근 5년 가맹점 수 추이(`yearly_franchise_counts`) 추가
+     *       - **외부 링크(`external_links`) & 정보 출처(`info_source`)**: 홈페이지·인스타그램·유튜브 링크 및 데이터 출처 필드 추가
+     *     - **연도별 매출 현황(`yearly_sales`) 필드 추가**: 응답에 `yearly_sales`(연도별 연/월평균 매출, 평당 연평균 매출, 가맹점 수, 신규 개점/계약 종료/계약 해지 수 배열) 필드를 추가했습니다.
      *
      *     <details>
      *     <summary><b>📂 이전 업데이트 이력 보기 (클릭하여 펼치기)</b></summary>
+     *
+     *     ### 📝 이전 업데이트 이력 (2026.11.13)
+     *     - **비주얼 미디어 5개 필드 추가**: 브랜드 대표 영상(`featured_video_list`), 매장 및 인테리어 사진/영상(`store_image_list`, `store_video_list`), 조리 사진/영상(`cooking_image_list`, `cooking_video_list`) 필드를 응답 스펙에 추가하여 상세 화면에서 다채로운 미디어를 렌더링할 수 있도록 지원합니다.
      *
      *     ### 📝 이전 업데이트 이력 (2026.10.12)
      *     - **비주얼 이미지 파싱 정상화**: DB 내 `brand_visual` 컬럼 매핑 오류를 수정하여 `logo_image` 및 `featured_image`가 null로 반환되던 문제를 해결했습니다.
@@ -1117,9 +1126,17 @@ export interface paths {
     };
     get?: never;
     /**
-     * 🔄 [UPDATE 26.10.06] 브랜드 운영 현황 입력 및 업데이트 (숫자 입력 범위 확장)
-     * @description ### 📝 최근 업데이트 이력 (2026.10.06)
+     * 🔄 [UPDATE 26.11.18] 브랜드 운영 현황 입력 및 업데이트 (연도별 매출 배열 추가)
+     * @description ### 📝 최근 업데이트 이력 (2026.11.18)
+     *     - **연도별 매출 현황(`yearly_sales`) 배열 필드 추가**: 연도별 연/월평균 매출, 평당 연평균 매출, 가맹점 수, 신규 개점/계약 종료/계약 해지 수 목록을 선택적으로 등록·수정할 수 있습니다. 기존 필드들은 하위 호환을 위해 그대로 유지됩니다.
+     *
+     *     <details>
+     *     <summary><b>📂 이전 업데이트 이력 보기 (클릭하여 펼치기)</b></summary>
+     *
+     *     ### 📝 이전 업데이트 이력 (2026.10.06)
      *     - **숫자 입력 필드 허용 범위 확장**: 매장 수(국내/직영/해외), 월평균 매출, 평균 객단가, 매장 평형, 좌석 수 등 모든 숫자 필드의 최소/최대 입력 범위를 -1조(-1,000,000,000,000) ~ +1조(1,000,000,000,000)로 확장하였습니다.
+     *
+     *     </details>
      *
      *     ---
      *
@@ -1137,8 +1154,9 @@ export interface paths {
      *        - 매출액 및 단가: `avg_monthly_sales`, `avg_cost_per_customer` (숫자, -1조 ~ +1조)
      *        - 공간 지표: `avg_store_area`, `avg_seat_cnt` (숫자, -1조 ~ +1조)
      *        - 고객 및 이용 상황: `target_audience`, `usage_context` (문자열 배열, 선택)
+     *        - 연도별 매출 현황: `yearly_sales` (객체 배열, 선택 — 미전달 시 기존 데이터 유지)
      *     3. **화면 렌더링 팁**:
-     *        - 바이어 탐색 카드 및 상세 정보의 매장 규모/운영 지표 뱃지로 활용됩니다.
+     *        - 바이어 탐색 카드 및 상세 정보의 매장 규모/운영 지표 뱃지 및 연도별 매출 추이 차트로 활용됩니다.
      */
     put: operations["UpdateBrandStatusController_handle"];
     post?: never;
@@ -1698,24 +1716,23 @@ export interface paths {
      *     - **필수 이미지 조건 변경**: 영상 생성 시 요구되는 최소 이미지 기준이 단순 4장 이상에서 **대표 메뉴 사진 1장 이상, 매장/인테리어 사진 2장 이상, 브랜드 로고 1장 이상**으로 변경되었습니다.
      *
      *     ### 📌 개요
-     *     - **자동 파이프라인**: 별도의 Request Body 없이 URL 경로의 `workspace_uid`만 전달하면, 기등록된 브랜드 프로필(매장, 메뉴, 조리, 로고) 데이터를 기반으로 20초 분량의 고화질 세로형(9:16) 시네마틱 쇼츠 영상을 자동 생성합니다.
+     *     - **자동 파이프라인**: 별도의 Request Body 없이 URL 경로의 `workspace_uid`만 전달하면, 기등록된 브랜드 프로필(매장, 메뉴, 조리, 로고) 데이터를 기반으로 AI가 각 이미지를 분석해 약 20초(±5초 내외) 분량의 고화질 세로형(9:16) 시네마틱 쇼츠 영상을 자동 생성합니다.
      *     - **진행 이력 관리**: 생성 요청 시 비디오 상태가 `status = 'PROCESSING'`으로 즉시 기록되며 작업 고유 식별자(`video_uid` 및 `task_id`)가 발급됩니다. 기존에 생성된 비디오가 있다면 자동으로 정리 후 신규 발급됩니다.
      *
      *     ### 🖼️ 이미지 자동 추출 파이프라인 순서
-     *     비디오 생성 엔진(Kling 4.0 Image-to-Video)에 전달되는 시퀀스 이미지는 아래 순서대로 자동 수집되며, 등록되지 않은 이미지는 자동으로 제외됩니다:
+     *     비디오 생성 엔진(Kling 4.0 Image-to-Video)에 전달되는 시퀀스 이미지는 아래 큰 틀 순서대로 자동 수집되며, 특정 항목이 부족하면 다른 등록 이미지로 자동 보충됩니다:
      *     1. **매장/인테리어 1번째 사진** ➔ 첫 번째 프레임 (스마트폰 9:16 규격으로 자동 Center Crop)
      *     2. **매장/인테리어 2번째 사진** ➔ 중간 프레임
      *     3. **대표 메뉴 1번째 사진** ➔ 중간 프레임
-     *     4. **조리 1번째 사진** ➔ 중간 프레임
-     *     5. **조리 2번째 사진** ➔ 중간 프레임
+     *     4. **조리 1번째 사진** ➔ 중간 프레임 (미등록 시 다른 유효 이미지로 보충)
+     *     5. **조리 2번째 사진** ➔ 중간 프레임 (미등록 시 다른 유효 이미지로 보충)
      *     6. **브랜드 로고 사진** ➔ 마지막 엔딩 프레임
      *
      *     > ⚠️ **주의사항**:
-     *     > 1. 아래 필수 이미지 조건을 모두 충족해야 영상 생성이 가능합니다. (미충족 시 `400 Bad Request` 예외 발생)
-     *     >    - **대표 메뉴 사진**: 1장 이상
-     *     >    - **매장/인테리어 사진**: 2장 이상
-     *     >    - **브랜드 로고**: 1장 이상
-     *     > 2. **현재 영상 생성 템플릿은 '목구멍' 브랜드(솥뚜껑 삼겹살/미나리 등)에 맞추어 연출 프롬프트가 최적화**되어 있습니다. 다른 브랜드로 호출하더라도 목구멍 6단계 템플릿 기반으로 영상이 생성되므로 테스트 시 유의해 주시기 바랍니다.
+     *     > 아래 필수 이미지 조건을 모두 충족해야 영상 생성이 가능합니다. (미충족 시 `400 Bad Request` 예외 발생)
+     *     > - **대표 메뉴 사진**: 1장 이상
+     *     > - **매장/인테리어 사진**: 2장 이상
+     *     > - **브랜드 로고**: 1장 이상
      *
      *     ### 🎬 프론트엔드 연동 시퀀스 다이어그램 (생성 및 확인 흐름)
      *
@@ -3862,6 +3879,48 @@ export interface components {
        */
       key_point: string[];
     };
+    BrandStatusYearlySalesDto: {
+      /**
+       * @description 기준 연도
+       * @example 2024
+       */
+      year: number;
+      /**
+       * @description 연평균 매출 (원)
+       * @example 760587000
+       */
+      avg_annual_sales: number;
+      /**
+       * @description 월평균 매출 (원)
+       * @example 63380000
+       */
+      avg_monthly_sales: number;
+      /**
+       * @description 평당(3.3㎡) 연평균 매출 (원)
+       * @example 21931000
+       */
+      sales_per_area: number;
+      /**
+       * @description 가맹점 수 (개)
+       * @example 169
+       */
+      franchise_count: number;
+      /**
+       * @description 신규 개점 수 (개)
+       * @example 26
+       */
+      new_open: number;
+      /**
+       * @description 계약 종료 수 (개)
+       * @example 6
+       */
+      contract_end: number;
+      /**
+       * @description 계약 해지 수 (개)
+       * @example 0
+       */
+      contract_cancel: number;
+    };
     BrandStatusDataDto: {
       /**
        * @description 국내 전체 매장 수 (개)
@@ -3914,6 +3973,8 @@ export interface components {
        *     ]
        */
       usage_context?: string[] | null;
+      /** @description 연도별 매출 및 가맹점 변동 현황 목록 */
+      yearly_sales?: components["schemas"]["BrandStatusYearlySalesDto"][] | null;
     };
     BrandContactDataDto: {
       /**
@@ -5426,6 +5487,205 @@ export interface components {
        */
       languages: string[] | null;
     };
+    BrandDetailYearlySalesDto: {
+      /**
+       * @description 기준 연도
+       * @example 2024
+       */
+      year: number;
+      /**
+       * @description 연평균 매출 (원)
+       * @example 760587000
+       */
+      avg_annual_sales: number;
+      /**
+       * @description 월평균 매출 (원)
+       * @example 63380000
+       */
+      avg_monthly_sales: number;
+      /**
+       * @description 평당(3.3㎡) 연평균 매출 (원)
+       * @example 21931000
+       */
+      sales_per_area: number;
+      /**
+       * @description 가맹점 수 (개)
+       * @example 169
+       */
+      franchise_count: number;
+      /**
+       * @description 신규 개점 수 (개)
+       * @example 26
+       */
+      new_open: number;
+      /**
+       * @description 계약 종료 수 (개)
+       * @example 6
+       */
+      contract_end: number;
+      /**
+       * @description 계약 해지 수 (개)
+       * @example 0
+       */
+      contract_cancel: number;
+    };
+    BrandDetailMenuDto: {
+      /**
+       * @description 메뉴명 (한국어)
+       * @example 미박삼겹살
+       */
+      name_ko: string | null;
+      /**
+       * @description 메뉴명 (영문)
+       * @example Skin-On Pork Belly
+       */
+      name_en: string | null;
+      /**
+       * @description 메뉴 설명
+       * @example 껍질을 벗기지 않은 삼겹살이란 뜻으로 쫄깃한 식감을 자랑합니다!
+       */
+      explain: string | null;
+      /**
+       * @description 메뉴 가격 (원)
+       * @example 13000
+       */
+      price: number | null;
+      /**
+       * @description 대표 메뉴 사진 URL
+       * @example https://example.com/menu.jpg
+       */
+      image_url: string | null;
+      /**
+       * @description 메뉴 사진 URL 목록
+       * @example [
+       *       "https://example.com/menu.jpg"
+       *     ]
+       */
+      image_list: string[];
+    };
+    BrandDetailSalesSummaryYearlyItemDto: {
+      /**
+       * @description 기준 연도
+       * @example 2024
+       */
+      year: number;
+      /**
+       * @description 연평균 매출 (원)
+       * @example 760587000
+       */
+      avg_annual_sales: number;
+      /**
+       * @description 월평균 매출 (원)
+       * @example 63380000
+       */
+      avg_monthly_sales: number;
+      /**
+       * @description 평당(3.3㎡) 연평균 매출 (원)
+       * @example 21931000
+       */
+      sales_per_area: number;
+      /**
+       * @description 평당(3.3㎡) 월평균 매출 (원)
+       * @example 1827583
+       */
+      monthly_sales_per_area: number;
+    };
+    BrandDetailSalesSummaryDto: {
+      /**
+       * @description 입력된 가장 최근 연도
+       * @example 2024
+       */
+      latest_year: number | null;
+      /**
+       * @description 가장 최근 연도의 월평균 매출 (원)
+       * @example 63380000
+       */
+      avg_monthly_sales: number | null;
+      /**
+       * @description 가장 최근 연도의 평당(3.3㎡) 연평균 매출 (원)
+       * @example 21931000
+       */
+      sales_per_area: number | null;
+      /**
+       * @description 가장 최근 연도의 평당(3.3㎡) 월평균 매출 (원)
+       * @example 1827583
+       */
+      monthly_sales_per_area: number | null;
+      /** @description 연간 매출 목록 (최근 5년) */
+      yearly_sales: components["schemas"]["BrandDetailSalesSummaryYearlyItemDto"][];
+    };
+    BrandDetailContractStatusDto: {
+      /**
+       * @description 기준 연도
+       * @example 2024
+       */
+      year: number;
+      /**
+       * @description 신규 개점 수 (개)
+       * @example 26
+       */
+      new_open: number;
+      /**
+       * @description 계약 종료 수 (개)
+       * @example 6
+       */
+      contract_end: number;
+      /**
+       * @description 계약 해지 수 (개)
+       * @example 0
+       */
+      contract_cancel: number;
+    };
+    BrandDetailYearlyFranchiseDto: {
+      /**
+       * @description 기준 연도
+       * @example 2024
+       */
+      year: number;
+      /**
+       * @description 가맹점 수 (개)
+       * @example 169
+       */
+      franchise_count: number;
+    };
+    BrandDetailFranchiseSummaryDto: {
+      /**
+       * @description 입력된 가장 최근 연도
+       * @example 2024
+       */
+      latest_year: number | null;
+      /**
+       * @description 가장 최근 연도의 가맹점 수 (개)
+       * @example 169
+       */
+      franchise_count: number | null;
+      /**
+       * @description 직영점 수 (개)
+       * @example 6
+       */
+      direct_count: number | null;
+      /** @description 연도별 계약 현황 목록 (최근 5년) */
+      contract_status: components["schemas"]["BrandDetailContractStatusDto"][];
+      /** @description 연간 가맹점 수 목록 (최근 5년) */
+      yearly_franchise_counts: components["schemas"]["BrandDetailYearlyFranchiseDto"][];
+    };
+    BrandDetailExternalLinksDto: {
+      /**
+       * @description 공식 홈페이지 URL
+       * @example https://www.moggumung.com
+       */
+      homepage_url: string | null;
+      /**
+       * @description 인스타그램 URL
+       * @example https://www.instagram.com/tim__brother/
+       */
+      instagram_url: string | null;
+      /**
+       * @description 유튜브 URL
+       * @example null
+       */
+      youtube_url: string | null;
+    };
     BrandDetailResponseDto: {
       /**
        * @description 브랜드 고유 식별자 (uid)
@@ -5560,6 +5820,21 @@ export interface components {
       partnership_conditions: components["schemas"]["BrandDetailPartnershipConditionsDto"] | null;
       /** @description 담당자 연락처 정보 */
       contact: components["schemas"]["BrandDetailContactDto"] | null;
+      /** @description 연도별 매출 및 가맹점 변동 현황 목록 */
+      yearly_sales: components["schemas"]["BrandDetailYearlySalesDto"][] | null;
+      /** @description 대표 메뉴 목록 (최대 5개) */
+      signature_menus: components["schemas"]["BrandDetailMenuDto"][];
+      /** @description 월평균 매출 및 최근 5년 매출 요약 */
+      sales_summary: components["schemas"]["BrandDetailSalesSummaryDto"] | null;
+      /** @description 가맹점 및 계약 현황 요약 (최근 5년) */
+      franchise_summary: components["schemas"]["BrandDetailFranchiseSummaryDto"] | null;
+      /** @description 외부 링크 (홈페이지, 인스타그램, 유튜브) */
+      external_links: components["schemas"]["BrandDetailExternalLinksDto"];
+      /**
+       * @description 정보 출처
+       * @example 공정거래위원회 가맹사업정보제공시스템, 브랜드 공식 홈페이지
+       */
+      info_source: string | null;
       /**
        * @description 브랜드 데이터 생성 일시 (ISO-8601)
        * @example 2026-09-10T04:20:00.000Z
@@ -6617,6 +6892,48 @@ export interface components {
       /** @description 업데이트된 브랜드 기본 정보 (brand_basic) */
       brand_basic: components["schemas"]["BrandBasicDataDto"];
     };
+    BrandYearlySalesDto: {
+      /**
+       * @description 기준 연도
+       * @example 2024
+       */
+      year: number;
+      /**
+       * @description 연평균 매출 (원)
+       * @example 760587000
+       */
+      avg_annual_sales: number;
+      /**
+       * @description 월평균 매출 (원)
+       * @example 63380000
+       */
+      avg_monthly_sales: number;
+      /**
+       * @description 평당(3.3㎡) 연평균 매출 (원)
+       * @example 21931000
+       */
+      sales_per_area: number;
+      /**
+       * @description 가맹점 수 (개)
+       * @example 169
+       */
+      franchise_count: number;
+      /**
+       * @description 신규 개점 수 (개)
+       * @example 26
+       */
+      new_open: number;
+      /**
+       * @description 계약 종료 수 (개)
+       * @example 6
+       */
+      contract_end: number;
+      /**
+       * @description 계약 해지 수 (개)
+       * @example 0
+       */
+      contract_cancel: number;
+    };
     UpdateBrandStatusDto: {
       /**
        * @description 국내 전체 매장 수 (개, 최소 -1조 ~ 최대 1조)
@@ -6669,6 +6986,8 @@ export interface components {
        *     ]
        */
       usage_context?: string[];
+      /** @description 연도별 매출 및 가맹점 변동 현황 목록 (선택사항) */
+      yearly_sales?: components["schemas"]["BrandYearlySalesDto"][];
     };
     UpdateBrandStatusResponseDto: {
       /**
@@ -7452,7 +7771,7 @@ export interface components {
        */
       status: "QUEUED" | "PROCESSING" | "COMPLETED" | "FAILED";
       /**
-       * @description 영상 재생 길이 (초 단위: 20초)
+       * @description 영상 재생 길이 (초 단위: 목표 20초 기준 ±5초 내외)
        * @example 20
        */
       duration: number;
