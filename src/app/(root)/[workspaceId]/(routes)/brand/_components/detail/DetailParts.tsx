@@ -72,8 +72,9 @@ export function YearBarChart({ bars, label }: { bars: YearBar[]; label: string }
 export function MenuCard({ menu }: { menu: MenuView }) {
   return (
     <li className="border-border flex gap-3 rounded-xl border bg-white px-3 pt-3 pb-3.5">
-      {/* 시안 160px. 좁은 화면에선 글자 칸이 너무 좁아져 120px로 줄인다 */}
-      <div className="bg-accent size-[120px] shrink-0 overflow-hidden rounded-lg sm:size-[160px]">
+      {/* 시안 160px. 좁은 화면에선 글자 칸이 너무 좁아져 120px로 줄인다.
+          흰 배경 누끼 사진(유가네)은 카드 흰 바탕에 묻혀 경계가 사라져서 얇은 테두리로 사진 자리를 잡아 준다 */}
+      <div className="bg-accent border-border size-[120px] shrink-0 overflow-hidden rounded-lg border sm:size-[160px]">
         {menu.imageUrl && <img src={menu.imageUrl} alt={menu.name} className="size-full object-cover" />}
       </div>
       <div className="flex min-w-0 flex-1 flex-col gap-1">
