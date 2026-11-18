@@ -117,7 +117,7 @@ type CompletionPanelProps = {
   doneContent: React.ReactNode;
   /**
    * 모든 패널 입력 완료 — 제목과 스테퍼만 남기고 본문을 접는다(피그마 769:4565).
-   * 브랜드는 모든 탭, 바이어는 페이지 전체를 채웠을 때다. 한 탭만 끝났을 땐 다음 탭 안내가 필요해 펼쳐 둔다
+   * 브랜드는 그 탭, 바이어는 페이지 전체를 다 채웠을 때다
    */
   isCollapsed?: boolean;
 };
