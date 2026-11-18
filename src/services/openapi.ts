@@ -1126,9 +1126,12 @@ export interface paths {
     };
     get?: never;
     /**
-     * 🔄 [UPDATE 26.11.18] 브랜드 운영 현황 입력 및 업데이트 (연도별 매출 배열 추가)
+     * 🔄 [UPDATE 26.11.18] 브랜드 운영 현황 입력 및 업데이트 (연도별 매출 배열 추가 및 파라미터 변경)
      * @description ### 📝 최근 업데이트 이력 (2026.11.18)
-     *     - **연도별 매출 현황(`yearly_sales`) 배열 필드 추가**: 연도별 연/월평균 매출, 평당 연평균 매출, 가맹점 수, 신규 개점/계약 종료/계약 해지 수 목록을 선택적으로 등록·수정할 수 있습니다. 기존 필드들은 하위 호환을 위해 그대로 유지됩니다.
+     *     - **연도별 매출 현황(`yearly_sales`) 파라미터 스펙 변경**:
+     *       - 요청 항목에서 `avg_monthly_sales`를 제거했습니다. (연평균 매출 `avg_annual_sales` 기준으로 월평균 매출이 자동 계산됩니다.)
+     *       - `franchise_count`, `new_open`, `contract_end`, `contract_cancel` 4개 필드를 선택 입력(Optional)으로 변경했습니다.
+     *     - **연도별 매출 현황(`yearly_sales`) 배열 필드 추가**: 연도별 연평균 매출, 평당 연평균 매출, 가맹점 수, 신규 개점/계약 종료/계약 해지 수 목록을 선택적으로 등록·수정할 수 있습니다. 기존 필드들은 하위 호환을 위해 그대로 유지됩니다.
      *
      *     <details>
      *     <summary><b>📂 이전 업데이트 이력 보기 (클릭하여 펼치기)</b></summary>
@@ -3904,22 +3907,22 @@ export interface components {
        * @description 가맹점 수 (개)
        * @example 169
        */
-      franchise_count: number;
+      franchise_count?: number | null;
       /**
        * @description 신규 개점 수 (개)
        * @example 26
        */
-      new_open: number;
+      new_open?: number | null;
       /**
        * @description 계약 종료 수 (개)
        * @example 6
        */
-      contract_end: number;
+      contract_end?: number | null;
       /**
        * @description 계약 해지 수 (개)
        * @example 0
        */
-      contract_cancel: number;
+      contract_cancel?: number | null;
     };
     BrandStatusDataDto: {
       /**
@@ -5512,22 +5515,22 @@ export interface components {
        * @description 가맹점 수 (개)
        * @example 169
        */
-      franchise_count: number;
+      franchise_count: number | null;
       /**
        * @description 신규 개점 수 (개)
        * @example 26
        */
-      new_open: number;
+      new_open: number | null;
       /**
        * @description 계약 종료 수 (개)
        * @example 6
        */
-      contract_end: number;
+      contract_end: number | null;
       /**
        * @description 계약 해지 수 (개)
        * @example 0
        */
-      contract_cancel: number;
+      contract_cancel: number | null;
     };
     BrandDetailMenuDto: {
       /**
@@ -6904,35 +6907,30 @@ export interface components {
        */
       avg_annual_sales: number;
       /**
-       * @description 월평균 매출 (원)
-       * @example 63380000
-       */
-      avg_monthly_sales: number;
-      /**
        * @description 평당(3.3㎡) 연평균 매출 (원)
        * @example 21931000
        */
       sales_per_area: number;
       /**
-       * @description 가맹점 수 (개)
+       * @description 가맹점 수 (개, 선택사항)
        * @example 169
        */
-      franchise_count: number;
+      franchise_count?: number;
       /**
-       * @description 신규 개점 수 (개)
+       * @description 신규 개점 수 (개, 선택사항)
        * @example 26
        */
-      new_open: number;
+      new_open?: number;
       /**
-       * @description 계약 종료 수 (개)
+       * @description 계약 종료 수 (개, 선택사항)
        * @example 6
        */
-      contract_end: number;
+      contract_end?: number;
       /**
-       * @description 계약 해지 수 (개)
+       * @description 계약 해지 수 (개, 선택사항)
        * @example 0
        */
-      contract_cancel: number;
+      contract_cancel?: number;
     };
     UpdateBrandStatusDto: {
       /**
