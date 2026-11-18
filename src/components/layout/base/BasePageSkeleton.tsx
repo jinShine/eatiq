@@ -34,7 +34,8 @@ export default function BasePageSkeleton({ title, description, children }: BaseP
               <Skeleton className="h-5 w-40" />
               <Skeleton className="h-3 w-56" />
             </div>
-            <Skeleton className="size-9 rounded-full" />
+            {/* AI 도우미 자리 — 이번 버전에 버튼을 넣지 않아 골격도 뺀다(PageHeader 참고) */}
+            {/* <Skeleton className="size-9 rounded-full" /> */}
           </header>
         )
       }

@@ -1,4 +1,5 @@
-import AiAskButton from "./AiAskButton";
+// AI 도우미는 이번 버전에 넣지 않는다(AI 기능 미구현) — 다시 켤 때 아래 import와 렌더를 함께 되살린다
+// import AiAskButton from "./AiAskButton";
 
 type PageHeaderProps = {
   title: string;
@@ -17,8 +18,8 @@ export default function PageHeader({ title, description }: PageHeaderProps) {
         )}
       </div>
 
-      {/* 우: AI 도우미 (기본 내장 — 페이지마다 주입하지 않음. 추후 모달 트리거) */}
-      <AiAskButton />
+      {/* 우: AI 도우미 (기본 내장 — 페이지마다 주입하지 않음. 추후 모달 트리거) — 이번 버전 제외 */}
+      {/* <AiAskButton /> */}
     </header>
   );
 }
