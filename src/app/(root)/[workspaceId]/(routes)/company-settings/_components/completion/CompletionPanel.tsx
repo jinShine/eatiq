@@ -91,8 +91,11 @@ export default function CompletionPanel({
 
   // 스크롤 신호는 peek(다음 항목이 반쯤 잘림) + 상시 스크롤바로 충분 — 페이드는 텍스트 가독성을 해쳐 제외
   const visibleTasks = remainingTasks.slice(0, VISIBLE_REMAINING);
-  // 더 남았는지 알 수 있게 나머지 개수만 제목 옆에 적는다(목록은 3개 그대로)
-  const hiddenCount = remainingTasks.length - visibleTasks.length;
+  // 더 남았는지 알 수 있게 나머지 개수만 제목 옆에 적는다(목록은 3개 그대로).
+  // 서버는 remaining_tasks를 최대 3개만 주므로 목록 길이로는 셀 수 없다 —
+  // 전체 미입력 수(총 항목 − 입력한 항목)에서 다음으로 해야 할 일과 보이는 목록을 뺀다
+  const missingCount = completion.totalFields - completion.completedFields;
+  const hiddenCount = Math.max(0, missingCount - (nextTask ? 1 : 0) - visibleTasks.length);
 
   return (
     <section className="border-border border-b px-6 py-6">
