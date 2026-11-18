@@ -61,10 +61,11 @@ export default function BrandDetailSheet({ detail, isLoading, isOpen, onOpenChan
 
       {detail && (
         <div className="flex flex-col gap-6 pb-4">
-          {/* 대표 사진 — 시안 700:400 비율. 시트 기본 여백(12px)을 상쇄해 폭 전체로 */}
-          <div className="bg-secondary-background -mx-3 -mt-3 aspect-[7/4] shrink-0">
+          {/* 대표 사진 — 시안 700:400 비율. 시트 기본 여백(12px)을 상쇄해 폭 전체로.
+              사진을 겹쳐 넣고(absolute) 넘치는 곳을 잘라야 비율이 고정된다 — 그냥 넣으면 세로가 긴 사진이 상자를 늘린다 */}
+          <div className="bg-secondary-background relative -mx-3 -mt-3 aspect-[7/4] shrink-0 overflow-hidden">
             {detail.imageUrl ? (
-              <img src={detail.imageUrl} alt="" className="size-full object-cover" />
+              <img src={detail.imageUrl} alt="" className="absolute inset-0 size-full object-cover" />
             ) : (
               <div className="text-text-disabled flex size-full items-center justify-center">
                 <ImageIcon aria-hidden className="size-10" strokeWidth={1.5} />
