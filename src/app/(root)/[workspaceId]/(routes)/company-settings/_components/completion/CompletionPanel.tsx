@@ -91,6 +91,8 @@ export default function CompletionPanel({
 
   // 스크롤 신호는 peek(다음 항목이 반쯤 잘림) + 상시 스크롤바로 충분 — 페이드는 텍스트 가독성을 해쳐 제외
   const visibleTasks = remainingTasks.slice(0, VISIBLE_REMAINING);
+  // 더 남았는지 알 수 있게 나머지 개수만 제목 옆에 적는다(목록은 3개 그대로)
+  const hiddenCount = remainingTasks.length - visibleTasks.length;
 
   return (
     <section className="border-border border-b px-6 py-6">
@@ -153,9 +155,12 @@ export default function CompletionPanel({
           )}
         </div>
 
-        {/* 열3 — 남은 주요 항목 (몇 개가 남아도 앞의 3개만) */}
+        {/* 열3 — 남은 주요 항목 (몇 개가 남아도 앞의 3개만 + 나머지 개수) */}
         <div className="flex min-w-0 flex-col gap-2 xl:pl-6">
-          <p className="text-text-tertiary text-xs">남은 주요 항목</p>
+          <p className="text-text-tertiary text-xs">
+            남은 주요 항목
+            {hiddenCount > 0 && <span className="text-text-disabled"> · 외 {hiddenCount}개</span>}
+          </p>
 
           {/* remaining_tasks는 next_task를 뺀 목록이다. 비어 있어도 next_task가 남아 있을 수 있어
               완료 문구는 둘 다 비었을 때만 보인다 */}
