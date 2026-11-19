@@ -17,7 +17,8 @@ import {
 import useClearOnFormChange from "../../_hooks/useClearOnFormChange";
 import FormSelect from "../FormSelect";
 import { pickOption, toOptions } from "./IntroOptions";
-import { INTEGER, SELECT_REQUIRED, chosen, requiredChoice, wonField } from "./formFields";
+import { numberOrNull, optionOrNull, textOrNull } from "./clearable";
+import { INTEGER, optionalChoice, wonField } from "./formFields";
 import { toNumberText } from "./numberText";
 import {
   DISTRICT_VALUES,
@@ -30,28 +31,28 @@ import {
 /**
  * 입지 및 상권 기준 — PUT /location-standard. 폼 필드 이름은 저장 DTO와 같다. → BasicInfoSection 주석 참고
  *
- * 서버 규칙(400 응답으로 확인): 1·2차 선호 상권 필수(문자열이면 무엇이든), 3차는 선택,
- * 임대료 최소·최대 필수(0 이상), 층수·중요도·필요 여부 9개는 선택지 필수.
+ * 서버 규칙(400 응답으로 확인): 선호 상권은 문자열이면 무엇이든, 임대료 0 이상, 층수·중요도·필요 여부는 선택지 값만.
+ * 모두 선택 입력이다(2026-11-19). 빈 칸은 null로 보내 지운다(clearable.ts).
  * 서버는 최소 > 최대 임대료도 저장해서 화면에서 막는다.
  */
 const NO_DISTRICT = "미입력"; // 3차 선호 상권 "선택 안 함" — Radix Select는 빈 값을 항목으로 둘 수 없다
 
 const locationSchema = z
   .object({
-    district_01: z.string().min(1, SELECT_REQUIRED),
-    district_02: z.string().min(1, SELECT_REQUIRED),
+    district_01: z.string(),
+    district_02: z.string(),
     district_03: z.string(),
     min_rent: wonField(),
     max_rent: wonField(),
-    floor_range: requiredChoice(FLOOR_RANGE_VALUES),
-    sign_imp: requiredChoice(IMPORTANCE_VALUES),
-    store_imp: requiredChoice(IMPORTANCE_VALUES),
-    parking_req: requiredChoice(REQUIREMENT_VALUES),
-    waiting_req: requiredChoice(REQUIREMENT_VALUES),
-    lunch_imp: requiredChoice(SALES_IMPORTANCE_VALUES),
-    night_imp: requiredChoice(SALES_IMPORTANCE_VALUES),
-    weekday_imp: requiredChoice(IMPORTANCE_VALUES),
-    weekend_imp: requiredChoice(IMPORTANCE_VALUES),
+    floor_range: optionalChoice(FLOOR_RANGE_VALUES),
+    sign_imp: optionalChoice(IMPORTANCE_VALUES),
+    store_imp: optionalChoice(IMPORTANCE_VALUES),
+    parking_req: optionalChoice(REQUIREMENT_VALUES),
+    waiting_req: optionalChoice(REQUIREMENT_VALUES),
+    lunch_imp: optionalChoice(SALES_IMPORTANCE_VALUES),
+    night_imp: optionalChoice(SALES_IMPORTANCE_VALUES),
+    weekday_imp: optionalChoice(IMPORTANCE_VALUES),
+    weekend_imp: optionalChoice(IMPORTANCE_VALUES),
   })
   // 두 값이 모두 숫자일 때만 비교한다(zod 3은 다른 칸이 실패해도 refine을 돌린다)
   .refine(
@@ -98,20 +99,20 @@ const toFormValues = (saved: BrandLocationStandardData): LocationFormValues => (
 });
 
 const toRequest = (values: LocationFormValues): UpdateBrandLocationStandardRequest => ({
-  district_01: values.district_01,
-  district_02: values.district_02,
-  district_03: values.district_03 && values.district_03 !== NO_DISTRICT ? values.district_03 : undefined,
-  min_rent: Number(values.min_rent),
-  max_rent: Number(values.max_rent),
-  floor_range: chosen(values.floor_range),
-  sign_imp: chosen(values.sign_imp),
-  store_imp: chosen(values.store_imp),
-  parking_req: chosen(values.parking_req),
-  waiting_req: chosen(values.waiting_req),
-  lunch_imp: chosen(values.lunch_imp),
-  night_imp: chosen(values.night_imp),
-  weekday_imp: chosen(values.weekday_imp),
-  weekend_imp: chosen(values.weekend_imp),
+  district_01: textOrNull(values.district_01),
+  district_02: textOrNull(values.district_02),
+  district_03: values.district_03 !== NO_DISTRICT ? textOrNull(values.district_03) : null,
+  min_rent: numberOrNull(values.min_rent),
+  max_rent: numberOrNull(values.max_rent),
+  floor_range: optionOrNull(values.floor_range),
+  sign_imp: optionOrNull(values.sign_imp),
+  store_imp: optionOrNull(values.store_imp),
+  parking_req: optionOrNull(values.parking_req),
+  waiting_req: optionOrNull(values.waiting_req),
+  lunch_imp: optionOrNull(values.lunch_imp),
+  night_imp: optionOrNull(values.night_imp),
+  weekday_imp: optionOrNull(values.weekday_imp),
+  weekend_imp: optionOrNull(values.weekend_imp),
 });
 
 /** 선호 상권 선택지 — 저장된 값이 목록 밖이면 덧붙여서 화면에 그대로 보이게 한다 */
@@ -176,14 +177,12 @@ export default function LocationCriteriaSection({ workspaceId }: LocationCriteri
           control={control}
           name="district_01"
           label="1차 선호 상권"
-          required
           options={districtOptions(getValues("district_01"))}
         />
         <FormSelect
           control={control}
           name="district_02"
           label="2차 선호 상권"
-          required
           options={districtOptions(getValues("district_02"))}
         />
         <FormSelect
@@ -208,7 +207,6 @@ export default function LocationCriteriaSection({ workspaceId }: LocationCriteri
               size="md"
               labelClassName="text-xs"
               label="허용 월 임대료 - 최소"
-              required
               placeholder="예: 9,000,000"
               className="pr-10"
               endAdornment={<Unit>원</Unit>}
@@ -227,7 +225,6 @@ export default function LocationCriteriaSection({ workspaceId }: LocationCriteri
               size="md"
               labelClassName="text-xs"
               label="허용 월 임대료 - 최대"
-              required
               placeholder="예: 12,000,000"
               className="pr-10"
               endAdornment={<Unit>원</Unit>}
@@ -245,21 +242,13 @@ export default function LocationCriteriaSection({ workspaceId }: LocationCriteri
           control={control}
           name="floor_range"
           label="허용 층수 범위"
-          required
           options={toOptions(FLOOR_RANGE_VALUES)}
         />
-        <FormSelect
-          control={control}
-          name="sign_imp"
-          label="간판 노출 중요도"
-          required
-          options={toOptions(IMPORTANCE_VALUES)}
-        />
+        <FormSelect control={control} name="sign_imp" label="간판 노출 중요도" options={toOptions(IMPORTANCE_VALUES)} />
         <FormSelect
           control={control}
           name="store_imp"
           label="매장 노출 중요도"
-          required
           options={toOptions(IMPORTANCE_VALUES)}
         />
       </div>
@@ -270,14 +259,12 @@ export default function LocationCriteriaSection({ workspaceId }: LocationCriteri
           control={control}
           name="parking_req"
           label="주차 필요 여부"
-          required
           options={toOptions(REQUIREMENT_VALUES)}
         />
         <FormSelect
           control={control}
           name="waiting_req"
           label="대기공간 필요 여부"
-          required
           options={toOptions(REQUIREMENT_VALUES)}
         />
       </div>
@@ -288,28 +275,24 @@ export default function LocationCriteriaSection({ workspaceId }: LocationCriteri
           control={control}
           name="lunch_imp"
           label="점심 매출 중요도"
-          required
           options={toOptions(SALES_IMPORTANCE_VALUES)}
         />
         <FormSelect
           control={control}
           name="night_imp"
           label="심야 매출 중요도"
-          required
           options={toOptions(SALES_IMPORTANCE_VALUES)}
         />
         <FormSelect
           control={control}
           name="weekday_imp"
           label="주중 매출 중요도"
-          required
           options={toOptions(IMPORTANCE_VALUES)}
         />
         <FormSelect
           control={control}
           name="weekend_imp"
           label="주말 매출 중요도"
-          required
           options={toOptions(IMPORTANCE_VALUES)}
         />
       </div>

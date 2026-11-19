@@ -30,7 +30,6 @@ export default function ContractPersonFields({
           size="md"
           labelClassName="text-xs"
           label={`${role} 이름 (한국어)`}
-          required
           placeholder={placeholders.name_ko}
           error={Boolean(errors.name_ko)}
           errorText={errors.name_ko?.message}
@@ -41,7 +40,6 @@ export default function ContractPersonFields({
           size="md"
           labelClassName="text-xs"
           label={`${role} 이름 (영어)`}
-          required
           placeholder={placeholders.name_en}
           error={Boolean(errors.name_en)}
           errorText={errors.name_en?.message}
@@ -52,7 +50,6 @@ export default function ContractPersonFields({
           size="md"
           labelClassName="text-xs"
           label={`${role} 직책`}
-          required
           placeholder={placeholders.position}
           error={Boolean(errors.position)}
           errorText={errors.position?.message}
@@ -67,7 +64,6 @@ export default function ContractPersonFields({
           size="md"
           labelClassName="text-xs"
           label={`${role} 이메일`}
-          required
           placeholder={placeholders.email}
           error={Boolean(errors.email)}
           errorText={errors.email?.message}

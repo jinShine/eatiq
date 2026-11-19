@@ -14,14 +14,15 @@ import { type BrandCommissionData, type UpdateBrandCommissionRequest } from "@se
 import useClearOnFormChange from "../../_hooks/useClearOnFormChange";
 import FormSelect from "../FormSelect";
 import { pickOption, toOptions } from "./IntroOptions";
-import { REQUIRED, chosen, requiredChoice, wonField } from "./formFields";
+import { numberOrNull, optionOrNull } from "./clearable";
+import { optionalChoice, wonField } from "./formFields";
 import { toNumberText } from "./numberText";
 import { ROYALTY_CALC_BASE_VALUES, ROYALTY_PAYMENT_CYCLE_VALUES } from "./policyOptions";
 
 /**
  * 수수료 및 정산 정책 정보 — PUT /commission. 폼 필드 이름은 저장 DTO와 같다. → BasicInfoSection 주석 참고
  *
- * 서버 규칙(400 응답으로 확인): 5개 모두 필수, 금액은 0 이상, 로열티 비율은 0~100%.
+ * 서버 규칙(400 응답으로 확인): 금액은 0 이상, 로열티 비율은 0~100%. 모두 선택 입력이다(2026-11-19).
  * 산정 기준(총매출·순매출)은 로열티 비율을 어느 매출에 곱할지이고, 비율과 고정 금액은 둘 다 받는다.
  * (예전 API는 산정 기준이 "비율/정액" 중 하나를 골라 한쪽 칸만 썼다 — 그 처리는 없앴다)
  */
@@ -29,14 +30,13 @@ const PERCENT = /^\d+(\.\d{1,2})?$/;
 
 const commissionSchema = z.object({
   franchise_fee: wonField(),
-  royalty_calc_base: requiredChoice(ROYALTY_CALC_BASE_VALUES),
+  royalty_calc_base: optionalChoice(ROYALTY_CALC_BASE_VALUES),
   royalty_rate: z
     .string()
-    .min(1, REQUIRED)
-    .regex(PERCENT, "소수 둘째 자리까지 숫자로 입력해주세요")
+    .refine(value => value === "" || PERCENT.test(value), "소수 둘째 자리까지 숫자로 입력해주세요")
     .refine(value => !PERCENT.test(value) || Number(value) <= 100, "100% 이하로 입력해주세요"),
   fixed_royalty: wonField(),
-  royalty_payment_cycle: requiredChoice(ROYALTY_PAYMENT_CYCLE_VALUES),
+  royalty_payment_cycle: optionalChoice(ROYALTY_PAYMENT_CYCLE_VALUES),
 });
 
 type CommissionFormValues = z.infer<typeof commissionSchema>;
@@ -57,12 +57,13 @@ const toFormValues = (saved: BrandCommissionData): CommissionFormValues => ({
   royalty_payment_cycle: pickOption(ROYALTY_PAYMENT_CYCLE_VALUES, saved.royalty_payment_cycle),
 });
 
+/** 폼 → 요청. 빈 칸은 null(지우기, clearable.ts) */
 const toRequest = (values: CommissionFormValues): UpdateBrandCommissionRequest => ({
-  franchise_fee: Number(values.franchise_fee),
-  royalty_calc_base: chosen(values.royalty_calc_base),
-  royalty_rate: Number(values.royalty_rate),
-  fixed_royalty: Number(values.fixed_royalty),
-  royalty_payment_cycle: chosen(values.royalty_payment_cycle),
+  franchise_fee: numberOrNull(values.franchise_fee),
+  royalty_calc_base: optionOrNull(values.royalty_calc_base),
+  royalty_rate: numberOrNull(values.royalty_rate),
+  fixed_royalty: numberOrNull(values.fixed_royalty),
+  royalty_payment_cycle: optionOrNull(values.royalty_payment_cycle),
 });
 
 const Unit = ({ children }: { children: string }) => <span className="text-text-tertiary text-sm">{children}</span>;
@@ -122,7 +123,6 @@ export default function FeeSection({ workspaceId }: FeeSectionProps) {
               size="md"
               labelClassName="text-xs"
               label="가맹비 (원화 기준)"
-              required
               placeholder="예: 50,000,000"
               className="pr-10"
               endAdornment={<Unit>원</Unit>}
@@ -136,7 +136,6 @@ export default function FeeSection({ workspaceId }: FeeSectionProps) {
           control={control}
           name="royalty_calc_base"
           label="매출 대비 로열티 산정 기준"
-          required
           options={toOptions(ROYALTY_CALC_BASE_VALUES)}
         />
         <Input
@@ -144,7 +143,6 @@ export default function FeeSection({ workspaceId }: FeeSectionProps) {
           size="md"
           labelClassName="text-xs"
           label="매출 대비 로열티 비율"
-          required
           placeholder="예: 5"
           inputMode="decimal"
           className="pr-10"
@@ -165,7 +163,6 @@ export default function FeeSection({ workspaceId }: FeeSectionProps) {
               size="md"
               labelClassName="text-xs"
               label="고정 로열티 금액 (원화 기준)"
-              required
               placeholder="예: 30,000,000"
               className="pr-10"
               endAdornment={<Unit>원</Unit>}
@@ -179,7 +176,6 @@ export default function FeeSection({ workspaceId }: FeeSectionProps) {
           control={control}
           name="royalty_payment_cycle"
           label="지급 주기"
-          required
           options={toOptions(ROYALTY_PAYMENT_CYCLE_VALUES)}
         />
       </div>

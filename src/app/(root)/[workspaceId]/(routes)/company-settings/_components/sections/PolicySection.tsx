@@ -14,7 +14,8 @@ import { type BrandContractPolicyData, type UpdateBrandContractPolicyRequest } f
 import useClearOnFormChange from "../../_hooks/useClearOnFormChange";
 import FormSelect from "../FormSelect";
 import { pickOption, toOptions } from "./IntroOptions";
-import { chosen, optionalChoice, requiredChoice } from "./formFields";
+import { optionOrNull } from "./clearable";
+import { optionalChoice } from "./formFields";
 import {
   CONTRACT_TYPE_VALUES,
   EXCLUSIVITY_VALUES,
@@ -29,19 +30,19 @@ import {
 /**
  * 계약 정책 정보 — PUT /contract-policy. 폼 필드 이름은 저장 DTO와 같다. → BasicInfoSection 주석 참고
  *
- * 서버 필수는 정책 6개다. 진출 목표 국가·선호 계약 방식은 서버에서 선택이지만
- * 완성도 API는 필수(진출 희망 조건)로 센다 — 저장은 막지 않고 저니 패널이 안내한다.
+ * 모두 선택 입력이다(2026-11-19 서버 필수 해제). 완성도 API가 세는 항목은 저장을 막지 않고 저니 패널이 안내한다.
+ * 빈 칸은 null로 보내 지운다(clearable.ts) — 단 진출 목표 국가는 아래 toRequest 주석 참고.
  * 진출 목표 국가는 시안에 없지만 저장 API·완성도에 있어 추가했다(디자인 확인 요청).
  */
 const policySchema = z.object({
   target_country: optionalChoice(TARGET_COUNTRY_VALUES),
   preferred_contract_type: optionalChoice(CONTRACT_TYPE_VALUES),
-  exclusivity_level: requiredChoice(EXCLUSIVITY_VALUES),
-  menu_localization_level: requiredChoice(MENU_LOCALIZATION_VALUES),
-  interior_standard_policy: requiredChoice(INTERIOR_STANDARD_VALUES),
-  supply_chain_policy: requiredChoice(SUPPLY_CHAIN_VALUES),
-  trademark_compliance_level: requiredChoice(TRADEMARK_COMPLIANCE_VALUES),
-  manual_compliance_level: requiredChoice(MANUAL_COMPLIANCE_VALUES),
+  exclusivity_level: optionalChoice(EXCLUSIVITY_VALUES),
+  menu_localization_level: optionalChoice(MENU_LOCALIZATION_VALUES),
+  interior_standard_policy: optionalChoice(INTERIOR_STANDARD_VALUES),
+  supply_chain_policy: optionalChoice(SUPPLY_CHAIN_VALUES),
+  trademark_compliance_level: optionalChoice(TRADEMARK_COMPLIANCE_VALUES),
+  manual_compliance_level: optionalChoice(MANUAL_COMPLIANCE_VALUES),
 });
 
 type PolicyFormValues = z.infer<typeof policySchema>;
@@ -69,15 +70,23 @@ const toFormValues = (saved: BrandContractPolicyData): PolicyFormValues => ({
   manual_compliance_level: pickOption(MANUAL_COMPLIANCE_VALUES, saved.manual_compliance_level),
 });
 
-const toRequest = (values: PolicyFormValues): UpdateBrandContractPolicyRequest => ({
-  target_country: values.target_country || undefined,
-  preferred_contract_type: values.preferred_contract_type || undefined,
-  exclusivity_level: chosen(values.exclusivity_level),
-  menu_localization_level: chosen(values.menu_localization_level),
-  interior_standard_policy: chosen(values.interior_standard_policy),
-  supply_chain_policy: chosen(values.supply_chain_policy),
-  trademark_compliance_level: chosen(values.trademark_compliance_level),
-  manual_compliance_level: chosen(values.manual_compliance_level),
+/**
+ * 폼 → 요청. 빈 칸은 null(지우기).
+ * 진출 목표 국가는 예외 — 스펙과 달리 배열로 저장된 워크스페이스(127)가 있고, 그 값은 목록에 없어 빈칸으로 보인다.
+ * 빈칸을 null로 보내면 사용자가 손대지 않은 그 배열이 지워져서, 저장값이 글자일 때만 지운다
+ */
+const toRequest = (
+  values: PolicyFormValues,
+  saved?: BrandContractPolicyData | null,
+): UpdateBrandContractPolicyRequest => ({
+  target_country: values.target_country || (typeof saved?.target_country === "string" ? null : undefined),
+  preferred_contract_type: optionOrNull(values.preferred_contract_type),
+  exclusivity_level: optionOrNull(values.exclusivity_level),
+  menu_localization_level: optionOrNull(values.menu_localization_level),
+  interior_standard_policy: optionOrNull(values.interior_standard_policy),
+  supply_chain_policy: optionOrNull(values.supply_chain_policy),
+  trademark_compliance_level: optionOrNull(values.trademark_compliance_level),
+  manual_compliance_level: optionOrNull(values.manual_compliance_level),
 });
 
 type PolicySectionProps = {
@@ -106,7 +115,7 @@ export default function PolicySection({ workspaceId }: PolicySectionProps) {
   useClearOnFormChange(watch, clearSaveError);
 
   const onSubmit = (values: PolicyFormValues) => {
-    save(toRequest(values), {
+    save(toRequest(values, saved), {
       onSuccess: response => {
         reset(response ? toFormValues(response.brand_contract_policy) : values, { keepFieldsRef: true });
         Toast.success("계약 정책 정보를 저장했어요.");
@@ -146,21 +155,18 @@ export default function PolicySection({ workspaceId }: PolicySectionProps) {
           control={control}
           name="exclusivity_level"
           label="독점권 요구 수준"
-          required
           options={toOptions(EXCLUSIVITY_VALUES)}
         />
         <FormSelect
           control={control}
           name="menu_localization_level"
           label="메뉴 현지화 요구 수준"
-          required
           options={toOptions(MENU_LOCALIZATION_VALUES)}
         />
         <FormSelect
           control={control}
           name="interior_standard_policy"
           label="인테리어 기준 선호"
-          required
           options={toOptions(INTERIOR_STANDARD_VALUES)}
         />
       </div>
@@ -169,21 +175,18 @@ export default function PolicySection({ workspaceId }: PolicySectionProps) {
           control={control}
           name="supply_chain_policy"
           label="자체 식자재 공급망"
-          required
           options={toOptions(SUPPLY_CHAIN_VALUES)}
         />
         <FormSelect
           control={control}
           name="trademark_compliance_level"
           label="상표 및 브랜드 사용 기준"
-          required
           options={toOptions(TRADEMARK_COMPLIANCE_VALUES)}
         />
         <FormSelect
           control={control}
           name="manual_compliance_level"
           label="운영 매뉴얼 준수 수준"
-          required
           options={toOptions(MANUAL_COMPLIANCE_VALUES)}
         />
       </div>

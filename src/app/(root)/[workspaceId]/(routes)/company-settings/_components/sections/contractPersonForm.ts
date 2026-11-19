@@ -2,21 +2,22 @@ import z from "zod";
 
 import { type BrandContractData, type BrandSignatureData } from "@services/api/brand/brand.type";
 
+import { textOrNull } from "./clearable";
+
 /**
  * 계약 담당자(PUT /contract)·서명권자(PUT /signature) 공통 폼.
- * 두 API의 필드·검증이 같다(서버 400 응답으로 확인): 4개 모두 필수,
- * 이름 한국어 50자·영어 100자, 직책 50자, 이메일 100자 + 형식.
+ * 두 API의 필드·검증이 같다(서버 400 응답으로 확인): 이름 한국어 50자·영어 100자, 직책 50자, 이메일 100자 + 형식.
+ * 4개 모두 선택 입력이다(2026-11-19). 빈 칸은 null로 보내 지운다(clearable.ts).
  */
 export const contractPersonSchema = z.object({
-  name_ko: z.string().trim().min(1, "이름(한국어)을 입력해주세요").max(50, "50자 이내로 입력해주세요"),
-  name_en: z.string().trim().min(1, "이름(영어)을 입력해주세요").max(100, "100자 이내로 입력해주세요"),
-  position: z.string().trim().min(1, "직책을 입력해주세요").max(50, "50자 이내로 입력해주세요"),
+  name_ko: z.string().trim().max(50, "50자 이내로 입력해주세요"),
+  name_en: z.string().trim().max(100, "100자 이내로 입력해주세요"),
+  position: z.string().trim().max(50, "50자 이내로 입력해주세요"),
   email: z
     .string()
     .trim()
-    .min(1, "이메일을 입력해주세요")
     .max(100, "100자 이내로 입력해주세요")
-    .email("올바른 이메일 형식이 아니에요"),
+    .refine(value => !value || z.string().email().safeParse(value).success, "올바른 이메일 형식이 아니에요"),
 });
 
 export type ContractPersonFormValues = z.infer<typeof contractPersonSchema>;
@@ -33,8 +34,8 @@ export const toContractPersonFormValues = (saved: ContractPersonData): ContractP
 });
 
 export const toContractPersonRequest = (values: ContractPersonFormValues) => ({
-  name_ko: values.name_ko.trim(),
-  name_en: values.name_en.trim(),
-  position: values.position.trim(),
-  email: values.email.trim(),
+  name_ko: textOrNull(values.name_ko),
+  name_en: textOrNull(values.name_en),
+  position: textOrNull(values.position),
+  email: textOrNull(values.email),
 });

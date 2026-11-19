@@ -12,13 +12,13 @@ import { useBrandSection, useUpdateBrandSizeCriteria } from "@services/api/brand
 import { type BrandSizeCriteriaData, type UpdateBrandSizeCriteriaRequest } from "@services/api/brand/brand.type";
 
 import useClearOnFormChange from "../../_hooks/useClearOnFormChange";
-import { REQUIRED } from "./formFields";
+import { numberOrNull } from "./clearable";
 import { toNumberText } from "./numberText";
 
 /**
  * 매장 크기 조건 — PUT /size-criteria. 폼 필드 이름은 저장 DTO와 같다. → BasicInfoSection 주석 참고
  *
- * 서버 규칙(400 응답으로 확인): 4개 모두 필수, 0 이상 숫자. 단위는 스펙·시안 모두 ㎡·m.
+ * 서버 규칙(400 응답으로 확인): 0 이상 숫자. 모두 선택 입력이다(2026-11-19). 단위는 스펙·시안 모두 ㎡·m.
  * 서버는 최소 > 최대 평형도 저장해서 화면에서 막는다.
  * 상한 — 서버에 없다. 평형 33,000㎡(약 1만 평, 운영 현황 평균 평형 상한과 같은 규모), 전면 폭 1,000m
  */
@@ -27,8 +27,7 @@ const DECIMAL = /^\d+(\.\d)?$/;
 const sizeField = (max: number, label: string) =>
   z
     .string()
-    .min(1, REQUIRED)
-    .regex(DECIMAL, "소수 첫째 자리까지 숫자로 입력해주세요")
+    .refine(value => value === "" || DECIMAL.test(value), "소수 첫째 자리까지 숫자로 입력해주세요")
     .refine(value => !DECIMAL.test(value) || Number(value) <= max, `${label} 이하로 입력해주세요`);
 
 const AREA = { max: 33_000, label: "33,000㎡" };
@@ -58,11 +57,12 @@ const toFormValues = (saved: BrandSizeCriteriaData): SizeFormValues => ({
   min_front_w: toNumberText(saved.min_front_w),
 });
 
+/** 폼 → 요청. 빈 칸은 null(지우기, clearable.ts) */
 const toRequest = (values: SizeFormValues): UpdateBrandSizeCriteriaRequest => ({
-  rec_area: Number(values.rec_area),
-  min_area: Number(values.min_area),
-  max_area: Number(values.max_area),
-  min_front_w: Number(values.min_front_w),
+  rec_area: numberOrNull(values.rec_area),
+  min_area: numberOrNull(values.min_area),
+  max_area: numberOrNull(values.max_area),
+  min_front_w: numberOrNull(values.min_front_w),
 });
 
 const Unit = ({ children }: { children: string }) => <span className="text-text-tertiary text-sm">{children}</span>;
@@ -117,7 +117,6 @@ export default function StoreSizeSection({ workspaceId }: StoreSizeSectionProps)
           size="md"
           labelClassName="text-xs"
           label="권장 매장 평형"
-          required
           placeholder="예: 165"
           inputMode="decimal"
           className="pr-10"
@@ -131,7 +130,6 @@ export default function StoreSizeSection({ workspaceId }: StoreSizeSectionProps)
           size="md"
           labelClassName="text-xs"
           label="선호 매장 평형 - 최소"
-          required
           placeholder="예: 99"
           inputMode="decimal"
           className="pr-10"
@@ -146,7 +144,6 @@ export default function StoreSizeSection({ workspaceId }: StoreSizeSectionProps)
           size="md"
           labelClassName="text-xs"
           label="선호 매장 평형 - 최대"
-          required
           placeholder="예: 198"
           inputMode="decimal"
           className="pr-10"
@@ -163,7 +160,6 @@ export default function StoreSizeSection({ workspaceId }: StoreSizeSectionProps)
           size="md"
           labelClassName="text-xs"
           label="최소 전면 폭"
-          required
           placeholder="예: 6"
           inputMode="decimal"
           className="pr-10"

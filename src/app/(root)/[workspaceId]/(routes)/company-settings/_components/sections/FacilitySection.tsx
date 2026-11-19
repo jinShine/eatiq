@@ -14,19 +14,20 @@ import { type BrandFacilityReqData, type UpdateBrandFacilityReqRequest } from "@
 import useClearOnFormChange from "../../_hooks/useClearOnFormChange";
 import FormSelect from "../FormSelect";
 import { pickOption, toOptions } from "./IntroOptions";
-import { chosen, requiredChoice } from "./formFields";
+import { optionOrNull } from "./clearable";
+import { optionalChoice } from "./formFields";
 import { REQUIREMENT_VALUES } from "./policyOptions";
 
 /**
  * 매장 시설 필수 조건 — PUT /facility-req. 폼 필드 이름은 저장 DTO와 같다. → BasicInfoSection 주석 참고
- * 서버 규칙: 5개 모두 필수(필수·선호·불필요).
+ * 서버 규칙: 선택지는 필수·선호·불필요. 모두 선택 입력이다(2026-11-19).
  */
 const facilitySchema = z.object({
-  gas_req: requiredChoice(REQUIREMENT_VALUES),
-  plumbing_req: requiredChoice(REQUIREMENT_VALUES),
-  direct_fire_req: requiredChoice(REQUIREMENT_VALUES),
-  vent_req: requiredChoice(REQUIREMENT_VALUES),
-  cold_storage_req: requiredChoice(REQUIREMENT_VALUES),
+  gas_req: optionalChoice(REQUIREMENT_VALUES),
+  plumbing_req: optionalChoice(REQUIREMENT_VALUES),
+  direct_fire_req: optionalChoice(REQUIREMENT_VALUES),
+  vent_req: optionalChoice(REQUIREMENT_VALUES),
+  cold_storage_req: optionalChoice(REQUIREMENT_VALUES),
 });
 
 type FacilityFormValues = z.infer<typeof facilitySchema>;
@@ -48,11 +49,11 @@ const toFormValues = (saved: BrandFacilityReqData): FacilityFormValues => ({
 });
 
 const toRequest = (values: FacilityFormValues): UpdateBrandFacilityReqRequest => ({
-  gas_req: chosen(values.gas_req),
-  plumbing_req: chosen(values.plumbing_req),
-  direct_fire_req: chosen(values.direct_fire_req),
-  vent_req: chosen(values.vent_req),
-  cold_storage_req: chosen(values.cold_storage_req),
+  gas_req: optionOrNull(values.gas_req),
+  plumbing_req: optionOrNull(values.plumbing_req),
+  direct_fire_req: optionOrNull(values.direct_fire_req),
+  vent_req: optionOrNull(values.vent_req),
+  cold_storage_req: optionOrNull(values.cold_storage_req),
 });
 
 type FacilitySectionProps = {
@@ -102,13 +103,13 @@ export default function FacilitySection({ workspaceId }: FacilitySectionProps) {
       onSubmit={handleSubmit(onSubmit)}
     >
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-        <FormSelect control={control} name="gas_req" label="가스 시설" required options={options} />
-        <FormSelect control={control} name="plumbing_req" label="급배수" required options={options} />
-        <FormSelect control={control} name="direct_fire_req" label="직화 시설" required options={options} />
+        <FormSelect control={control} name="gas_req" label="가스 시설" options={options} />
+        <FormSelect control={control} name="plumbing_req" label="급배수" options={options} />
+        <FormSelect control={control} name="direct_fire_req" label="직화 시설" options={options} />
       </div>
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-        <FormSelect control={control} name="vent_req" label="배기 시설" required options={options} />
-        <FormSelect control={control} name="cold_storage_req" label="냉장/냉동 저장공간" required options={options} />
+        <FormSelect control={control} name="vent_req" label="배기 시설" options={options} />
+        <FormSelect control={control} name="cold_storage_req" label="냉장/냉동 저장공간" options={options} />
       </div>
     </SettingsSection>
   );

@@ -11,7 +11,7 @@ export const SELECT_REQUIRED = "선택해주세요";
 export const optionalChoice = <T extends readonly [string, ...string[]]>(values: T) =>
   z.union([z.enum(values), z.literal("")], { errorMap: () => ({ message: "목록에서 다시 선택해주세요" }) });
 
-/** 필수 선택 항목 */
+/** 필수 선택 항목 — 바이어 설정용. 브랜드 설정은 2026-11-19부터 모두 선택이다 */
 export const requiredChoice = <T extends readonly [string, ...string[]]>(values: T) =>
   optionalChoice(values).refine(value => value !== "", SELECT_REQUIRED);
 
@@ -26,10 +26,9 @@ export const INTEGER = /^\d+$/;
  */
 export const MAX_WON = { value: 10_000_000_000_000, label: "10조 원" };
 
-/** 원 단위 금액 칸(쉼표 입력) — 필수, 0 이상 정수, 상한 */
+/** 원 단위 금액 칸(쉼표 입력) — 비워 둘 수 있다(브랜드 설정 2026-11-19). 적었으면 0 이상 정수, 상한 */
 export const wonField = () =>
   z
     .string()
-    .min(1, REQUIRED)
-    .regex(INTEGER, "0 이상의 정수를 입력해주세요")
+    .refine(value => value === "" || INTEGER.test(value), "0 이상의 정수를 입력해주세요")
     .refine(value => !INTEGER.test(value) || Number(value) <= MAX_WON.value, `${MAX_WON.label} 이하로 입력해주세요`);
