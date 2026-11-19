@@ -19,10 +19,10 @@ import { toNumberText } from "./numberText";
 /**
  * 연도별 실적 (피그마 「Card · 연도별 실적」 2419:1040).
  *
- * 저장은 운영 현황과 같은 PUT …/brand/status의 yearly_sales로 한다(기획 합의: 가맹점 수·연평균 매출·평당 연매출만).
- * PUT이라 운영 현황 필수값을 저장된 그대로 함께 보낸다. 운영 현황을 한 번도 저장하지 않았으면 이 카드도 저장할 수 없다.
- * yearly_sales가 통째로 바뀌는지 연도별로 합쳐지는지 스펙에 없어서, 어느 쪽이든 기존 값이 지워지지 않게
- * 이 카드에 없는 항목(신규 개점·계약 종료·계약 해지)과 범위 밖 연도는 저장된 값을 그대로 실어 보낸다.
+ * 저장은 운영 현황과 같은 PUT …/brand/status에 yearly_sales만 보낸다(기획 합의: 가맹점 수·연평균 매출·평당 연매출).
+ * 서버는 보내지 않은 필드를 유지하지만(2026-11-19), yearly_sales는 배열째 바꾼다 — 보낸 연도만 남고
+ * 한 해 안에서 빠진 항목은 비워진다(실측). 그래서 이 카드에 없는 항목(신규 개점·계약 종료·계약 해지)과
+ * 범위 밖 연도는 저장된 값을 그대로 실어 보낸다.
  * 공정위 정보공개서 값 자동 채움·잠금도 나중 작업이다 — 지금은 모든 칸을 직접 입력한다.
  */
 
@@ -70,25 +70,10 @@ const cellField = ({ value, label }: (typeof ROWS)[number]["max"]) =>
     .refine(input => input === "" || INTEGER.test(input), "0 이상의 정수를 입력해주세요")
     .refine(input => !INTEGER.test(input) || Number(input) <= value, `${label} 이하로 입력해주세요`);
 
-/** 서버는 한 해를 보낼 때 매출 두 칸을 필수로 받는다(가맹점 수만 선택, 2026-11-18). 그래서 화면에서 함께 채우게 막는다 */
-const SALES_FIELDS = ["avg_annual_sales", "sales_per_area"] as const satisfies readonly RowName[];
-
-const yearSchema = z
-  .object(
-    Object.fromEntries(ROWS.map(row => [row.name, cellField(row.max)])) as Record<
-      RowName,
-      ReturnType<typeof cellField>
-    >,
-  )
-  .superRefine((values, ctx) => {
-    // 세 칸이 모두 비면 「그해 값 없음」이라 보내지 않는다 — 하나라도 적었을 때만 검사한다
-    if (ROWS.every(row => values[row.name] === "")) {
-      return;
-    }
-    SALES_FIELDS.filter(field => values[field] === "").forEach(field =>
-      ctx.addIssue({ code: z.ZodIssueCode.custom, path: [field], message: "매출 두 칸은 함께 입력해 주세요" }),
-    );
-  });
+// 세 칸 모두 선택 입력이다(2026-11-19 서버 필수 해제). 한 해에 아는 값만 적어도 된다
+const yearSchema = z.object(
+  Object.fromEntries(ROWS.map(row => [row.name, cellField(row.max)])) as Record<RowName, ReturnType<typeof cellField>>,
+);
 
 /** 키에 「y」를 붙인다 — 「2021」처럼 숫자만 있는 키는 RHF가 배열 위치로 읽는다 */
 const yearKey = (year: number) => `y${year}` as const;
@@ -108,22 +93,37 @@ const EMPTY_YEAR: YearValues = { franchise_count: "", avg_annual_sales: "", sale
 /** 원 → 만 원 문자열. 화면은 정수만 받아 반올림한다(저장할 때 바뀌지 않은 칸은 원래 원 값을 보낸다) */
 const toManwonText = (won: number) => String(Math.round(won / MANWON));
 
-/** 만 원 문자열 → 원. 반올림해 보여 준 값을 그대로 두었으면 원래 값을 보내 원 단위 끝자리를 지키지 않는다 */
-const toWon = (text: string, original?: number | null) =>
-  original !== undefined && original !== null && toManwonText(original) === text ? original : Number(text) * MANWON;
+/**
+ * 만 원 문자열 → 원. 반올림해 보여 준 값을 그대로 두었으면 원래 값을 보내 원 단위 끝자리를 지킨다.
+ * 빈칸은 undefined — 배열째 바뀌는 yearly_sales 안에서는 빠진 항목이 비워진다
+ */
+const toWon = (text: string, original?: number | null) => {
+  if (text === "") {
+    return undefined;
+  }
+  return original !== undefined && original !== null && toManwonText(original) === text
+    ? original
+    : Number(text) * MANWON;
+};
+
+/** 저장된 숫자 → 요청 값. 비어(null) 있으면 뺀다 */
+const keepNumber = (value: number | null | undefined) => (value === null ? undefined : value);
 
 type SavedYearly = NonNullable<BrandStatusData["yearly_sales"]>[number];
 type YearlyRequest = NonNullable<UpdateBrandStatusRequest["yearly_sales"]>[number];
 
-/** 이 카드에 없는 항목 — 저장된 값이 있으면 그대로 실어 보낸다(null은 서버가 받지 않아 뺀다) */
+/** 이 카드에 없는 항목 — 저장된 값을 그대로 실어 보낸다(빠뜨리면 배열째 바뀌며 지워진다) */
 const keepOtherFields = (item?: SavedYearly) => ({
-  ...(item?.new_open != null && { new_open: item.new_open }),
-  ...(item?.contract_end != null && { contract_end: item.contract_end }),
-  ...(item?.contract_cancel != null && { contract_cancel: item.contract_cancel }),
+  new_open: keepNumber(item?.new_open),
+  contract_end: keepNumber(item?.contract_end),
+  contract_cancel: keepNumber(item?.contract_cancel),
 });
 
-const toYearlyRequest = (values: YearlyFormValues, saved: BrandStatusData): YearlyRequest[] => {
-  const savedItems = saved.yearly_sales ?? [];
+const toYearlyRequest = (values: YearlyFormValues, saved?: BrandStatusData | null): YearlyRequest[] => {
+  // 연도가 빈 항목은 어느 해인지 알 수 없어 다루지 않는다
+  const savedItems = (saved?.yearly_sales ?? []).filter(
+    (item): item is SavedYearly & { year: number } => item.year != null,
+  );
   const byYear = new Map(savedItems.map(item => [item.year, item]));
 
   const inRange = YEARS.flatMap(year => {
@@ -138,7 +138,7 @@ const toYearlyRequest = (values: YearlyFormValues, saved: BrandStatusData): Year
         year,
         avg_annual_sales: toWon(row.avg_annual_sales, prev?.avg_annual_sales),
         sales_per_area: toWon(row.sales_per_area, prev?.sales_per_area),
-        ...(row.franchise_count !== "" && { franchise_count: Number(row.franchise_count) }),
+        franchise_count: row.franchise_count === "" ? undefined : Number(row.franchise_count),
         ...keepOtherFields(prev),
       },
     ];
@@ -149,26 +149,17 @@ const toYearlyRequest = (values: YearlyFormValues, saved: BrandStatusData): Year
     .filter(item => !YEARS.includes(item.year))
     .map(item => ({
       year: item.year,
-      avg_annual_sales: item.avg_annual_sales,
-      sales_per_area: item.sales_per_area,
-      ...(item.franchise_count != null && { franchise_count: item.franchise_count }),
+      avg_annual_sales: keepNumber(item.avg_annual_sales),
+      sales_per_area: keepNumber(item.sales_per_area),
+      franchise_count: keepNumber(item.franchise_count),
       ...keepOtherFields(item),
     }));
 
   return [...outOfRange, ...inRange].sort((a, b) => a.year - b.year);
 };
 
-/** 운영 현황 필수값은 저장된 그대로 — 이 카드는 yearly_sales만 바꾼다 */
-const toRequest = (values: YearlyFormValues, saved: BrandStatusData): UpdateBrandStatusRequest => ({
-  domestic_store_total_cnt: saved.domestic_store_total_cnt,
-  domestic_store_direct_cnt: saved.domestic_store_direct_cnt,
-  overseas_store_total_cnt: saved.overseas_store_total_cnt,
-  avg_monthly_sales: saved.avg_monthly_sales,
-  avg_cost_per_customer: saved.avg_cost_per_customer,
-  avg_store_area: saved.avg_store_area,
-  avg_seat_cnt: saved.avg_seat_cnt,
-  ...(saved.target_audience && { target_audience: saved.target_audience }),
-  ...(saved.usage_context && { usage_context: saved.usage_context }),
+/** yearly_sales만 보낸다 — 운영 현황 필드는 보내지 않으면 서버가 그대로 둔다 */
+const toRequest = (values: YearlyFormValues, saved?: BrandStatusData | null): UpdateBrandStatusRequest => ({
   yearly_sales: toYearlyRequest(values, saved),
 });
 
@@ -182,8 +173,8 @@ const toFormValues = (saved?: BrandStatusData | null): YearlyFormValues => {
           ? {
               // 가맹점 수는 선택 항목이라 비어(null) 올 수 있다
               franchise_count: toNumberText(item.franchise_count),
-              avg_annual_sales: toManwonText(item.avg_annual_sales),
-              sales_per_area: toManwonText(item.sales_per_area),
+              avg_annual_sales: item.avg_annual_sales == null ? "" : toManwonText(item.avg_annual_sales),
+              sales_per_area: item.sales_per_area == null ? "" : toManwonText(item.sales_per_area),
             }
           : EMPTY_YEAR;
         return [yearKey(year), values];
@@ -235,7 +226,6 @@ export default function YearlyPerformanceSection({ workspaceId }: YearlyPerforma
 
   const {
     control,
-    trigger,
     reset,
     watch,
     handleSubmit,
@@ -249,14 +239,7 @@ export default function YearlyPerformanceSection({ workspaceId }: YearlyPerforma
 
   useClearOnFormChange(watch, clearSaveError);
 
-  // 운영 현황 필수값이 없으면 PUT을 만들 수 없다 — 운영 현황을 먼저 저장해야 한다
-  // (불러오는 중엔 undefined라 문구를 띄우지 않는다. null이면 저장된 적이 없다)
-  const missingStatusMessage = saved === null ? "운영 현황을 먼저 저장해 주세요" : null;
-
   const onSubmit = (values: YearlyFormValues) => {
-    if (!saved) {
-      return;
-    }
     updateBrandStatus(toRequest(values, saved), {
       onSuccess: response => {
         // 서버가 저장한 모양으로 폼을 맞춘다(목 모드는 보낸 값). 이걸 해야 dirty가 풀린다
@@ -289,9 +272,9 @@ export default function YearlyPerformanceSection({ workspaceId }: YearlyPerforma
     <SettingsSection
       title="연도별 실적"
       description="가맹점 수와 가맹점 한 곳의 연평균 매출을 연도별로 적어 주세요"
-      isDirty={isDirty && !missingStatusMessage}
+      isDirty={isDirty}
       isPending={isPending}
-      errorMessage={missingStatusMessage ?? error?.message}
+      errorMessage={error?.message}
       onSubmit={handleSubmit(onSubmit, onInvalid)}
     >
       {/* 좁은 화면에선 표를 옆으로 넘겨 본다. 항목 이름 칸은 왼쪽에 붙여 둔다.
@@ -356,12 +339,6 @@ export default function YearlyPerformanceSection({ workspaceId }: YearlyPerforma
                             className="h-10 rounded-lg bg-white text-center font-medium tracking-[-0.7px] placeholder:text-gray-300"
                             error={Boolean(message)}
                             {...field}
-                            // 한 칸을 떠날 때 그해 세 칸을 함께 검사한다 — 가맹점 수만 적고 넘어가면 매출 칸에 바로 알린다.
-                            // 입력 중(onChange)에 하면 아직 안 적은 옆 칸까지 빨개져 성가시다
-                            onBlur={() => {
-                              field.onBlur();
-                              void trigger(ROWS.map(item => `years.${yearKey(year)}.${item.name}` as const));
-                            }}
                           />
                         )}
                       />

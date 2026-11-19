@@ -1088,9 +1088,17 @@ export interface paths {
     };
     get?: never;
     /**
-     * 🔄 [UPDATE 26.10.06] 브랜드 기본 정보 입력 및 업데이트 (런칭 연도 범위 확장)
-     * @description ### 📝 최근 업데이트 이력 (2026.10.06)
+     * 🔄 [UPDATE 26.11.19] 브랜드 기본 정보 입력 및 업데이트 (전체 Body 파라미터 선택 입력 전환)
+     * @description ### 📝 최근 업데이트 이력 (2026.11.19)
+     *     - **요청 파라미터(Body) 전체 선택 입력(Optional) 전환**: 모든 Request Body 필드를 선택 입력으로 변경하였으며, 미전달된 필드는 기존 저장된 값이 유지됩니다.
+     *
+     *     <details>
+     *     <summary><b>📂 이전 업데이트 이력 보기 (클릭하여 펼치기)</b></summary>
+     *
+     *     ### 📝 이전 업데이트 이력 (2026.10.06)
      *     - **런칭 연도(`launch_year`) 범위 변경**: 최소 -1조(-1,000,000,000,000) ~ 최대 1조(1,000,000,000,000)로 허용 범위를 확장하였습니다.
+     *
+     *     </details>
      *
      *     ---
      *
@@ -1104,8 +1112,8 @@ export interface paths {
      *     1. **호출 시점**:
      *        - 브랜드 프로필 관리 페이지 내 [기본 정보] 폼 저장/수정 완료 시.
      *     2. **요청 파라미터 (Body)**:
-     *        - `brand_name_ko` (string, 필수): 브랜드 국문명
-     *        - `brand_name_en` (string, 필수): 브랜드 영문명
+     *        - `brand_name_ko` (string, 선택): 브랜드 국문명
+     *        - `brand_name_en` (string, 선택): 브랜드 영문명
      *        - `launch_year` (number, 선택): 런칭 연도 (-1조 ~ 1조)
      *        - `ceo_name_ko`, `ceo_name_en`, `website_url` 등 선택 항목 전달.
      *     3. **처리 팁**:
@@ -1128,8 +1136,11 @@ export interface paths {
     };
     get?: never;
     /**
-     * 🔄 [UPDATE 26.11.18] 브랜드 운영 현황 입력 및 업데이트 (연도별 매출 배열 추가 및 파라미터 변경)
-     * @description ### 📝 최근 업데이트 이력 (2026.11.18)
+     * 🔄 [UPDATE 26.11.19] 브랜드 운영 현황 입력 및 업데이트 (전체 Body 파라미터 선택 입력 전환)
+     * @description ### 📝 최근 업데이트 이력 (2026.11.19)
+     *     - **요청 파라미터(Body) 전체 선택 입력(Optional) 전환**: `yearly_sales` 내부 필드를 포함한 모든 Request Body 필드를 선택 입력으로 변경하였으며, 미전달된 필드는 기존 저장된 값이 유지됩니다.
+     *
+     *     ### 📝 이전 업데이트 이력 (2026.11.18)
      *     - **연도별 매출 현황(`yearly_sales`) 파라미터 스펙 변경**:
      *       - 요청 항목에서 `avg_monthly_sales`를 제거했습니다. (연평균 매출 `avg_annual_sales` 기준으로 월평균 매출이 자동 계산됩니다.)
      *       - `franchise_count`, `new_open`, `contract_end`, `contract_cancel` 4개 필드를 선택 입력(Optional)으로 변경했습니다.
@@ -1180,8 +1191,13 @@ export interface paths {
     };
     get?: never;
     /**
-     * 브랜드 소개 정보 입력 및 업데이트
-     * @description ### 📌 상세 역할 및 개요
+     * 🔄 [UPDATE 26.11.19] 브랜드 소개 정보 입력 및 업데이트 (전체 Body 파라미터 선택 입력 전환)
+     * @description ### 📝 최근 업데이트 이력 (2026.11.19)
+     *     - **요청 파라미터(Body) 전체 선택 입력(Optional) 전환**: 모든 Request Body 필드를 선택 입력으로 변경하였으며, 미전달된 필드는 기존 저장된 값이 유지됩니다.
+     *
+     *     ---
+     *
+     *     ### 📌 상세 역할 및 개요
      *     - 브랜드의 한줄 소개, 상세 소개, 업종 카테고리, 가격대 포지셔닝, 핵심 차별점(`key_point`)을 등록 또는 수정합니다.
      *     - `category` 필드는 `etq_workspace_brand.category` 컬럼과도 자동 동기화되어 검색 및 필터에 즉시 반영됩니다.
      *     - 요청자는 해당 워크스페이스에 소속된 **활성 멤버**여야 합니다.
@@ -1192,11 +1208,11 @@ export interface paths {
      *     1. **호출 시점**:
      *        - 브랜드 프로필 관리 페이지 내 [소개/스토리] 폼 저장 완료 시.
      *     2. **요청 파라미터 (Body)**:
-     *        - `short_intro` (string, 필수): 한줄 소개 (최대 100자)
-     *        - `detail_intro` (string, 필수): 상세 소개 (최대 500자)
+     *        - `short_intro` (string, 선택): 한줄 소개 (최대 100자)
+     *        - `detail_intro` (string, 선택): 상세 소개 (최대 500자)
      *        - `category` (string, 선택): `양식` | `한식` | `일식` | `중식`
      *        - `price_positioning` (string, 선택): `저가` | `중가` | `고가`
-     *        - `key_point` (string[], 필수): 핵심 차별점 목록 (최대 3개)
+     *        - `key_point` (string[], 선택): 핵심 차별점 목록 (최대 3개)
      *     3. **화면 렌더링 팁**:
      *        - `short_intro`와 `key_point`는 바이어 탐색 카드에 바로 노출되는 주요 문구입니다.
      */
@@ -1217,8 +1233,13 @@ export interface paths {
     };
     get?: never;
     /**
-     * 브랜드 담당자 연락처 입력 및 업데이트
-     * @description ### 📌 상세 역할 및 개요
+     * 🔄 [UPDATE 26.11.19] 브랜드 담당자 연락처 입력 및 업데이트 (전체 Body 파라미터 선택 입력 전환)
+     * @description ### 📝 최근 업데이트 이력 (2026.11.19)
+     *     - **요청 파라미터(Body) 전체 선택 입력(Optional) 전환**: 모든 Request Body 필드를 선택 입력으로 변경하였으며, 미전달된 필드는 기존 저장된 값이 유지됩니다.
+     *
+     *     ---
+     *
+     *     ### 📌 상세 역할 및 개요
      *     - 브랜드 워크스페이스의 담당자 연락처 정보(국/영문 이름, 직책, 이메일, 전화번호 등)를 등록 또는 수정합니다.
      *     - 요청자는 해당 워크스페이스에 소속된 **활성 멤버**여야 합니다.
      *
@@ -1228,10 +1249,10 @@ export interface paths {
      *     1. **호출 시점**:
      *        - 브랜드 프로필 관리 페이지 내 [담당자 연락처] 폼 저장/수정 완료 시.
      *     2. **요청 파라미터 (Body)**:
-     *        - `name_ko` (string, 필수): 국문 이름
-     *        - `name_en` (string, 필수): 영문 이름
-     *        - `position` (string, 필수): 직책/직급
-     *        - `email` (string, 필수): 담당자 업무 이메일
+     *        - `name_ko` (string, 선택): 국문 이름
+     *        - `name_en` (string, 선택): 영문 이름
+     *        - `position` (string, 선택): 직책/직급
+     *        - `email` (string, 선택): 담당자 업무 이메일
      *        - `phone_country_code`, `phone_number` (선택): 전화번호
      */
     put: operations["UpdateBrandContactController_handle"];
@@ -1251,8 +1272,13 @@ export interface paths {
     };
     get?: never;
     /**
-     * 브랜드 계약 담당자 정보 입력 및 업데이트
-     * @description ### 📌 상세 역할 및 개요
+     * 🔄 [UPDATE 26.11.19] 브랜드 계약 담당자 정보 입력 및 업데이트 (전체 Body 파라미터 선택 입력 전환)
+     * @description ### 📝 최근 업데이트 이력 (2026.11.19)
+     *     - **요청 파라미터(Body) 전체 선택 입력(Optional) 전환**: 모든 Request Body 필드를 선택 입력으로 변경하였으며, 미전달된 필드는 기존 저장된 값이 유지됩니다.
+     *
+     *     ---
+     *
+     *     ### 📌 상세 역할 및 개요
      *     - 브랜드 워크스페이스의 계약 담당자 정보(`brand_contract`: 국/영문 성명, 직책, 계약 전용 이메일, 전화번호 등)를 등록 또는 수정합니다.
      *     - 요청자는 해당 워크스페이스에 소속된 **활성 멤버**여야 합니다.
      *
@@ -1262,10 +1288,10 @@ export interface paths {
      *     1. **호출 시점**:
      *        - 브랜드 프로필 관리 페이지 내 [계약 담당자] 폼 저장/수정 완료 시.
      *     2. **요청 파라미터 (Body)**:
-     *        - `name_ko` (string, 필수): 계약 담당자 국문 성명
-     *        - `name_en` (string, 필수): 계약 담당자 영문 성명
-     *        - `position` (string, 필수): 직책/부서
-     *        - `email` (string, 필수): 계약 전용 이메일
+     *        - `name_ko` (string, 선택): 계약 담당자 국문 성명
+     *        - `name_en` (string, 선택): 계약 담당자 영문 성명
+     *        - `position` (string, 선택): 직책/부서
+     *        - `email` (string, 선택): 계약 전용 이메일
      *        - `phone_country_code`, `phone_number` (선택): 전화번호
      */
     put: operations["UpdateBrandContractController_handle"];
@@ -1285,8 +1311,13 @@ export interface paths {
     };
     get?: never;
     /**
-     * 브랜드 서명권자 정보 입력 및 업데이트
-     * @description ### 📌 상세 역할 및 개요
+     * 🔄 [UPDATE 26.11.19] 브랜드 서명권자 정보 입력 및 업데이트 (전체 Body 파라미터 선택 입력 전환)
+     * @description ### 📝 최근 업데이트 이력 (2026.11.19)
+     *     - **요청 파라미터(Body) 전체 선택 입력(Optional) 전환**: 모든 Request Body 필드를 선택 입력으로 변경하였으며, 미전달된 필드는 기존 저장된 값이 유지됩니다.
+     *
+     *     ---
+     *
+     *     ### 📌 상세 역할 및 개요
      *     - 최종 계약 체결 권한을 가진 서명권자 정보(`brand_signature`: 국/영문 성명, 직책, 이메일, 전화번호 등)를 등록 또는 수정합니다.
      *     - 요청자는 해당 워크스페이스에 소속된 **활성 멤버**여야 합니다.
      *
@@ -1296,10 +1327,10 @@ export interface paths {
      *     1. **호출 시점**:
      *        - 브랜드 프로필 관리 페이지 내 [서명권자 정보] 폼 저장/수정 완료 시.
      *     2. **요청 파라미터 (Body)**:
-     *        - `name_ko` (string, 필수): 서명권자 국문 성명
-     *        - `name_en` (string, 필수): 서명권자 영문 성명
-     *        - `position` (string, 필수): 직책 (예: 대표이사)
-     *        - `email` (string, 필수): 서명권자 이메일
+     *        - `name_ko` (string, 선택): 서명권자 국문 성명
+     *        - `name_en` (string, 선택): 서명권자 영문 성명
+     *        - `position` (string, 선택): 직책 (예: 대표이사)
+     *        - `email` (string, 선택): 서명권자 이메일
      *        - `phone_country_code`, `phone_number` (선택): 전화번호
      */
     put: operations["UpdateBrandSignatureController_handle"];
@@ -1319,8 +1350,13 @@ export interface paths {
     };
     get?: never;
     /**
-     * 브랜드 계약 정책 정보 입력 및 업데이트
-     * @description ### 📌 상세 역할 및 개요
+     * 🔄 [UPDATE 26.11.19] 브랜드 계약 정책 정보 입력 및 업데이트 (전체 Body 파라미터 선택 입력 전환)
+     * @description ### 📝 최근 업데이트 이력 (2026.11.19)
+     *     - **요청 파라미터(Body) 전체 선택 입력(Optional) 전환**: 모든 Request Body 필드를 선택 입력으로 변경하였으며, 미전달된 필드는 기존 저장된 값이 유지됩니다.
+     *
+     *     ---
+     *
+     *     ### 📌 상세 역할 및 개요
      *     - 선호 계약 방식, 진출 목표 국가, 독점권 여부, 메뉴 현지화 허용 범위, 식자재 공급망 정책 등 계약 정책 정보(`brand_contract_policy`)를 등록 또는 수정합니다.
      *     - `preferred_contract_type` 및 `target_country`는 `etq_workspace_brand` 컬럼과 자동 동기화되어 탐색/필터에 즉시 반영됩니다.
      *     - 요청자는 해당 워크스페이스에 소속된 **활성 멤버**여야 합니다.
@@ -1354,8 +1390,13 @@ export interface paths {
     };
     get?: never;
     /**
-     * 브랜드 계약 수수료 정보 입력 및 업데이트
-     * @description ### 📌 상세 역할 및 개요
+     * 🔄 [UPDATE 26.11.19] 브랜드 계약 수수료 정보 입력 및 업데이트 (전체 Body 파라미터 선택 입력 전환)
+     * @description ### 📝 최근 업데이트 이력 (2026.11.19)
+     *     - **요청 파라미터(Body) 전체 선택 입력(Optional) 전환**: 모든 Request Body 필드를 선택 입력으로 변경하였으며, 미전달된 필드는 기존 저장된 값이 유지됩니다.
+     *
+     *     ---
+     *
+     *     ### 📌 상세 역할 및 개요
      *     - 브랜드 가맹비, 로열티 산정 기준, 로열티 비율, 납부 주기 등 계약 수수료 정보(`brand_commission`)를 등록 또는 수정합니다.
      *     - 요청자는 해당 워크스페이스에 소속된 **활성 멤버**여야 합니다.
      *
@@ -1365,11 +1406,11 @@ export interface paths {
      *     1. **호출 시점**:
      *        - 브랜드 프로필 관리 페이지 내 [계약 수수료/로열티] 폼 저장 완료 시.
      *     2. **요청 파라미터 (Body)**:
-     *        - `franchise_fee` (number, 필수): 가맹비 (원)
-     *        - `royalty_calc_base` (string, 필수): `총매출` | `순매출`
-     *        - `royalty_rate` (number, 필수): 로열티 비율 (0~100%)
-     *        - `royalty_payment_cycle` (string, 필수): `매월` | `매 분기` | `매 반기` | `매년`
-     *        - `training_fee`, `supervision_fee`, `deposit` (number, 선택): 교육비, 감리비, 보증금 등
+     *        - `franchise_fee` (number, 선택): 가맹비 (원)
+     *        - `royalty_calc_base` (string, 선택): `총매출` | `순매출`
+     *        - `royalty_rate` (number, 선택): 로열티 비율 (0~100%)
+     *        - `fixed_royalty` (number, 선택): 고정 로열티 금액 (원)
+     *        - `royalty_payment_cycle` (string, 선택): `매월` | `매 분기` | `매 반기` | `매년`
      */
     put: operations["UpdateBrandCommissionController_handle"];
     post?: never;
@@ -1388,8 +1429,13 @@ export interface paths {
     };
     get?: never;
     /**
-     * 브랜드 입지 및 상권 기준 정보 입력 및 업데이트
-     * @description ### 📌 상세 역할 및 개요
+     * 🔄 [UPDATE 26.11.19] 브랜드 입지 및 상권 기준 정보 입력 및 업데이트 (전체 Body 파라미터 선택 입력 전환)
+     * @description ### 📝 최근 업데이트 이력 (2026.11.19)
+     *     - **요청 파라미터(Body) 전체 선택 입력(Optional) 전환**: 모든 Request Body 필드를 선택 입력으로 변경하였으며, 미전달된 필드는 기존 저장된 값이 유지됩니다.
+     *
+     *     ---
+     *
+     *     ### 📌 상세 역할 및 개요
      *     - 브랜드 매장 출점에 필요한 입지 선호도(층수, 전면 가시성, 주차, 대중교통 등) 및 상권 기준(`brand_location_standard`)을 등록 또는 수정합니다.
      *     - 요청자는 해당 워크스페이스에 소속된 **활성 멤버**여야 합니다.
      *
@@ -1399,7 +1445,7 @@ export interface paths {
      *     1. **호출 시점**:
      *        - 브랜드 프로필 관리 페이지 내 [입지/상권 기준] 폼 저장 완료 시.
      *     2. **요청 파라미터 (Body)**:
-     *        - `floor_range` (string, 필수): `1층만 가능` | `1~2층` | `제한 없음`
+     *        - `floor_range` (string, 선택): `1층만 가능` | `1~2층` | `제한 없음`
      *        - 가시성/주차/대중교통 중요도 (`visibility_importance`, `parking_importance`, `transportation_importance`)
      *        - 매출 비중 중요도(홀/포장/배달) 등 전달.
      */
@@ -1420,8 +1466,13 @@ export interface paths {
     };
     get?: never;
     /**
-     * 브랜드 매장 크기 조건 정보 입력 및 업데이트
-     * @description ### 📌 상세 역할 및 개요
+     * 🔄 [UPDATE 26.11.19] 브랜드 매장 크기 조건 정보 입력 및 업데이트 (전체 Body 파라미터 선택 입력 전환)
+     * @description ### 📝 최근 업데이트 이력 (2026.11.19)
+     *     - **요청 파라미터(Body) 전체 선택 입력(Optional) 전환**: 모든 Request Body 필드를 선택 입력으로 변경하였으며, 미전달된 필드는 기존 저장된 값이 유지됩니다.
+     *
+     *     ---
+     *
+     *     ### 📌 상세 역할 및 개요
      *     - 브랜드 매장 출점에 필요한 권장/최소/최대 면적(㎡) 및 최소 전면 폭(m), 층고(m) 등 매장 크기 기준(`brand_size_criteria`)을 등록 또는 수정합니다.
      *     - 요청자는 해당 워크스페이스에 소속된 **활성 멤버**여야 합니다.
      *
@@ -1451,8 +1502,13 @@ export interface paths {
     };
     get?: never;
     /**
-     * 브랜드 매장 시설 필수 조건 정보 입력 및 업데이트
-     * @description ### 📌 상세 역할 및 개요
+     * 🔄 [UPDATE 26.11.19] 브랜드 매장 시설 필수 조건 정보 입력 및 업데이트 (전체 Body 파라미터 선택 입력 전환)
+     * @description ### 📝 최근 업데이트 이력 (2026.11.19)
+     *     - **요청 파라미터(Body) 전체 선택 입력(Optional) 전환**: 모든 Request Body 필드를 선택 입력으로 변경하였으며, 미전달된 필드는 기존 저장된 값이 유지됩니다.
+     *
+     *     ---
+     *
+     *     ### 📌 상세 역할 및 개요
      *     - 브랜드 매장 입점에 필수적인 설비(가스, 급배수, 직화, 환기/덕트 등) 조건 정보(`brand_facility_req`)를 등록 또는 수정합니다.
      *     - 요청자는 해당 워크스페이스에 소속된 **활성 멤버**여야 합니다.
      *
@@ -1637,8 +1693,13 @@ export interface paths {
     };
     get?: never;
     /**
-     * 브랜드 메뉴 목록 등록 및 업데이트
-     * @description ### 📌 상세 역할 및 개요
+     * 🔄 [UPDATE 26.11.19] 브랜드 메뉴 목록 등록 및 업데이트 (전체 Body 파라미터 선택 입력 전환)
+     * @description ### 📝 최근 업데이트 이력 (2026.11.19)
+     *     - **요청 파라미터(Body) 전체 선택 입력(Optional) 전환**: `menu_list` 및 내부 메뉴 항목 필드를 선택 입력으로 변경하였으며, `menu_list` 미전달 시 기존 저장된 메뉴 목록이 유지됩니다.
+     *
+     *     ---
+     *
+     *     ### 📌 상세 역할 및 개요
      *     - 브랜드 대표 메뉴 목록(`brand_menu`: 국/영문명, 가격, 설명, 사진 URL 목록)을 전체 등록 또는 수정합니다.
      *     - 기존 메뉴 목록을 전달받은 배열로 덮어씁니다.
      *     - 요청자는 해당 워크스페이스에 소속된 **활성 멤버**여야 합니다.
@@ -1651,11 +1712,11 @@ export interface paths {
      *     2. **사전 작업 (사진 업로드)**:
      *        - 메뉴별 사진은 `POST /api/upload/image`로 개별 업로드 후 S3 URL을 `image_list` 배열로 담아 전송합니다.
      *     3. **요청 파라미터 (Body)**:
-     *        - `menu_list` (MenuItemDto[], 필수):
-     *          - `name_ko`, `name_en` (string): 메뉴명
-     *          - `price` (number): 가격
-     *          - `explain` (string): 메뉴 설명 (최대 300자)
-     *          - `image_list` (string[]): 메뉴 사진 S3 URL 목록
+     *        - `menu_list` (MenuItemDto[], 선택):
+     *          - `name_ko`, `name_en` (string, 선택): 메뉴명
+     *          - `price` (number, 선택): 가격
+     *          - `explain` (string, 선택): 메뉴 설명 (최대 1000자)
+     *          - `image_list` (string[], 선택): 메뉴 사진 S3 URL 목록
      */
     put: operations["UpdateBrandMenuController_handle"];
     post?: never;
@@ -1674,9 +1735,17 @@ export interface paths {
     };
     get?: never;
     /**
-     * 🔥 [NEW 26.10.06] 브랜드 대표 매장 정보 등록 및 수정
-     * @description ### 📝 최근 업데이트 이력 (2026.10.06)
+     * 🔄 [UPDATE 26.11.19] 브랜드 대표 매장 정보 등록 및 수정 (전체 Body 파라미터 선택 입력 전환)
+     * @description ### 📝 최근 업데이트 이력 (2026.11.19)
+     *     - **요청 파라미터(Body) 전체 선택 입력(Optional) 전환**: `store_name_ko`를 포함한 모든 Request Body 필드를 선택 입력으로 변경하였으며, 미전달된 필드는 기존 저장된 값이 유지됩니다.
+     *
+     *     <details>
+     *     <summary><b>📂 이전 업데이트 이력 보기 (클릭하여 펼치기)</b></summary>
+     *
+     *     ### 📝 이전 업데이트 이력 (2026.10.06)
      *     - **신규 API 추가**: 브랜드 워크스페이스의 대표 매장 정보(`brand_store`: 한국어/영어 매장명, 주소, 사진 목록)를 등록 및 수정하는 전용 엔드포인트가 추가되었습니다.
+     *
+     *     </details>
      *
      *     ---
      *
@@ -1693,7 +1762,7 @@ export interface paths {
      *     2. **사전 작업 (사진 업로드)**:
      *        - 사진 추가 시 `POST /api/upload/image`를 먼저 호출하여 S3 URL을 발급받은 후, 반환된 URL 배열을 `image_list`에 담아 요청합니다.
      *     3. **요청 파라미터 (Body)**:
-     *        - `store_name_ko` (string, 필수): 대표 매장 이름(한국어)
+     *        - `store_name_ko` (string, 선택): 대표 매장 이름(한국어)
      *        - `store_name_en` (string, 선택): 대표 매장 이름(영어)
      *        - `store_address` (string, 선택): 대표 매장 주소
      *        - `image_list` (string[], 선택): 대표 매장 사진 S3 URL 배열 (빈 배열 [] 전송 시 기존 사진 삭제)
@@ -3814,12 +3883,12 @@ export interface components {
        * @description 브랜드 이름 (한국어)
        * @example 플러그푸드
        */
-      brand_name_ko: string;
+      brand_name_ko: string | null;
       /**
        * @description 브랜드 이름 (영어)
        * @example PlugFood
        */
-      brand_name_en: string;
+      brand_name_en: string | null;
       /**
        * @description 런칭 연도
        * @example 2021
@@ -3856,12 +3925,12 @@ export interface components {
        * @description 한줄 소개 (100자 이내)
        * @example 신선한 재료로 만드는 건강한 슬로우푸드 브랜드
        */
-      short_intro: string;
+      short_intro?: string | null;
       /**
        * @description 상세 소개 (500자 이내)
        * @example 플러그푸드는 국내산 친환경 식자재만을 사용하여 남녀노소 누구나 안심하고 즐길 수 있는 식단을 제공합니다.
        */
-      detail_intro: string;
+      detail_intro?: string | null;
       /**
        * @description 업종 분류 (양식, 한식, 일식, 중식)
        * @example 양식
@@ -3882,29 +3951,29 @@ export interface components {
        *       "친환경 생분해 패키지 전 매장 도입"
        *     ]
        */
-      key_point: string[];
+      key_point?: string[] | null;
     };
     BrandStatusYearlySalesDto: {
       /**
        * @description 기준 연도
        * @example 2024
        */
-      year: number;
+      year?: number | null;
       /**
        * @description 연평균 매출 (원)
        * @example 760587000
        */
-      avg_annual_sales: number;
+      avg_annual_sales?: number | null;
       /**
        * @description 월평균 매출 (원)
        * @example 63380000
        */
-      avg_monthly_sales: number;
+      avg_monthly_sales?: number | null;
       /**
        * @description 평당(3.3㎡) 연평균 매출 (원)
        * @example 21931000
        */
-      sales_per_area: number;
+      sales_per_area?: number | null;
       /**
        * @description 가맹점 수 (개)
        * @example 169
@@ -3931,37 +4000,37 @@ export interface components {
        * @description 국내 전체 매장 수 (개)
        * @example 120
        */
-      domestic_store_total_cnt: number;
+      domestic_store_total_cnt?: number | null;
       /**
        * @description 국내 직영점 수 (개)
        * @example 15
        */
-      domestic_store_direct_cnt: number;
+      domestic_store_direct_cnt?: number | null;
       /**
        * @description 해외 전체 매장 수 (개)
        * @example 5
        */
-      overseas_store_total_cnt: number;
+      overseas_store_total_cnt?: number | null;
       /**
        * @description 월평균 매출 (원)
        * @example 45000000
        */
-      avg_monthly_sales: number;
+      avg_monthly_sales?: number | null;
       /**
        * @description 평균 객단가 (원)
        * @example 18000
        */
-      avg_cost_per_customer: number;
+      avg_cost_per_customer?: number | null;
       /**
        * @description 평균 매장 평형 (평)
        * @example 25.5
        */
-      avg_store_area: number;
+      avg_store_area?: number | null;
       /**
        * @description 평균 좌석 수 (석)
        * @example 40
        */
-      avg_seat_cnt: number;
+      avg_seat_cnt?: number | null;
       /**
        * @description 주요 고객층
        * @example [
@@ -3986,22 +4055,22 @@ export interface components {
        * @description 이름 (한국어)
        * @example 홍길동
        */
-      name_ko: string;
+      name_ko?: string | null;
       /**
        * @description 이름 (영어)
        * @example Gildong Hong
        */
-      name_en: string;
+      name_en?: string | null;
       /**
        * @description 직책/직급
        * @example 해외사업팀 팀장
        */
-      position: string;
+      position?: string | null;
       /**
        * @description 이메일 주소
        * @example gdhong@plugfood.com
        */
-      email: string;
+      email?: string | null;
       /**
        * @description 가능 언어
        * @example [
@@ -4016,44 +4085,44 @@ export interface components {
        * @description 계약 담당자 이름 (한국어)
        * @example 홍길동
        */
-      name_ko: string;
+      name_ko?: string | null;
       /**
        * @description 계약 담당자 이름 (영어)
        * @example Gildong Hong
        */
-      name_en: string;
+      name_en?: string | null;
       /**
        * @description 계약 담당자 직책/직급
        * @example 법무계약팀 팀장
        */
-      position: string;
+      position?: string | null;
       /**
        * @description 계약 담당자 이메일 주소
        * @example contract@plugfood.com
        */
-      email: string;
+      email?: string | null;
     };
     BrandSignatureDataDto: {
       /**
        * @description 서명권자 이름 (한국어)
        * @example 홍길동
        */
-      name_ko: string;
+      name_ko?: string | null;
       /**
        * @description 서명권자 이름 (영어)
        * @example Gildong Hong
        */
-      name_en: string;
+      name_en?: string | null;
       /**
        * @description 서명권자 직책/직급
        * @example 대표이사
        */
-      position: string;
+      position?: string | null;
       /**
        * @description 서명권자 이메일 주소
        * @example ceo@plugfood.com
        */
-      email: string;
+      email?: string | null;
     };
     BrandVisualDataDto: {
       /**
@@ -4081,22 +4150,22 @@ export interface components {
        * @description 메뉴 이름 (한국어)
        * @example 갈릭 불고기 피자
        */
-      name_ko: string;
+      name_ko?: string | null;
       /**
        * @description 메뉴 이름 (영어)
        * @example Garlic Bulgogi Pizza
        */
-      name_en: string;
+      name_en?: string | null;
       /**
        * @description 메뉴 가격
        * @example 18900
        */
-      price: number;
+      price?: number | null;
       /**
        * @description 메뉴 설명
        * @example 특제 마늘 소스와 직화 불고기의 풍미가 어우러진 시그니처 대표 피자
        */
-      explain: string;
+      explain?: string | null;
       /**
        * @description 메뉴 사진 URL 배열
        * @example [
@@ -4104,7 +4173,7 @@ export interface components {
        *       "https://eatiqlink-s3-bucket.s3.ap-northeast-2.amazonaws.com/uploads/images/2026/09/menu2.png"
        *     ]
        */
-      image_list: string[];
+      image_list?: string[];
     };
     BrandContractPolicyDataDto: {
       /**
@@ -4130,210 +4199,210 @@ export interface components {
       /**
        * @description 독점권 요구 수준 (선택지: 불가, 협의 필요, 가능)
        * @example 협의 필요
-       * @enum {string}
+       * @enum {string|null}
        */
-      exclusivity_level: "불가" | "협의 필요" | "가능";
+      exclusivity_level?: "불가" | "협의 필요" | "가능" | null;
       /**
        * @description 메뉴 현지화 요구 수준 (선택지: 불가, 협의 필요, 가능)
        * @example 가능
-       * @enum {string}
+       * @enum {string|null}
        */
-      menu_localization_level: "불가" | "협의 필요" | "가능";
+      menu_localization_level?: "불가" | "협의 필요" | "가능" | null;
       /**
        * @description 인테리어 기준 선호 (선택지: 가능, 협의 필요, 불가)
        * @example 협의 필요
-       * @enum {string}
+       * @enum {string|null}
        */
-      interior_standard_policy: "가능" | "협의 필요" | "불가";
+      interior_standard_policy?: "가능" | "협의 필요" | "불가" | null;
       /**
        * @description 원부자재 공급 정책 (선택지: 협의 필요, 필수, 불필요)
        * @example 협의 필요
-       * @enum {string}
+       * @enum {string|null}
        */
-      supply_chain_policy: "협의 필요" | "필수" | "불필요";
+      supply_chain_policy?: "협의 필요" | "필수" | "불필요" | null;
       /**
        * @description 상표/브랜드 아이덴티티 준수 (선택지: 전면 준수 필수, 부분 협의 가능)
        * @example 전면 준수 필수
-       * @enum {string}
+       * @enum {string|null}
        */
-      trademark_compliance_level: "전면 준수 필수" | "부분 협의 가능";
+      trademark_compliance_level?: "전면 준수 필수" | "부분 협의 가능" | null;
       /**
        * @description 운영 매뉴얼/SOP 준수 (선택지: 전면 준수 필수, 부분 협의 가능)
        * @example 전면 준수 필수
-       * @enum {string}
+       * @enum {string|null}
        */
-      manual_compliance_level: "전면 준수 필수" | "부분 협의 가능";
+      manual_compliance_level?: "전면 준수 필수" | "부분 협의 가능" | null;
     };
     BrandCommissionDataDto: {
       /**
        * @description 가맹비 (원)
        * @example 10000000
        */
-      franchise_fee: number;
+      franchise_fee?: number | null;
       /**
        * @description 매출 대비 로열티 산정 기준 (선택지: 총매출, 순매출)
        * @example 총매출
-       * @enum {string}
+       * @enum {string|null}
        */
-      royalty_calc_base: "총매출" | "순매출";
+      royalty_calc_base?: "총매출" | "순매출" | null;
       /**
        * @description 매출 대비 로열티 비율 (%)
        * @example 3.5
        */
-      royalty_rate: number;
+      royalty_rate?: number | null;
       /**
        * @description 고정 로열티 금액 (원)
        * @example 500000
        */
-      fixed_royalty: number;
+      fixed_royalty?: number | null;
       /**
        * @description 지급 주기 (선택지: 매월, 매 분기, 매 반기, 매년)
        * @example 매월
-       * @enum {string}
+       * @enum {string|null}
        */
-      royalty_payment_cycle: "매월" | "매 분기" | "매 반기" | "매년";
+      royalty_payment_cycle?: "매월" | "매 분기" | "매 반기" | "매년" | null;
     };
     BrandLocationStandardDataDto: {
       /**
        * @description 1차 선호 상권
        * @example 오피스
        */
-      district_01: string;
+      district_01?: string | null;
       /**
        * @description 2차 선호 상권
        * @example 번화가
        */
-      district_02: string;
+      district_02?: string | null;
       /**
        * @description 3차 선호 상권
        * @example 대학가
        */
-      district_03: string | null;
+      district_03?: string | null;
       /**
        * @description 허용 월 임대료 - 최소 (원)
        * @example 3000000
        */
-      min_rent: number;
+      min_rent?: number | null;
       /**
        * @description 허용 월 임대료 - 최대 (원)
        * @example 7000000
        */
-      max_rent: number;
+      max_rent?: number | null;
       /**
        * @description 허용 층수 범위 (선택지: 1층만 가능, 1~2층, 제한 없음)
        * @example 1층만 가능
-       * @enum {string}
+       * @enum {string|null}
        */
-      floor_range: "1층만 가능" | "1~2층" | "제한 없음";
+      floor_range?: "1층만 가능" | "1~2층" | "제한 없음" | null;
       /**
        * @description 간판 노출 중요도 (선택지: 낮음, 보통, 높음)
        * @example 높음
-       * @enum {string}
+       * @enum {string|null}
        */
-      sign_imp: "낮음" | "보통" | "높음";
+      sign_imp?: "낮음" | "보통" | "높음" | null;
       /**
        * @description 매장 노출 중요도 (선택지: 낮음, 보통, 높음)
        * @example 높음
-       * @enum {string}
+       * @enum {string|null}
        */
-      store_imp: "낮음" | "보통" | "높음";
+      store_imp?: "낮음" | "보통" | "높음" | null;
       /**
        * @description 주차 필요 여부 (선택지: 필수, 선호, 불필요)
        * @example 선호
-       * @enum {string}
+       * @enum {string|null}
        */
-      parking_req: "필수" | "선호" | "불필요";
+      parking_req?: "필수" | "선호" | "불필요" | null;
       /**
        * @description 대기공간 필요 여부 (선택지: 필수, 선호, 불필요)
        * @example 선호
-       * @enum {string}
+       * @enum {string|null}
        */
-      waiting_req: "필수" | "선호" | "불필요";
+      waiting_req?: "필수" | "선호" | "불필요" | null;
       /**
        * @description 점심 매출 중요도 (선택지: 높음, 보통, 낮음, 없음)
        * @example 높음
-       * @enum {string}
+       * @enum {string|null}
        */
-      lunch_imp: "없음" | "낮음" | "보통" | "높음";
+      lunch_imp?: "없음" | "낮음" | "보통" | "높음" | null;
       /**
        * @description 심야 매출 중요도 (선택지: 없음, 낮음, 보통, 높음)
        * @example 낮음
-       * @enum {string}
+       * @enum {string|null}
        */
-      night_imp: "없음" | "낮음" | "보통" | "높음";
+      night_imp?: "없음" | "낮음" | "보통" | "높음" | null;
       /**
        * @description 주중 매출 중요도 (선택지: 높음, 보통, 낮음)
        * @example 높음
-       * @enum {string}
+       * @enum {string|null}
        */
-      weekday_imp: "낮음" | "보통" | "높음";
+      weekday_imp?: "낮음" | "보통" | "높음" | null;
       /**
        * @description 주말 매출 중요도 (선택지: 높음, 보통, 낮음)
        * @example 보통
-       * @enum {string}
+       * @enum {string|null}
        */
-      weekend_imp: "낮음" | "보통" | "높음";
+      weekend_imp?: "낮음" | "보통" | "높음" | null;
     };
     BrandSizeCriteriaDataDto: {
       /**
        * @description 권장 매장 평형 (㎡)
        * @example 99.17
        */
-      rec_area: number;
+      rec_area?: number | null;
       /**
        * @description 선호 매장 평형 - 최소 (㎡)
        * @example 66.12
        */
-      min_area: number;
+      min_area?: number | null;
       /**
        * @description 선호 매장 평형 - 최대 (㎡)
        * @example 132.23
        */
-      max_area: number;
+      max_area?: number | null;
       /**
        * @description 최소 전면 폭 (m)
        * @example 4.5
        */
-      min_front_w: number;
+      min_front_w?: number | null;
     };
     BrandFacilityReqDataDto: {
       /**
        * @description 가스 시설 필요 여부 (선택지: 필수, 선호, 불필요)
        * @example 필수
-       * @enum {string}
+       * @enum {string|null}
        */
-      gas_req: "필수" | "선호" | "불필요";
+      gas_req?: "필수" | "선호" | "불필요" | null;
       /**
        * @description 급배수 시설 필요 여부 (선택지: 필수, 선호, 불필요)
        * @example 필수
-       * @enum {string}
+       * @enum {string|null}
        */
-      plumbing_req: "필수" | "선호" | "불필요";
+      plumbing_req?: "필수" | "선호" | "불필요" | null;
       /**
        * @description 직화 시설 필요 여부 (선택지: 필수, 선호, 불필요)
        * @example 선호
-       * @enum {string}
+       * @enum {string|null}
        */
-      direct_fire_req: "필수" | "선호" | "불필요";
+      direct_fire_req?: "필수" | "선호" | "불필요" | null;
       /**
        * @description 배기 시설 필요 여부 (선택지: 필수, 선호, 불필요)
        * @example 필수
-       * @enum {string}
+       * @enum {string|null}
        */
-      vent_req: "필수" | "선호" | "불필요";
+      vent_req?: "필수" | "선호" | "불필요" | null;
       /**
        * @description 냉장/냉동 저장공간 필요 여부 (선택지: 필수, 선호, 불필요)
        * @example 필수
-       * @enum {string}
+       * @enum {string|null}
        */
-      cold_storage_req: "필수" | "선호" | "불필요";
+      cold_storage_req?: "필수" | "선호" | "불필요" | null;
     };
     BrandStoreDataDto: {
       /**
        * @description 대표 매장 이름 (한국어)
        * @example 몽탄 애월점
        */
-      store_name_ko: string;
+      store_name_ko: string | null;
       /**
        * @description 대표 매장 이름 (영어)
        * @example Mongtan Aewol
@@ -6935,12 +7004,12 @@ export interface components {
        * @description 브랜드 이름 (한국어)
        * @example 플러그푸드
        */
-      brand_name_ko: string;
+      brand_name_ko?: string;
       /**
        * @description 브랜드 이름 (영어)
        * @example PlugFood
        */
-      brand_name_en: string;
+      brand_name_en?: string;
       /**
        * @description 런칭 연도 (예: 2021, 최소 -1조 ~ 최대 1조)
        * @example 2021
@@ -6991,17 +7060,17 @@ export interface components {
        * @description 기준 연도
        * @example 2024
        */
-      year: number;
+      year?: number;
       /**
        * @description 연평균 매출 (원)
        * @example 760587000
        */
-      avg_annual_sales: number;
+      avg_annual_sales?: number;
       /**
        * @description 평당(3.3㎡) 연평균 매출 (원)
        * @example 21931000
        */
-      sales_per_area: number;
+      sales_per_area?: number;
       /**
        * @description 가맹점 수 (개, 선택사항)
        * @example 169
@@ -7028,37 +7097,37 @@ export interface components {
        * @description 국내 전체 매장 수 (개, 최소 -1조 ~ 최대 1조)
        * @example 120
        */
-      domestic_store_total_cnt: number;
+      domestic_store_total_cnt?: number;
       /**
        * @description 국내 직영점 수 (개, 최소 -1조 ~ 최대 1조)
        * @example 15
        */
-      domestic_store_direct_cnt: number;
+      domestic_store_direct_cnt?: number;
       /**
        * @description 해외 전체 매장 수 (개, 최소 -1조 ~ 최대 1조)
        * @example 5
        */
-      overseas_store_total_cnt: number;
+      overseas_store_total_cnt?: number;
       /**
        * @description 월평균 매출 (원, 최소 -1조 ~ 최대 1조)
        * @example 45000000
        */
-      avg_monthly_sales: number;
+      avg_monthly_sales?: number;
       /**
        * @description 평균 객단가 (원, 최소 -1조 ~ 최대 1조)
        * @example 18000
        */
-      avg_cost_per_customer: number;
+      avg_cost_per_customer?: number;
       /**
        * @description 평균 매장 평형 (평, 최소 -1조 ~ 최대 1조)
        * @example 25.5
        */
-      avg_store_area: number;
+      avg_store_area?: number;
       /**
        * @description 평균 좌석 수 (석, 최소 -1조 ~ 최대 1조)
        * @example 40
        */
-      avg_seat_cnt: number;
+      avg_seat_cnt?: number;
       /**
        * @description 주요 고객층 (선택사항, 예: 20대, 30대, 가족 단위 등)
        * @example [
@@ -7097,12 +7166,12 @@ export interface components {
        * @description 한줄 소개 (100자 이내)
        * @example 신선한 재료로 만드는 건강한 슬로우푸드 브랜드
        */
-      short_intro: string;
+      short_intro?: string;
       /**
        * @description 상세 소개 (500자 이내)
        * @example 플러그푸드는 국내산 친환경 식자재만을 사용하여 남녀노소 누구나 안심하고 즐길 수 있는 식단을 제공합니다. 도심 속 현대인을 위한 힐링 키친을 지향하며, 지속 가능한 미식 경험을 연구합니다.
        */
-      detail_intro: string;
+      detail_intro?: string;
       /**
        * @description 업종 분류 (선택지: 양식, 한식, 일식, 중식)
        * @example 양식
@@ -7123,7 +7192,7 @@ export interface components {
        *       "친환경 생분해 패키지 전 매장 도입"
        *     ]
        */
-      key_point: string[];
+      key_point?: string[];
     };
     UpdateBrandIntroResponseDto: {
       /**
@@ -7150,22 +7219,22 @@ export interface components {
        * @description 이름 (한국어)
        * @example 홍길동
        */
-      name_ko: string;
+      name_ko?: string;
       /**
        * @description 이름 (영어)
        * @example Gildong Hong
        */
-      name_en: string;
+      name_en?: string;
       /**
        * @description 직책/직급
        * @example 해외사업팀 팀장
        */
-      position: string;
+      position?: string;
       /**
        * @description 이메일 주소
        * @example gdhong@plugfood.com
        */
-      email: string;
+      email?: string;
       /**
        * @description 가능 언어 (선택사항, 예: 한국어, 영어, 일본어 등)
        * @example [
@@ -7194,22 +7263,22 @@ export interface components {
        * @description 계약 담당자 이름 (한국어)
        * @example 홍길동
        */
-      name_ko: string;
+      name_ko?: string;
       /**
        * @description 계약 담당자 이름 (영어)
        * @example Gildong Hong
        */
-      name_en: string;
+      name_en?: string;
       /**
        * @description 계약 담당자 직책/직급
        * @example 법무계약팀 팀장
        */
-      position: string;
+      position?: string;
       /**
        * @description 계약 담당자 이메일 주소
        * @example contract@plugfood.com
        */
-      email: string;
+      email?: string;
     };
     UpdateBrandContractResponseDto: {
       /**
@@ -7230,22 +7299,22 @@ export interface components {
        * @description 서명권자 이름 (한국어)
        * @example 홍길동
        */
-      name_ko: string;
+      name_ko?: string;
       /**
        * @description 서명권자 이름 (영어)
        * @example Gildong Hong
        */
-      name_en: string;
+      name_en?: string;
       /**
        * @description 서명권자 직책/직급
        * @example 대표이사
        */
-      position: string;
+      position?: string;
       /**
        * @description 서명권자 이메일 주소
        * @example ceo@plugfood.com
        */
-      email: string;
+      email?: string;
     };
     UpdateBrandSignatureResponseDto: {
       /**
@@ -7286,37 +7355,37 @@ export interface components {
        * @example 협의 필요
        * @enum {string}
        */
-      exclusivity_level: "불가" | "협의 필요" | "가능";
+      exclusivity_level?: "불가" | "협의 필요" | "가능";
       /**
        * @description 메뉴 현지화 요구 수준 (선택지: 불가, 협의 필요, 가능)
        * @example 가능
        * @enum {string}
        */
-      menu_localization_level: "불가" | "협의 필요" | "가능";
+      menu_localization_level?: "불가" | "협의 필요" | "가능";
       /**
        * @description 인테리어 기준 선호 (선택지: 가능, 협의 필요, 불가)
        * @example 협의 필요
        * @enum {string}
        */
-      interior_standard_policy: "가능" | "협의 필요" | "불가";
+      interior_standard_policy?: "가능" | "협의 필요" | "불가";
       /**
        * @description 자체 식자재 공급망 (선택지: 협의 필요, 필수, 불필요)
        * @example 필수
        * @enum {string}
        */
-      supply_chain_policy: "협의 필요" | "필수" | "불필요";
+      supply_chain_policy?: "협의 필요" | "필수" | "불필요";
       /**
        * @description 상표 및 브랜드 사용 기준 (선택지: 전면 준수 필수, 부분 협의 가능)
        * @example 전면 준수 필수
        * @enum {string}
        */
-      trademark_compliance_level: "전면 준수 필수" | "부분 협의 가능";
+      trademark_compliance_level?: "전면 준수 필수" | "부분 협의 가능";
       /**
        * @description 운영 매뉴얼 준수 수준 (선택지: 전면 준수 필수, 부분 협의 가능)
        * @example 전면 준수 필수
        * @enum {string}
        */
-      manual_compliance_level: "전면 준수 필수" | "부분 협의 가능";
+      manual_compliance_level?: "전면 준수 필수" | "부분 협의 가능";
     };
     UpdateBrandContractPolicyResponseDto: {
       /**
@@ -7357,29 +7426,29 @@ export interface components {
        * @description 가맹비 (원)
        * @example 10000000
        */
-      franchise_fee: number;
+      franchise_fee?: number;
       /**
        * @description 매출 대비 로열티 산정 기준 (선택지: 총매출, 순매출)
        * @example 총매출
        * @enum {string}
        */
-      royalty_calc_base: "총매출" | "순매출";
+      royalty_calc_base?: "총매출" | "순매출";
       /**
        * @description 매출 대비 로열티 비율 (%)
        * @example 3.5
        */
-      royalty_rate: number;
+      royalty_rate?: number;
       /**
        * @description 고정 로열티 금액 (원)
        * @example 500000
        */
-      fixed_royalty: number;
+      fixed_royalty?: number;
       /**
        * @description 지급 주기 (선택지: 매월, 매 분기, 매 반기, 매년)
        * @example 매월
        * @enum {string}
        */
-      royalty_payment_cycle: "매월" | "매 분기" | "매 반기" | "매년";
+      royalty_payment_cycle?: "매월" | "매 분기" | "매 반기" | "매년";
     };
     UpdateBrandCommissionResponseDto: {
       /**
@@ -7400,12 +7469,12 @@ export interface components {
        * @description 1차 선호 상권 (예: 오피스, 주거 밀집, 대학가, 번화가 등)
        * @example 오피스
        */
-      district_01: string;
+      district_01?: string;
       /**
        * @description 2차 선호 상권 (예: 오피스, 주거 밀집, 대학가, 번화가 등)
        * @example 번화가
        */
-      district_02: string;
+      district_02?: string;
       /**
        * @description 3차 선호 상권 (선택사항, 예: 미입력, 오피스, 주거 밀집, 대학가 등)
        * @example 대학가
@@ -7415,66 +7484,66 @@ export interface components {
        * @description 허용 월 임대료 - 최소 (숫자 입력, 원 단위)
        * @example 3000000
        */
-      min_rent: number;
+      min_rent?: number;
       /**
        * @description 허용 월 임대료 - 최대 (숫자 입력, 원 단위)
        * @example 7000000
        */
-      max_rent: number;
+      max_rent?: number;
       /**
        * @description 허용 층수 범위 (선택지: 1층만 가능, 1~2층, 제한 없음)
        * @example 1층만 가능
        * @enum {string}
        */
-      floor_range: "1층만 가능" | "1~2층" | "제한 없음";
+      floor_range?: "1층만 가능" | "1~2층" | "제한 없음";
       /**
        * @description 간판 노출 중요도 (선택지: 낮음, 보통, 높음)
        * @example 높음
        * @enum {string}
        */
-      sign_imp: "낮음" | "보통" | "높음";
+      sign_imp?: "낮음" | "보통" | "높음";
       /**
        * @description 매장 노출 중요도 (선택지: 낮음, 보통, 높음)
        * @example 높음
        * @enum {string}
        */
-      store_imp: "낮음" | "보통" | "높음";
+      store_imp?: "낮음" | "보통" | "높음";
       /**
        * @description 주차 필요 여부 (선택지: 필수, 선호, 불필요)
        * @example 선호
        * @enum {string}
        */
-      parking_req: "필수" | "선호" | "불필요";
+      parking_req?: "필수" | "선호" | "불필요";
       /**
        * @description 대기공간 필요 여부 (선택지: 필수, 선호, 불필요)
        * @example 선호
        * @enum {string}
        */
-      waiting_req: "필수" | "선호" | "불필요";
+      waiting_req?: "필수" | "선호" | "불필요";
       /**
        * @description 점심 매출 중요도 (선택지: 높음, 보통, 낮음, 없음)
        * @example 높음
        * @enum {string}
        */
-      lunch_imp: "없음" | "낮음" | "보통" | "높음";
+      lunch_imp?: "없음" | "낮음" | "보통" | "높음";
       /**
        * @description 심야 매출 중요도 (선택지: 없음, 낮음, 보통, 높음)
        * @example 낮음
        * @enum {string}
        */
-      night_imp: "없음" | "낮음" | "보통" | "높음";
+      night_imp?: "없음" | "낮음" | "보통" | "높음";
       /**
        * @description 주중 매출 중요도 (선택지: 높음, 보통, 낮음)
        * @example 높음
        * @enum {string}
        */
-      weekday_imp: "낮음" | "보통" | "높음";
+      weekday_imp?: "낮음" | "보통" | "높음";
       /**
        * @description 주말 매출 중요도 (선택지: 높음, 보통, 낮음)
        * @example 보통
        * @enum {string}
        */
-      weekend_imp: "낮음" | "보통" | "높음";
+      weekend_imp?: "낮음" | "보통" | "높음";
     };
     UpdateBrandLocationStandardResponseDto: {
       /**
@@ -7495,22 +7564,22 @@ export interface components {
        * @description 권장 매장 평형 (숫자 입력, ㎡ 단위)
        * @example 99.17
        */
-      rec_area: number;
+      rec_area?: number;
       /**
        * @description 선호 매장 평형 - 최소 (숫자 입력, ㎡ 단위)
        * @example 66.12
        */
-      min_area: number;
+      min_area?: number;
       /**
        * @description 선호 매장 평형 - 최대 (숫자 입력, ㎡ 단위)
        * @example 132.23
        */
-      max_area: number;
+      max_area?: number;
       /**
        * @description 최소 전면 폭 (숫자 입력, m 단위)
        * @example 4.5
        */
-      min_front_w: number;
+      min_front_w?: number;
     };
     UpdateBrandSizeCriteriaResponseDto: {
       /**
@@ -7532,31 +7601,31 @@ export interface components {
        * @example 필수
        * @enum {string}
        */
-      gas_req: "필수" | "선호" | "불필요";
+      gas_req?: "필수" | "선호" | "불필요";
       /**
        * @description 급배수 시설 필요 여부 (선택지: 필수, 선호, 불필요)
        * @example 필수
        * @enum {string}
        */
-      plumbing_req: "필수" | "선호" | "불필요";
+      plumbing_req?: "필수" | "선호" | "불필요";
       /**
        * @description 직화 시설 필요 여부 (선택지: 필수, 선호, 불필요)
        * @example 선호
        * @enum {string}
        */
-      direct_fire_req: "필수" | "선호" | "불필요";
+      direct_fire_req?: "필수" | "선호" | "불필요";
       /**
        * @description 배기 시설 필요 여부 (선택지: 필수, 선호, 불필요)
        * @example 필수
        * @enum {string}
        */
-      vent_req: "필수" | "선호" | "불필요";
+      vent_req?: "필수" | "선호" | "불필요";
       /**
        * @description 냉장/냉동 저장공간 필요 여부 (선택지: 필수, 선호, 불필요)
        * @example 필수
        * @enum {string}
        */
-      cold_storage_req: "필수" | "선호" | "불필요";
+      cold_storage_req?: "필수" | "선호" | "불필요";
     };
     UpdateBrandFacilityReqResponseDto: {
       /**
@@ -7760,22 +7829,22 @@ export interface components {
        * @description 메뉴 이름 (한국어)
        * @example 갈릭 불고기 피자
        */
-      name_ko: string;
+      name_ko?: string;
       /**
        * @description 메뉴 이름 (영어)
        * @example Garlic Bulgogi Pizza
        */
-      name_en: string;
+      name_en?: string;
       /**
        * @description 메뉴 가격 (원화 또는 기본 통화 단위)
        * @example 18900
        */
-      price: number;
+      price?: number;
       /**
        * @description 메뉴 설명
        * @example 특제 마늘 소스와 직화 불고기의 풍미가 어우러진 시그니처 대표 피자
        */
-      explain: string;
+      explain?: string;
       /**
        * @description 메뉴 사진 URL 배열 (/api/upload/image 로 업로드 후 반환된 S3 URL)
        * @example [
@@ -7783,11 +7852,11 @@ export interface components {
        *       "https://eatiqlink-s3-bucket.s3.ap-northeast-2.amazonaws.com/uploads/images/2026/09/menu2.png"
        *     ]
        */
-      image_list: string[];
+      image_list?: string[];
     };
     UpdateBrandMenuDto: {
       /** @description 브랜드 메뉴 목록 (json array) */
-      menu_list: components["schemas"]["MenuItemDto"][];
+      menu_list?: components["schemas"]["MenuItemDto"][];
     };
     UpdateBrandMenuResponseDto: {
       /**
@@ -7808,7 +7877,7 @@ export interface components {
        * @description 대표 매장 이름 (한국어)
        * @example 몽탄 애월점
        */
-      store_name_ko: string;
+      store_name_ko?: string;
       /**
        * @description 대표 매장 이름 (영어)
        * @example Mongtan Aewol

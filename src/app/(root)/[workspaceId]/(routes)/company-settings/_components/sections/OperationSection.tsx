@@ -12,16 +12,16 @@ import { type BrandStatusData, type UpdateBrandStatusRequest } from "@services/a
 import useClearOnFormChange from "../../_hooks/useClearOnFormChange";
 import FormMultiSelect, { toTags } from "../FormMultiSelect";
 import { TARGET_AUDIENCE_VALUES, USAGE_CONTEXT_VALUES, toOptions } from "./IntroOptions";
+import { numberOrNull } from "./clearable";
 import { toNumberText } from "./numberText";
 
 /**
  * 폼 필드 이름은 저장 DTO(UpdateBrandStatusDto)와 같다. → BasicInfoSection 주석 참고
  *
- * 숫자 7개는 모두 서버 필수(0 이상)다. 입력은 문자열로 받아 저장할 때 숫자로 바꾼다.
+ * 숫자 7개는 모두 선택 입력이다(2026-11-19 서버 필수 해제). 입력은 문자열로 받아 저장할 때 숫자로 바꾼다.
  * 매장 수·좌석 수는 서버가 정수만 받는다. 매출·객단가는 원 단위 정수로 받는다(서버는 소수도 받지만 원 미만은 없다).
  * 평형만 소수를 허용한다.
  */
-const REQUIRED = "입력해주세요";
 
 /**
  * 입력 상한. 서버 범위(-1조~1조, 2026-10-06)가 너무 넓어 화면에서 막는다.
@@ -44,17 +44,16 @@ const withinLimit = (pattern: RegExp, { value, label }: Limit) =>
 const INTEGER = /^\d+$/;
 const DECIMAL = /^\d+(\.\d+)?$/;
 
+// 빈칸은 「입력 안 함」이라 통과한다. 적었으면 형식·상한을 본다
 const integerField = (limit: Limit) =>
   z
     .string()
-    .min(1, REQUIRED)
-    .regex(INTEGER, "0 이상의 정수를 입력해주세요")
+    .refine(input => input === "" || INTEGER.test(input), "0 이상의 정수를 입력해주세요")
     .refine(...withinLimit(INTEGER, limit));
 const decimalField = (limit: Limit) =>
   z
     .string()
-    .min(1, REQUIRED)
-    .regex(DECIMAL, "0 이상의 숫자를 입력해주세요")
+    .refine(input => input === "" || DECIMAL.test(input), "0 이상의 숫자를 입력해주세요")
     .refine(...withinLimit(DECIMAL, limit));
 
 const statusSchema = z
@@ -108,14 +107,15 @@ const toFormValues = (saved: BrandStatusData): StatusFormValues => ({
   usage_context: toTags(saved.usage_context),
 });
 
+/** 폼 → 요청. 빈 칸은 null(지우기, clearable.ts). 연도별 실적(yearly_sales)은 보내지 않아 그대로 남는다 */
 const toRequest = (values: StatusFormValues): UpdateBrandStatusRequest => ({
-  domestic_store_total_cnt: Number(values.domestic_store_total_cnt),
-  domestic_store_direct_cnt: Number(values.domestic_store_direct_cnt),
-  overseas_store_total_cnt: Number(values.overseas_store_total_cnt),
-  avg_monthly_sales: Number(values.avg_monthly_sales),
-  avg_cost_per_customer: Number(values.avg_cost_per_customer),
-  avg_store_area: Number(values.avg_store_area),
-  avg_seat_cnt: Number(values.avg_seat_cnt),
+  domestic_store_total_cnt: numberOrNull(values.domestic_store_total_cnt),
+  domestic_store_direct_cnt: numberOrNull(values.domestic_store_direct_cnt),
+  overseas_store_total_cnt: numberOrNull(values.overseas_store_total_cnt),
+  avg_monthly_sales: numberOrNull(values.avg_monthly_sales),
+  avg_cost_per_customer: numberOrNull(values.avg_cost_per_customer),
+  avg_store_area: numberOrNull(values.avg_store_area),
+  avg_seat_cnt: numberOrNull(values.avg_seat_cnt),
   target_audience: values.target_audience,
   usage_context: values.usage_context,
 });
@@ -177,7 +177,6 @@ export default function OperationSection({ workspaceId }: OperationSectionProps)
           size="md"
           labelClassName="text-xs"
           label="국내 전체 매장 수"
-          required
           placeholder="예: 187"
           inputMode="numeric"
           className="pr-10"
@@ -192,7 +191,6 @@ export default function OperationSection({ workspaceId }: OperationSectionProps)
           size="md"
           labelClassName="text-xs"
           label="국내 직영점 수"
-          required
           placeholder="예: 12"
           inputMode="numeric"
           className="pr-10"
@@ -206,7 +204,6 @@ export default function OperationSection({ workspaceId }: OperationSectionProps)
           size="md"
           labelClassName="text-xs"
           label="해외 전체 매장 수"
-          required
           placeholder="예: 3"
           inputMode="numeric"
           className="pr-10"
@@ -229,7 +226,6 @@ export default function OperationSection({ workspaceId }: OperationSectionProps)
               size="md"
               labelClassName="text-xs"
               label="월평균 매출"
-              required
               placeholder="예: 42,000,000"
               className="pr-10"
               endAdornment={<Unit>원</Unit>}
@@ -248,7 +244,6 @@ export default function OperationSection({ workspaceId }: OperationSectionProps)
               size="md"
               labelClassName="text-xs"
               label="평균 객단가"
-              required
               placeholder="예: 13,500"
               className="pr-10"
               endAdornment={<Unit>원</Unit>}
@@ -263,7 +258,6 @@ export default function OperationSection({ workspaceId }: OperationSectionProps)
           size="md"
           labelClassName="text-xs"
           label="평균 매장 평형"
-          required
           placeholder="예: 28"
           inputMode="decimal"
           className="pr-10"
@@ -277,7 +271,6 @@ export default function OperationSection({ workspaceId }: OperationSectionProps)
           size="md"
           labelClassName="text-xs"
           label="평균 좌석 수"
-          required
           placeholder="예: 42"
           inputMode="numeric"
           className="pr-10"

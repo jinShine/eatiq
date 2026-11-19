@@ -57,12 +57,12 @@ export function buildIntroRequirements({
 
   // 0은 「입력 안 됨」으로 본다 — 서버가 빈 값을 0으로 보내는 해가 있다
   const yearly = status?.yearly_sales ?? [];
-  const salesYears = yearly.filter(item => item.avg_annual_sales > 0).length;
+  const salesYears = yearly.filter(item => (item.avg_annual_sales ?? 0) > 0).length;
   const franchiseYears = yearly.filter(item => (item.franchise_count ?? 0) > 0).length;
 
   // 대표 메뉴는 이름 · 가격 · 사진이 다 있어야 메뉴 쪽에 실린다(쪽 구성 5)
   const hasCompleteMenu = (menu ?? []).some(
-    item => hasText(item.name_ko) && item.price > 0 && item.image_list.length > 0,
+    item => hasText(item.name_ko) && (item.price ?? 0) > 0 && (item.image_list?.length ?? 0) > 0,
   );
 
   const required = [

@@ -12,6 +12,7 @@ import { type BrandIntroData, type UpdateBrandIntroRequest } from "@services/api
 import useClearOnFormChange from "../../_hooks/useClearOnFormChange";
 import FormSelect from "../FormSelect";
 import { CATEGORY_VALUES, PRICE_POSITIONING_VALUES, pickOption, toOptions } from "./IntroOptions";
+import { optionOrNull, textOrNull } from "./clearable";
 
 /**
  * 폼 필드 이름은 저장 DTO(UpdateBrandIntroDto)와 같다. → BasicInfoSection 주석 참고
@@ -20,8 +21,8 @@ import { CATEGORY_VALUES, PRICE_POSITIONING_VALUES, pickOption, toOptions } from
  * 완성도 API가 key_point_01~03으로 가리켜서 입력칸 이름도 그렇게 둔다.
  */
 const introSchema = z.object({
-  short_intro: z.string().trim().min(1, "한줄 소개를 입력해주세요").max(100, "100자 이내로 입력해주세요"),
-  detail_intro: z.string().trim().min(1, "상세 소개를 입력해주세요").max(500, "500자 이내로 입력해주세요"),
+  short_intro: z.string().trim().max(100, "100자 이내로 입력해주세요"),
+  detail_intro: z.string().trim().max(500, "500자 이내로 입력해주세요"),
   category: z.union([z.enum(CATEGORY_VALUES), z.literal("")], {
     errorMap: () => ({ message: "목록에서 다시 선택해주세요" }),
   }),
@@ -57,14 +58,14 @@ const toFormValues = (saved: BrandIntroData): IntroFormValues => ({
 });
 
 /**
- * 폼 → 요청. 빈 차별점은 뺀다 — 서버가 빈 문자열 항목을 거부한다(빈 배열은 받는다).
- * 선택하지 않은 업종·가격은 보내지 않는다.
+ * 폼 → 요청. 빈 칸·고르지 않은 선택값은 null(지우기, clearable.ts).
+ * 빈 차별점은 뺀다 — 서버가 빈 문자열 항목을 거부한다(빈 배열은 받아 목록을 비운다).
  */
 const toRequest = (values: IntroFormValues): UpdateBrandIntroRequest => ({
-  short_intro: values.short_intro.trim(),
-  detail_intro: values.detail_intro.trim(),
-  category: values.category || undefined,
-  price_positioning: values.price_positioning || undefined,
+  short_intro: textOrNull(values.short_intro),
+  detail_intro: textOrNull(values.detail_intro),
+  category: optionOrNull(values.category),
+  price_positioning: optionOrNull(values.price_positioning),
   key_point: [values.key_point_01, values.key_point_02, values.key_point_03].map(point => point.trim()).filter(Boolean),
 });
 
@@ -121,7 +122,6 @@ export default function IntroSection({ workspaceId }: IntroSectionProps) {
         size="md"
         labelClassName="text-xs"
         label="한줄 소개 (100자 이내)"
-        required
         placeholder="예: 건강한 재료와 합리적인 가격의 파스타 전문 브랜드"
         error={Boolean(errors.short_intro)}
         errorText={errors.short_intro?.message}
@@ -137,7 +137,6 @@ export default function IntroSection({ workspaceId }: IntroSectionProps) {
             id="detail_intro"
             labelClassName="text-xs"
             label="상세 소개 (500자 이내)"
-            required
             placeholder="브랜드의 스토리와 특징을 소개해주세요"
             rows={3}
             error={Boolean(errors.detail_intro)}

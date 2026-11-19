@@ -12,16 +12,21 @@ import { type BrandContactData, type UpdateBrandContactRequest } from "@services
 import useClearOnFormChange from "../../_hooks/useClearOnFormChange";
 import FormMultiSelect, { toTags } from "../FormMultiSelect";
 import { CONTACT_LANGUAGE_VALUES, toOptions } from "./IntroOptions";
+import { textOrNull } from "./clearable";
 
 /**
  * 폼 필드 이름은 저장 DTO(UpdateBrandContactDto)와 같다. → BasicInfoSection 주석 참고
- * 필수·길이 제한은 서버 검증에 맞췄다(스펙에는 길이가 없어 400 응답으로 확인).
+ * 길이 제한은 서버 검증에 맞췄다(스펙에는 길이가 없어 400 응답으로 확인). 모든 칸이 선택 입력이다(2026-11-19).
  */
 const contactSchema = z.object({
-  name_ko: z.string().trim().min(1, "담당자 이름(한국어)을 입력해주세요").max(50, "50자 이내로 입력해주세요"),
-  name_en: z.string().trim().min(1, "담당자 이름(영어)을 입력해주세요").max(100, "100자 이내로 입력해주세요"),
-  position: z.string().trim().min(1, "직책을 입력해주세요").max(50, "50자 이내로 입력해주세요"),
-  email: z.string().trim().min(1, "이메일을 입력해주세요").email("올바른 이메일 형식이 아니에요"),
+  name_ko: z.string().trim().max(50, "50자 이내로 입력해주세요"),
+  name_en: z.string().trim().max(100, "100자 이내로 입력해주세요"),
+  position: z.string().trim().max(50, "50자 이내로 입력해주세요"),
+  // 비어 있으면 통과 — 선택 항목(2026-11-19). 적었으면 형식을 본다
+  email: z
+    .string()
+    .trim()
+    .refine(value => !value || z.string().email().safeParse(value).success, "올바른 이메일 형식이 아니에요"),
   languages: z.array(z.string()),
 });
 
@@ -43,11 +48,12 @@ const toFormValues = (saved: BrandContactData): ContactFormValues => ({
   languages: toTags(saved.languages),
 });
 
+/** 폼 → 요청. 빈 칸은 null(지우기, clearable.ts) */
 const toRequest = (values: ContactFormValues): UpdateBrandContactRequest => ({
-  name_ko: values.name_ko.trim(),
-  name_en: values.name_en.trim(),
-  position: values.position.trim(),
-  email: values.email.trim(),
+  name_ko: textOrNull(values.name_ko),
+  name_en: textOrNull(values.name_en),
+  position: textOrNull(values.position),
+  email: textOrNull(values.email),
   languages: values.languages,
 });
 
@@ -105,7 +111,6 @@ export default function ContactSection({ workspaceId }: ContactSectionProps) {
           size="md"
           labelClassName="text-xs"
           label="담당자 이름 (한국어)"
-          required
           placeholder="예: 박민수"
           error={Boolean(errors.name_ko)}
           errorText={errors.name_ko?.message}
@@ -116,7 +121,6 @@ export default function ContactSection({ workspaceId }: ContactSectionProps) {
           size="md"
           labelClassName="text-xs"
           label="담당자 이름 (영어)"
-          required
           placeholder="예: Minsoo Park"
           error={Boolean(errors.name_en)}
           errorText={errors.name_en?.message}
@@ -127,7 +131,6 @@ export default function ContactSection({ workspaceId }: ContactSectionProps) {
           size="md"
           labelClassName="text-xs"
           label="직책"
-          required
           placeholder="예: 대리"
           error={Boolean(errors.position)}
           errorText={errors.position?.message}
@@ -142,7 +145,6 @@ export default function ContactSection({ workspaceId }: ContactSectionProps) {
           size="md"
           labelClassName="text-xs"
           label="담당자 이메일"
-          required
           placeholder="예: minsoo.park@rollingpasta.com"
           error={Boolean(errors.email)}
           errorText={errors.email?.message}

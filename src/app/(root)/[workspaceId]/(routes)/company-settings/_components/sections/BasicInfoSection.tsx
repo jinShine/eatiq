@@ -12,22 +12,21 @@ import { type BrandBasicData, type UpdateBrandBasicRequest } from "@services/api
 import { isUrl } from "@utils/functions";
 
 import useClearOnFormChange from "../../_hooks/useClearOnFormChange";
+import { numberOrNull, textOrNull } from "./clearable";
 
 /**
  * 폼 필드 이름은 저장 DTO(UpdateBrandBasicDto)와 같다.
  *
- * PUT이 전체 치환이라 폼 값이 곧 요청 본문이다. 이름을 바꾸는 변환을 두면 한 필드를
- * 빠뜨렸을 때 그 값이 서버에서 지워진다. 또 완성도 API의 field_key가 이 이름을 가리켜
- * 저니 패널에서 입력칸으로 바로 포커스할 수 있다.
+ * 완성도 API의 field_key가 이 이름을 가리켜 저니 패널에서 입력칸으로 바로 포커스할 수 있다.
  *
- * 입력칸은 전부 문자열로 받는다. 연도만 저장할 때 숫자로 바꾼다.
+ * 모든 칸이 선택 입력이다(2026-11-19 서버 필수 해제). 입력칸은 전부 문자열로 받고 연도만 숫자로 바꾼다.
  */
 // 글자 수 제한은 서버 검증과 같다(스펙에 없어 400 응답으로 확인)
 const maxLength = (max: number) => `${max}자 이내로 입력해주세요`;
 
 const basicInfoSchema = z.object({
-  brand_name_ko: z.string().trim().min(1, "브랜드 이름(한국어)을 입력해주세요").max(100, maxLength(100)),
-  brand_name_en: z.string().trim().min(1, "브랜드 이름(영어)을 입력해주세요").max(100, maxLength(100)),
+  brand_name_ko: z.string().trim().max(100, maxLength(100)),
+  brand_name_en: z.string().trim().max(100, maxLength(100)),
   // 서버 검증 범위(1900~2100)와 맞춘다. 스펙에는 범위가 적혀 있지 않아 400 응답으로 확인했다
   launch_year: z.string().refine(v => !v || (/^\d{4}$/.test(v) && Number(v) >= 1900 && Number(v) <= 2100), {
     message: "1900~2100 사이 연도를 입력해주세요",
@@ -72,24 +71,17 @@ const toFormValues = (saved: BrandBasicData): BasicInfoFormValues => ({
   official_address: saved.official_address ?? "",
 });
 
-/**
- * 폼 → 요청. 빈 선택 항목은 보내지 않는다.
- * 빈 문자열을 보내면 서버의 형식 검증(이메일·URL 등)에 걸린다. PUT이 전체 치환이라 빠진 필드는 비워진다.
- */
-const toRequest = (values: BasicInfoFormValues): UpdateBrandBasicRequest => {
-  const optional = (value: string) => value.trim() || undefined;
-
-  return {
-    brand_name_ko: values.brand_name_ko.trim(),
-    brand_name_en: values.brand_name_en.trim(),
-    launch_year: values.launch_year ? Number(values.launch_year) : undefined,
-    ceo_name_ko: optional(values.ceo_name_ko),
-    ceo_name_en: optional(values.ceo_name_en),
-    homepage_url: optional(values.homepage_url),
-    official_email: optional(values.official_email),
-    official_address: optional(values.official_address),
-  };
-};
+/** 폼 → 요청. 빈 칸은 null — 지운 값이 실제로 지워진다(clearable.ts) */
+const toRequest = (values: BasicInfoFormValues): UpdateBrandBasicRequest => ({
+  brand_name_ko: textOrNull(values.brand_name_ko),
+  brand_name_en: textOrNull(values.brand_name_en),
+  launch_year: numberOrNull(values.launch_year),
+  ceo_name_ko: textOrNull(values.ceo_name_ko),
+  ceo_name_en: textOrNull(values.ceo_name_en),
+  homepage_url: textOrNull(values.homepage_url),
+  official_email: textOrNull(values.official_email),
+  official_address: textOrNull(values.official_address),
+});
 
 type BasicInfoSectionProps = {
   workspaceId: string;
@@ -144,7 +136,6 @@ export default function BasicInfoSection({ workspaceId }: BasicInfoSectionProps)
           size="md"
           labelClassName="text-xs"
           label="브랜드 이름 (한국어)"
-          required
           placeholder="예: 롤링 파스타"
           error={Boolean(errors.brand_name_ko)}
           errorText={errors.brand_name_ko?.message}
@@ -155,7 +146,6 @@ export default function BasicInfoSection({ workspaceId }: BasicInfoSectionProps)
           size="md"
           labelClassName="text-xs"
           label="브랜드 이름 (영어)"
-          required
           placeholder="예: Rolling Pasta"
           error={Boolean(errors.brand_name_en)}
           errorText={errors.brand_name_en?.message}

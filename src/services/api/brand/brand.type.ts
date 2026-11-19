@@ -14,7 +14,14 @@ export type BrandListResponse = components["schemas"]["GetBrandListResponseDto"]
  * 이전 PATCH 한 방에 보내던 구조가 섹션별 PUT으로 나뉘었다.
  * (basic / intro / status / contact / contract / contract-policy /
  *  commission / location-standard / size-criteria / facility-req / menu / signature / visual)
+ *
+ * 2026-11-19부터 모든 필드가 선택이고 부분 업데이트다 — 보내지 않은 필드는 서버가 그대로 둔다.
+ * 값을 지우려면 null을 보낸다(테스트 워크스페이스로 실측. 선택값에 ""를 보내면 400).
+ * 스펙의 요청 타입에는 null이 없어 Clearable로 넓힌다
  ************************************/
+
+/** 모든 필드에 null(지우기)을 허용한 요청 타입 */
+type Clearable<T> = { [K in keyof T]?: T[K] | null };
 
 /************************************
  * 브랜드 정보 설정 — 섹션별 저장값 (읽기)
@@ -37,43 +44,43 @@ export type BrandMenuItem = components["schemas"]["MenuItemResponseDto"];
 export type BrandStoreData = components["schemas"]["BrandStoreDataDto"];
 
 /** 기본 정보 — 브랜드명·런칭 연도·대표자·본사 연락처 */
-export type UpdateBrandBasicRequest = components["schemas"]["UpdateBrandBasicDto"];
+export type UpdateBrandBasicRequest = Clearable<components["schemas"]["UpdateBrandBasicDto"]>;
 export type UpdateBrandBasicResponse = components["schemas"]["UpdateBrandBasicResponseDto"];
 
 /** 브랜드 소개 — 한 줄·상세 소개, 업종, 가격대, 강점 */
-export type UpdateBrandIntroRequest = components["schemas"]["UpdateBrandIntroDto"];
+export type UpdateBrandIntroRequest = Clearable<components["schemas"]["UpdateBrandIntroDto"]>;
 export type UpdateBrandIntroResponse = components["schemas"]["UpdateBrandIntroResponseDto"];
 
 /** 운영 현황 — 매장 수·매출·객단가·평형 (이전 operation) */
-export type UpdateBrandStatusRequest = components["schemas"]["UpdateBrandStatusDto"];
+export type UpdateBrandStatusRequest = Clearable<components["schemas"]["UpdateBrandStatusDto"]>;
 export type UpdateBrandStatusResponse = components["schemas"]["UpdateBrandStatusResponseDto"];
 
 /** 브랜드 담당자 연락처 */
-export type UpdateBrandContactRequest = components["schemas"]["UpdateBrandContactDto"];
+export type UpdateBrandContactRequest = Clearable<components["schemas"]["UpdateBrandContactDto"]>;
 export type UpdateBrandContactResponse = components["schemas"]["UpdateBrandContactResponseDto"];
 
 /** 계약 담당자 */
-export type UpdateBrandContractRequest = components["schemas"]["UpdateBrandContractDto"];
+export type UpdateBrandContractRequest = Clearable<components["schemas"]["UpdateBrandContractDto"]>;
 export type UpdateBrandContractResponse = components["schemas"]["UpdateBrandContractResponseDto"];
 
 /** 계약 정책 — 독점권·현지화·상표·매뉴얼 */
-export type UpdateBrandContractPolicyRequest = components["schemas"]["UpdateBrandContractPolicyDto"];
+export type UpdateBrandContractPolicyRequest = Clearable<components["schemas"]["UpdateBrandContractPolicyDto"]>;
 export type UpdateBrandContractPolicyResponse = components["schemas"]["UpdateBrandContractPolicyResponseDto"];
 
 /** 수수료 — 가맹비·로열티 (이전 fee) */
-export type UpdateBrandCommissionRequest = components["schemas"]["UpdateBrandCommissionDto"];
+export type UpdateBrandCommissionRequest = Clearable<components["schemas"]["UpdateBrandCommissionDto"]>;
 export type UpdateBrandCommissionResponse = components["schemas"]["UpdateBrandCommissionResponseDto"];
 
 /** 입지 기준 — 선호 상권·임대료·층수·중요도 (이전 areaCriteria 일부) */
-export type UpdateBrandLocationStandardRequest = components["schemas"]["UpdateBrandLocationStandardDto"];
+export type UpdateBrandLocationStandardRequest = Clearable<components["schemas"]["UpdateBrandLocationStandardDto"]>;
 export type UpdateBrandLocationStandardResponse = components["schemas"]["UpdateBrandLocationStandardResponseDto"];
 
 /** 면적 기준 — 권장·최소·최대 평형, 최소 전면 폭 */
-export type UpdateBrandSizeCriteriaRequest = components["schemas"]["UpdateBrandSizeCriteriaDto"];
+export type UpdateBrandSizeCriteriaRequest = Clearable<components["schemas"]["UpdateBrandSizeCriteriaDto"]>;
 export type UpdateBrandSizeCriteriaResponse = components["schemas"]["UpdateBrandSizeCriteriaResponseDto"];
 
 /** 설비 요건 — 가스·급배수·직화·환기·냉장 */
-export type UpdateBrandFacilityReqRequest = components["schemas"]["UpdateBrandFacilityReqDto"];
+export type UpdateBrandFacilityReqRequest = Clearable<components["schemas"]["UpdateBrandFacilityReqDto"]>;
 export type UpdateBrandFacilityReqResponse = components["schemas"]["UpdateBrandFacilityReqResponseDto"];
 
 /** 대표 메뉴 */
@@ -81,11 +88,11 @@ export type UpdateBrandMenuRequest = components["schemas"]["UpdateBrandMenuDto"]
 export type UpdateBrandMenuResponse = components["schemas"]["UpdateBrandMenuResponseDto"];
 
 /** 대표 매장 */
-export type UpdateBrandStoreRequest = components["schemas"]["UpdateBrandStoreDto"];
+export type UpdateBrandStoreRequest = Clearable<components["schemas"]["UpdateBrandStoreDto"]>;
 export type UpdateBrandStoreResponse = components["schemas"]["UpdateBrandStoreResponseDto"];
 
 /** 시그니처 */
-export type UpdateBrandSignatureRequest = components["schemas"]["UpdateBrandSignatureDto"];
+export type UpdateBrandSignatureRequest = Clearable<components["schemas"]["UpdateBrandSignatureDto"]>;
 export type UpdateBrandSignatureResponse = components["schemas"]["UpdateBrandSignatureResponseDto"];
 
 /************************************
