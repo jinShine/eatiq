@@ -13,12 +13,13 @@ import { type BrandStoreData, type UpdateBrandStoreRequest } from "@services/api
 
 import useClearOnFormChange from "../../_hooks/useClearOnFormChange";
 import PhotoListField from "../media/PhotoListField";
+import { textOrNull } from "./clearable";
 
 /**
  * 대표 매장 (피그마 186:2177). 폼 필드 이름은 저장 DTO(UpdateBrandStoreDto)와 같다 → BasicInfoSection 주석 참고.
  *
- * 서버 규칙(400 응답으로 확인): 매장 이름(한국어) 필수 100자, 영어 이름 100자, 주소 255자, 사진은 URL.
- * PUT 전체 치환이라 사진 목록을 빼고 보내면 서버가 사진을 비운다 — 항상 보낸다.
+ * 서버 규칙(400 응답으로 확인): 매장 이름 한/영 100자, 주소 255자, 사진은 URL.
+ * 모든 칸이 선택 입력이다(2026-11-19). 빈 칸은 null로 보내 지운다(clearable.ts). 사진 목록은 항상 보낸다.
  */
 const maxLength = (max: number) => `${max}자 이내로 입력해주세요`;
 
@@ -26,7 +27,7 @@ const maxLength = (max: number) => `${max}자 이내로 입력해주세요`;
 const MAX_STORE_PHOTOS = 10;
 
 const storeSchema = z.object({
-  store_name_ko: z.string().trim().min(1, "대표 매장 이름(한국어)을 입력해주세요").max(100, maxLength(100)),
+  store_name_ko: z.string().trim().max(100, maxLength(100)),
   store_name_en: z.string().trim().max(100, maxLength(100)),
   store_address: z.string().trim().max(255, maxLength(255)),
   image_list: z.array(z.string()),
@@ -47,11 +48,11 @@ const toFormValues = (saved: BrandStoreData | null): StoreFormValues =>
       }
     : EMPTY_VALUES;
 
-/** 폼 → 요청. 빈 선택 항목은 보내지 않는다(서버에서 비워진다) */
+/** 폼 → 요청. 빈 칸은 null(지우기) */
 const toRequest = (values: StoreFormValues): UpdateBrandStoreRequest => ({
-  store_name_ko: values.store_name_ko.trim(),
-  store_name_en: values.store_name_en.trim() || undefined,
-  store_address: values.store_address.trim() || undefined,
+  store_name_ko: textOrNull(values.store_name_ko),
+  store_name_en: textOrNull(values.store_name_en),
+  store_address: textOrNull(values.store_address),
   image_list: values.image_list,
 });
 
@@ -122,7 +123,6 @@ export default function StoreSection({ workspaceId }: StoreSectionProps) {
             size="md"
             labelClassName="text-xs"
             label="대표 매장 이름 (한국어)"
-            required
             placeholder="예: 몽탄 애월점"
             error={Boolean(errors.store_name_ko)}
             errorText={errors.store_name_ko?.message}

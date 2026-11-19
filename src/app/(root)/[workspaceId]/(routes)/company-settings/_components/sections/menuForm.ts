@@ -2,14 +2,15 @@ import z from "zod";
 
 import { type BrandMenuItem, type UpdateBrandMenuRequest } from "@services/api/brand/brand.type";
 
-import { INTEGER, REQUIRED } from "./formFields";
+import { INTEGER } from "./formFields";
 import { toNumberText } from "./numberText";
 
 /**
  * 대표 메뉴 폼. 필드 이름은 저장 DTO(MenuItemDto)와 같다 → BasicInfoSection 주석 참고.
  *
- * 서버 규칙(400 응답으로 확인): 이름 한/영 필수 100자, 가격 필수 0 이상 정수, 설명 필수 1000자,
- * 사진은 빈 배열 허용. 스펙은 설명을 300자로 적었지만 서버는 1000자까지 받는다.
+ * 서버 규칙(400 응답으로 확인): 이름 한/영 100자, 가격 0 이상 정수, 설명 1000자, 사진은 빈 배열 허용.
+ * 스펙은 설명을 300자로 적었지만 서버는 1000자까지 받는다.
+ * 모든 칸이 선택 입력이다(2026-11-19 서버 필수 해제) — 아는 칸만 채운 메뉴도 저장된다.
  */
 
 /** 피그마 769:3865 "최대 3개까지". 서버는 개수를 막지 않는다 */
@@ -42,24 +43,12 @@ export const EMPTY_MENU: MenuFormValue = { name_ko: "", name_en: "", price: "", 
 export const isBlankMenu = (menu: MenuFormValue) =>
   !menu.name_ko.trim() && !menu.name_en.trim() && !menu.price && !menu.explain.trim() && menu.image_list.length === 0;
 
+// 가격은 적었을 때만 형식·상한을 본다
 const menuSchema = menuShape.superRefine((menu, ctx) => {
-  if (isBlankMenu(menu)) {
+  if (!menu.price) {
     return;
   }
-  const required = (path: keyof MenuFormValue) => ctx.addIssue({ code: "custom", path: [path], message: REQUIRED });
-
-  if (!menu.name_ko.trim()) {
-    required("name_ko");
-  }
-  if (!menu.name_en.trim()) {
-    required("name_en");
-  }
-  if (!menu.explain.trim()) {
-    required("explain");
-  }
-  if (!menu.price) {
-    required("price");
-  } else if (!INTEGER.test(menu.price)) {
+  if (!INTEGER.test(menu.price)) {
     ctx.addIssue({ code: "custom", path: ["price"], message: "0 이상의 정수를 입력해주세요" });
   } else if (Number(menu.price) > MAX_PRICE.value) {
     ctx.addIssue({ code: "custom", path: ["price"], message: `${MAX_PRICE.label} 이하로 입력해주세요` });
@@ -83,15 +72,18 @@ export const toFormValues = (saved: BrandMenuItem[] | null | undefined): MenuFor
     : [EMPTY_MENU],
 });
 
-/** 폼 → 요청. PUT이 목록 전체 치환이라 빈 메뉴를 뺀 나머지가 곧 저장될 목록이다 */
+/**
+ * 폼 → 요청. 메뉴 목록은 통째로 바뀌어서 빈 메뉴를 뺀 나머지가 곧 저장될 목록이다.
+ * 메뉴 안의 빈 칸은 보내지 않는다 — 새 목록이라 지울 이전 값이 없다
+ */
 export const toRequest = (values: MenuFormValues): UpdateBrandMenuRequest => ({
   menu_list: values.menu_list
     .filter(menu => !isBlankMenu(menu))
     .map(menu => ({
-      name_ko: menu.name_ko.trim(),
-      name_en: menu.name_en.trim(),
-      price: Number(menu.price),
-      explain: menu.explain.trim(),
+      name_ko: menu.name_ko.trim() || undefined,
+      name_en: menu.name_en.trim() || undefined,
+      price: menu.price ? Number(menu.price) : undefined,
+      explain: menu.explain.trim() || undefined,
       image_list: menu.image_list,
     })),
 });

@@ -160,7 +160,6 @@ export default function MenuSection({ workspaceId }: MenuSectionProps) {
               size="md"
               labelClassName="text-xs"
               label="메뉴 이름 (한국어)"
-              required
               placeholder="예: 우대 갈비"
               error={Boolean(menuErrors?.name_ko)}
               errorText={menuErrors?.name_ko?.message}
@@ -170,7 +169,6 @@ export default function MenuSection({ workspaceId }: MenuSectionProps) {
               size="md"
               labelClassName="text-xs"
               label="메뉴 이름 (영어)"
-              required
               placeholder="영문 메뉴 이름을 입력해주세요."
               error={Boolean(menuErrors?.name_en)}
               errorText={menuErrors?.name_en?.message}
@@ -184,7 +182,6 @@ export default function MenuSection({ workspaceId }: MenuSectionProps) {
                   size="md"
                   labelClassName="text-xs"
                   label="메뉴 가격"
-                  required
                   placeholder="예: 35,000"
                   className="pr-16"
                   endAdornment={<Unit>원 (KRW)</Unit>}
@@ -200,7 +197,6 @@ export default function MenuSection({ workspaceId }: MenuSectionProps) {
             size="md"
             labelClassName="text-xs"
             label="메뉴 설명"
-            required
             placeholder="메뉴 설명을 입력해주세요"
             error={Boolean(menuErrors?.explain)}
             errorText={menuErrors?.explain?.message}
